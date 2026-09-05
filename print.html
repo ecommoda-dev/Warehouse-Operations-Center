@@ -1075,7 +1075,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
           <h4>KEY VARIABLES</h4>
           <ul>
-            <li><code>currentEmployee</code> — في ذاكرة الـ JS فقط، عمره ما يروح <code>localStorage</code></li>
+            <li><code>currentEmployee</code> — بييجي من <code>sessionStorage</code> عبر <code>requireSession()</code> (استثناء الهب الموثّق من بند ٥). بيموت مع قفل التاب، ولكل تاب لوحده، ومابيديش أي صلاحية جديدة</li>
             <li><code>TOOL_VERSION</code> — نسخة الواجهة، مصدر واحد بيغذّي زرار الهيدر وشاشة الدخول والـ Changelog</li>
             <li><code>MIN_WORKER_VERSION</code> — أقل نسخة Worker مقبولة. <strong>مالهاش علاقة بـ <code>TOOL_VERSION</code></strong></li>
             <li><code>LS_SECRET = 'order_printer_worker_secret'</code> — المفتاح الوحيد في <code>localStorage</code></li>
