@@ -25,7 +25,7 @@
 // ══════════════════════════════════════════════════════════════
 //
 // ⚠️ الروابط **مش أسرار** (Standards #28) — الحماية في السر + CORS
-//    allowlist. مالهاش مكان في شاشة الإعدادات ولا في localStorage.
+//    allowlist. مالهاش مكان في شاشة الإعدادات ولا في التخزين المحلي.
 //
 // كل Worker ومعاه **أقل نسخة** الهب بيشتغل معاها. الحد الأدنى لكل Worker
 // لوحده — مالهمش أي علاقة ببعض ولا بـ `TOOL_VERSION`.
@@ -47,7 +47,8 @@ const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة 
 const WOC_APP_ID   = 'warehouse_ops_center';         // قيمة `tool` في D1 — login/logout بس
 const SHOP_HANDLE  = '6c7e1a-53';
 
-// 🔴 السر هو **الحاجة الوحيدة** في localStorage في الريبو كله (#28 · #39).
+// 🔴 السر (`LS_SECRET`) هو **الحاجة الوحيدة** في التخزين المحلي في الريبو
+//    كله (#28 · #39). الهوية في sessionStorage، والروابط ثوابت في الكود.
 //    الهوية في sessionStorage، والروابط ثوابت في الكود.
 function getSecret()      { try { return localStorage.getItem(LS_SECRET) || ''; } catch { return ''; } }
 function setSecret(v)     { try { localStorage.setItem(LS_SECRET, v); } catch {} }
@@ -57,7 +58,7 @@ function isConfigured()   { return getSecret().trim().length > 0; }
 // §SESSION — الهوية في sessionStorage (استثناء موثّق من بند ٥)
 // ══════════════════════════════════════════════════════════════
 //
-// ⚠️ `sessionStorage` **مش** `localStorage` — بيموت مع قفل التاب، ولكل
+// ⚠️ `sessionStorage` **مش** التخزين الدائم — بيموت مع قفل التاب، ولكل
 //    تاب لوحده، ومابيديش أي صلاحية جديدة (`employee` بيتبعت من العميل في
 //    كل كتابة **النهاردة كمان** — الـ Worker بيتحقق من السر مش من هوية
 //    الموظف). ده استثناء موثّق من `ecommoda-html-builder` بند ٥، سببه إن

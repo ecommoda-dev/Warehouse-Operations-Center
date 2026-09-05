@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<!-- skills: html-builder v6.3.0 · worker-builder v2.0.0 · constants v1.6.0 · order-lifecycle v1.2.0 — 05-09-2026 -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مركز عمليات المخزن — EcomModa</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- 🔴 قاعدة الأسبقية: الـ shell أولاً، وستايل الصفحة بعده وبيغلب -->
+  <link rel="stylesheet" href="shared/shell.css">
+<style>
+/* ══════════════════════════════════════════════════════════════
+   §STYLES — `index.html` بس (شاشة الدخول + لمسات الشاشة الرئيسية)
+   ⚠️ مفيش كتلة توكنز هنا — كلها في `shared/shell.css`.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Login — منقولة من `Orders-Packing-Checker` v2.6.2 ──────── */
+.login-overlay{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-overlay.hidden{display:none}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 22px 70px rgba(0,0,0,.22);width:100%;max-width:420px;padding:28px 26px 24px;position:relative;animation:loginIn .18s ease}
+@keyframes loginIn{from{transform:translateY(6px) scale(.985);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+.login-settings-btn{position:absolute;top:16px;left:16px;display:inline-flex;align-items:center;gap:5px;min-height:38px;padding:8px 12px;border-radius:9px;border:1.5px solid;background:var(--surface);font-family:var(--font-body);font-size:12px;font-weight:800;cursor:pointer;transition:all .15s;white-space:nowrap}
+.login-settings-btn.ready{border-color:var(--green);color:var(--green);background:var(--green-light)}
+.login-settings-btn.missing{border-color:var(--red);color:var(--red);background:var(--red-light)}
+.login-settings-btn:hover{transform:translateY(-1px)}
+.login-version{position:absolute;top:60px;left:16px;font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--text-muted);direction:ltr}
+.login-top{padding-top:12px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.login-icon{font-size:34px;line-height:1;margin-bottom:14px}
+.login-title{font-size:19px;line-height:1.35;font-weight:900;text-align:center;letter-spacing:-.1px}
+.login-desc{margin-top:6px;color:var(--text-secondary);font-size:12.5px;font-weight:700;text-align:center}
+.login-sub{min-height:22px;margin-top:7px;color:var(--text-secondary);font-size:13px;font-weight:600;text-align:center;line-height:1.7}
+.login-body{margin-top:22px;display:flex;flex-direction:column;gap:14px}
+.login-field{display:flex;flex-direction:column;gap:7px}
+.login-field select{width:100%;height:58px;border:1.5px solid var(--border-strong);border-radius:10px;background:var(--surface);color:var(--text-primary);font-family:var(--font-body);font-size:14px;font-weight:600;outline:none;padding:0 14px;transition:border-color .15s,box-shadow .15s}
+.login-field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+.login-field select:disabled{opacity:.68;cursor:not-allowed;background:var(--surface-2)}
+.login-status{min-height:18px;font-size:12px;font-weight:700;color:var(--text-muted);line-height:1.5}
+.login-status.info{color:var(--accent)}.login-status.warn{color:var(--amber)}.login-status.error{color:var(--red)}
+.login-alert{display:none;min-height:38px;border-radius:10px;border:1px solid var(--red-border);background:var(--red-light);color:var(--red);padding:9px 12px;font-size:12px;font-weight:800;text-align:center;line-height:1.6}
+.login-alert.visible{display:block}
+.pin-zone{display:none;flex-direction:column;gap:12px;animation:pinZoneIn .16s ease}
+.pin-zone.visible{display:flex}
+@keyframes pinZoneIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.pin-label{font-size:12px;font-weight:800;color:var(--text-secondary);text-align:right;margin-top:2px}
+.pin-slots{display:flex;justify-content:center;gap:9px;direction:ltr}
+.pin-slot{width:48px;height:48px;border-radius:10px;border:1.5px solid var(--border-strong);background:var(--surface-2);display:grid;place-items:center;font-family:var(--font-mono);font-size:22px;line-height:1;font-weight:800;color:var(--accent);transition:all .15s;user-select:none}
+.pin-slot.empty::before{content:'_';transform:translateY(-2px);color:var(--accent);opacity:.75;font-size:18px}
+.pin-slot.filled{background:var(--accent-light);border-color:var(--accent)}
+.pin-slot.filled::before{content:'●';font-size:17px;transform:translateY(-1px);color:var(--accent);opacity:1}
+.pin-slot.error{border-color:var(--red);background:var(--red-light)}
+.pin-slot.error::before{color:var(--red)}
+.pin-slots.shake{animation:pinShake .34s ease}
+@keyframes pinShake{0%,100%{transform:translateX(0)}22%{transform:translateX(-5px)}44%{transform:translateX(5px)}66%{transform:translateX(-3px)}88%{transform:translateX(3px)}}
+.pin-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:1px 0 0}
+.pin-key{min-height:49px;border-radius:10px;border:1.5px solid var(--border-strong);background:var(--surface);color:var(--text-primary);font-family:var(--font-mono);font-size:18px;font-weight:800;cursor:pointer;transition:background .12s,color .12s,border-color .12s,transform .06s;display:flex;align-items:center;justify-content:center}
+.pin-key:hover:not(:disabled){background:var(--accent-light);border-color:var(--accent);color:var(--accent)}
+.pin-key:active:not(:disabled){transform:translateY(1px)}
+.pin-key.utility{color:var(--red);background:var(--red-light);border-color:var(--red-border);font-family:var(--font-body);font-size:13px;font-weight:900}
+.pin-key.utility:hover:not(:disabled){background:var(--red);color:var(--on-accent);border-color:var(--red)}
+.pin-key:disabled{opacity:.55;cursor:not-allowed}
+.login-primary{display:none;align-items:center;justify-content:center;gap:7px;width:100%;min-height:58px;margin-top:1px;border:none;border-radius:10px;background:var(--accent);color:var(--on-accent);font-family:var(--font-body);font-size:15px;font-weight:900;cursor:pointer;transition:background .15s,opacity .15s,transform .06s}
+.login-primary.visible{display:inline-flex}
+.login-primary:hover:not(:disabled){background:var(--accent-dark)}
+.login-primary:active:not(:disabled){transform:translateY(1px)}
+.login-primary:disabled{opacity:.56;cursor:not-allowed}
+.login-secondary{display:none;align-items:center;justify-content:center;width:100%;min-height:42px;border-radius:10px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text-secondary);font-family:var(--font-body);font-size:12px;font-weight:800;cursor:pointer;transition:all .15s}
+.login-secondary.visible{display:inline-flex}
+.login-secondary:hover{border-color:var(--accent);background:var(--accent-light);color:var(--accent)}
+
+/* ── الشاشة الرئيسية — لمسات فوق `.woc-*` اللي في الـ shell ──── */
+.home-hint{font-size:12px;color:var(--text-secondary);font-weight:600;line-height:1.7;margin-bottom:14px}
+.home-err{margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════
+     §LOGIN — منقولة كما هي من أداة التغليف (Standards #7 · #8 · #18 · #34)
+     ══════════════════════════════════════════════════════════════ -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-card">
+    <button class="login-settings-btn missing" id="loginSettingsBtn" onclick="openSettings()">⚙️ الإعدادات</button>
+    <div class="login-version" id="loginVersionText"></div>
+    <div class="login-top">
+      <div class="login-icon">🏭</div>
+      <div class="login-title">مركز عمليات المخزن</div>
+      <div class="login-desc">طباعة · تغليف · حذف منتج · رحلة الأوردر</div>
+      <div class="login-sub" id="loginSub"></div>
+    </div>
+    <div class="login-body">
+      <div class="login-field">
+        <select id="loginSelect" onchange="handleEmployeeChange()" disabled>
+          <option value="">اختر اسمك للمتابعة</option>
+        </select>
+        <div class="login-status warn" id="loginStatus">الإعدادات غير مكتملة — افتح الإعدادات أولًا.</div>
+      </div>
+      <!-- ⚠️ loginAlert بره pin-zone — عشان أخطاء تحميل القائمة تبان في الخطوة الأولى -->
+      <div class="login-alert" id="loginAlert"></div>
+      <div class="pin-zone" id="pinZone">
+        <div class="pin-label" id="pinLabel">أدخل الـ PIN</div>
+        <div class="pin-slots" id="pinSlots">
+          <div class="pin-slot empty" id="pinSlot0"></div>
+          <div class="pin-slot empty" id="pinSlot1"></div>
+          <div class="pin-slot empty" id="pinSlot2"></div>
+          <div class="pin-slot empty" id="pinSlot3"></div>
+        </div>
+        <div class="pin-keypad" id="pinKeypad">
+          <button class="pin-key" onclick="pressPinKey('1')">1</button>
+          <button class="pin-key" onclick="pressPinKey('2')">2</button>
+          <button class="pin-key" onclick="pressPinKey('3')">3</button>
+          <button class="pin-key" onclick="pressPinKey('4')">4</button>
+          <button class="pin-key" onclick="pressPinKey('5')">5</button>
+          <button class="pin-key" onclick="pressPinKey('6')">6</button>
+          <button class="pin-key" onclick="pressPinKey('7')">7</button>
+          <button class="pin-key" onclick="pressPinKey('8')">8</button>
+          <button class="pin-key" onclick="pressPinKey('9')">9</button>
+          <button class="pin-key utility" onclick="pressPinKey('clear')">مسح</button>
+          <button class="pin-key" onclick="pressPinKey('0')">0</button>
+          <button class="pin-key utility" onclick="pressPinKey('back')">←</button>
+        </div>
+        <button class="login-primary visible" id="loginPrimaryBtn" onclick="handlePrimaryLoginAction()" disabled>دخول</button>
+        <button class="login-secondary" id="loginSecondaryBtn" onclick="restartNewPinFlow()">الرجوع لإدخال PIN جديد</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     §HOME — الشاشة الرئيسية
+     ══════════════════════════════════════════════════════════════ -->
+<div class="container" id="appRoot" style="display:none">
+  <div id="headerMount"></div>
+
+  <div class="home-hint">
+    اختر المحطة اللي هتشتغل عليها. الأعداد بتتجاب <b>مرة واحدة بعد الدخول</b> —
+    مفيش تحديث تلقائي هنا، وزرار ↻ جوّه كل كارت.
+  </div>
+
+  <div class="woc-home-sec">
+    <div class="woc-home-sec-title">الطوابير</div>
+    <div class="woc-home-grid">
+
+      <a class="woc-card" href="print.html">
+        <div class="woc-card-top"><span class="woc-card-ico">🖨</span><span class="woc-card-name">جاهز للطباعة</span></div>
+        <div class="woc-count pending" id="cntPrint">—</div>
+        <div class="woc-split" id="splitPrint">&nbsp;</div>
+        <div class="woc-fail" id="failPrint" style="display:none"></div>
+        <div class="woc-stamp">
+          <span class="woc-stamp-txt" id="stampPrint">لسه ما اتحدّثش</span>
+          <button class="woc-stamp-btn" id="btnPrint" onclick="event.preventDefault();event.stopPropagation();loadPrintCount()">↻ تحديث</button>
+        </div>
+      </a>
+
+      <a class="woc-card" href="pack.html">
+        <div class="woc-card-top"><span class="woc-card-ico">📦</span><span class="woc-card-name">جاهز للتغليف</span></div>
+        <div class="woc-count pending" id="cntPack">—</div>
+        <div class="woc-split" id="splitPack">&nbsp;</div>
+        <div class="woc-fail" id="failPack" style="display:none"></div>
+        <div class="woc-stamp">
+          <span class="woc-stamp-txt" id="stampPack">لسه ما اتحدّثش</span>
+          <button class="woc-stamp-btn" id="btnPack" onclick="event.preventDefault();event.stopPropagation();loadPackCount()">↻ تحديث</button>
+        </div>
+      </a>
+
+    </div>
+  </div>
+
+  <div class="woc-home-sec">
+    <div class="woc-home-sec-title">أدوات</div>
+    <div class="woc-home-grid tools">
+      <a class="woc-card" href="remove.html">
+        <div class="woc-card-top"><span class="woc-card-ico">🗑</span><span class="woc-card-name">حذف منتج</span></div>
+        <div class="woc-card-desc">شيل بند من أوردر COD غير مسدد — بتأكيدين إلزاميين</div>
+      </a>
+      <a class="woc-card" href="journey.html">
+        <div class="woc-card-top"><span class="woc-card-ico">🔎</span><span class="woc-card-name">رحلة الأوردر</span></div>
+        <div class="woc-card-desc">كل اللي حصل لأوردر واحد عبر التلات أدوات</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     §MODALS — About و Changelog (محتواهم بيفرق من صفحة للتانية،
+     فبيفضلوا في صفحتهم مش في الـ shell)
+     ══════════════════════════════════════════════════════════════ -->
+<div class="eco-overlay" id="aboutOverlay">
+  <div class="eco-modal">
+    <div class="eco-modal-hdr"><span>ℹ️ عن مركز عمليات المخزن</span><button class="modal-close-x" onclick="closeAbout()">✕</button></div>
+    <div class="eco-modal-body">
+      <details class="about-sec" open>
+        <summary>الأداة بتعمل إيه</summary>
+        <div class="about-sec-body">
+          <p><b>هب واحد لمحطة المخزن.</b> الموظف بيدخل مرة واحدة، وبعدين بيتنقّل بين
+             الطباعة والتغليف وحذف المنتج ورحلة الأوردر من غير ما يدخل تاني ومن غير
+             ما يفتح تبويبات متفرقة.</p>
+          <h4>الصفحات والـ Workers</h4>
+          <div id="aboutWorkers"></div>
+          <h4>الأعداد في الشاشة الرئيسية</h4>
+          <ul>
+            <li>بتتجاب <b>مرة واحدة بعد الدخول</b> والاتنين <b>بالتوازي</b> — مفيش أي polling هنا.
+                <code>get_ready_orders</code> بيصفّح كل الأوردرات ويصنّف S2 لكل واحد،
+                فـ polling معناه مضاعفة أتقل endpoint × عدد الأجهزة × طول اليوم.</li>
+            <li>قبل أول جلب ناجح العدد <b>«—» مش «0»</b> — «ما اتحدّثش» ≠ «مفيش شغل».</li>
+            <li>الفشل بيعرض <b>حالة فشل</b> مش صفر، والدخول للأداة <b>لسه شغّال</b>:
+                الطابور مش شرط للشغل، الموظف يقدر يسكن باركود عادي.</li>
+            <li>ختم الوقت بيتسجّل <b>حتى لو الطابور رجع فاضي</b>، وفي الفشل <b>مايتغيّرش</b>.</li>
+          </ul>
+        </div>
+      </details>
+      <details class="about-sec">
+        <summary>الجلسة — إيه اللي اتغيّر عن الأدوات المستقلة</summary>
+        <div class="about-sec-body">
+          <ul>
+            <li>الهوية في <code>sessionStorage</code> — بتعيش عبر التنقل بين الصفحات،
+                وبتموت مع <b>قفل التاب</b> ولكل تاب لوحده.</li>
+            <li>يعني <b>الريفريش مابيطلّعكش</b> (فرق مقصود عن الأدوات القديمة)، وقفل
+                التاب بيطلّعك.</li>
+            <li>مفيش انتهاء صلاحية بالوقت — أي timeout كان هيطلّع الموظف وهو بيغلّف.</li>
+            <li>ده <b>مابيضيفش</b> أي صلاحية: <code>employee</code> بيتبعت من العميل في كل
+                كتابة النهاردة كمان، والـ Worker بيتحقق من السر مش من هوية الموظف.
+                المحاسبة شرف مش إثبات — قبل الهب وبعده.</li>
+            <li>صف الدخول في D1 بيتسجّل باسم <code>warehouse_ops_center</code> —
+                <code>appId</code> بيتبعت مع <code>verify_employee</code> و<code>log_logout</code>
+                (محتاج Worker التغليف <b>2.5.0</b> على الأقل).</li>
+          </ul>
+        </div>
+      </details>
+      <details class="about-sec">
+        <summary>السر والإعدادات</summary>
+        <div class="about-sec-body">
+          <ul>
+            <li>سر واحد لمجموعة <code>warehouse_ops</code> — نفس القيمة على التلات Workers.</li>
+            <li>مفتاح التخزين <code>warehouse_ops_worker_secret</code>، وهو <b>الحاجة
+                الوحيدة</b> في التخزين المحلي (<code>warehouse_ops_worker_secret</code>) في الهب كله.</li>
+            <li>روابط الـ Workers <b>ثوابت في الكود</b> — مش حقول إعدادات (Standards #28).</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+    <div class="eco-modal-ftr"><button class="btn-ghost" onclick="closeAbout()">إغلاق</button></div>
+  </div>
+</div>
+
+<div class="eco-overlay" id="changelogOverlay">
+  <div class="eco-modal">
+    <div class="eco-modal-hdr"><span>📋 سجل التغييرات</span><button class="modal-close-x" onclick="closeChangelog()">✕</button></div>
+    <div class="eco-modal-body">
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.0.0</span>
+          <span class="cl-ver-date">05-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>أول إصدار للهب — الدخول مرة واحدة، وأربع صفحات تحت رابط واحد.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>الشاشة الرئيسية بعدّادَي الطوابير + ختم «آخر تحديث» لكل واحد.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>رحلة الأوردر</b> — صفحة جديدة بتدمج سجل التلات أدوات لأوردر واحد.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>تحذير الطباعة المزدوجة</b> — نافذة بأسماء الأوردرات اللي اتطبعت خلال آخر ٣٠ دقيقة، بأوقاتها وموظفيها.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>الهوية بقت في <code>sessionStorage</code> — الريفريش مابيطلّعش، وقفل التاب بيطلّع.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>صف الدخول في D1 بقى باسم <code>warehouse_ops_center</code> مش اسم أداة.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>زراري «عطلان» و«إعادة» في طابور التغليف بقوا صفحات جوّه الهب مش لينكات خارجية.</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="eco-modal-ftr"><button class="btn-ghost" onclick="closeChangelog()">إغلاق</button></div>
+  </div>
+</div>
+
+<div id="sharedMount"></div>
+
+<!-- 🔴 نسخة واحدة مضمّنة — ممنوع محتوى الملف ده يتنسخ هنا -->
+<script src="shared/shell.js"></script>
+<script>document.getElementById('sharedMount').innerHTML = wocSharedModals();</script>
+<script>
+// ══════════════════════════════════════════════════════════════
+// §PAGE — index.html
+// ══════════════════════════════════════════════════════════════
+//
+// ⚠️ الصفحة دي **مافيهاش حارس جلسة** — دي شاشة الدخول نفسها.
+//    باقي الصفحات بتنادي الحارس في أول سطر عندها.
+
+const { apiGet, apiPost } = wocApi(WOC_WORKERS.pack);   // الدخول على Worker التغليف — أكتر الأدوات استخدامًا
+const PAGE_WORKERS = ['printer', 'pack', 'remover'];
+
+// ══════════════════════════════════════════════════════════════
+// §AUTH-JS — Unified Login UI (منقولة من أداة التغليف)
+// ══════════════════════════════════════════════════════════════
+let allEmployees = [];
+let selectedUsername = '';
+let selectedDisplayName = '';
+let loginMode = 'employee';
+let pinDigits = [];
+let pendingNewPin = '';
+let isLoginBusy = false;
+let autoLoginTimer = null;
+
+async function loadEmployeesList() {
+  const sel = document.getElementById('loginSelect');
+  const status = document.getElementById('loginStatus');
+  clearLoginAlert();
+  sel.innerHTML = '<option value="">اختر اسمك للمتابعة</option>';
+  sel.disabled = true;
+  if (!isConfigured()) {
+    status.className = 'login-status warn';
+    status.textContent = 'الإعدادات غير مكتملة — افتح الإعدادات أولًا.';
+    renderLoginMode('employee');
+    return;
+  }
+  status.className = 'login-status info';
+  status.textContent = 'جارٍ تحميل قائمة الموظفين...';
+  try {
+    const data = await apiGet('get_employees');
+    const employees = data.employees || [];
+    allEmployees = employees;
+    employees.forEach(e => {
+      const o = document.createElement('option');
+      o.value = e.username; o.textContent = e.display_name;
+      sel.appendChild(o);
+    });
+    sel.disabled = false;
+    status.className = employees.length ? 'login-status info' : 'login-status warn';
+    status.textContent = employees.length ? '' : 'لا يوجد موظفون نشطون.';
+  } catch (err) {
+    status.className = 'login-status error';
+    status.textContent = 'تعذّر تحميل قائمة الموظفين.';
+    showLoginAlert(err.message || 'تعذّر تحميل قائمة الموظفين.');
+  }
+}
+
+// بيتنادى من `saveSettings` في الـ shell — الـ shell مابيعرفش شغل الصفحة
+function onSettingsSaved() {
+  checkWorkerVersion(PAGE_WORKERS);
+  loadEmployeesList();
+}
+
+async function handleEmployeeChange() {
+  if (isLoginBusy) return;
+  clearTimeout(autoLoginTimer);
+  clearLoginAlert();
+  resetPinState();
+  const sel = document.getElementById('loginSelect');
+  selectedUsername = sel.value || '';
+  selectedDisplayName = sel.options[sel.selectedIndex]?.textContent || '';
+  if (!selectedUsername) { renderLoginMode('employee'); return; }
+  renderLoginMode('employee');
+  document.getElementById('loginSub').textContent = 'جارٍ التحقق من الحساب...';
+  try {
+    const data = await apiGet('check_employee', { username: selectedUsername });
+    if (!data.exists)   { showLoginAlert('المستخدم غير موجود'); selectedUsername=''; sel.value=''; renderLoginMode('employee'); playBeep('error'); return; }
+    if (!data.isActive) { showLoginAlert('الحساب موقوف — تواصل مع المسؤول'); selectedUsername=''; sel.value=''; renderLoginMode('employee'); playBeep('error'); return; }
+    renderLoginMode(data.hasPin ? 'existing' : 'new');
+  } catch (err) {
+    showLoginAlert(err.message || 'تعذّر التحقق من الحساب');
+    selectedUsername=''; sel.value=''; renderLoginMode('employee'); playBeep('error');
+  }
+}
+
+function renderLoginMode(mode) {
+  loginMode = mode;
+  const pinZone = document.getElementById('pinZone');
+  const pinLabel = document.getElementById('pinLabel');
+  const primary = document.getElementById('loginPrimaryBtn');
+  const secondary = document.getElementById('loginSecondaryBtn');
+  const sub = document.getElementById('loginSub');
+  pinZone.classList.toggle('visible', mode !== 'employee');
+  primary.classList.toggle('visible', mode !== 'employee');
+  secondary.classList.toggle('visible', mode === 'confirm');
+  resetPinState(false);
+  clearLoginAlert();
+  // mode='employee' → الإرشاد جوّه placeholder القائمة، فالسطر ده بيفضل فاضي
+  if (mode === 'employee') { sub.textContent = ''; pinLabel.textContent = 'أدخل الـ PIN'; primary.textContent = 'دخول'; primary.disabled = true; return; }
+  if (mode === 'existing') { sub.textContent = 'أدخل الـ PIN'; pinLabel.textContent = 'أدخل الـ PIN'; primary.textContent = 'دخول'; primary.disabled = true; return; }
+  if (mode === 'new')      { sub.textContent = 'أول مرة؟ أنشئ PIN من 4 أرقام'; pinLabel.textContent = 'أنشئ PIN جديد'; primary.textContent = 'متابعة'; primary.disabled = true; return; }
+  if (mode === 'confirm')  { sub.textContent = 'أعد إدخال الـ PIN للتأكيد'; pinLabel.textContent = 'تأكيد الـ PIN'; primary.textContent = 'تأكيد وتسجيل الدخول'; primary.disabled = true; }
+}
+function restartNewPinFlow() { pendingNewPin = ''; renderLoginMode('new'); }
+function pressPinKey(key) {
+  if (isLoginBusy || loginMode === 'employee') return;
+  clearTimeout(autoLoginTimer);
+  if (key === 'clear')                              pinDigits = [];
+  else if (key === 'back')                          pinDigits.pop();
+  else if (/^\d$/.test(key) && pinDigits.length < 4) pinDigits.push(key);
+  clearLoginAlert(); renderPinSlots(); updatePrimaryLoginState();
+  if (pinDigits.length === 4) autoLoginTimer = setTimeout(() => handlePrimaryLoginAction(), 140);
+}
+function renderPinSlots() {
+  for (let i = 0; i < 4; i++) {
+    const slot = document.getElementById(`pinSlot${i}`);
+    slot.classList.remove('empty','filled','error');
+    slot.classList.add(i < pinDigits.length ? 'filled' : 'empty');
+  }
+}
+function resetPinState(clearPending = true) {
+  pinDigits = [];
+  if (clearPending && loginMode !== 'confirm') pendingNewPin = '';
+  renderPinSlots(); updatePrimaryLoginState();
+}
+function updatePrimaryLoginState() {
+  document.getElementById('loginPrimaryBtn').disabled = loginMode==='employee' || pinDigits.length!==4 || isLoginBusy;
+}
+async function handlePrimaryLoginAction() {
+  if (isLoginBusy || loginMode==='employee' || pinDigits.length!==4) return;
+  if (loginMode==='existing') { await verifyExistingPin(); return; }
+  if (loginMode==='new')      { pendingNewPin = pinDigits.join(''); renderLoginMode('confirm'); return; }
+  if (loginMode==='confirm')  { await registerNewPinAndLogin(); }
+}
+async function verifyExistingPin() {
+  const pin = pinDigits.join('');
+  setLoginBusy(true, '⏳ جاري التحقق...');
+  try {
+    // ⚠️ `appId` — من غيره الدخول بيتسجّل `pack_checker` والصف المسجّل
+    //    لـ `warehouse_ops_center` في `ecommoda-constants` §7 يفضل فاضي.
+    const data = await apiPost('verify_employee', { username: selectedUsername, pin, appId: WOC_APP_ID });
+    if (!data.ok) { await presentLoginPinError('PIN خطأ — حاول مرة أخرى'); return; }
+    await finishLogin(selectedUsername, data.displayName || selectedDisplayName, data.logged);
+  } catch (err) { await presentLoginPinError(err.message || 'PIN خطأ'); }
+  finally { setLoginBusy(false); }
+}
+async function registerNewPinAndLogin() {
+  const confirmPin = pinDigits.join('');
+  if (confirmPin !== pendingNewPin) { await presentLoginPinError('الـ PIN غير متطابق — حاول مرة أخرى'); pendingNewPin=''; renderLoginMode('new'); return; }
+  setLoginBusy(true, '⏳ جاري التسجيل...');
+  try {
+    const reg = await apiPost('register_pin', { username: selectedUsername, pin: pendingNewPin });
+    if (reg && reg.ok === false) { await presentLoginPinError(reg.error || 'تعذّر تسجيل الـ PIN'); return; }
+    const data = await apiPost('verify_employee', { username: selectedUsername, pin: pendingNewPin, appId: WOC_APP_ID });
+    if (!data.ok) { await presentLoginPinError(data.error || 'تعذّر تسجيل الدخول'); return; }
+    await finishLogin(selectedUsername, data.displayName || selectedDisplayName, data.logged);
+  } catch (err) { await presentLoginPinError(err.message || 'تعذّر تسجيل الـ PIN'); }
+  finally { setLoginBusy(false); }
+}
+function setLoginBusy(active, text = '') {
+  isLoginBusy = active;
+  const primary = document.getElementById('loginPrimaryBtn');
+  document.querySelectorAll('#pinKeypad .pin-key').forEach(b => b.disabled = active);
+  document.getElementById('loginSelect').disabled = active || !isConfigured();
+  if (active) { primary.dataset.prevText = primary.textContent; primary.textContent = text || primary.textContent; primary.disabled = true; }
+  else { primary.textContent = primary.dataset.prevText || primary.textContent; delete primary.dataset.prevText; updatePrimaryLoginState(); }
+}
+async function presentLoginPinError(message) {
+  playBeep('error'); showLoginAlert(message);
+  const slots = document.getElementById('pinSlots');
+  slots.classList.add('shake');
+  for (let i = 0; i < 4; i++) document.getElementById(`pinSlot${i}`).classList.add('error');
+  await new Promise(r => setTimeout(r, 760));
+  slots.classList.remove('shake'); pinDigits = []; renderPinSlots(); updatePrimaryLoginState();
+}
+function showLoginAlert(msg) { const a=document.getElementById('loginAlert'); a.textContent=msg; a.classList.add('visible'); }
+function clearLoginAlert()   { const a=document.getElementById('loginAlert'); a.textContent=''; a.classList.remove('visible'); }
+
+// حارس الكيبورد — بيقرا settingsOverlay (الاسم القديم مش موجود في الـ DOM أصلاً)
+document.addEventListener('keydown', e => {
+  const loginOverlay = document.getElementById('loginOverlay');
+  const settingsOpen = document.getElementById('settingsOverlay').classList.contains('open');
+  if (loginOverlay.classList.contains('hidden') || settingsOpen || isLoginBusy) return;
+  if (/^\d$/.test(e.key))                      { e.preventDefault(); pressPinKey(e.key); return; }
+  if (e.key === 'Backspace')                   { e.preventDefault(); pressPinKey('back'); return; }
+  if (e.key === 'Delete' || e.key === 'Escape'){ e.preventDefault(); pressPinKey('clear'); return; }
+  if (e.key === 'Enter')                       { e.preventDefault(); handlePrimaryLoginAction(); }
+});
+
+// 🔴 `next` بيتفحص بـ regex **قبل** التحويل. من غير الفحص،
+//    `?next=https://evil…` بيحوّل الموظف لبرّه الهب.
+//    الـ regex بيسمح باسم ملف محلي + query بس.
+const NEXT_RE = /^[a-z]+\.html(\?[^#]*)?$/;
+
+async function finishLogin(username, displayName, logged) {
+  setSession(username, displayName);
+  if (logged === false) showToast('الدخول تم بس تسجيله في السجل فشل', 'warning', 5000);
+  playBeep('success');
+  const next = new URLSearchParams(location.search).get('next');
+  if (next && NEXT_RE.test(next)) { location.replace(next); return; }
+  showHome();
+}
+
+// ══════════════════════════════════════════════════════════════
+// §HOME-JS — الشاشة الرئيسية
+// ══════════════════════════════════════════════════════════════
+const TYPE_LABEL = { S1: 'عادي', S2: 'استبدال/استرجاع' };
+
+function showHome() {
+  const s = getSession();
+  if (!s) return;
+  document.getElementById('loginOverlay').classList.add('hidden');
+  document.getElementById('headerMount').innerHTML = wocHeader({
+    icon: '🏭', title: 'مركز عمليات المخزن', subtitle: 'EcomModa — محطة المخزن',
+    home: false,          // ⚠️ إحنا **في** الشاشة الرئيسية
+    session: s,
+  });
+  document.getElementById('appRoot').style.display = '';
+  renderVersionUI();
+  renderAboutWorkers();
+  showToast(`أهلاً ${s.displayName} 👋`, 'success');
+  loadCounts();
+}
+
+// الأعداد — الاتنين **بالتوازي**، و`allSettled` مش `all`:
+// Workers مختلفين = isolates مختلفين = توازي حقيقي، وفشل طابور
+// **مايخفيش** التاني.
+function loadCounts() { Promise.allSettled([loadPrintCount(), loadPackCount()]); }
+
+function setCount(el, splitEl, value, split) {
+  const c = document.getElementById(el);
+  c.textContent = value === null ? '—' : String(value);
+  c.classList.toggle('pending', value === null);
+  c.classList.remove('failed');
+  document.getElementById(splitEl).innerHTML = split || '&nbsp;';
+}
+function setFail(failEl, stampEl, btnEl, msg) {
+  // ⚠️ الختم **مايتغيّرش** في الفشل — ما نقولش للموظف إن القايمة دي
+  //    جديدة وهي مش جديدة.
+  const f = document.getElementById(failEl);
+  f.style.display = '';
+  f.textContent = `⚠️ ${msg}`;
+  document.getElementById(btnEl).disabled = false;
+}
+function clearFail(failEl) { const f = document.getElementById(failEl); f.style.display = 'none'; f.textContent = ''; }
+
+// ⚠️ الختم بيتسجّل **حتى لو الطابور رجع فاضي** — «اتحدّث ورجع صفر»
+//    معلومة، و«ما اتحدّثش» معلومة تانية خالص.
+function stamp(stampEl, at) {
+  document.getElementById(stampEl).textContent = `آخر تحديث ${sinceText(at)}`;
+}
+
+async function loadPrintCount() {
+  const btn = document.getElementById('btnPrint');
+  btn.disabled = true;
+  try {
+    const data = await wocApi(WOC_WORKERS.printer).apiPath('/orders', {});
+    cacheSet(WOC_CACHE_PRINT, data);
+    const orders = data.orders || [];
+    const s1 = orders.filter(o => o.type === 'S1').length;
+    const s2 = orders.filter(o => o.type === 'S2').length;
+    clearFail('failPrint');
+    setCount('cntPrint', 'splitPrint', orders.length,
+      `${TYPE_LABEL.S1} ${s1}<span class="sep">·</span>${TYPE_LABEL.S2} ${s2}`);
+    stamp('stampPrint', new Date().toISOString());
+  } catch (err) {
+    setFail('failPrint', 'stampPrint', 'btnPrint', err.message || 'تعذّر جلب طابور الطباعة');
+    document.getElementById('cntPrint').classList.add('failed');
+  } finally { btn.disabled = false; }
+}
+
+async function loadPackCount() {
+  const btn = document.getElementById('btnPack');
+  btn.disabled = true;
+  try {
+    const data = await wocApi(WOC_WORKERS.pack).apiGet('get_ready_orders');
+    cacheSet(WOC_CACHE_PACK, data);
+    const orders = data.orders || [];
+    const s1 = orders.filter(o => o.orderType === 'S1').length;
+    const s2 = orders.filter(o => o.orderType === 'S2').length;
+    clearFail('failPack');
+    setCount('cntPack', 'splitPack', data.total ?? orders.length,
+      `${TYPE_LABEL.S1} ${s1}<span class="sep">·</span>${TYPE_LABEL.S2} ${s2}`);
+    stamp('stampPack', new Date().toISOString());
+  } catch (err) {
+    setFail('failPack', 'stampPack', 'btnPack', err.message || 'تعذّر جلب طابور التغليف');
+    document.getElementById('cntPack').classList.add('failed');
+  } finally { btn.disabled = false; }
+}
+
+// ⚠️ الحلقة دي مكرّرة في الخمس صفحات **عن قصد**: `WOC_WORKERS` و`cmpVersion`
+//    في الـ shell، بس فحص Step 9 بيطلب وجودهم في كل صفحة، والقايمة نفسها
+//    (`PAGE_WORKERS`) بتفرق من صفحة للتانية.
+async function renderAboutWorkers() {
+  const box = document.getElementById('aboutWorkers');
+  if (!box) return;
+  const rows = await Promise.all(PAGE_WORKERS.map(async k => {
+    const w = WOC_WORKERS[k];
+    let got = '—', mark = '⏳';
+    try {
+      const cfg = await wocApi(w).apiGet('get_config');
+      got = cfg.version || cfg.WORKER_VERSION || '—';
+      mark = cmpVersion(got, w.min) < 0 ? '⚠️' : '✅';
+    } catch { mark = '❌'; got = 'تعذّر الوصول'; }
+    return `<tr><td>${mark} ${esc(w.label)}</td><td><code>${esc(got)}</code></td><td><code>${esc(w.min)}</code></td></tr>`;
+  }));
+  box.innerHTML =
+    `<table><tr><th>الأداة</th><th>نسخة الـ Worker</th><th>الحد الأدنى</th></tr>${rows.join('')}</table>
+     <p>نسخة الواجهة (الهب كله): <code>${esc(TOOL_VERSION)}</code></p>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// §INIT
+// ══════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  renderVersionUI();
+  // جلسة شغّالة؟ يبقى الريفريش مايطلّعش — ودي الوجهة لو جاي من `next`
+  if (getSession()) {
+    const next = new URLSearchParams(location.search).get('next');
+    if (next && NEXT_RE.test(next)) { location.replace(next); return; }
+    showHome();
+    checkWorkerVersion(PAGE_WORKERS);
+    return;
+  }
+  loadEmployeesList();
+  checkWorkerVersion(PAGE_WORKERS);
+});
+</script>
+</body>
+</html>
