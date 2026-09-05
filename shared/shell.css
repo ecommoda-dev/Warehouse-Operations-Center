@@ -1,0 +1,260 @@
+/* ══════════════════════════════════════════════════════════════
+   shared/shell.css — مركز عمليات المخزن (Warehouse-Operations-Center)
+   skills: html-builder v6.3.0 · constants v1.6.0 — 05-09-2026
+   ══════════════════════════════════════════════════════════════
+
+   🔴 قاعدة الأسبقية — أهم قاعدة في الريبو ده:
+
+       <link rel="stylesheet" href="shared/shell.css">
+       <style> /* CSS الصفحة — بيغلب shell.css عند أي تعارض */ </style>
+
+   الملف ده فيه **الـ chrome بس**: التوكنز · الريسِت · الهيدر · التوست ·
+   المودالات · الأزرار · كروت الشاشة الرئيسية. أي CSS خاص بأداة
+   (جداول · فلاتر · `.rdy-*` · `.act-btn` · `.state-box` · `.ms-*` ·
+   `.tbl-*` · `.range-preset-*`) **بيفضل في صفحته**. الصفحة بتيجي بعد
+   الـ shell فقاعدتها بتغلب تلقائيًا — وده اللي بيلغي الحاجة لحل الـ ٤٦
+   تعارض CSS بين الأدوات التلاتة يدويًا.
+
+   🔴 كتلة التوكنز معرّفة هنا **بس**. أي كتلة توكنز في صفحة = التوكنز اتفرّقت.
+      الاستثناء الوحيد المسموح: `remove.html` بتعرّف `--container-max`
+      لوحدها (Tier M) وخلاص.
+
+   المصدر: `Orders-Packing-Checker/index.html` v2.6.2 — أحدث نسخة وأكتر
+   التوكنز (٥١)، وفيها `.btn-red` (Standards #38) و`--crit*` و`--orange*`
+   و`--focus-ring*` و`--overlay-scrim`.
+   ══════════════════════════════════════════════════════════════ */
+
+:root {
+  --bg:             #f3f4f6;
+  --surface:        #ffffff;
+  --surface-2:      #f9fafb;
+  --border:         #e5e7eb;
+  --border-strong:  #d1d5db;
+  --text-primary:   #111827;
+  --text-secondary: #6b7280;
+  --text-muted:     #6b7280;
+  --text-mid:       #374151;
+  --accent:         #2563eb;
+  --accent-light:   #eff6ff;
+  --accent-dark:    #1d4ed8;
+  --green:          #16a34a;
+  --green-light:    #f0fdf4;
+  --green-border:   #86efac;
+  --red:            #dc2626;
+  --red-light:      #fef2f2;
+  --red-border:     #fca5a5;
+  --amber:          #d97706;
+  --amber-light:    #fffbeb;
+  --amber-border:   #fde68a;
+  --purple:         #7c3aed;
+  --purple-light:   #f5f3ff;
+  --purple-border:  #c4b5fd;
+  --orange:         #ea580c;
+  --orange-light:   #fff7ed;
+  --orange-border:  #fed7aa;
+  --orange-dark:    #9a3412;
+  /* سلّم التأخير في «الوقت منذ الطباعة» — أعلى درجة (٧ أيام فأكتر) */
+  --crit:           #7f1d1d;
+  --crit-light:     #fee2e2;
+  --crit-border:    #f87171;
+
+  --surface-hover:      #f0f4f8;
+  --neutral-dark:       #1a1d27;
+  --on-accent:          #ffffff;
+  --accent-border:      #bfdbfe;
+  --accent-hover:       #dbeafe;
+  --accent-hover-border:#93c5fd;
+  --green-dark:         #15803d;
+  --red-dark:           #b91c1c;
+  --amber-dark:         #92400e;
+  --purple-dark:        #4c1d95;
+  --overlay-scrim:      rgba(17,24,39,.88);
+  /* حلقات الفوكس — لون المربع نفسه (قاعدة: صفر hex حرفي خارج كتلة التوكنز) */
+  --focus-ring:         rgba(37,99,235,.12);
+  --focus-ring-red:     rgba(220,38,38,.12);
+  --focus-ring-neutral: rgba(107,114,128,.14);
+
+  /* من `Order-Printer` — ألوان الفاتورة. ⚠️ HTML الفاتورة جوّه الـ iframe
+     بيفضل بألوانه الحرفية (مستند الـ iframe مالوش وصول للتوكنز) —
+     استثناء موثّق من Standards #35. متحاولش تصلّحه. */
+  --print-ink:      #000000;
+  --print-paper:    #ffffff;
+
+  --radius:         12px;
+  --radius-sm:      8px;
+  --shadow:         0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  /* Tier L — الأداة فيها جدول سجل بأعمدة كتير + شاشة فحص بعمودين */
+  /* Tier L — الافتراضي للهب (جداول كثيفة في الطباعة والتغليف).
+     `remove.html` و`journey.html` بينزّلوا Tier M (1200px) في ستايلهم. */
+  --container-max:  1400px;
+  --font-body:      'Noto Sans Arabic', -apple-system, sans-serif;
+  --font-mono:      'Noto Sans Arabic', -apple-system, sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary);min-height:100vh;padding:12px;direction:rtl}
+.container{max-width:var(--container-max);margin:0 auto}
+
+/* ══ الهيدر الموحّد ══ */
+.app-header{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;margin-bottom:12px;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.app-title{display:flex;align-items:center;gap:10px}
+.app-icon{font-size:22px}
+.app-title-text h1{font-size:15px;font-weight:700;line-height:1.2}
+.app-title-text span{font-size:11px;color:var(--text-muted)}
+.app-header-btns{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.hbtn{display:flex;align-items:center;gap:5px;padding:6px 12px;border:1.5px solid var(--border-strong);background:var(--surface);border-radius:var(--radius-sm);font-family:inherit;font-size:12px;font-weight:600;color:var(--text-secondary);cursor:pointer;transition:all .15s;white-space:nowrap}
+.hbtn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
+.hbtn:disabled{opacity:.5;cursor:not-allowed}
+.hbtn.settings-configured{border-color:var(--green);color:var(--green);background:var(--green-light)}
+.hbtn.ver-btn{border-color:var(--accent-border);color:var(--accent-dark);background:var(--accent-light);font-family:var(--font-mono);font-weight:700}
+.hbtn.ver-btn:hover{background:var(--accent-hover);border-color:var(--accent-hover-border);color:var(--accent-dark)}
+.hbtn.active-user{border-color:var(--green);color:var(--green);background:var(--green-light)}
+.hbtn.active-user:hover{border-color:var(--red);color:var(--red);background:var(--red-light)}
+
+/* ── Toast ── */
+.toast-container{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{padding:10px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;color:var(--on-accent);box-shadow:0 4px 12px rgba(0,0,0,.2);animation:toastIn .3s ease;max-width:320px}
+@keyframes toastIn{from{transform:translateX(100%);opacity:0}to{transform:none;opacity:1}}
+.toast-success{background:var(--green)}
+.toast-error{background:var(--red)}
+.toast-warning{background:var(--amber)}
+.toast-neutral{background:var(--neutral-dark)}
+
+
+/* ── Settings Modal ── */
+.settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}
+.settings-overlay.open{display:flex}
+.settings-modal{background:var(--surface);border-radius:var(--radius);width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,.18);animation:modalIn .2s ease;max-height:88vh;display:flex;flex-direction:column}
+@keyframes modalIn{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+.settings-modal-hdr{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border);font-size:15px;font-weight:700;flex-shrink:0}
+.modal-close-x{background:var(--red-light);border:1.5px solid var(--red-border);color:var(--red);font-size:14px;font-weight:700;line-height:1;padding:4px 11px;border-radius:var(--radius-sm);font-family:inherit;cursor:pointer;transition:all .15s}
+.modal-close-x:hover{background:var(--red);color:var(--on-accent);border-color:var(--red)}
+.settings-modal-body{padding:20px;display:flex;flex-direction:column;gap:14px;overflow-y:auto}
+.settings-field{display:flex;flex-direction:column;gap:5px}
+.settings-label{font-size:10px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px}
+.settings-input{border:1.5px solid var(--border-strong);border-radius:var(--radius-sm);padding:9px 11px;font-family:var(--font-mono);font-size:12px;color:var(--text-primary);outline:none;width:100%;direction:ltr;background:var(--surface);transition:border-color .15s}
+.settings-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+.settings-static{font-family:var(--font-mono);font-size:11.5px;color:var(--text-secondary);background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;direction:ltr;word-break:break-all}
+.settings-modal-ftr{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
+.btn-modal-cancel{padding:8px 14px;background:transparent;color:var(--text-secondary);border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-family:inherit;font-size:12px;cursor:pointer}
+.btn-modal-cancel:hover{color:var(--text-primary)}
+.btn-modal-save{padding:8px 18px;background:var(--accent);color:var(--on-accent);border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s}
+.btn-modal-save:hover{background:var(--accent-dark)}
+.btn-outline{padding:8px 14px;border:1.5px solid var(--border-strong);background:var(--surface);color:var(--text-primary);border-radius:var(--radius-sm);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
+.diag-line{display:flex;gap:6px;align-items:flex-start;line-height:1.7}
+.diag-line .diag-detail{color:var(--text-secondary);word-break:break-word}
+
+/* ── Modal Shell (About / Changelog / أي نافذة طويلة) ── */
+.eco-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}
+.eco-overlay.open{display:flex}
+.eco-modal{background:var(--surface);border-radius:var(--radius);width:90%;max-width:calc(var(--container-max) * .9);max-height:85vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.18);overflow:hidden}
+.eco-modal-hdr{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border);font-size:14px;font-weight:700;background:var(--surface);flex-shrink:0}
+.eco-modal-body{overflow-y:auto;padding:16px 20px;flex:1}
+.eco-modal-ftr{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
+
+/* ── Changelog ── */
+.cl-version-block{margin-bottom:4px}
+.cl-version-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.cl-ver-badge{font-family:var(--font-mono);font-size:12px;font-weight:700;padding:3px 10px;border-radius:5px;background:var(--accent-light);color:var(--accent-dark);border:1px solid var(--accent-border);direction:ltr}
+.cl-ver-badge.old{background:var(--surface-2);color:var(--text-secondary);border-color:var(--border-strong)}
+.cl-ver-date{font-size:12px;color:var(--text-muted);font-family:var(--font-mono);direction:ltr}
+.cl-items{list-style:none;display:flex;flex-direction:column;gap:5px;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid var(--border)}
+.cl-version-block:last-child .cl-items{border-bottom:none;padding-bottom:0;margin-bottom:0}
+.cl-item{display:flex;gap:8px;font-size:13px;align-items:flex-start}
+.cl-tag{font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap;flex-shrink:0;align-self:flex-start;margin-top:2px}
+.cl-tag.new{background:var(--green-light);color:var(--green-dark)}
+.cl-tag.fix{background:var(--red-light);color:var(--red)}
+.cl-tag.change{background:var(--amber-light);color:var(--amber-dark)}
+
+/* ── About ── */
+.about-sec{border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:10px;overflow:hidden}
+.about-sec > summary{padding:11px 14px;font-weight:700;font-size:14px;background:var(--surface-2);cursor:pointer;user-select:none}
+.about-sec-body{padding:14px;display:flex;flex-direction:column;gap:10px;font-size:13px;line-height:1.75}
+.about-sec-body h4{font-size:12px;font-weight:700;color:var(--accent);margin-top:4px}
+.about-sec-body ol,.about-sec-body ul{padding-inline-start:20px;display:flex;flex-direction:column;gap:4px}
+.about-sec-body code{font-family:var(--font-mono);font-size:11px;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;direction:ltr;display:inline-block}
+.about-sec-body table{width:100%;border-collapse:collapse;font-size:12px}
+.about-sec-body th,.about-sec-body td{padding:6px 8px;border-bottom:1px solid var(--border);text-align:right}
+.about-pre{font-family:var(--font-mono);font-size:11px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;overflow-x:auto;white-space:pre;direction:ltr;text-align:left;line-height:1.65;margin:0}
+
+/* ── Main Tabs — عرض كامل + تقسيم متساوٍ ── */
+.main-tabs-bar{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:6px;margin-bottom:14px;box-shadow:var(--shadow)}
+.main-tab-btn{flex:1;padding:9px 10px;border:2px solid transparent;background:transparent;border-radius:var(--radius-sm);font-family:inherit;font-size:12px;font-weight:600;color:var(--text-secondary);cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+.main-tab-btn:hover{background:var(--surface-2);color:var(--text-primary)}
+.main-tab-btn.active{background:var(--accent);color:var(--on-accent);border-color:var(--accent);box-shadow:0 2px 8px rgba(37,99,235,.25)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+.warn-banner{margin:0 0 12px;padding:10px 14px;border-radius:9px;background:var(--amber-light);border:1px solid var(--amber);color:var(--amber-dark);font-size:13px;font-weight:600;line-height:1.7}
+.export-warn{margin:0 0 12px;padding:10px 14px;border-radius:9px;background:var(--amber-light);border:1px solid var(--amber);color:var(--amber);font-size:13px;font-weight:600;line-height:1.7}
+
+/* ══ الأزرار المشتركة ══ */
+.btn-ghost{padding:9px 18px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--surface);color:var(--text-primary);font-family:var(--font-body);font-size:13px;font-weight:600;cursor:pointer;transition:background .15s}
+.btn-ghost:hover{background:var(--bg)}
+.btn-primary{padding:9px 18px;border-radius:var(--radius-sm);border:none;background:var(--accent);color:var(--on-accent);font-family:var(--font-body);font-size:13px;font-weight:700;cursor:pointer;transition:background .15s}
+.btn-primary:hover{background:var(--accent-dark)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-green{padding:9px 18px;border-radius:var(--radius-sm);border:none;background:var(--green);color:var(--on-accent);font-family:var(--font-body);font-size:13px;font-weight:700;cursor:pointer;transition:background .15s}
+.btn-green:hover{background:var(--green-dark)}
+.btn-red{padding:9px 18px;border-radius:var(--radius-sm);border:none;background:var(--red);color:var(--on-accent);font-family:var(--font-body);font-size:13px;font-weight:700;cursor:pointer;transition:background .15s}
+.btn-red:hover{background:var(--red-dark)}
+
+/* ══ روابط الأوردر (قاعدة #20) ══ */
+.order-link{font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--accent);text-decoration:none;direction:ltr;display:inline-block}
+.order-link:hover{text-decoration:underline;color:var(--accent-dark)}
+.order-num{font-family:var(--font-mono);font-size:12.5px;font-weight:700;direction:ltr;display:inline-block}
+.order-name{font-family:var(--font-mono);font-size:20px;font-weight:700;direction:ltr;display:inline-block;color:var(--accent);text-decoration:none}
+.order-name[href]:hover{text-decoration:underline;color:var(--accent-dark)}
+.order-name.no-link{color:var(--text-primary);cursor:default}
+
+/* ══ Misc ══ */
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-area{text-align:center;padding:40px}
+.empty-state{text-align:center;padding:40px;color:var(--text-muted);font-size:14px}
+
+/* ══════════════════════════════════════════════════════════════
+   §WOC-HOME — كروت الشاشة الرئيسية (الهب بس)
+   الصف الأول: طوابير بعدّاد حيّ · الصف التاني: أدوات بلا عدّاد.
+   ⚠️ أداة جديدة بتدخل الصف التاني افتراضيًا — عدّاد حيّ = جلب تقيل
+      عند كل دخول، وماياخدهوش إلا اللي عنده طابور حقيقي وجلبه رخيص.
+   ══════════════════════════════════════════════════════════════ */
+.woc-home-sec{margin-bottom:16px}
+.woc-home-sec-title{font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.woc-home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.woc-home-grid.tools{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+
+.woc-card{display:flex;flex-direction:column;gap:10px;text-align:right;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px;font-family:var(--font-body);color:var(--text-primary);text-decoration:none;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .06s}
+.woc-card:hover{border-color:var(--accent);box-shadow:0 6px 18px rgba(37,99,235,.12)}
+.woc-card:active{transform:translateY(1px)}
+.woc-card:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--focus-ring)}
+
+.woc-card-top{display:flex;align-items:center;gap:10px}
+.woc-card-ico{font-size:24px;line-height:1}
+.woc-card-name{font-size:15px;font-weight:800}
+.woc-card-desc{font-size:12px;color:var(--text-secondary);font-weight:600;line-height:1.6}
+
+/* العدّاد — «—» قبل أول جلب ناجح، مش «0».
+   «ما اتحدّثش» ≠ «مفيش شغل» (نفس قاعدة `rdySetCounts(null,…)`). */
+.woc-count{font-family:var(--font-mono);font-size:38px;font-weight:800;line-height:1;color:var(--accent);direction:ltr;text-align:center;padding:4px 0}
+.woc-count.pending{color:var(--text-muted)}
+.woc-count.failed{color:var(--red);font-size:26px}
+.woc-split{font-size:12px;font-weight:700;color:var(--text-secondary);text-align:center;direction:rtl}
+.woc-split .sep{color:var(--border-strong);margin:0 6px}
+
+/* ختم «آخر تحديث» — بيتسجّل حتى لو الطابور رجع فاضي.
+   وفي الفشل **مايتغيّرش**: ما نقولش للموظف إن القايمة جديدة وهي مش جديدة. */
+.woc-stamp{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid var(--border);padding-top:9px;font-size:11px;font-weight:700;color:var(--text-muted);font-family:var(--font-mono);direction:ltr}
+.woc-stamp .woc-stamp-txt{direction:rtl;font-family:var(--font-body)}
+.woc-stamp-btn{padding:4px 10px;border:1.5px solid var(--border-strong);background:var(--surface);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:11px;font-weight:700;color:var(--text-secondary);cursor:pointer;transition:all .15s}
+.woc-stamp-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
+.woc-stamp-btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* حالة الفشل — ⚠️ + «حاول تاني»، والدخول للأداة **لسه شغّال**:
+   الطابور مش شرط للشغل، الموظف يقدر يسكن باركود عادي. */
+.woc-fail{display:flex;align-items:center;gap:7px;background:var(--red-light);border:1px solid var(--red-border);color:var(--red);border-radius:var(--radius-sm);padding:8px 10px;font-size:12px;font-weight:700;line-height:1.6}
+
+/* شريط الرجوع للطابور — بيظهر لما الصفحة اتفتحت من جدول التغليف */
+.woc-back-bar{display:none;align-items:center;justify-content:space-between;gap:10px;background:var(--accent-light);border:1px solid var(--accent-border);color:var(--accent-dark);border-radius:var(--radius-sm);padding:9px 14px;margin-bottom:12px;font-size:13px;font-weight:700}
+.woc-back-bar.visible{display:flex}
