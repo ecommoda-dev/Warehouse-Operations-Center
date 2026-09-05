@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<!-- skills: html-builder v6.3.0 · worker-builder v2.0.0 · constants v1.6.0 · order-lifecycle v1.2.0 — 05-09-2026 -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>حذف منتج من الأوردر — مركز عمليات المخزن</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+
+  <!-- 🔴 قاعدة الأسبقية: الـ shell أولاً، وستايل الصفحة بعده وبيغلب -->
+  <link rel="stylesheet" href="shared/shell.css">
+<style>
+/* ⚠️ الاستثناء الوحيد المسموح لكتلة توكنز في صفحة: `--container-max` لوحدها.
+   الصفحة دي Tier M — مفيهاش جدول كثيف، والعرض الكامل بيبعّد الحقول عن بعض. */
+:root { --container-max: 1200px; }
+
+
+/* ⚠️ الـ chrome (التابات · الهيدر · الإعدادات · شِل المودالات · التوست ·
+   روابط الأوردر) اتشال من هنا — كله في `shared/shell.css`. النسخة اللي
+   كانت هنا كان فيها ٢٥ hex حرفي (مخالفة Standards #35) ورّثتها الأداة
+   المستقلة. */
+/* ── Confirm Remove Modal (eco-modal shell + info rows + gate checkboxes) ── */
+.confirm-info-row { display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--border); font-size:13px; }
+.confirm-info-row:last-of-type { border-bottom:none; }
+.confirm-info-label { color:var(--text-secondary); font-weight:600; }
+.confirm-info-value { font-weight:700; color:var(--text-primary); }
+.confirm-check-group { display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+.confirm-check-item { display:flex; align-items:flex-start; gap:9px; padding:11px 12px; border:1.5px solid var(--border-strong); border-radius:var(--radius-sm); font-size:13px; font-weight:600; line-height:1.6; cursor:pointer; transition:all .15s; background:var(--surface-2); }
+.confirm-check-item:has(input:checked) { border-color:var(--green); background:var(--green-light); color:var(--green-dark3d; }
+.confirm-check-item input[type=checkbox] { width:17px; height:17px; margin-top:1px; accent-color:var(--green); cursor:pointer; flex-shrink:0; }
+.btn-confirm-ok { padding:9px 18px; background:var(--red); color:var(--on-accent); border:none; border-radius:var(--radius-sm); font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; transition:background .15s, opacity .15s; }
+.btn-confirm-ok:hover:not(:disabled) { background:var(--red-dark); }
+.btn-confirm-ok:disabled { opacity:.45; cursor:not-allowed; }
+
+/* ── Tool-specific: order search + result cards ─────────────── */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; margin-bottom:14px; }
+.search-row { display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end; }
+.field-input { border:1.5px solid var(--border-strong); border-radius:var(--radius-sm); padding:9px 11px; font-family:inherit; font-size:13px; color:var(--text-primary); background:var(--surface); outline:none; transition:border-color .15s; }
+.field-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(37,99,235,.08); }
+.field-input.has-value { border-color:var(--accent); background:var(--accent-light); }
+.btn-primary { padding:10px 20px; background:var(--accent); color:var(--on-accent); border:none; border-radius:var(--radius-sm); font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; transition:background .15s; }
+.btn-primary:hover:not(:disabled) { background:var(--accent-dark); }
+.btn-primary:disabled { opacity:.5; cursor:not-allowed; }
+
+.order-summary { display:flex; flex-wrap:wrap; gap:16px; align-items:center; margin-bottom:8px; }
+.order-summary .osum-name { font-size:16px; }
+.osum-chip { font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; background:var(--surface-2); border:1px solid var(--border); color:var(--text-secondary); }
+.osum-chip.customer { color:var(--text-primary); }
+
+.banner { border-radius:var(--radius-sm); padding:12px 14px; font-size:13px; font-weight:600; line-height:1.7; margin-top:8px; }
+.banner-green { background:var(--green-light); border:1px solid var(--green-border); color:var(--green-dark); }
+.banner-red { background:var(--red-light); border:1px solid var(--red-border); color:var(--red); }
+.banner-amber { background:var(--amber-light); border:1px solid var(--amber-border); color:var(--amber-dark); }
+
+.remove-opts { display:flex; gap:16px; flex-wrap:wrap; align-items:center; margin:10px 0 4px; font-size:12px; color:var(--text-secondary); }
+.remove-opts label { display:flex; align-items:center; gap:6px; cursor:pointer; }
+.remove-opts input[type=checkbox] { width:15px; height:15px; accent-color:var(--accent); cursor:pointer; }
+.remove-opts label.opt-locked { cursor:not-allowed; opacity:.75; }
+.remove-opts label.opt-locked input[type=checkbox] { cursor:not-allowed; accent-color:var(--red); }
+.opt-locked-note { font-size:10px; color:var(--red); font-weight:700; }
+
+.item-card { display:flex; align-items:center; gap:12px; border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px; margin-bottom:8px; background:var(--surface-2); }
+.item-thumb { width:48px; height:48px; border-radius:6px; background:var(--surface); border:1px solid var(--border); object-fit:cover; flex-shrink:0; }
+.item-thumb-ph { width:48px; height:48px; border-radius:6px; background:var(--surface); border:1px solid var(--border); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:18px; color:var(--text-muted); }
+.item-info { flex:1; min-width:0; }
+.item-title { font-size:13px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.item-meta { font-size:11px; color:var(--text-muted); font-family:var(--font-mono); direction:ltr; text-align:right; margin-top:2px; }
+.item-blocked-reason { font-size:11px; color:var(--red); margin-top:2px; }
+.btn-remove { padding:8px 14px; background:var(--red-light); color:var(--red); border:1.5px solid var(--red-border); border-radius:var(--radius-sm); font-family:inherit; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; transition:all .15s; flex-shrink:0; }
+.btn-remove:hover:not(:disabled) { background:var(--red); color:var(--on-accent); }
+.btn-remove:disabled { opacity:.45; cursor:not-allowed; background:var(--surface-2); color:var(--text-muted); border-color:var(--border); }
+
+.result-box { border-radius:var(--radius-sm); padding:14px; margin-top:10px; font-size:13px; line-height:1.8; }
+.result-box.success { background:var(--green-light); border:1px solid var(--green-border); }
+.result-box.warning { background:var(--amber-light); border:1px solid var(--amber-border); }
+.result-box.error   { background:var(--red-light); border:1px solid var(--red-border); }
+.result-badge { display:inline-block; font-size:12px; font-weight:800; padding:3px 10px; border-radius:20px; margin-bottom:6px; }
+.result-badge.success { background:var(--green); color:var(--on-accent); }
+.result-badge.warning { background:var(--amber); color:var(--on-accent); }
+.result-badge.error   { background:var(--red); color:var(--on-accent); }
+.result-actions { margin-top:6px; font-size:12px; color:var(--text-secondary); }
+.result-actions li { margin-inline-start:18px; }
+
+/* ── Log Tab table ────────────────────────────────────────── */
+.log-tab-wrap { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+.log-filters-row { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; padding:12px 16px; border-bottom:1px solid var(--border); background:var(--surface-2); }
+.log-fg { display:flex; flex-direction:column; gap:3px; }
+.log-flabel { font-size:10px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.4px; white-space:nowrap; }
+.log-fsel, .log-finput { border:1px solid var(--border-strong); border-radius:var(--radius-sm); padding:6px 10px; font-family:inherit; font-size:12px; color:var(--text-primary); background:var(--surface); outline:none; height:34px; }
+.log-fsel:focus, .log-finput:focus { border-color:var(--accent); box-shadow:0 0 0 2px rgba(37,99,235,.08); }
+.log-finput.has-value { border-color:var(--accent); background:var(--accent-light); }
+.log-clear-btn { display:flex; align-items:center; gap:5px; padding:6px 12px; border:1px solid var(--red-border); border-radius:var(--radius-sm); font-family:inherit; font-size:12px; font-weight:600; color:var(--red); background:var(--red-light); cursor:pointer; height:34px; }
+.log-clear-btn:hover { background:var(--red); color:var(--on-accent); }
+.log-stats-bar { display:flex; align-items:center; gap:8px; padding:8px 16px; border-bottom:1px solid var(--border); background:var(--surface-2); flex-wrap:wrap; }
+.log-refresh-btn { display:flex; align-items:center; gap:5px; padding:5px 12px; border:1px solid var(--green-border); border-radius:var(--radius-sm); font-family:inherit; font-size:11px; font-weight:600; color:var(--green); background:var(--green-light); cursor:pointer; }
+.log-refresh-btn:hover { background:var(--green); color:var(--on-accent); }
+.log-stat-chip { font-size:11px; font-weight:600; color:var(--text-secondary); background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:3px 10px; }
+.log-stat-chip strong { color:var(--text-primary); }
+.log-export-btn { display:flex; align-items:center; gap:5px; padding:5px 12px; border:1px solid var(--green-border); border-radius:var(--radius-sm); font-family:inherit; font-size:11px; font-weight:600; color:var(--green); background:var(--green-light); cursor:pointer; margin-right:auto; }
+.log-export-btn:hover { background:var(--green); color:var(--on-accent); }
+.data-table { width:100%; border-collapse:collapse; font-size:12.5px; }
+.data-table thead th, .data-table tbody td { text-align:center; padding:8px 10px; border-bottom:1px solid var(--border); border-inline-start:1px solid var(--border); }
+.data-table thead th:first-child, .data-table tbody td:first-child { border-inline-start:none; }
+.data-table thead th { background:var(--surface-2); font-size:11px; font-weight:700; color:var(--text-secondary); }
+.data-table .col-num { font-family:var(--font-mono); direction:ltr; white-space:nowrap; }
+.log-type-badge { font-size:11px; font-weight:700; padding:2px 8px; border-radius:4px; }
+.log-type-badge.success { background:var(--green-light); color:var(--green); }
+.log-type-badge.error { background:var(--red-light); color:var(--red); }
+.empty-row td { padding:30px; color:var(--text-muted); }
+.pagination-row { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:0; padding:12px; }
+.page-info { font-size:13px; color:var(--text-secondary); font-family:var(--font-mono); padding:0 8px; }
+.page-btn { padding:6px 14px; border-radius:7px; border:1px solid var(--border); background:var(--surface); font-size:13px; font-weight:600; cursor:pointer; font-family:var(--font-body); color:var(--text-primary); }
+.page-btn:hover:not(:disabled) { background:var(--accent-light); border-color:var(--accent); color:var(--accent); }
+.page-btn:disabled { opacity:.4; cursor:not-allowed; }
+.loading-spinner { width:24px; height:24px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; display:inline-block; }
+@keyframes spin { to{transform:rotate(360deg);} }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<!-- ══ App Header ══ -->
+<div id="headerMount"></div>
+
+<!-- بيظهر بس لما الصفحة اتفتحت من جدول التغليف (`?from=pack`) -->
+<div class="woc-back-bar" id="backToQueueBar">
+  <span>📦 جاي من طابور التغليف</span>
+  <button class="btn-ghost" onclick="location.href='pack.html'">↩ رجوع للطابور</button>
+</div>
+
+<!-- ══ Changelog Modal ══ -->
+<div class="eco-overlay" id="changelogOverlay" onclick="if(event.target===this)closeChangelog()">
+  <div class="eco-modal">
+    <div class="eco-modal-hdr"><span>📋 سجل التحديثات</span><button class="modal-close-x" onclick="closeChangelog()">✕</button></div>
+    <div class="eco-modal-body">
+      <div class="cl-version-block">
+        <div class="cl-version-row"><span class="cl-ver-badge" id="clLatestVerBadge"></span><span class="cl-ver-date">05-09-2026</span></div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>تصدير السجل بقى بيبلّغ لو اتقص — الرد فيه <code>cap</code>/<code>total</code>/<code>truncated</code> والواجهة بتعرض تحذير بدل القصّ الصامت عند ٢٠٠٠ صف</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>توكن شوبيفاي بقى متكاش في ذاكرة الـ Worker (بدل توكن جديد لكل نداء) مع تجديد تلقائي عند 401</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>دوال السجل المشتركة اتوحّدت مع باقي الأدوات — فلترة بقوايم موظفين/أنواع + فلتر تاريخ (<code>dateFrom</code>/<code>dateTo</code>) متاحين في الـ Worker</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>شاشة الإعدادات بقى فيها حقل واحد بس (<code>WORKER SECRET</code>) — رابط الـ Worker بقى ثابت في الكود ومش إعداد</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span><code>WORKER_SECRET</code> بقى مشترك مع طابعة الفواتير وأداة التغليف (مجموعة <code>warehouse_ops</code>) — و🩺 فحص النظام بيعرض بصمة السر للمقارنة</span></li>
+        </ul>
+      </div>
+      <div class="cl-version-block">
+        <div class="cl-version-row"><span class="cl-ver-badge old">v1.2.0</span><span class="cl-ver-date">03-09-2026</span></div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>زرار «⚠️ نسخة الـ Worker مختلفة» كان ظاهر على طول حتى والنسختين متطابقتين — الحارس بقى حد أدنى رقمي</span></li>
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>حارس للـ <code>WORKER_SECRET</code> الغايب — قبل كده أي طلب بـ «Bearer undefined» كان بيعدّي المصادقة</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>أي متغيّر ناقص في الـ Worker بيوقف العملية برسالة باسمه بدل فشل غامض</span></li>
+        </ul>
+      </div>
+      <div class="cl-version-block">
+        <div class="cl-version-row"><span class="cl-ver-badge old">v1.1.0</span><span class="cl-ver-date">28-08-2026</span></div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>استرجاع المخزون التلقائي بقى معطّل دائمًا وغير قابل للتعديل — الأداة مخصّصة فقط للمنتجات غير المتوفرة بالمخزن</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>عند كل حذف: تحديث ميتافيلد الحالة <code>custom.manual_status</code> إلى "Pending Edit" و<code>custom.cancel_manual_reason</code> إلى "عطلان" (لو الانتقال مسموح)</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>إعادة تصميم نافذة تأكيد الحذف بشِل <code>eco-modal</code> مع تأكيدين إلزاميين (مراجعة المخزون + قطع الفاتورة)</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>بعد تنفيذ الحذف، الأداة ترجع تلقائيًا لوضعها الافتراضي (مربع البحث فاضي)</span></li>
+        </ul>
+      </div>
+      <div class="cl-version-block">
+        <div class="cl-version-row"><span class="cl-ver-badge old">v1.0.0</span><span class="cl-ver-date">26-08-2026</span></div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>إطلاق الأداة — بحث بالأوردر، عرض المنتجات Unfulfilled، حذف منتج مع استرجاع اختياري للمخزون</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ About Modal ══ -->
+<div class="eco-overlay" id="aboutOverlay" onclick="if(event.target===this)closeAbout()">
+  <div class="eco-modal">
+    <div class="eco-modal-hdr"><span>ℹ️ About — حذف منتج من الأوردر</span><button class="modal-close-x" onclick="closeAbout()">✕</button></div>
+    <div class="eco-modal-body">
+
+      <details class="about-sec" open>
+        <summary>🏭 الصفحة دي جوّه مركز عمليات المخزن</summary>
+        <div class="about-sec-body">
+          <p>الصفحة دي <b>جزء من الهب</b> — الدخول بيحصل مرة واحدة في الشاشة
+             الرئيسية، والهوية بتوصل هنا من <code>sessionStorage</code>.</p>
+          <div id="aboutWorkers"></div>
+          <h4>🔴 الأداة دي هدّامة — حراسها ما اتلمستش</h4>
+          <ul>
+            <li>نافذة التأكيد <b>بالتأكيدين الإلزاميين</b> (مراجعة المخزون + قطع الفاتورة).</li>
+            <li>شرط <code>displayFinancialStatus = PENDING</code> (COD غير مسدد).</li>
+            <li><code>restock: false</code> <b>مفروضة من الواجهة والـ Worker</b> — دفاع مزدوج.</li>
+            <li>الرجوع للوضع الافتراضي بعد أي حذف ناجح.</li>
+            <li>انتقال <code>custom.manual_status → Pending Edit</code> بشرطه،
+                و<code>cancel_manual_reason → عطلان</code>.</li>
+          </ul>
+          <h4>الفتح التلقائي من طابور التغليف</h4>
+          <p>⚠️ <code>?order=</code> بيوصل <b>لقايمة المنتجات بس</b> — مش بيحذف ومش
+             بيختار بند. قرب الأداة بضغطة من جدول التغليف معناه إنها هتتستخدم
+             أكتر، يعني حراسها بقت <b>أهم</b> مش أقل.</p>
+        </div>
+      </details>
+
+      <details class="about-sec" open>
+        <summary>📋 وصف الأداة</summary>
+        <div class="about-sec-body">
+          <p><strong>الهدف:</strong> إزالة منتج واحد لسه ما اتشحنش (Unfulfilled بالكامل) من أوردر معين، بدل إلغاء الأوردر كله — مفيد لو العميل رجع في منتج واحد بس من أوردر فيه أكتر من منتج.</p>
+          <p><strong>المستخدمون المستهدفون:</strong> فريق خدمة العملاء / إدارة الأوردرات.</p>
+
+          <h4>كيف تعمل — Workflow</h4>
+          <ol>
+            <li>الموظف يدخل رقم الأوردر ويضغط بحث.</li>
+            <li>الأداة تجيب الأوردر وتعرض بس المنتجات اللي حالتها Unfulfilled بالكامل.</li>
+            <li>لو الأوردر مش مؤهل (متسدد أونلاين / ملغي / مقفول) — بانر أحمر واضح بالسبب، ومفيش حذف متاح.</li>
+            <li>الموظف يختار منتج ويضغط "حذف من الأوردر" — نافذة تأكيد بتاعتين إلزاميتين: مراجعة المخزون + قطع الفاتورة.</li>
+            <li>الأداة تنفّذ Order Editing (Shopify) لإزالة البند بالكامل — <strong>بدون استرجاع مخزون أبدًا</strong>.</li>
+            <li>لو الانتقال مسموح: تحديث <code>custom.manual_status</code> إلى "Pending Edit" و<code>custom.cancel_manual_reason</code> إلى "عطلان".</li>
+            <li>النتيجة تظهر كـ toast وتتسجّل في سجل العمليات — نجاح / تحذير / فشل — والأداة ترجع لوضعها الافتراضي (مربع بحث فاضي).</li>
+          </ol>
+
+          <h4>الـ Endpoints الرئيسية</h4>
+          <table>
+            <tr><th>action</th><th>الوصف</th></tr>
+            <tr><td><code>lookup_order</code></td><td>البحث عن أوردر بالاسم وجلب منتجاته Unfulfilled</td></tr>
+            <tr><td><code>remove_item</code></td><td>حذف بند من الأوردر (Order Editing API — quantity → 0، بدون استرجاع مخزون) + تحديث ميتافيلدات الحالة/السبب</td></tr>
+            <tr><td><code>get_logs / get_logs_count / get_logs_export</code></td><td>سجل العمليات — صفحات + تصدير XLSX</td></tr>
+            <tr><td><code>diag</code></td><td>فحص ذاتي: الصلاحيات (write_order_edits) و تعريفات الميتافيلدز و D1 والاتصال</td></tr>
+          </table>
+
+          <h4>⚙️ إجراءات كل حذف</h4>
+          <table>
+            <tr><th>الإجراء</th><th>التفاصيل</th></tr>
+            <tr><td>حذف البند</td><td>Order Editing API — <code>orderEditSetQuantity(quantity: 0)</code> ثم Commit</td></tr>
+            <tr><td>استرجاع المخزون</td><td><strong>معطّل دائمًا</strong> — <code>restock: false</code> مفروضة من السيرفر بغض النظر عن أي مدخل</td></tr>
+            <tr><td>تحديث الحالة</td><td><code>custom.manual_status → Pending Edit</code> — بس لو الحالة الحالية <code>Confirmed</code> أو <code>Ready</code> (أو <code>Pending Edit</code> بالفعل)، وإلا يتم تخطيها مع تحذير</td></tr>
+            <tr><td>تحديث سبب الإلغاء</td><td><code>custom.cancel_manual_reason → عطلان</code> — دايمًا، بغض النظر عن حالة الأوردر</td></tr>
+          </table>
+
+          <h4>⚠️ قيود مهمة</h4>
+          <ul>
+            <li>الأداة تشتغل بس على أوردرات <code>financial status = PENDING</code> (يعني COD غير متسدد بعد) — الأوردرات المتسددة أونلاين ممنوع الحذف منها من هنا (قرار: منع كامل، لا استرجاع تلقائي مطبَّق).</li>
+            <li>بس البنود اللي كميتها كلها Unfulfilled (مفيش أي جزء اتشحن) هي القابلة للحذف الكامل.</li>
+            <li>استرجاع المخزون معطّل دائمًا — الأداة مخصّصة فقط للمنتجات المكتشف إنها غير متوفرة بالمخزن وقت التجهيز.</li>
+            <li>الحذف مش بيرجع تاني تلقائيًا — لو غلط، لازم يتضاف المنتج يدويًا للأوردر من شوبيفاي.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="about-sec">
+        <summary>🔧 تشريح الكود</summary>
+        <div class="about-sec-body">
+          <h4>FEATURE MAP</h4>
+          <ul>
+            <li><code>§AUTH</code> — Universal D1 Auth</li>
+            <li><code>§TOOL</code> — بحث الأوردر + عرض المنتجات + حذف بند (Order Editing API)</li>
+            <li><code>§LOG</code> — سجل العمليات (جدول + صفحات + تصدير)</li>
+          </ul>
+          <h4>KEY VARIABLES</h4>
+          <ul>
+            <li><code>currentEmployee</code> — { username, displayName } في الذاكرة فقط</li>
+            <li>روابط الـ Workers — ثوابت في <code>shared/shell.js</code> § CONFIG (مش في التخزين المحلي — Standards #28)</li>
+            <li><code>LS_SECRET = 'order_item_remover_worker_secret'</code> — المفتاح الوحيد في localStorage</li>
+            <li><code>TOOL_NAME = 'order_item_remover'</code> — قيمة tool في جدول logs</li>
+            <li><code>currentOrder</code> — آخر أوردر تم البحث عنه (في الذاكرة)</li>
+          </ul>
+          <h4>NOTES</h4>
+          <ul>
+            <li>الحذف بيتم عبر <code>orderEditSetQuantity(quantity: 0)</code> — مفيش mutation مباشرة لحذف بند في Shopify.</li>
+            <li>محتاج صلاحية <code>write_order_edits</code> + <code>read_order_edits</code> على تطبيق شوبيفاي — مختلفة عن <code>write_orders</code> العادية. استخدم زرار "فحص النظام" في الإعدادات للتأكد.</li>
+            <li><code>restock</code> مفروضة <code>false</code> من الواجهة **و**من الـ Worker (دفاع مزدوج) — الشيك بوكس في الواجهة معطّل ومقفول دايمًا.</li>
+            <li>تحديث <code>custom.manual_status</code> بيتحقق من صحة الانتقال قبل الكتابة (<code>ecommoda-order-lifecycle</code> §1.4) — بيتخطى الكتابة بأمان لو الحالة الحالية مش <code>Confirmed</code>/<code>Ready</code>، بدل ما يكتب انتقال غير مسموح.</li>
+            <li>نوع الميتافيلد (<code>type</code>) بيتقرا ديناميكيًا من تعريف الحقل في شوبيفاي وقت التنفيذ — مش hardcoded.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Confirm Remove Modal ══ -->
+<div class="eco-overlay" id="confirmRemoveOverlay" onclick="if(event.target===this)closeConfirmRemove()">
+  <div class="eco-modal" style="max-width:520px;">
+    <div class="eco-modal-hdr"><span>⚠️ تأكيد حذف المنتج</span><button class="modal-close-x" onclick="closeConfirmRemove()">✕</button></div>
+    <div class="eco-modal-body">
+      <div class="confirm-info-row"><span class="confirm-info-label">المنتج</span><span class="confirm-info-value" id="crmProductName">—</span></div>
+      <div class="confirm-info-row"><span class="confirm-info-label">SKU</span><span class="confirm-info-value" id="crmSku">—</span></div>
+      <div class="confirm-info-row"><span class="confirm-info-label">الأوردر</span><span class="confirm-info-value" id="crmOrderName">—</span></div>
+      <div class="banner banner-amber" style="margin-top:10px;">⚠️ هذا الإجراء لا يُلغى تلقائيًا — لو غلط، المنتج لازم يتضاف يدويًا من شوبيفاي. المخزون <strong>لن</strong> يُسترجع تلقائيًا.</div>
+      <div class="confirm-check-group">
+        <label class="confirm-check-item"><input type="checkbox" id="crmCheck1" onchange="updateConfirmRemoveState()"> نعم، احذف المنتج — أنا راجعت كويس وهذا المنتج غير موجود في المخزن</label>
+        <label class="confirm-check-item"><input type="checkbox" id="crmCheck2" onchange="updateConfirmRemoveState()"> نعم، قمت بقطع الفاتورة لهذا الأوردر</label>
+      </div>
+    </div>
+    <div class="settings-modal-ftr">
+      <button class="btn-modal-cancel" onclick="closeConfirmRemove()">إلغاء</button>
+      <button class="btn-confirm-ok" id="crmOkBtn" disabled>🗑️ تأكيد الحذف</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ §TOOL — Remove Tab ══ -->
+<div id="removeTabContent" class="tab-panel active">
+  <div class="card">
+    <div class="search-row">
+      <div class="log-fg" style="flex:1;min-width:180px;">
+        <span class="log-flabel">رقم الأوردر</span>
+        <input type="text" class="field-input" id="orderInput" placeholder="مثال: 47101 أو #47101" style="width:100%;" oninput="toggleSearchActiveState(this)" onkeydown="if(event.key==='Enter')lookupOrder()">
+      </div>
+      <button class="btn-primary" id="searchBtn" onclick="lookupOrder()">🔍 بحث</button>
+    </div>
+  </div>
+
+  <div id="orderResultArea"></div>
+</div>
+
+<!-- ══ §LOG — Log Tab ══ -->
+<div id="logTabContent" class="tab-panel" style="display:none;">
+  <div class="log-tab-wrap">
+    <div class="log-filters-row">
+      <div class="log-fg">
+        <span class="log-flabel">الموظف</span>
+        <select class="log-fsel" id="logFilterEmployee" onchange="onLogFilterChange()"><option value="">كل الموظفين</option></select>
+      </div>
+      <div class="log-fg" style="flex:1;min-width:180px;">
+        <span class="log-flabel">بحث برقم الأوردر أو ملاحظات</span>
+        <input type="text" class="log-finput" id="logSearch" style="width:100%;" oninput="onLogSearchInput(); toggleSearchActiveState(this);">
+      </div>
+      <button class="log-clear-btn" onclick="clearLogFilters()">✕ مسح كل الفلاتر</button>
+    </div>
+    <div class="log-stats-bar">
+      <button class="log-refresh-btn" onclick="fetchLog()">↺ تحديث</button>
+      <div class="log-stat-chip">النتائج: <strong id="logTotalCount">—</strong></div>
+      <button class="log-export-btn" onclick="exportLogXLSX()">⬇ تصدير الكل .xlsx</button>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="data-table">
+        <thead><tr>
+          <th>التاريخ والوقت</th><th>الموظف</th><th>النتيجة</th><th>الأوردر</th><th>المنتج</th><th>SKU</th><th>ملاحظات</th>
+        </tr></thead>
+        <tbody id="logBody"><tr class="empty-row"><td colspan="7">اضغط تحديث لتحميل السجل</td></tr></tbody>
+      </table>
+    </div>
+    <div class="pagination-row" id="paginationRow" style="display:none;">
+      <button class="page-btn" id="btnPrevPage" onclick="goPage(-1)">→ السابق</button>
+      <span class="page-info" id="pageInfo"></span>
+      <button class="page-btn" id="btnNextPage" onclick="goPage(1)">التالي ←</button>
+    </div>
+  </div>
+</div>
+
+
+</div><!-- /.container -->
+
+<div id="sharedMount"></div>
+
+<!-- 🔴 نسخة واحدة مضمّنة — ممنوع محتوى الملف ده يتنسخ هنا -->
+<script src="shared/shell.js"></script>
+<script>document.getElementById('sharedMount').innerHTML = wocSharedModals();</script>
+<script>
+
+// ══════════════════════════════════════════════════════════════
+// §INIT — الجلسة أولاً، قبل أي حاجة تانية
+// ══════════════════════════════════════════════════════════════
+//
+// 🔴 `requireSession()` **بترمي** لو مفيش جلسة — بتوقف باقي السكربت
+//    أثناء التحويل لشاشة الدخول.
+const session = requireSession();
+const currentEmployee = { username: session.username, displayName: session.displayName };
+const { apiGet, apiPost } = wocApi(WOC_WORKERS.remover);
+const PAGE_WORKERS = ['remover'];
+
+// خاصة بالصفحة — كانت في §CONFIG المحذوف
+function toggleSearchActiveState(el) { el.classList.toggle('has-value', el.value.trim().length > 0); }
+
+// ⚠️ الحلقة دي مكرّرة في الخمس صفحات **عن قصد**: `WOC_WORKERS` و`cmpVersion`
+//    في الـ shell، بس فحص Step 9 بيطلب وجودهم في كل صفحة، والقايمة نفسها
+//    بتفرق من صفحة للتانية.
+async function renderAboutWorkers() {
+  const box = document.getElementById('aboutWorkers');
+  if (!box) return;
+  const rows = await Promise.all(PAGE_WORKERS.map(async k => {
+    const w = WOC_WORKERS[k];
+    let got = '—', mark = '❌';
+    try {
+      const cfg = await wocApi(w).apiGet('get_config');
+      got = cfg.version || cfg.WORKER_VERSION || '—';
+      mark = cmpVersion(got, w.min) < 0 ? '⚠️' : '✅';
+    } catch { got = 'تعذّر الوصول'; }
+    return `<tr><td>${mark} ${esc(w.label)}</td><td><code>${esc(got)}</code></td><td><code>${esc(w.min)}</code></td></tr>`;
+  }));
+  box.innerHTML = `<table><tr><th>الأداة</th><th>نسخة الـ Worker</th><th>الحد الأدنى</th></tr>${rows.join('')}</table>
+     <p>نسخة الواجهة (الهب كله): <code>${esc(TOOL_VERSION)}</code></p>`;
+}
+
+function onSettingsSaved() { checkWorkerVersion(PAGE_WORKERS); }
+
+function showBackToQueue() { document.getElementById('backToQueueBar')?.classList.add('visible'); }
+
+// ══════════════════════════════════════════════════════════════
+// §AUTH-JS — **اتشال**: الدخول في `index.html` بس، والهوية بتوصل
+// للصفحة دي من `sessionStorage` عبر `requireSession()` فوق.
+// ══════════════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════════════
+// §TOOL-JS — order lookup + item removal
+// ══════════════════════════════════════════════════════════════
+let currentOrder = null;
+
+function switchMainTab(tab) {
+  const isRemove = tab === 'remove';
+  document.getElementById('mainTabRemove').classList.toggle('active', isRemove);
+  document.getElementById('mainTabLog').classList.toggle('active', !isRemove);
+  document.getElementById('removeTabContent').style.display = isRemove ? 'block' : 'none';
+  document.getElementById('logTabContent').style.display = isRemove ? 'none' : 'block';
+  if (!isRemove && !logLoaded) fetchLog();
+}
+
+// ─── §TOOL-JS::lookupOrder ───
+async function lookupOrder() {
+  const raw = document.getElementById('orderInput').value.trim();
+  const area = document.getElementById('orderResultArea');
+  if (!raw) { showToast('اكتب رقم الأوردر أولاً', 'error'); return; }
+  const btn = document.getElementById('searchBtn'); btn.disabled = true; btn.textContent = '⏳ جارٍ البحث...';
+  area.innerHTML = '<div class="card"><div class="loading-spinner"></div></div>';
+  try {
+    const data = await apiGetLookup(raw);
+    currentOrder = data.order;
+    renderOrder(currentOrder);
+  } catch (err) {
+    area.innerHTML = `<div class="card"><div class="banner banner-red">${err.message}</div></div>`;
+  } finally {
+    btn.disabled = false; btn.textContent = '🔍 بحث';
+  }
+}
+async function apiGetLookup(orderRaw) { return apiGet('lookup_order', { order: orderRaw }); }
+
+// ─── §TOOL-JS::renderOrder ───
+function renderOrder(order) {
+  const area = document.getElementById('orderResultArea');
+  let html = '<div class="card">';
+  html += `<div class="order-summary">
+    <span class="osum-name">${orderLink(order.name, order.numericId)}</span>
+    <span class="osum-chip">${order.displayFulfillmentStatus || '—'}</span>
+    <span class="osum-chip">${order.displayFinancialStatus || '—'}</span>
+    ${order.customerName ? `<span class="osum-chip customer">👤 ${order.customerName}</span>` : ''}
+    ${order.totalPrice ? `<span class="osum-chip">${order.totalPrice}</span>` : ''}
+  </div>`;
+
+  if (!order.orderEligible) {
+    html += `<div class="banner banner-red">🚫 ${order.orderBlockReason}</div></div>`;
+    area.innerHTML = html;
+    return;
+  }
+
+  if (!order.unfulfilledItems.length) {
+    html += `<div class="banner banner-amber">لا توجد منتجات Unfulfilled في هذا الأوردر.</div></div>`;
+    area.innerHTML = html;
+    return;
+  }
+
+  html += `<div class="remove-opts">
+    <label class="opt-locked"><input type="checkbox" id="optRestock" disabled> استرجاع المخزون تلقائيًا عند الحذف <span class="opt-locked-note">🔒 معطّل دائمًا — الأداة للمنتجات غير المتوفرة بالمخزن فقط</span></label>
+    <label><input type="checkbox" id="optNotify"> إشعار العميل بالتعديل</label>
+  </div>`;
+
+  html += '<div style="margin-top:10px;">';
+  order.unfulfilledItems.forEach(li => {
+    html += `<div class="item-card">
+      ${li.imageUrl ? `<img class="item-thumb" src="${li.imageUrl}">` : `<div class="item-thumb-ph">📦</div>`}
+      <div class="item-info">
+        <div class="item-title">${li.title}${li.variantTitle ? ' — ' + li.variantTitle : ''}</div>
+        <div class="item-meta">SKU: ${li.sku || '—'} · الكمية: ${li.unfulfilledQuantity} · ${li.unitPrice || ''}</div>
+        ${!li.removable ? `<div class="item-blocked-reason">⚠️ ${li.reason}</div>` : ''}
+      </div>
+      <button class="btn-remove" ${li.removable ? '' : 'disabled'} onclick="confirmRemove('${li.lineItemId}')">🗑️ حذف من الأوردر</button>
+    </div>`;
+  });
+  html += '</div>';
+  html += `<div id="removeResultArea-${order.id.replace(/[^0-9]/g,'')}"></div>`;
+  html += '</div>';
+  area.innerHTML = html;
+}
+
+// ─── §TOOL-JS::confirmRemove — eco-modal gate (2 mandatory checkboxes) ───
+let pendingRemoveLineItemId = null;
+function confirmRemove(lineItemId) {
+  const item = currentOrder?.unfulfilledItems.find(li => li.lineItemId === lineItemId);
+  if (!item || !currentOrder) return;
+  pendingRemoveLineItemId = lineItemId;
+  document.getElementById('crmProductName').textContent = item.title + (item.variantTitle ? ' — ' + item.variantTitle : '');
+  document.getElementById('crmSku').textContent = item.sku || '—';
+  document.getElementById('crmOrderName').textContent = currentOrder.name;
+  document.getElementById('crmCheck1').checked = false;
+  document.getElementById('crmCheck2').checked = false;
+  updateConfirmRemoveState();
+  document.getElementById('confirmRemoveOverlay').classList.add('open');
+}
+function closeConfirmRemove() {
+  document.getElementById('confirmRemoveOverlay').classList.remove('open');
+  pendingRemoveLineItemId = null;
+}
+function updateConfirmRemoveState() {
+  const ok = document.getElementById('crmCheck1').checked && document.getElementById('crmCheck2').checked;
+  document.getElementById('crmOkBtn').disabled = !ok;
+}
+document.getElementById('crmOkBtn').addEventListener('click', () => {
+  if (document.getElementById('crmOkBtn').disabled || !pendingRemoveLineItemId) return;
+  const lineItemId = pendingRemoveLineItemId;
+  closeConfirmRemove();
+  doRemoveItem(lineItemId);
+});
+
+// ─── §TOOL-JS::doRemoveItem ───
+async function doRemoveItem(lineItemId) {
+  if (!currentOrder || !currentEmployee) { showToast('اعمل تسجيل دخول أولاً', 'error'); return; }
+  const notifyCustomer = document.getElementById('optNotify')?.checked ?? false;
+
+  showToast('جارٍ تنفيذ الحذف...', 'neutral', 4000);
+  try {
+    const res = await apiPost('remove_item', {
+      orderId: currentOrder.id, lineItemId,
+      employee: currentEmployee.username, notifyCustomer,
+    });
+    const status = res.status || (res.ok ? 'success' : 'error');
+    if (res.ok) {
+      // Item removal itself executed (success أو warning على تحديث الحالة/السبب فقط)
+      showToast(res.message || 'تم الحذف ✓', status === 'warning' ? 'warning' : 'success', status === 'warning' ? 6000 : 3000);
+      playBeep('success');
+      resetRemoveTabToDefault();
+    } else {
+      renderRemoveResult('error', res);
+      showToast(res.error || 'حصل خطأ', 'error'); playBeep('error');
+    }
+  } catch (err) {
+    renderRemoveResult('error', { error: err.message });
+    showToast(err.message, 'error'); playBeep('error');
+  }
+}
+
+// ─── §TOOL-JS::resetRemoveTabToDefault ───
+function resetRemoveTabToDefault() {
+  currentOrder = null;
+  const input = document.getElementById('orderInput');
+  input.value = '';
+  toggleSearchActiveState(input);
+  document.getElementById('orderResultArea').innerHTML = '';
+  input.focus();
+}
+
+function renderRemoveResult(status, res) {
+  const area = document.getElementById('orderResultArea');
+  const badgeText = status === 'success' ? '✓ تم' : status === 'warning' ? '⚠ تم جزئيًا' : '✗ فشل';
+  let html = `<div class="card"><div class="result-box ${status}">
+    <span class="result-badge ${status}">${badgeText}</span>
+    <div>${status === 'error' ? (res.error || 'حصل خطأ غير متوقع') : (res.message || '')}</div>`;
+  if (res.logged === false) html += `<div style="margin-top:6px;color:var(--amber);font-weight:700;">⚠️ العملية تمت لكن لم تُسجَّل في سجل العمليات.</div>`;
+  if (Array.isArray(res.actions) && res.actions.length) {
+    html += `<div class="result-actions">ما تم فعليًا:<ul>${res.actions.map(a => `<li>${a}</li>`).join('')}</ul></div>`;
+  }
+  html += '</div></div>';
+  area.insertAdjacentHTML('afterbegin', html);
+}
+
+// ══════════════════════════════════════════════════════════════
+// §LOG-JS — server pagination model (v2)
+// ══════════════════════════════════════════════════════════════
+const LOG_PAGE_SIZE = 100;
+let logCurrentPage = 1, logTotalCount = 0, logSearchTimer = null, logLoaded = false, logAllEntries = [];
+
+function onLogFilterChange() { logCurrentPage = 1; fetchLog(); }
+function onLogSearchInput() { clearTimeout(logSearchTimer); logSearchTimer = setTimeout(() => { logCurrentPage = 1; fetchLog(); }, 400); }
+function clearLogFilters() {
+  document.getElementById('logFilterEmployee').value = '';
+  const s = document.getElementById('logSearch'); s.value=''; toggleSearchActiveState(s);
+  logCurrentPage = 1; fetchLog();
+}
+
+async function fetchLog() {
+  logLoaded = true;
+  const body = document.getElementById('logBody');
+  body.innerHTML = '<tr class="empty-row"><td colspan="7"><div class="loading-spinner"></div></td></tr>';
+  const employee = document.getElementById('logFilterEmployee').value || null;
+  const search = document.getElementById('logSearch').value.trim() || null;
+  const offset = (logCurrentPage - 1) * LOG_PAGE_SIZE;
+  const params = { limit: LOG_PAGE_SIZE, offset }; if (employee) params.employee = employee; if (search) params.search = search;
+  const countParams = {}; if (employee) countParams.employee = employee; if (search) countParams.search = search;
+  try {
+    const [pageData, countData] = await Promise.all([apiGet('get_logs', params), apiGet('get_logs_count', countParams)]);
+    logTotalCount = countData.total || 0;
+    logAllEntries = pageData.entries || [];
+    document.getElementById('logTotalCount').textContent = logTotalCount.toLocaleString('en-US');
+    renderLogTable(logAllEntries);
+    renderPagination();
+  } catch (err) {
+    body.innerHTML = `<tr class="empty-row"><td colspan="7">⚠️ ${err.message}</td></tr>`;
+    document.getElementById('logTotalCount').textContent = '—';
+  }
+}
+function renderPagination() {
+  const totalPages = Math.max(1, Math.ceil(logTotalCount / LOG_PAGE_SIZE));
+  const row = document.getElementById('paginationRow');
+  row.style.display = totalPages > 1 ? 'flex' : 'none';
+  document.getElementById('pageInfo').textContent = `صفحة ${logCurrentPage} من ${totalPages}`;
+  document.getElementById('btnPrevPage').disabled = logCurrentPage <= 1;
+  document.getElementById('btnNextPage').disabled = logCurrentPage >= totalPages;
+}
+function goPage(dir) {
+  const totalPages = Math.ceil(logTotalCount / LOG_PAGE_SIZE);
+  const next = logCurrentPage + dir; if (next < 1 || next > totalPages) return;
+  logCurrentPage = next; fetchLog();
+}
+function renderLogTable(entries) {
+  const body = document.getElementById('logBody');
+  if (!entries.length) { body.innerHTML = '<tr class="empty-row"><td colspan="7">لا توجد نتائج</td></tr>'; return; }
+  body.innerHTML = entries.map(e => {
+    const isSuccess = e.type === 'remove_item';
+    const typeHtml = isSuccess ? '<span class="log-type-badge success">✓ تم الحذف</span>' : '<span class="log-type-badge error">✗ فشل</span>';
+    return `<tr>
+      <td>${e.timestamp ? formatDateTime(e.timestamp) : '—'}</td>
+      <td>${e.employee ? e.employee.replace(/_/g,' ') : '—'}</td>
+      <td>${typeHtml}</td>
+      <td>${e.order_name ? orderLink(e.order_name, e.order_id) : '—'}</td>
+      <td style="text-align:right;">${e.product_title || '—'}</td>
+      <td class="col-num">${e.sku || '—'}</td>
+      <td style="text-align:right;">${e.notes || '—'}</td>
+    </tr>`;
+  }).join('');
+}
+async function exportLogXLSX() {
+  const employee = document.getElementById('logFilterEmployee').value || null;
+  const search = document.getElementById('logSearch').value.trim() || null;
+  const params = {}; if (employee) params.employee = employee; if (search) params.search = search;
+  try {
+    const data = await apiGet('get_logs_export', params);
+    const entries = data.entries || [];
+    if (data.truncated) {
+      showToast(
+        `⚠️ التصدير اتقص عند ${data.cap.toLocaleString('en-US')} صف من إجمالي ` +
+        `${data.total.toLocaleString('en-US')} — ضيّق الفلاتر عشان تصدّر الباقي`,
+        'warning', 8000
+      );
+    }
+    if (!entries.length) { showToast('لا توجد بيانات للتصدير', 'error'); return; }
+    const wb = new ExcelJS.Workbook(); wb.views = [{ rightToLeft: true }];
+    const ws = wb.addWorksheet('سجل العمليات'); ws.views = [{ state: 'frozen', ySplit: 1, rightToLeft: true }];
+    ws.columns = [
+      { header: 'التاريخ', key: 'd', width: 14 }, { header: 'الوقت', key: 't', width: 12 },
+      { header: 'الموظف', key: 'e', width: 18 }, { header: 'النتيجة', key: 'r', width: 12 },
+      { header: 'الأوردر', key: 'o', width: 12 }, { header: 'المنتج', key: 'p', width: 40 },
+      { header: 'SKU', key: 's', width: 20 }, { header: 'ملاحظات', key: 'n', width: 40 },
+    ];
+    entries.forEach(e => ws.addRow({
+      d: e.timestamp ? formatDateForExport(e.timestamp) : null,
+      t: e.timestamp ? formatDateTime(e.timestamp).split('🕐 ')[1] : null,
+      e: e.employee ? e.employee.replace(/_/g,' ') : null,
+      r: e.type === 'remove_item' ? 'تم الحذف' : 'فشل',
+      o: e.order_name || null, p: e.product_title || null, s: e.sku || null, n: e.notes || null,
+    }));
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = `order-item-remover-log-${new Date().toISOString().substring(0,10)}.xlsx`; a.click(); URL.revokeObjectURL(url);
+    showToast(`تم تصدير ${entries.length} عملية ✓`, 'success');
+  } catch (err) { showToast('خطأ في التصدير: ' + err.message, 'error'); }
+}
+
+// ══════════════════════════════════════════════════════════════
+// Init
+// ══════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('headerMount').innerHTML = wocHeader({
+    icon: '🗑️', title: 'حذف منتج من الأوردر', subtitle: 'مركز عمليات المخزن', session,
+  });
+  renderVersionUI();
+  checkWorkerVersion(PAGE_WORKERS);
+  renderAboutWorkers();
+
+  // الفتح التلقائي الجاي من طابور التغليف.
+  // ⚠️ بيوصل **لقايمة المنتجات بس** — مش بيحذف ومش بيختار بند. الأداة دي
+  //    هدّامة، وقربها بضغطة من جدول التغليف معناه إنها هتتستخدم أكتر،
+  //    يعني حراسها بقت **أهم** مش أقل.
+  const p = new URLSearchParams(location.search);
+  const num = p.get('order');
+  if (p.get('from') === 'pack') showBackToQueue();
+  if (num) {
+    const inp = document.getElementById('orderInput');
+    inp.value = num;
+    toggleSearchActiveState(inp);
+    lookupOrder();
+  }
+});
+</script>
+</body>
+</html>

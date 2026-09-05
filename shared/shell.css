@@ -118,6 +118,11 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .toast-error{background:var(--red)}
 .toast-warning{background:var(--amber)}
 .toast-neutral{background:var(--neutral-dark)}
+/* ⚠️ أسماء بديلة **مطلوبة**: الطابعة بتنادي `showToast` بـ 'warn'/'info'
+   والتغليف بـ 'warning'/'neutral'. من غير السطرين دول التوست بيطلع نص
+   أبيض على خلفية شفافة — فشل صامت، والموظف مش هيبلّغ عنه. */
+.toast-warn{background:var(--amber)}
+.toast-info{background:var(--accent)}
 
 
 /* ── Settings Modal ── */
@@ -141,7 +146,9 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .btn-modal-save:hover{background:var(--accent-dark)}
 .btn-outline{padding:8px 14px;border:1.5px solid var(--border-strong);background:var(--surface);color:var(--text-primary);border-radius:var(--radius-sm);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
 .btn-outline:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
-.diag-line{display:flex;gap:6px;align-items:flex-start;line-height:1.7}
+.diag-line{display:flex;gap:6px;align-items:flex-start;line-height:1.7;font-size:12px}
+.diag-box{max-height:200px;overflow-y:auto;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 11px;font-size:12px;line-height:1.7}
+.diag-box:empty{display:none}
 .diag-line .diag-detail{color:var(--text-secondary);word-break:break-word}
 
 /* ── Modal Shell (About / Changelog / أي نافذة طويلة) ── */

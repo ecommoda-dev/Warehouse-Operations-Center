@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<!-- skills: html-builder v6.3.0 · worker-builder v2.0.0 · constants v1.6.0 · order-lifecycle v1.2.0 — 05-09-2026 -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>رحلة الأوردر — مركز عمليات المخزن</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- 🔴 قاعدة الأسبقية: الـ shell أولاً، وستايل الصفحة بعده وبيغلب -->
+  <link rel="stylesheet" href="shared/shell.css">
+<style>
+/* ⚠️ الاستثناء الوحيد المسموح لكتلة توكنز في صفحة: `--container-max` لوحدها.
+   Tier M — جدول واحد بسيط. */
+:root { --container-max: 1200px; }
+
+/* ── البحث ─────────────────────────────────────────────────── */
+.jn-search{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.jn-field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:220px}
+.jn-label{font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px}
+.jn-input{border:1.5px solid var(--border-strong);border-radius:var(--radius-sm);padding:11px 13px;font-family:var(--font-mono);font-size:15px;font-weight:700;color:var(--text-primary);background:var(--surface);outline:none;direction:ltr;text-align:center;transition:border-color .15s,box-shadow .15s}
+.jn-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--focus-ring)}
+
+/* ── رأس النتيجة ───────────────────────────────────────────── */
+.jn-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.jn-head-num{font-family:var(--font-mono);font-size:22px;font-weight:800;direction:ltr;color:var(--accent);text-decoration:none}
+.jn-head-num[href]:hover{text-decoration:underline;color:var(--accent-dark)}
+.jn-head-num.no-link{color:var(--text-primary);cursor:default}
+.jn-head-count{font-size:12.5px;font-weight:700;color:var(--text-secondary)}
+
+/* ── جدول الرحلة ───────────────────────────────────────────── */
+.jn-table{width:100%;border-collapse:collapse;font-size:13px}
+.jn-table th{background:var(--surface-2);border-bottom:2px solid var(--border);padding:9px 10px;text-align:right;font-size:11.5px;font-weight:700;color:var(--text-secondary);white-space:nowrap}
+.jn-table td{border-bottom:1px solid var(--border);padding:10px;vertical-align:top;line-height:1.7}
+.jn-table tr:last-child td{border-bottom:none}
+.jn-table tr:hover td{background:var(--surface-hover)}
+.jn-when{font-family:var(--font-mono);direction:ltr;white-space:nowrap;font-size:12.5px}
+.jn-who{font-weight:700;white-space:nowrap}
+.jn-num{font-family:var(--font-mono);direction:ltr;font-weight:700}
+
+/* لون الأداة — الأيقونة لوحدها مش كفاية على شاشة فيها ١٥ صف */
+.jn-act{display:inline-flex;align-items:center;gap:6px;font-weight:700;white-space:nowrap}
+.jn-act.print{color:var(--accent)}
+.jn-act.pack {color:var(--green-dark)}
+.jn-act.rm   {color:var(--red)}
+.jn-detail{color:var(--text-secondary);font-size:12.5px}
+
+/* ── البانرات والحالات ─────────────────────────────────────── */
+/* ⚠️ «مفيش سجل» و«معرفناش نجيب السجل» حاجتين **مختلفتين تمامًا** */
+.jn-fail{margin-bottom:12px;padding:10px 14px;border-radius:var(--radius-sm);background:var(--red-light);border:1px solid var(--red-border);color:var(--red);font-size:13px;font-weight:700;line-height:1.8}
+.jn-note{margin-bottom:12px;padding:10px 14px;border-radius:var(--radius-sm);background:var(--amber-light);border:1px solid var(--amber-border);color:var(--amber-dark);font-size:12.5px;font-weight:600;line-height:1.8}
+.jn-state{text-align:center;padding:40px 20px;color:var(--text-muted);font-size:14px;line-height:1.9}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div id="headerMount"></div>
+
+  <div class="card">
+    <div class="card-title">🔎 رحلة الأوردر</div>
+    <div class="jn-search">
+      <div class="jn-field">
+        <label class="jn-label" for="jnInput">رقم الأوردر</label>
+        <input type="text" class="jn-input" id="jnInput" placeholder="مثال: 53621 أو #53621"
+               autocomplete="off" onkeydown="if(event.key==='Enter')jnLookup()">
+      </div>
+      <button class="btn-primary" id="jnBtn" onclick="jnLookup()">عرض الرحلة</button>
+    </div>
+  </div>
+
+  <div class="card" id="jnResultCard" style="display:none">
+    <div id="jnFail"></div>
+    <div class="jn-head">
+      <a class="jn-head-num" id="jnHeadNum" target="_blank" rel="noopener"></a>
+      <span class="jn-head-count" id="jnHeadCount"></span>
+    </div>
+    <div id="jnNote"></div>
+    <div id="jnBody"></div>
+  </div>
+
+  <div class="card jn-state" id="jnIdle">
+    اكتب رقم أوردر فوق عشان تشوف كل اللي حصل له عبر التلات أدوات.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     §MODALS — About و Changelog
+     ══════════════════════════════════════════════════════════════ -->
+<div class="eco-overlay" id="aboutOverlay" onclick="if(event.target===this)closeAbout()">
+  <div class="eco-modal">
+    <div class="eco-modal-hdr"><span>ℹ️ عن رحلة الأوردر</span><button class="modal-close-x" onclick="closeAbout()">✕</button></div>
+    <div class="eco-modal-body">
+      <details class="about-sec" open>
+        <summary>الصفحة بتعمل إيه</summary>
+        <div class="about-sec-body">
+          <p>أوردر واحد، وكل اللي حصل له عبر التلات أدوات في خط زمني واحد —
+             المكسب اللي الدمج بيفتحه.</p>
+          <h4>مصدر البيانات — صفر تعديل Worker</h4>
+          <p>كل Worker عنده <code>?action=get_logs</code> وبيفلتر على <code>tool</code>
+             بتاعه <b>مثبّت في الكود</b>، فمفيش endpoint واحد بيرجّع التلاتة.
+             الحل: <b>تلات نداءات متوازية ودمج في الواجهة</b>.</p>
+          <div id="aboutWorkers"></div>
+        </div>
+      </details>
+      <details class="about-sec">
+        <summary>🔴 الحدود المعروفة</summary>
+        <div class="about-sec-body">
+          <ul>
+            <li><b>التلات أدوات بس.</b> صفوف <code>metafields_change</code> (اللي
+                الطابعة والحذف بيكتبوها تحتها بـ <code>extra.source</code>)
+                <b>مش معروضة</b> — محتاجة مصدر رابع.</li>
+            <li><b>سقف ١٠٠ صف لكل أداة</b> — كافي لأوردر واحد بفارق كبير.</li>
+            <li><code>get_logs</code> بيستبعد <code>login</code>/<code>logout</code> في
+                SQL — وده صح هنا، إحنا عايزين الأفعال.</li>
+            <li><b>المصدر الفاشل بيتعرض بالاسم</b> — «مفيش تغليف» و«معرفناش نجيب
+                التغليف» حاجتين مختلفتين تمامًا، فأداة واقعة مالهاش تخفي تاريخ
+                الأداتين التانيين (<code>allSettled</code> مش <code>all</code>).</li>
+            <li>البحث في الـ Worker بيقارن <code>order_name LIKE %x%</code>، يعني
+                <code>#5362</code> بيطابق <code>#53621</code> كمان — فالواجهة
+                <b>بتفلتر بالمطابقة التامة</b> وبتعرض رقم الأوردر في كل صف.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+    <div class="eco-modal-ftr"><button class="btn-ghost" onclick="closeAbout()">إغلاق</button></div>
+  </div>
+</div>
+
+<div class="eco-overlay" id="changelogOverlay" onclick="if(event.target===this)closeChangelog()">
+  <div class="eco-modal">
+    <div class="eco-modal-hdr"><span>📋 سجل التغييرات</span><button class="modal-close-x" onclick="closeChangelog()">✕</button></div>
+    <div class="eco-modal-body">
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.0.0</span>
+          <span class="cl-ver-date">05-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>أول إصدار — دمج سجل التلات أدوات لأوردر واحد في خط زمني.</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="eco-modal-ftr"><button class="btn-ghost" onclick="closeChangelog()">إغلاق</button></div>
+  </div>
+</div>
+
+<div id="sharedMount"></div>
+
+<!-- 🔴 نسخة واحدة مضمّنة — ممنوع محتوى الملف ده يتنسخ هنا -->
+<script src="shared/shell.js"></script>
+<script>document.getElementById('sharedMount').innerHTML = wocSharedModals();</script>
+<script>
+// ══════════════════════════════════════════════════════════════
+// §INIT — الجلسة أولاً، قبل أي حاجة تانية
+// ══════════════════════════════════════════════════════════════
+const session = requireSession();
+const currentEmployee = { username: session.username, displayName: session.displayName };
+
+// ⚠️ الصفحة دي **قراءة سجل بس** — مفيش عقد جديد مع أي Worker، فحارس
+//    النسخة بياخد قايمة فاضية. الجدول في About بيعرض التلاتة عشان
+//    الموظف يعرف مصدر كل سطر، مش كحارس.
+const PAGE_WORKERS = [];
+const JN_SOURCES = [
+  { key: 'printer', icon: '🖨', cls: 'print', label: 'طباعة' },
+  { key: 'pack',    icon: '📦', cls: 'pack',  label: 'تغليف' },
+  { key: 'remover', icon: '🗑', cls: 'rm',    label: 'حذف منتج' },
+];
+
+// ⚠️ الحلقة دي مكرّرة في الخمس صفحات **عن قصد**: `WOC_WORKERS` و`cmpVersion`
+//    في الـ shell، بس فحص Step 9 بيطلب وجودهم في كل صفحة.
+async function renderAboutWorkers() {
+  const box = document.getElementById('aboutWorkers');
+  if (!box) return;
+  const rows = await Promise.all(JN_SOURCES.map(async ({ key }) => {
+    const w = WOC_WORKERS[key];
+    let got = '—', mark = '❌';
+    try {
+      const cfg = await wocApi(w).apiGet('get_config');
+      got = cfg.version || cfg.WORKER_VERSION || '—';
+      mark = cmpVersion(got, w.min) < 0 ? '⚠️' : '✅';
+    } catch { got = 'تعذّر الوصول'; }
+    return `<tr><td>${mark} ${esc(w.label)}</td><td><code>${esc(got)}</code></td><td><code>${esc(w.min)}</code></td></tr>`;
+  }));
+  box.innerHTML = `<table><tr><th>الأداة</th><th>نسخة الـ Worker</th><th>الحد الأدنى</th></tr>${rows.join('')}</table>
+     <p>نسخة الواجهة (الهب كله): <code>${esc(TOOL_VERSION)}</code></p>`;
+}
+
+function onSettingsSaved() { /* مفيش عقد نسخة هنا — الاستعلام الجاي هيبلّغ لوحده */ }
+
+// ══════════════════════════════════════════════════════════════
+// §JOURNEY-JS
+// ══════════════════════════════════════════════════════════════
+
+// وصف الصف — بيفرق حسب الأداة، لأن كل أداة بتكتب أعمدة مختلفة.
+function jnDescribe(src, e) {
+  if (src.key === 'printer') {
+    // الطابعة بتكتب `type` = 'S1' | 'S2' — نفس قيم عقد الـ Worker.
+    // ⚠️ التسميات **عرض بس**؛ القيم المخزّنة بتفضل S1/S2 حرفيًا.
+    const label = e.type === 'S1' ? 'عادي' : e.type === 'S2' ? 'استبدال/استرجاع' : e.type;
+    return { title: `${src.label} ${esc(e.type || '')}`, detail: esc(label) };
+  }
+  if (src.key === 'pack') {
+    // أعمدة إضافية بتكتبها أداة التغليف: stage · item_count · items
+    const stage = e.stage || (jnExtra(e).stage || '');
+    const n     = e.item_count ?? jnExtra(e).itemCount;
+    const bits  = [];
+    if (n != null) bits.push(`${Number(n).toLocaleString('en-US')} قطعة`);
+    if (e.items || jnExtra(e).items) bits.push(esc(e.items || jnExtra(e).items));
+    return { title: `${src.label} ${esc(stage)}`.trim(), detail: bits.join(' · ') };
+  }
+  // الحذف — السبب والمنتج
+  const bits = [];
+  if (e.product_title) bits.push(esc(e.product_title));
+  if (e.sku)           bits.push(`SKU ${esc(e.sku)}`);
+  if (e.notes)         bits.push(esc(e.notes));
+  return { title: src.label, detail: bits.join(' · ') };
+}
+
+// `extra` بيتخزّن نص JSON — التحليل الفاشل **مايكسرش الصف**، بيرجّع {}.
+function jnExtra(e) {
+  if (!e || !e.extra) return {};
+  if (typeof e.extra === 'object') return e.extra;
+  try { return JSON.parse(e.extra) || {}; } catch { return {}; }
+}
+
+// تطبيع رقم الأوردر للمقارنة التامة: بلا '#' وبلا مسافات
+function jnNorm(v) { return String(v ?? '').replace('#', '').trim(); }
+
+let jnBusy = false;
+
+async function jnLookup() {
+  if (jnBusy) return;
+  const raw = document.getElementById('jnInput').value.trim();
+  const num = jnNorm(raw);
+  if (!num) { showToast('اكتب رقم أوردر', 'warn'); return; }
+
+  jnBusy = true;
+  document.getElementById('jnBtn').disabled = true;
+  document.getElementById('jnIdle').style.display = 'none';
+  const card = document.getElementById('jnResultCard');
+  card.style.display = '';
+  document.getElementById('jnFail').innerHTML = '';
+  document.getElementById('jnNote').innerHTML = '';
+  document.getElementById('jnHeadCount').textContent = '';
+  document.getElementById('jnBody').innerHTML = '<div class="jn-state">جارٍ الجلب من التلات أدوات...</div>';
+
+  const headEl = document.getElementById('jnHeadNum');
+  headEl.textContent = `#${num}`;
+  headEl.removeAttribute('href');
+  headEl.classList.add('no-link');
+
+  // 🔴 `allSettled` مش `all` — أداة واقعة **مالهاش** تخفي تاريخ الأداتين
+  //    التانيين، والمصدر الفاشل بيتعرض **بالاسم**.
+  const results = await Promise.allSettled(
+    JN_SOURCES.map(s => wocApi(WOC_WORKERS[s.key]).apiGet('get_logs', { search: num, limit: 100 }))
+  );
+
+  const rows = [];
+  const failed = [];
+  let trimmed = false;
+  results.forEach((r, i) => {
+    const src = JN_SOURCES[i];
+    if (r.status !== 'fulfilled') { failed.push({ src, msg: r.reason?.message || 'خطأ غير معروف' }); return; }
+    const entries = r.value?.entries || [];
+    if (entries.length >= 100) trimmed = true;
+    for (const e of entries) {
+      // ⚠️ الـ Worker بيقارن `order_name LIKE %x%`، يعني `#5362` بيطابق
+      //    `#53621` كمان. الفلترة التامة بتحصل هنا.
+      if (jnNorm(e.order_name) !== num) continue;
+      rows.push({ src, e });
+    }
+  });
+
+  if (failed.length) {
+    document.getElementById('jnFail').innerHTML =
+      `<div class="jn-fail">⚠️ ${failed.map(f => `تعذّر جلب سجل ${esc(WOC_WORKERS[f.src.key].label)} — ${esc(f.msg)}`).join('<br>')}
+       <br><b>اللي تحت ناقص المصدر ده</b> — مش معناه إن الأوردر ما عدّاش منه.</div>`;
+  }
+  if (trimmed) {
+    document.getElementById('jnNote').innerHTML =
+      '<div class="jn-note">⚠️ مصدر أو أكتر رجّع السقف (١٠٠ صف) — ممكن يكون فيه أقدم من كده مش معروض.</div>';
+  }
+
+  // الترتيب الزمني **تصاعدي** — الرحلة بتتقرا من الأقدم للأحدث.
+  // ⚠️ نسخة قبل الترتيب — الترتيب في المكان بيعدّل
+  //    المصفوفة الأصلية، وده الفخّ اللي فحص Step 9 بيدوّر عليه.
+  const ordered = [...rows].sort((a, b) => new Date(a.e.timestamp) - new Date(b.e.timestamp));
+
+  // رقم الأوردر بيبقى لينك لو أي صف فيه `order_id` (قاعدة #20).
+  // ⚠️ من غير `id` بيفضل نص عادي — لينك رايح لـ `orders/undefined` بيخلّي
+  //    الموظف يفتكر الأوردر اتمسح.
+  const withId = ordered.find(r => r.e.order_id);
+  if (withId) {
+    headEl.href = shopifyOrderUrl(withId.e.order_id);
+    headEl.classList.remove('no-link');
+  }
+
+  document.getElementById('jnHeadCount').textContent =
+    ordered.length ? `${ordered.length.toLocaleString('en-US')} عملية` : '';
+
+  if (!ordered.length) {
+    document.getElementById('jnBody').innerHTML = failed.length
+      ? '<div class="jn-state">مفيش عمليات في المصادر اللي ردّت.</div>'
+      : '<div class="jn-state">مفيش أي عملية مسجّلة على الأوردر ده في التلات أدوات.</div>';
+  } else {
+    document.getElementById('jnBody').innerHTML = `
+      <div style="overflow-x:auto">
+        <table class="jn-table">
+          <thead><tr><th>الوقت</th><th>الأداة</th><th>الأوردر</th><th>الموظف</th><th>تفاصيل</th></tr></thead>
+          <tbody>${ordered.map(({ src, e }) => {
+            const d = jnDescribe(src, e);
+            return `<tr>
+              <td class="jn-when">${esc(formatDateTime(e.timestamp))}</td>
+              <td><span class="jn-act ${src.cls}">${src.icon} ${esc(d.title)}</span></td>
+              <td class="jn-num">${esc(e.order_name || '—')}</td>
+              <td class="jn-who">${esc((e.employee || '—').replace(/_/g, ' '))}</td>
+              <td class="jn-detail">${d.detail || '—'}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
+      </div>`;
+  }
+
+  jnBusy = false;
+  document.getElementById('jnBtn').disabled = false;
+}
+
+// ══════════════════════════════════════════════════════════════
+// §INIT
+// ══════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('headerMount').innerHTML = wocHeader({
+    icon: '🔎', title: 'رحلة الأوردر', subtitle: 'مركز عمليات المخزن', session,
+  });
+  renderVersionUI();
+  checkWorkerVersion(PAGE_WORKERS);   // قايمة فاضية — قراءة سجل بس
+  renderAboutWorkers();
+
+  const num = new URLSearchParams(location.search).get('order');
+  if (num) { document.getElementById('jnInput').value = num; jnLookup(); }
+  else     { document.getElementById('jnInput').focus(); }
+});
+</script>
+</body>
+</html>
