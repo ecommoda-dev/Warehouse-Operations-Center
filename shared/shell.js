@@ -343,6 +343,8 @@ function showToast(msg, type = 'neutral', duration = 3000) {
 function openSettings() {
   const f = document.getElementById('cfgSecret');
   if (f) f.value = getSecret();
+  const dg = document.getElementById('diagResult');
+  if (dg) dg.innerHTML = '';
   document.getElementById('settingsOverlay')?.classList.add('open');
 }
 function closeSettings()            { document.getElementById('settingsOverlay')?.classList.remove('open'); }
@@ -382,11 +384,47 @@ function closeChangelog() { document.getElementById('changelogOverlay')?.classLi
 function openAbout()      { document.getElementById('aboutOverlay')?.classList.add('open'); }
 function closeAbout()     { document.getElementById('aboutOverlay')?.classList.remove('open'); }
 
+// ── الفحص الذاتي — **ممنوع يعرض قيمة أي سر** ──────────────────
+// الصفحة بتعرّف `PAGE_WORKERS` (المفاتيح اللي بتناديها)، والفحص بيمشي
+// عليها واحد واحد ويسمّي كل Worker باسمه. الأسماء والأطوال بس — مفيش
+// قيمة سر (البصمة القصيرة في `diag` هي اللي بتثبت إن السر واحد).
+async function wocRunDiag() {
+  const box = document.getElementById('diagResult');
+  const btn = document.getElementById('diagBtn');
+  if (!box) return;
+  const keys = (typeof PAGE_WORKERS !== 'undefined' && PAGE_WORKERS.length)
+    ? PAGE_WORKERS : Object.keys(WOC_WORKERS);
+  box.innerHTML = 'جارٍ الفحص...';
+  if (btn) btn.disabled = true;
+  const out = [];
+  for (const k of keys) {
+    const w = WOC_WORKERS[k];
+    try {
+      const d = await wocApi(w).apiGet('diag');
+      const ver = d.version || d.WORKER_VERSION || '—';
+      const behind = cmpVersion(ver, w.min) < 0;
+      out.push(`<div class="diag-line"><span>${behind ? '⚠️' : 'ℹ️'}</span><span><b>${esc(w.label)}</b> — نسخة <code>${esc(ver)}</code> (الحد الأدنى <code>${esc(w.min)}</code>)</span></div>`);
+      for (const c of (d.checks || [])) {
+        out.push(`<div class="diag-line"><span>${c.ok ? '✅' : '❌'}</span><span>${esc(c.label || c.name || '')} — <span class="diag-detail">${esc(c.detail || '')}</span></span></div>`);
+      }
+    } catch (e) {
+      out.push(`<div class="diag-line"><span>❌</span><span><b>${esc(w.label)}</b> — ${esc(e.message)}</span></div>`);
+    }
+  }
+  box.innerHTML = out.join('');
+  if (btn) btn.disabled = false;
+}
+
 // ── حارس النسخة — **لازم يسمّي الـ Worker** ────────────────────
 // الهب بينادي تلات Workers بتلات حدود دنيا مستقلة. رسالة «الـ Worker
 // نسخة قديمة» من غير اسم الأداة بتخلّي الموظف يدوّر في التلاتة.
 let wocStaleMsgs = [];
 async function checkWorkerVersion(keys) {
+  // ⚠️ بلا سر مفيش فحص نسخة **أصلاً**. من غير الحارس ده أول نداء بيقع في
+  //    `apiRequest` اللي بيفتح شاشة الإعدادات — فتطلع فوق شاشة الدخول
+  //    وتغطّي زرار الإعدادات اللي جوّه الكارت (Standards #4). الموظف
+  //    بيلاقي نافذة فتحت لوحدها من غير ما يضغط حاجة.
+  if (!isConfigured()) return;
   for (const k of keys) {
     const w = WOC_WORKERS[k];
     if (!w) continue;
@@ -492,6 +530,11 @@ function wocSharedModals() {
           <div class="settings-field">
             <label class="settings-label">الـ Workers</label>
             <div class="settings-static">order-printer-worker · orders-packing-checker-worker · order-item-remover-worker</div>
+          </div>
+          <div class="settings-field">
+            <label class="settings-label">فحص النظام</label>
+            <button class="btn-outline" id="diagBtn" onclick="wocRunDiag()">🩺 افحص الأداة والاتصالات</button>
+            <div class="diag-box" id="diagResult"></div>
           </div>
         </div>
         <div class="settings-modal-ftr">
