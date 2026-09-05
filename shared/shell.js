@@ -385,6 +385,39 @@ function openAbout()      { document.getElementById('aboutOverlay')?.classList.a
 function closeAbout()     { document.getElementById('aboutOverlay')?.classList.remove('open'); }
 
 // ── الفحص الذاتي — **ممنوع يعرض قيمة أي سر** ──────────────────
+//
+// 🔴 **التلات Workers بيرجّعوا `checks` بشكلين مختلفين** — الهب بينادي
+//    التلاتة، فلازم يفهم الاتنين:
+//      · الطباعة والتغليف → **مصفوفة** `[{ ok, label|name, detail }]`
+//      · حذف منتج          → **كائن عادي** `{ d1: 'ok', oauth: 'FAILED: …' }`
+//    نسخة v1.0.0 كانت بتعمل `for…of` على الاتنين، فالكائن كان بيرمي
+//    «object is not iterable» و**بيوقّف الفحص كله** عند أول Worker
+//    بالشكل ده — يعني الموظف مايشوفش نتيجة الأدوات اللي بعده.
+//
+// ⚠️ في شكل الكائن مفيش `ok` صريحة، فالحكم من القيمة والاسم:
+//    `'ok'` ✅ · بتبدأ بـ `FAILED` ❌ · الاسم منتهي بـ `Error`/`Warning` ⚠️ ·
+//    غير كده **معلومة** ℹ️ (زي `accessScopes` و`envKeys`) — مش نجاح ولا فشل.
+function diagRows(checks) {
+  if (!checks) return [];
+  const line = (icon, label, detail) =>
+    `<div class="diag-line"><span>${icon}</span><span>${esc(label)}${detail ? ' — <span class="diag-detail">' + esc(detail) + '</span>' : ''}</span></div>`;
+
+  if (Array.isArray(checks)) {
+    return checks.map(c => line(c.ok ? '✅' : '❌', c.label || c.name || '', c.detail || ''));
+  }
+  if (typeof checks !== 'object') return [line('ℹ️', String(checks), '')];
+
+  return Object.entries(checks).map(([k, v]) => {
+    const txt = (v && typeof v === 'object') ? JSON.stringify(v) : String(v);
+    let icon = 'ℹ️';
+    if (/(Error|Warning)$/.test(k))      icon = '⚠️';
+    else if (/^FAILED/i.test(txt))       icon = '❌';
+    else if (txt === 'ok' || v === true) icon = '✅';
+    else if (v === false)                icon = '❌';
+    return line(icon, k, txt);
+  });
+}
+
 // الصفحة بتعرّف `PAGE_WORKERS` (المفاتيح اللي بتناديها)، والفحص بيمشي
 // عليها واحد واحد ويسمّي كل Worker باسمه. الأسماء والأطوال بس — مفيش
 // قيمة سر (البصمة القصيرة في `diag` هي اللي بتثبت إن السر واحد).
@@ -404,9 +437,7 @@ async function wocRunDiag() {
       const ver = d.version || d.WORKER_VERSION || '—';
       const behind = cmpVersion(ver, w.min) < 0;
       out.push(`<div class="diag-line"><span>${behind ? '⚠️' : 'ℹ️'}</span><span><b>${esc(w.label)}</b> — نسخة <code>${esc(ver)}</code> (الحد الأدنى <code>${esc(w.min)}</code>)</span></div>`);
-      for (const c of (d.checks || [])) {
-        out.push(`<div class="diag-line"><span>${c.ok ? '✅' : '❌'}</span><span>${esc(c.label || c.name || '')} — <span class="diag-detail">${esc(c.detail || '')}</span></span></div>`);
-      }
+      out.push(...diagRows(d.checks));
     } catch (e) {
       out.push(`<div class="diag-line"><span>❌</span><span><b>${esc(w.label)}</b> — ${esc(e.message)}</span></div>`);
     }
