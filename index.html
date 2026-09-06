@@ -216,6 +216,11 @@
         <div class="woc-card-name">رحلة الأوردر</div>
         <div class="woc-card-desc">تاريخ أوردر واحد عبر التلات أدوات</div>
       </a>
+      <a class="woc-tool" href="stats.html">
+        <span class="woc-card-ico">📊</span>
+        <div class="woc-card-name">إحصائيات المخزن</div>
+        <div class="woc-card-desc">أرقام اليوم · الموظفين · ساعات الشغل</div>
+      </a>
     </div>
   </div>
 </div>
@@ -297,7 +302,18 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.4.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.5.0</span>
+          <span class="cl-ver-date">06-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>صفحة <b>📊 إحصائيات المخزن</b> — أرقام الفترة · جدول الموظفين · توزيع ساعات الشغل · مؤشرات الجودة. قراءة سجل D1 بحتة، <b>صفر تعديل Worker</b>.</span></li>
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>سلّم «آخر تحديث» (<code>agoInfo</code>) اتنقل لـ <code>shared/shell.js</code> — كان نسخة في الشاشة الرئيسية لوحدها.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.4.0</span>
           <span class="cl-ver-date">06-09-2026</span>
         </div>
         <ul class="cl-items">
@@ -740,15 +756,9 @@ function setRefreshing(key, on) {
 // ⚠️ ثقة الموظف في الرقم بتتبني على السطر ده. طابور اتحدّث من ٤٠ دقيقة
 //    شكله بالظبط زي واحد اتحدّث من دقيقة لو مافيش عدّاد — فالعدّاد
 //    بيلوّن نفسه، والزرار بيتحوّل كهرماني بعد ١٥ دقيقة.
-function agoInfo(at, now) {
-  if (!at) return { cls: '', text: 'لسه ما اتحدّثش', stale: false };
-  const mins = Math.max(0, Math.floor((now - at.getTime()) / 60000));
-  if (mins < 1)  return { cls: 'ago-fresh', text: '⏱ منذ لحظات', stale: false };
-  if (mins < 5)  return { cls: 'ago-fresh', text: `⏱ منذ ${arMin(mins)}`, stale: false };
-  if (mins < 15) return { cls: 'ago-ok',    text: `⏱ منذ ${arMin(mins)}`, stale: false };
-  if (mins < 60) return { cls: 'ago-warn',  text: `⏱ منذ ${arMin(mins)} — يفضّل تحدّث`, stale: true };
-  return { cls: 'ago-stale', text: `⏱ منذ ${arHour(Math.floor(mins / 60))} — الرقم قديم، حدّث`, stale: true };
-}
+// ⚠️ `agoInfo` بقت في `shared/shell.js` §HELPERS — **ممنوع نسخة هنا**.
+//    `stats.html` بتستخدم نفس السلّم بالظبط، ونسختين معناهم إن اللوحتين
+//    هيفترقوا مع أول تعديل (درس R1).
 
 function renderFreshness(now = Date.now()) {
   Object.keys(homeQ).forEach(key => {

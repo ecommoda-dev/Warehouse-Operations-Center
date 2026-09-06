@@ -42,7 +42,7 @@ const WOC_WORKERS = {
   remover: { url: 'https://order-item-remover-worker.ecommoda-dev.workers.dev',     min: '1.3.0', label: 'حذف منتج' },
 };
 
-const TOOL_VERSION = 'v1.4.0';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.5.0';                      // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const WOC_APP_ID   = 'warehouse_ops_center';         // قيمة `tool` في D1 — login/logout بس
 const SHOP_HANDLE  = '6c7e1a-53';
@@ -268,6 +268,27 @@ function sinceText(iso) {
   const hrs = Math.floor(mins / 60);
   if (hrs < 24)  return `منذ ${arHour(hrs)}`;
   return `منذ ${arDay(Math.floor(hrs / 24))}`;
+}
+
+// سلّم قِدَم «آخر تحديث» — **مصدر واحد للريبو كله**.
+//
+// 🔴 كان معرّف جوّه `index.html` لوحده، ولما `stats.html` احتاجت نفس اللوحة
+//    كان الاختيار: نسخة تانية ولا مصدر واحد. النسخة التانية هي بالظبط اللي
+//    أنتجت باج R1 (منطق واحد في ملفين، اتصلح في واحد وفضل مكسور في التاني).
+//    والقاعدة في `CLAUDE.md` صريحة: لوحة بشكلين مختلفين لنفس المعلومة =
+//    الموظف بيتعلّمها مرتين.
+//
+// ⚠️ `at` بيتاخد **Date أو null**، و`now` بالملّي — التوقيع ده مقصود عشان
+//    النبضة تنادي الدالة بـ `Date.now()` واحدة لكل الصفوف بدل قراءة جديدة
+//    للساعة مع كل صف.
+function agoInfo(at, now) {
+  if (!at) return { cls: '', text: 'لسه ما اتحدّثش', stale: false };
+  const mins = Math.max(0, Math.floor((now - at.getTime()) / 60000));
+  if (mins < 1)  return { cls: 'ago-fresh', text: '⏱ منذ لحظات', stale: false };
+  if (mins < 5)  return { cls: 'ago-fresh', text: `⏱ منذ ${arMin(mins)}`, stale: false };
+  if (mins < 15) return { cls: 'ago-ok',    text: `⏱ منذ ${arMin(mins)}`, stale: false };
+  if (mins < 60) return { cls: 'ago-warn',  text: `⏱ منذ ${arMin(mins)} — يفضّل تحدّث`, stale: true };
+  return { cls: 'ago-stale', text: `⏱ منذ ${arHour(Math.floor(mins / 60))} — الرقم قديم، حدّث`, stale: true };
 }
 
 // ── رابط الأوردر على شوبيفاي (قاعدة #20) ──────────────────────
