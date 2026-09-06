@@ -133,33 +133,66 @@
   <div id="headerMount"></div>
 
   <div class="home-hint">
-    اختر المحطة اللي هتشتغل عليها. الأعداد بتتجاب <b>مرة واحدة بعد الدخول</b> —
-    مفيش تحديث تلقائي هنا، وزرار ↻ جوّه كل كارت.
+    اختر المحطة اللي هتشتغل عليها. الأعداد بتتحدّث <b>تلقائيًا كل ١٥ دقيقة</b>
+    وبعد كل تحديث يدوي — والعدّاد جنب كل كارت بيقول القايمة دي عمرها قد إيه.
   </div>
 
   <div class="woc-home-sec">
     <div class="woc-home-sec-title">الطوابير</div>
     <div class="woc-home-grid">
 
+      <!-- ⚠️ الإيموجي **نفس** إيموجي هيدر `print.html` بالحرف
+           (U+1F5A8 U+FE0F) — من غير الـ FE0F بيترسم مربع فاضي على
+           أجهزة المخزن، وده فشل صامت الموظف مش هيبلّغ عنه. -->
       <a class="woc-card" href="print.html">
-        <div class="woc-card-top"><span class="woc-card-ico">🖨</span><span class="woc-card-name">جاهز للطباعة</span></div>
-        <div class="woc-count pending" id="cntPrint">—</div>
-        <div class="woc-split" id="splitPrint">&nbsp;</div>
+        <div class="woc-card-top">
+          <span class="woc-card-ico ico-blue">🖨️</span>
+          <div>
+            <div class="woc-card-name">جاهز للطباعة</div>
+            <div class="woc-card-desc">فواتير مستنية الطباعة</div>
+          </div>
+        </div>
+        <div class="woc-num"><span class="woc-count pending" id="cntPrint">—</span><span class="woc-unit">أوردر</span></div>
+        <div class="woc-chips" id="chipsPrint"></div>
         <div class="woc-fail" id="failPrint" style="display:none"></div>
-        <div class="woc-stamp">
-          <span class="woc-stamp-txt" id="stampPrint">لسه ما اتحدّثش</span>
-          <button class="woc-stamp-btn" id="btnPrint" onclick="event.preventDefault();event.stopPropagation();loadPrintCount()">↻ تحديث</button>
+        <div class="woc-foot">
+          <div class="woc-fresh">
+            <div class="woc-fresh-row">
+              <span class="woc-fresh-lbl">آخر تحديث</span>
+              <span class="woc-ago" id="agoPrint">لسه ما اتحدّثش</span>
+            </div>
+            <div class="woc-fresh-row" id="stampPrint"><span class="woc-stamp-chip">—</span></div>
+          </div>
+          <button class="woc-rbtn" id="btnPrint"
+                  onclick="event.preventDefault();event.stopPropagation();loadQueue('print', false)">
+            <span class="woc-rbtn-ico">↺</span><span>تحديث</span><span class="woc-rbtn-badge" id="badgePrint">—</span>
+          </button>
         </div>
       </a>
 
       <a class="woc-card" href="pack.html">
-        <div class="woc-card-top"><span class="woc-card-ico">📦</span><span class="woc-card-name">جاهز للتغليف</span></div>
-        <div class="woc-count pending" id="cntPack">—</div>
-        <div class="woc-split" id="splitPack">&nbsp;</div>
+        <div class="woc-card-top">
+          <span class="woc-card-ico ico-green">📦</span>
+          <div>
+            <div class="woc-card-name">جاهز للتغليف</div>
+            <div class="woc-card-desc">اتطبع ولسه ما اتغلّفش</div>
+          </div>
+        </div>
+        <div class="woc-num"><span class="woc-count pending" id="cntPack">—</span><span class="woc-unit">أوردر</span></div>
+        <div class="woc-chips" id="chipsPack"></div>
         <div class="woc-fail" id="failPack" style="display:none"></div>
-        <div class="woc-stamp">
-          <span class="woc-stamp-txt" id="stampPack">لسه ما اتحدّثش</span>
-          <button class="woc-stamp-btn" id="btnPack" onclick="event.preventDefault();event.stopPropagation();loadPackCount()">↻ تحديث</button>
+        <div class="woc-foot">
+          <div class="woc-fresh">
+            <div class="woc-fresh-row">
+              <span class="woc-fresh-lbl">آخر تحديث</span>
+              <span class="woc-ago" id="agoPack">لسه ما اتحدّثش</span>
+            </div>
+            <div class="woc-fresh-row" id="stampPack"><span class="woc-stamp-chip">—</span></div>
+          </div>
+          <button class="woc-rbtn" id="btnPack"
+                  onclick="event.preventDefault();event.stopPropagation();loadQueue('pack', false)">
+            <span class="woc-rbtn-ico">↺</span><span>تحديث</span><span class="woc-rbtn-badge" id="badgePack">—</span>
+          </button>
         </div>
       </a>
 
@@ -170,11 +203,17 @@
     <div class="woc-home-sec-title">أدوات</div>
     <div class="woc-home-grid tools">
       <a class="woc-card" href="remove.html">
-        <div class="woc-card-top"><span class="woc-card-ico">🗑</span><span class="woc-card-name">حذف منتج</span></div>
+        <div class="woc-card-top">
+          <span class="woc-card-ico">🗑️</span>
+          <div><div class="woc-card-name">حذف منتج</div></div>
+        </div>
         <div class="woc-card-desc">شيل بند من أوردر COD غير مسدد — بتأكيدين إلزاميين</div>
       </a>
       <a class="woc-card" href="journey.html">
-        <div class="woc-card-top"><span class="woc-card-ico">🔎</span><span class="woc-card-name">رحلة الأوردر</span></div>
+        <div class="woc-card-top">
+          <span class="woc-card-ico">🔎</span>
+          <div><div class="woc-card-name">رحلة الأوردر</div></div>
+        </div>
         <div class="woc-card-desc">كل اللي حصل لأوردر واحد عبر التلات أدوات</div>
       </a>
     </div>
@@ -199,13 +238,22 @@
           <div id="aboutWorkers"></div>
           <h4>الأعداد في الشاشة الرئيسية</h4>
           <ul>
-            <li>بتتجاب <b>مرة واحدة بعد الدخول</b> والاتنين <b>بالتوازي</b> — مفيش أي polling هنا.
+            <li>بتتجاب بعد الدخول والاتنين <b>بالتوازي</b>، وبعد كده <b>بتتحدّث تلقائيًا
+                كل ١٥ دقيقة</b> — نفس فترة طابور التغليف بالظبط.</li>
+            <li>التحديث التلقائي <b>بيقف والتاب مقفول</b> ويكمّل أول ما ترجع.
                 <code>get_ready_orders</code> بيصفّح كل الأوردرات ويصنّف S2 لكل واحد،
-                فـ polling معناه مضاعفة أتقل endpoint × عدد الأجهزة × طول اليوم.</li>
+                فاستعلام على شاشة محدش شايفها تكلفته حقيقية على الـ Worker وعلى شوبيفاي.</li>
+            <li>عدّاد «آخر تحديث» جنب كل كارت <b>بيلوّن نفسه</b>: أخضر أقل من ٥ دقايق ·
+                أزرق أقل من ١٥ · كهرماني بعدها (والزرار كمان) · أحمر بعد ساعة.
+                والعدّاد بيتحدّث كل نص دقيقة <b>بلا أي نداء شبكة</b>.</li>
+            <li>زرار «تحديث» جوّه كل كارت <b>لكل طابور لوحده</b> — الاتنين Workers
+                مستقلين، وزرار موحّد كان هيخبّي مين اللي فشل.</li>
             <li>قبل أول جلب ناجح العدد <b>«—» مش «0»</b> — «ما اتحدّثش» ≠ «مفيش شغل».</li>
             <li>الفشل بيعرض <b>حالة فشل</b> مش صفر، والدخول للأداة <b>لسه شغّال</b>:
                 الطابور مش شرط للشغل، الموظف يقدر يسكن باركود عادي.</li>
-            <li>ختم الوقت بيتسجّل <b>حتى لو الطابور رجع فاضي</b>، وفي الفشل <b>مايتغيّرش</b>.</li>
+            <li>ختم الوقت بيتسجّل <b>حتى لو الطابور رجع فاضي</b>، وفي الفشل <b>مايتغيّرش</b> —
+                ولو كان فيه رقم ناجح قبل كده بيفضل معروض، والعدّاد الأحمر فوقه هو اللي
+                بيقول إنه قديم.</li>
           </ul>
         </div>
       </details>
@@ -249,7 +297,23 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.1.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.2.0</span>
+          <span class="cl-ver-date">06-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>تحديث تلقائي كل ١٥ دقيقة</b> للأعداد في الشاشة الرئيسية — بيقف والتاب مقفول ويكمّل أول ما ترجع، والعدّاد بيتسلّح من آخر تحديث ناجح مش من الدخول.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>لوحة <b>«آخر تحديث»</b> جوّه كل كارت — ختم بالتاريخ والوقت + عدّاد بيلوّن نفسه بالقِدَم، وزرار التحديث بيبقى كهرماني بعد ١٥ دقيقة.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>كروت الشاشة الرئيسية اتصمّمت من أول وجديد: أيقونة أكبر في مربع ملوّن · الرقم أوضح بوحدة «أوردر» · التقسيمة بقت <b>شيبس ملوّنة</b> · زرار تحديث أساسي ببادج العدد.</span></li>
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>أيقونة الطباعة في الشاشة الرئيسية كانت بتترسم <b>مربع فاضي</b> على أجهزة المخزن — بقت نفس أيقونة هيدر صفحة الطباعة بالحرف.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>زرار <b>🏠 الرئيسية</b> بقى مصمت أزرق و<b>في نص الهيدر</b> في كل الصفحات — كان بنفس شكل باقي الزراير بالظبط.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>زرار الموظف بقى <b>«الاسم ✕»</b> بدل «👤 الاسم — خروج».</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>اسم صفحة التغليف بقى <b>«قسم التغليف»</b> بدل «تشييك التغليف».</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.1.0</span>
           <span class="cl-ver-date">06-09-2026</span>
         </div>
         <ul class="cl-items">
@@ -492,6 +556,69 @@ async function finishLogin(username, displayName, logged) {
 // ══════════════════════════════════════════════════════════════
 const TYPE_LABEL = { S1: 'عادي', S2: 'استبدال/استرجاع' };
 
+// 🔴 التحديث التلقائي — كل ١٥ دقيقة (قرار أحمد 06-09-2026).
+//
+//    ده **بيلغي** قاعدة «مفيش polling على الشاشة الرئيسية» اللي كانت
+//    مكتوبة هنا. القرار مبني على إن `pack.html` بتعمل نفس الشيء بالظبط
+//    من v2.4.0 على **نفس** الـ endpoint — فالمبدأ اتكسر أصلاً، والرئيسية
+//    كانت الوحيدة الفاضلة على القاعدة القديمة.
+//
+//    ⚠️ الحراس التلاتة دول **مش تفاصيل تنفيذ** — من غيرهم ده بيبقى
+//       polling أعمى على أتقل endpoint في الستاك × عدد الأجهزة × طول
+//       اليوم، وده بالظبط اللي القاعدة القديمة اتكتبت عشانه:
+//
+//       ① التسليح بعد **كل جلب ناجح** (`armAuto` جوّه `loadQueue`) —
+//          فالعدّاد معناه «١٥ دقيقة من آخر تحديث فعلي» مش من الدخول.
+//       ② `document.hidden` = التاب مقفول/الجهاز مقفول = **مفيش
+//          استعلام**. بيتعلّم `dirty` بس، والجلب بيحصل أول ما الموظف
+//          يرجع للتاب. ده المكافئ المباشر لـ `rdyQueueVisible()`
+//          في صفحة التغليف — «مفيش استعلام على قايمة محدش شايفها».
+//       ③ النبضة (٣٠ ثانية) بتحدّث «منذ كام» **بلا أي نداء شبكة**.
+//
+//    ⚠️ تايمر **لكل طابور لوحده** مش تايمر واحد للاتنين: Workers
+//       مستقلين، وواحد ممكن يقع والتاني ينجح (قاعدة ٤). تايمر موحّد
+//       كان هيربط تسليح الناجح بفشل التاني.
+const WOC_AUTO_REFRESH_MS = 15 * 60 * 1000;
+const WOC_TICK_MS         = 30 * 1000;
+
+// تعريف كل طابور: الـ IDs بتاعته + إزاي بيتجاب.
+// ⚠️ الاتنين بيكتبوا الكاش المشترك بعد كل جلب ناجح، فـ `print.html`
+//    و`pack.html` بيفتحوا على بيانات أحدث بدل شاشة فاضية.
+const HOME_QUEUES = {
+  print: {
+    err: 'تعذّر جلب طابور الطباعة',
+    ids: { count:'cntPrint', chips:'chipsPrint', fail:'failPrint',
+           ago:'agoPrint', stamp:'stampPrint', btn:'btnPrint', badge:'badgePrint' },
+    async fetch() {
+      const data = await wocApi(WOC_WORKERS.printer).apiPath('/orders', {});
+      cacheSet(WOC_CACHE_PRINT, data);
+      const orders = data.orders || [];
+      return { total: orders.length,
+               s1: orders.filter(o => o.type === 'S1').length,
+               s2: orders.filter(o => o.type === 'S2').length };
+    },
+  },
+  pack: {
+    err: 'تعذّر جلب طابور التغليف',
+    ids: { count:'cntPack', chips:'chipsPack', fail:'failPack',
+           ago:'agoPack', stamp:'stampPack', btn:'btnPack', badge:'badgePack' },
+    async fetch() {
+      const data = await wocApi(WOC_WORKERS.pack).apiGet('get_ready_orders');
+      cacheSet(WOC_CACHE_PACK, data);
+      const orders = data.orders || [];
+      return { total: data.total ?? orders.length,
+               s1: orders.filter(o => o.orderType === 'S1').length,
+               s2: orders.filter(o => o.orderType === 'S2').length };
+    },
+  },
+};
+
+const homeQ = {
+  print: { at: null, dirty: false, timer: null, loading: false },
+  pack:  { at: null, dirty: false, timer: null, loading: false },
+};
+let homeTickTimer = null;
+
 function showHome() {
   const s = getSession();
   if (!s) return;
@@ -511,68 +638,141 @@ function showHome() {
 // الأعداد — الاتنين **بالتوازي**، و`allSettled` مش `all`:
 // Workers مختلفين = isolates مختلفين = توازي حقيقي، وفشل طابور
 // **مايخفيش** التاني.
-function loadCounts() { Promise.allSettled([loadPrintCount(), loadPackCount()]); }
-
-function setCount(el, splitEl, value, split) {
-  const c = document.getElementById(el);
-  c.textContent = value === null ? '—' : String(value);
-  c.classList.toggle('pending', value === null);
-  c.classList.remove('failed');
-  document.getElementById(splitEl).innerHTML = split || '&nbsp;';
+function loadCounts() {
+  renderFreshness();
+  startHomeTicker();
+  // ⚠️ التسليح **من الدخول** كمان مش من أول نجاح بس: لو أول جلب فشل،
+  //    تفضل فيه محاولة تلقائية بدل ما الكارت يقف على ⚠️ للأبد.
+  Object.keys(homeQ).forEach(armAuto);
+  Promise.allSettled([loadQueue('print'), loadQueue('pack')]);
 }
-function setFail(failEl, stampEl, btnEl, msg) {
-  // ⚠️ الختم **مايتغيّرش** في الفشل — ما نقولش للموظف إن القايمة دي
-  //    جديدة وهي مش جديدة.
-  const f = document.getElementById(failEl);
+
+// المسار الوحيد للجلب — الضغطة اليدوية والنبضة التلقائية الاتنين
+// بيعدّوا منه. نسخة تانية للتلقائي هتفترق مع أول تعديل (درس R1).
+async function loadQueue(key, silent = true) {
+  const q = homeQ[key], def = HOME_QUEUES[key];
+  if (q.loading) return;              // ضغطة + نبضة في نفس اللحظة
+  q.loading = true;
+  setRefreshing(key, true);
+  try {
+    const r = await def.fetch();
+    clearFail(def.ids.fail);
+    setCount(key, r.total, r.s1, r.s2);
+    // ⚠️ الختم بيتسجّل **حتى لو الطابور رجع فاضي** — «اتحدّث ورجع صفر»
+    //    معلومة، و«ما اتحدّثش» معلومة تانية خالص.
+    q.at = new Date();
+    q.dirty = false;
+    armAuto(key);                     // العدّاد بيبدأ من آخر تحديث ناجح
+  } catch (err) {
+    // ⚠️ الختم **مايتغيّرش** في الفشل — ما نقولش للموظف إن القايمة دي
+    //    جديدة وهي مش جديدة. والدخول للأداة **لسه شغّال** (قاعدة ٧).
+    setFail(key, err.message || def.err);
+    if (!silent) showToast(err.message || def.err, 'error', 5000);
+  } finally {
+    q.loading = false;
+    setRefreshing(key, false);
+    renderFreshness();
+  }
+}
+
+function setCount(key, total, s1, s2) {
+  const ids = HOME_QUEUES[key].ids;
+  const c = document.getElementById(ids.count);
+  c.textContent = String(total);
+  c.classList.remove('pending', 'failed');
+  document.getElementById(ids.chips).innerHTML =
+    `<span class="woc-chip chip-s1">${TYPE_LABEL.S1} <b>${s1}</b></span>` +
+    `<span class="woc-chip chip-s2">${TYPE_LABEL.S2} <b>${s2}</b></span>`;
+  document.getElementById(ids.badge).textContent = String(total);
+}
+
+function setFail(key, msg) {
+  const ids = HOME_QUEUES[key].ids;
+  const f = document.getElementById(ids.fail);
   f.style.display = '';
   f.textContent = `⚠️ ${msg}`;
-  document.getElementById(btnEl).disabled = false;
+  // ⚠️ «تعذّر الاستعلام» ≠ «مفيش شغل» — فالعدد **عمره ما يبقى صفر** هنا.
+  //    ولو فيه جلب ناجح قبل كده، الرقم القديم **بيفضل** والعدّاد النسبي
+  //    فوقه (الأحمر) هو اللي بيقول إنه قديم — ده أصدق من مسحه.
+  if (!homeQ[key].at) {
+    const c = document.getElementById(ids.count);
+    c.textContent = 'تعذّر';
+    c.classList.remove('pending');
+    c.classList.add('failed');
+  }
 }
-function clearFail(failEl) { const f = document.getElementById(failEl); f.style.display = 'none'; f.textContent = ''; }
-
-// ⚠️ الختم بيتسجّل **حتى لو الطابور رجع فاضي** — «اتحدّث ورجع صفر»
-//    معلومة، و«ما اتحدّثش» معلومة تانية خالص.
-function stamp(stampEl, at) {
-  document.getElementById(stampEl).textContent = `آخر تحديث ${sinceText(at)}`;
-}
-
-async function loadPrintCount() {
-  const btn = document.getElementById('btnPrint');
-  btn.disabled = true;
-  try {
-    const data = await wocApi(WOC_WORKERS.printer).apiPath('/orders', {});
-    cacheSet(WOC_CACHE_PRINT, data);
-    const orders = data.orders || [];
-    const s1 = orders.filter(o => o.type === 'S1').length;
-    const s2 = orders.filter(o => o.type === 'S2').length;
-    clearFail('failPrint');
-    setCount('cntPrint', 'splitPrint', orders.length,
-      `${TYPE_LABEL.S1} ${s1}<span class="sep">·</span>${TYPE_LABEL.S2} ${s2}`);
-    stamp('stampPrint', new Date().toISOString());
-  } catch (err) {
-    setFail('failPrint', 'stampPrint', 'btnPrint', err.message || 'تعذّر جلب طابور الطباعة');
-    document.getElementById('cntPrint').classList.add('failed');
-  } finally { btn.disabled = false; }
+function clearFail(failId) {
+  const f = document.getElementById(failId);
+  f.style.display = 'none';
+  f.textContent = '';
 }
 
-async function loadPackCount() {
-  const btn = document.getElementById('btnPack');
-  btn.disabled = true;
-  try {
-    const data = await wocApi(WOC_WORKERS.pack).apiGet('get_ready_orders');
-    cacheSet(WOC_CACHE_PACK, data);
-    const orders = data.orders || [];
-    const s1 = orders.filter(o => o.orderType === 'S1').length;
-    const s2 = orders.filter(o => o.orderType === 'S2').length;
-    clearFail('failPack');
-    setCount('cntPack', 'splitPack', data.total ?? orders.length,
-      `${TYPE_LABEL.S1} ${s1}<span class="sep">·</span>${TYPE_LABEL.S2} ${s2}`);
-    stamp('stampPack', new Date().toISOString());
-  } catch (err) {
-    setFail('failPack', 'stampPack', 'btnPack', err.message || 'تعذّر جلب طابور التغليف');
-    document.getElementById('cntPack').classList.add('failed');
-  } finally { btn.disabled = false; }
+function setRefreshing(key, on) {
+  const btn = document.getElementById(HOME_QUEUES[key].ids.btn);
+  if (!btn) return;
+  btn.disabled = on;
+  btn.classList.toggle('loading', on);
 }
+
+// ─── لوحة «آخر تحديث» ───
+// ⚠️ ثقة الموظف في الرقم بتتبني على السطر ده. طابور اتحدّث من ٤٠ دقيقة
+//    شكله بالظبط زي واحد اتحدّث من دقيقة لو مافيش عدّاد — فالعدّاد
+//    بيلوّن نفسه، والزرار بيتحوّل كهرماني بعد ١٥ دقيقة.
+function agoInfo(at, now) {
+  if (!at) return { cls: '', text: 'لسه ما اتحدّثش', stale: false };
+  const mins = Math.max(0, Math.floor((now - at.getTime()) / 60000));
+  if (mins < 1)  return { cls: 'ago-fresh', text: '⏱ منذ لحظات', stale: false };
+  if (mins < 5)  return { cls: 'ago-fresh', text: `⏱ منذ ${arMin(mins)}`, stale: false };
+  if (mins < 15) return { cls: 'ago-ok',    text: `⏱ منذ ${arMin(mins)}`, stale: false };
+  if (mins < 60) return { cls: 'ago-warn',  text: `⏱ منذ ${arMin(mins)} — يفضّل تحدّث`, stale: true };
+  return { cls: 'ago-stale', text: `⏱ منذ ${arHour(Math.floor(mins / 60))} — الرقم قديم، حدّث`, stale: true };
+}
+
+function renderFreshness(now = Date.now()) {
+  Object.keys(homeQ).forEach(key => {
+    const q = homeQ[key], ids = HOME_QUEUES[key].ids;
+    const info = agoInfo(q.at, now);
+    const ago = document.getElementById(ids.ago);
+    if (!ago) return;
+    ago.className   = `woc-ago ${info.cls}`;
+    ago.textContent = info.text;
+    const iso = q.at ? q.at.toISOString() : null;
+    document.getElementById(ids.stamp).innerHTML = iso
+      ? `<span class="woc-stamp-chip">${esc(formatDate(iso))}</span>`
+        + `<span class="woc-stamp-chip">${esc(formatTimeOnly(iso))}</span>`
+      : '<span class="woc-stamp-chip">—</span>';
+    document.getElementById(ids.btn).classList.toggle('is-stale', info.stale);
+  });
+}
+
+// ─── النبضة — أرقام محسوبة محليًا، **صفر نداء شبكة** ───
+function startHomeTicker() {
+  if (homeTickTimer) return;
+  homeTickTimer = setInterval(() => renderFreshness(), WOC_TICK_MS);
+}
+
+// ─── التحديث التلقائي ───
+function armAuto(key) {
+  stopAuto(key);
+  homeQ[key].timer = setInterval(() => autoTick(key), WOC_AUTO_REFRESH_MS);
+}
+function stopAuto(key) {
+  const q = homeQ[key];
+  if (q.timer) { clearInterval(q.timer); q.timer = null; }
+}
+function autoTick(key) {
+  if (!getSession()) { stopAuto(key); return; }
+  // ② التاب مخفي = القايمة دي محدش شايفها. علّم بس، والجلب عند الرجوع.
+  if (document.hidden) { homeQ[key].dirty = true; return; }
+  loadQueue(key);
+}
+
+// الرجوع للتاب — بيجيب اللي اتأجّل بس. `dirty` **مابيتصفّرش غير بعد
+// جلب ناجح**، فلو الجلب فشل أول رجوع تاني بيحاول.
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden || !getSession()) return;
+  Object.keys(homeQ).forEach(k => { if (homeQ[k].dirty) loadQueue(k); });
+});
 
 // ⚠️ الحلقة دي مكرّرة في الخمس صفحات **عن قصد**: `WOC_WORKERS` و`cmpVersion`
 //    في الـ shell، بس فحص Step 9 بيطلب وجودهم في كل صفحة، والقايمة نفسها

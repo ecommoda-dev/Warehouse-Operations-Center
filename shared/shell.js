@@ -42,7 +42,7 @@ const WOC_WORKERS = {
   remover: { url: 'https://order-item-remover-worker.ecommoda-dev.workers.dev',     min: '1.3.0', label: 'حذف منتج' },
 };
 
-const TOOL_VERSION = 'v1.1.0';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.2.0';                      // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const WOC_APP_ID   = 'warehouse_ops_center';         // قيمة `tool` في D1 — login/logout بس
 const SHOP_HANDLE  = '6c7e1a-53';
@@ -506,7 +506,7 @@ async function doLogout() {
 //
 // الترتيب RTL (القراءة من اليمين للشمال):
 //
-//   [🏠 الرئيسية] [extras خاصة بالصفحة] [ℹ️ عن الأداة] [vX.Y.Z 📋] [👤 اسم — خروج] [⚙️ الإعدادات]
+//   [العنوان]  ←→  [🏠 الرئيسية في النص]  ←→  [extras] [ℹ️] [vX.Y.Z 📋] [اسم ✕] [⚙️]
 //
 // ⚠️ `⚙️ الإعدادات` **آخر عنصر** في ترتيب القراءة = أقصى الشمال بصريًا
 //    (Step 3 · Header Button Order). الأدوات التلاتة الحالية مش متطابقة
@@ -515,14 +515,21 @@ async function doLogout() {
 //    الطبيعي. في `index.html` الزرار ده مايتعرضش (`home: false`).
 function wocHeader(opts = {}) {
   const { icon = '📦', title = '', subtitle = '', home = true, extras = '', session = null } = opts;
-  const homeBtn = home
-    ? `<button class="hbtn" onclick="location.href='index.html'" title="الشاشة الرئيسية">🏠 الرئيسية</button>`
+  // 🔴 زرار الرئيسية **في المنطقة الوسطى** ومصمت أزرق (قرار أحمد 06-09-2026).
+  //    ده انحراف مقصود عن Step 3 (الرئيسية أول عنصر في قراءة RTL) —
+  //    السبب إن الموظف بيرجع منه من كل أداة، وكان بيتوه وسط زراير
+  //    بنفس الشكل بالظبط. موثّق في `CLAUDE.md` §الهيدر الموحّد.
+  const homeZone = home
+    ? `<div class="app-header-center"><button class="hbtn hbtn-home" onclick="location.href='index.html'" title="الشاشة الرئيسية">🏠 الرئيسية</button></div>`
     : '';
+  // زرار الموظف **هو** زرار الخروج — ✕ بدل كلمة «خروج»، و👤 اتشالت
+  // لأن الاسم لوحده كافي. `aria-label` بيحافظ على الوضوح لقارئ الشاشة.
   const userBtn = session
-    ? `<button class="hbtn active-user" id="activeUserBtn" onclick="doLogout()" title="تسجيل الخروج">👤 ${esc(session.displayName)} — خروج</button>`
+    ? `<button class="hbtn active-user" id="activeUserBtn" onclick="doLogout()" title="تسجيل الخروج — ${esc(session.displayName)}" aria-label="تسجيل الخروج">`
+      + `<span>${esc(session.displayName)}</span><span class="user-x" aria-hidden="true">✕</span></button>`
     : '';
   return `
-    <div class="app-header">
+    <div class="app-header${home ? ' has-center' : ''}">
       <div class="app-title">
         <span class="app-icon">${icon}</span>
         <div class="app-title-text">
@@ -530,8 +537,8 @@ function wocHeader(opts = {}) {
           <span>${esc(subtitle)}</span>
         </div>
       </div>
+      ${homeZone}
       <div class="app-header-btns">
-        ${homeBtn}
         ${extras}
         <button class="hbtn" id="verStaleBtn" style="display:none" onclick="showWorkerStale()">⚠️ الـ Worker نسخة قديمة</button>
         <button class="hbtn" onclick="openAbout()">ℹ️ عن الأداة</button>

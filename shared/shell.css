@@ -107,14 +107,38 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .app-title-text h1{font-size:15px;font-weight:700;line-height:1.2}
 .app-title-text span{font-size:11px;color:var(--text-muted)}
 .app-header-btns{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+
+/* الهيدر ثلاثي المناطق لما زرار الرئيسية موجود: العنوان يمين ·
+   الرئيسية في النص · باقي الزراير شمال.
+   انحراف موثّق عن ترتيب Step 3 (الرئيسية أول عنصر في قراءة RTL) —
+   قرار أحمد 06-09-2026. index.html مالهاش المنطقة دي (home:false). */
+.app-header.has-center{display:grid;grid-template-columns:1fr auto 1fr;flex-wrap:nowrap}
+.app-header.has-center .app-header-btns{justify-content:flex-end}
+.app-header-center{display:flex;align-items:center;justify-content:center}
 .hbtn{display:flex;align-items:center;gap:5px;padding:6px 12px;border:1.5px solid var(--border-strong);background:var(--surface);border-radius:var(--radius-sm);font-family:inherit;font-size:12px;font-weight:600;color:var(--text-secondary);cursor:pointer;transition:all .15s;white-space:nowrap}
 .hbtn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
 .hbtn:disabled{opacity:.5;cursor:not-allowed}
 .hbtn.settings-configured{border-color:var(--green);color:var(--green);background:var(--green-light)}
 .hbtn.ver-btn{border-color:var(--accent-border);color:var(--accent-dark);background:var(--accent-light);font-family:var(--font-mono);font-weight:700}
 .hbtn.ver-btn:hover{background:var(--accent-hover);border-color:var(--accent-hover-border);color:var(--accent-dark)}
-.hbtn.active-user{border-color:var(--green);color:var(--green);background:var(--green-light)}
+.hbtn.active-user{border-color:var(--green);color:var(--green);background:var(--green-light);gap:8px}
 .hbtn.active-user:hover{border-color:var(--red);color:var(--red);background:var(--red-light)}
+/* زرار الموظف **هو** زرار الخروج. الأيقونة بتقول «اقفل» من غير كلمة،
+   واسم الموظف لوحده كافي للتعريف (قرار أحمد 06-09-2026). */
+.hbtn.active-user .user-x{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex-shrink:0;border-radius:50%;border:1px solid var(--green-border);background:var(--green-light);font-size:9.5px;font-weight:900;line-height:1;transition:all .15s}
+.hbtn.active-user:hover .user-x{border-color:var(--red);background:var(--red);color:var(--on-accent)}
+
+/* الرئيسية — مصمت أزرق، أوضح زرار في الهيدر (قرار أحمد 06-09-2026).
+   الموظف بيرجع منه من كل أداة، فلازم يفضل مميّز عن باقي `.hbtn`. */
+.hbtn.hbtn-home{border-color:var(--accent);background:var(--accent);color:var(--on-accent);font-weight:800;padding:7px 18px}
+.hbtn.hbtn-home:hover{border-color:var(--accent-dark);background:var(--accent-dark);color:var(--on-accent)}
+.hbtn.hbtn-home:focus-visible{outline:none;box-shadow:0 0 0 3px var(--focus-ring)}
+
+/* تحت 1100px الشبكة التلاتية بتخنق الزراير — بترجع flex عادي
+   و`justify-content:space-between` بيسيب الرئيسية في النص برضه. */
+@media (max-width:1100px){
+  .app-header.has-center{display:flex;flex-wrap:wrap}
+}
 
 /* ── Toast ── */
 .toast-container{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
@@ -231,38 +255,77 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
    §WOC-HOME — كروت الشاشة الرئيسية (الهب بس)
    الصف الأول: طوابير بعدّاد حيّ · الصف التاني: أدوات بلا عدّاد.
    ⚠️ أداة جديدة بتدخل الصف التاني افتراضيًا — عدّاد حيّ = جلب تقيل
-      عند كل دخول، وماياخدهوش إلا اللي عنده طابور حقيقي وجلبه رخيص.
+      عند كل دخول وكل تحديث تلقائي، وماياخدهوش إلا اللي عنده طابور
+      حقيقي وجلبه رخيص.
    ══════════════════════════════════════════════════════════════ */
-.woc-home-sec{margin-bottom:16px}
-.woc-home-sec-title{font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
-.woc-home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
-.woc-home-grid.tools{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.woc-home-sec{margin-bottom:18px}
+.woc-home-sec-title{display:flex;align-items:center;gap:10px;font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:11px}
+.woc-home-sec-title::after{content:"";flex:1;height:1px;background:var(--border)}
+.woc-home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.woc-home-grid.tools{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
 
-.woc-card{display:flex;flex-direction:column;gap:10px;text-align:right;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px;font-family:var(--font-body);color:var(--text-primary);text-decoration:none;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .06s}
+.woc-card{display:flex;flex-direction:column;gap:11px;text-align:right;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 18px 12px;font-family:var(--font-body);color:var(--text-primary);text-decoration:none;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .06s}
 .woc-card:hover{border-color:var(--accent);box-shadow:0 6px 18px rgba(37,99,235,.12)}
 .woc-card:active{transform:translateY(1px)}
 .woc-card:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--focus-ring)}
 
-.woc-card-top{display:flex;align-items:center;gap:10px}
-.woc-card-ico{font-size:24px;line-height:1}
-.woc-card-name{font-size:15px;font-weight:800}
+/* ⚠️ الأيقونة في مربع ملوّن — اللون هو اللي بيفرّق الطباعة عن التغليف
+   قبل ما الموظف يقرا الاسم أصلاً. والإيموجي لازم يكون **نفس** إيموجي
+   هيدر الأداة نفسها، وبـ variation selector (FE0F) عشان يترسم ملوّن
+   على أجهزة المخزن بدل مربع فاضي. */
+.woc-card-top{display:flex;align-items:center;gap:12px}
+.woc-card-ico{width:52px;height:52px;flex-shrink:0;border-radius:13px;display:grid;place-items:center;font-size:28px;line-height:1;border:1px solid var(--border);background:var(--surface-2)}
+.woc-card-ico.ico-blue{background:var(--accent-light);border-color:var(--accent-border)}
+.woc-card-ico.ico-green{background:var(--green-light);border-color:var(--green-border)}
+.woc-card-name{font-size:15.5px;font-weight:800;line-height:1.3}
 .woc-card-desc{font-size:12px;color:var(--text-secondary);font-weight:600;line-height:1.6}
 
 /* العدّاد — «—» قبل أول جلب ناجح، مش «0».
    «ما اتحدّثش» ≠ «مفيش شغل» (نفس قاعدة `rdySetCounts(null,…)`). */
-.woc-count{font-family:var(--font-mono);font-size:38px;font-weight:800;line-height:1;color:var(--accent);direction:ltr;text-align:center;padding:4px 0}
+.woc-num{display:flex;align-items:baseline;gap:9px}
+.woc-count{font-family:var(--font-mono);font-size:44px;font-weight:900;line-height:1;color:var(--accent);direction:ltr;font-variant-numeric:tabular-nums}
 .woc-count.pending{color:var(--text-muted)}
-.woc-count.failed{color:var(--red);font-size:26px}
-.woc-split{font-size:12px;font-weight:700;color:var(--text-secondary);text-align:center;direction:rtl}
-.woc-split .sep{color:var(--border-strong);margin:0 6px}
+.woc-count.failed{color:var(--red);font-size:24px}
+.woc-unit{font-size:12px;font-weight:700;color:var(--text-muted)}
 
+/* التقسيمة — شيبس بنفس لغة `.count-badge` في صفحة التغليف */
+.woc-chips{display:flex;gap:6px;flex-wrap:wrap;min-height:22px}
+.woc-chip{display:inline-flex;align-items:center;gap:5px;padding:2.5px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface-2);font-size:11.5px;font-weight:800;color:var(--text-secondary)}
+.woc-chip b{font-family:var(--font-mono);font-variant-numeric:tabular-nums;direction:ltr}
+.woc-chip.chip-s1{background:var(--accent-light);color:var(--accent-dark);border-color:var(--accent-border)}
+.woc-chip.chip-s2{background:var(--purple-light);color:var(--purple-dark);border-color:var(--purple-border)}
+
+/* فوتر الكارت — لوحة «آخر تحديث» + زرار التحديث.
+   `margin-top:auto` بيخلّي الفوترين متحاذيين مهما اختلف ارتفاع المحتوى. */
+.woc-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:10px;margin-top:auto}
+.woc-fresh{display:flex;flex-direction:column;gap:4px}
+.woc-fresh-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.woc-fresh-lbl{font-size:10px;font-weight:800;color:var(--text-muted)}
 /* ختم «آخر تحديث» — بيتسجّل حتى لو الطابور رجع فاضي.
    وفي الفشل **مايتغيّرش**: ما نقولش للموظف إن القايمة جديدة وهي مش جديدة. */
-.woc-stamp{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid var(--border);padding-top:9px;font-size:11px;font-weight:700;color:var(--text-muted);font-family:var(--font-mono);direction:ltr}
-.woc-stamp .woc-stamp-txt{direction:rtl;font-family:var(--font-body)}
-.woc-stamp-btn{padding:4px 10px;border:1.5px solid var(--border-strong);background:var(--surface);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:11px;font-weight:700;color:var(--text-secondary);cursor:pointer;transition:all .15s}
-.woc-stamp-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
-.woc-stamp-btn:disabled{opacity:.5;cursor:not-allowed}
+.woc-stamp-chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;background:var(--surface-2);border:1px solid var(--border);font-family:var(--font-mono);font-size:10.5px;font-weight:700;color:var(--text-secondary);direction:ltr;white-space:nowrap}
+/* عدّاد القِدَم بيلوّن نفسه — طابور عمره نص ساعة شكله بالظبط زي واحد
+   اتحدّث من دقيقة لو مافيش عدّاد، والفرق ده لازم يبان من غير حساب. */
+.woc-ago{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap;border:1px solid var(--border);background:var(--surface-2);color:var(--text-secondary)}
+.woc-ago.ago-fresh{background:var(--green-light);color:var(--green-dark);border-color:var(--green-border)}
+.woc-ago.ago-ok{background:var(--accent-light);color:var(--accent-dark);border-color:var(--accent-border)}
+.woc-ago.ago-warn{background:var(--amber-light);color:var(--amber-dark);border-color:var(--amber-border)}
+.woc-ago.ago-stale{background:var(--red-light);color:var(--red-dark);border-color:var(--red-border)}
+
+/* زرار التحديث — أساسي مش ثانوي: هو المخرج الوحيد لما العدّاد يبقى
+   كهرماني/أحمر والموظف عايز رقم دلوقتي. والبادج بيقول «فيه كام»
+   من غير ما الموظف يفتح الأداة. */
+.woc-rbtn{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:var(--radius-sm);border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);font-family:var(--font-body);font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;box-shadow:var(--shadow);transition:background .15s,border-color .15s,transform .06s}
+.woc-rbtn:hover:not(:disabled){background:var(--accent-dark);border-color:var(--accent-dark)}
+.woc-rbtn:active:not(:disabled){transform:translateY(1px)}
+.woc-rbtn:disabled{opacity:.6;cursor:not-allowed}
+.woc-rbtn:focus-visible{outline:none;box-shadow:0 0 0 3px var(--focus-ring)}
+.woc-rbtn.is-stale{background:var(--amber);border-color:var(--amber)}
+.woc-rbtn.is-stale:hover:not(:disabled){background:var(--amber-dark);border-color:var(--amber-dark)}
+.woc-rbtn-ico{font-size:14px;line-height:1;display:inline-block}
+.woc-rbtn.loading .woc-rbtn-ico{animation:spin .8s linear infinite}
+.woc-rbtn-badge{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:19px;padding:0 6px;border-radius:20px;background:var(--on-accent);color:var(--accent-dark);font-family:var(--font-mono);font-size:11px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
+.woc-rbtn.is-stale .woc-rbtn-badge{color:var(--amber-dark)}
 
 /* حالة الفشل — ⚠️ + «حاول تاني»، والدخول للأداة **لسه شغّال**:
    الطابور مش شرط للشغل، الموظف يقدر يسكن باركود عادي. */
