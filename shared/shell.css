@@ -276,7 +276,10 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .woc-row-id{display:flex;align-items:center;gap:12px;flex:0 0 auto;min-width:215px}
 .woc-row-num{flex:0 0 auto;min-width:125px}
 .woc-row-mid{flex:1 1 230px;min-width:215px;display:flex;flex-direction:column;gap:7px}
-.woc-row-act{flex:0 0 auto;margin-inline-start:auto}
+/* منطقة الأكشن = لوحة «آخر تحديث» + زرار التحديث **مع بعض**
+   (نفس `.rdy-actions` في `pack.html`). `align-items:stretch` بيخلّي
+   الزرار بنفس ارتفاع اللوحة بالظبط. */
+.woc-row-act{flex:0 0 auto;margin-inline-start:auto;display:flex;align-items:stretch;gap:8px;flex-wrap:wrap}
 
 /* ══ الأدوات = مربعات مضغوطة تحت الطوابير ══
    ⚠️ `auto-fit` مقصود — أداة جديدة بتدخل الصف من غير أي تعديل CSS
@@ -314,12 +317,17 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .woc-chip.chip-s1{background:var(--accent-light);color:var(--accent-dark);border-color:var(--accent-border)}
 .woc-chip.chip-s2{background:var(--purple-light);color:var(--purple-dark);border-color:var(--purple-border)}
 
-/* لوحة «آخر تحديث» — سطر واحد جوّه منطقة التفاصيل */
-.woc-fresh-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.woc-fresh-lbl{font-size:10px;font-weight:800;color:var(--text-muted)}
+/* لوحة «آخر تحديث» — **نفس شكل `.rdy-fresh` في `pack.html`** بالحرف:
+   صندوق محدّد بسطرين، الأول اللافتة + عدّاد القِدَم والتاني ختم
+   التاريخ والوقت، وملزوق بزرار التحديث في منطقة واحدة.
+   ⚠️ الموظف بيشوف **نفس اللوحة** في الهب وفي صفحة التغليف —
+      شكلين مختلفين لنفس المعلومة معناهم إنه يتعلّمها مرتين. */
+.woc-fresh{display:flex;flex-direction:column;justify-content:center;gap:5px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow);padding:7px 11px}
+.woc-fresh-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.woc-fresh-lbl{font-size:10.5px;font-weight:700;color:var(--text-muted)}
 /* ختم «آخر تحديث» — بيتسجّل حتى لو الطابور رجع فاضي.
    وفي الفشل **مايتغيّرش**: ما نقولش للموظف إن القايمة جديدة وهي مش جديدة. */
-.woc-stamp-chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;background:var(--surface-2);border:1px solid var(--border);font-family:var(--font-mono);font-size:10.5px;font-weight:700;color:var(--text-secondary);direction:ltr;white-space:nowrap}
+.woc-stamp-chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;background:var(--surface-2);border:1px solid var(--border);font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--text-secondary);direction:ltr;white-space:nowrap}
 /* عدّاد القِدَم بيلوّن نفسه — طابور عمره نص ساعة شكله بالظبط زي واحد
    اتحدّث من دقيقة لو مافيش عدّاد، والفرق ده لازم يبان من غير حساب. */
 .woc-ago{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap;border:1px solid var(--border);background:var(--surface-2);color:var(--text-secondary)}
@@ -331,7 +339,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 /* زرار التحديث — أساسي مش ثانوي: هو المخرج الوحيد لما العدّاد يبقى
    كهرماني/أحمر والموظف عايز رقم دلوقتي. والبادج بيقول «فيه كام»
    من غير ما الموظف يفتح الأداة. */
-.woc-rbtn{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:var(--radius-sm);border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);font-family:var(--font-body);font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;box-shadow:var(--shadow);transition:background .15s,border-color .15s,transform .06s}
+.woc-rbtn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 15px;border-radius:var(--radius-sm);border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);font-family:var(--font-body);font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;box-shadow:var(--shadow);transition:background .15s,border-color .15s,transform .06s}
 .woc-rbtn:hover:not(:disabled){background:var(--accent-dark);border-color:var(--accent-dark)}
 .woc-rbtn:active:not(:disabled){transform:translateY(1px)}
 .woc-rbtn:disabled{opacity:.6;cursor:not-allowed}
@@ -340,7 +348,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .woc-rbtn.is-stale:hover:not(:disabled){background:var(--amber-dark);border-color:var(--amber-dark)}
 .woc-rbtn-ico{font-size:14px;line-height:1;display:inline-block}
 .woc-rbtn.loading .woc-rbtn-ico{animation:spin .8s linear infinite}
-.woc-rbtn-badge{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:19px;padding:0 6px;border-radius:20px;background:var(--on-accent);color:var(--accent-dark);font-family:var(--font-mono);font-size:11px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
+.woc-rbtn-badge{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:20px;padding:0 6px;border-radius:20px;background:var(--on-accent);color:var(--accent-dark);font-family:var(--font-mono);font-size:11.5px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
 .woc-rbtn.is-stale .woc-rbtn-badge{color:var(--amber-dark)}
 
 /* حالة الفشل — ⚠️ + «حاول تاني»، والدخول للأداة **لسه شغّال**:
