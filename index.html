@@ -134,87 +134,83 @@
 
   <div class="home-hint">
     اختر المحطة اللي هتشتغل عليها. الأعداد بتتحدّث <b>تلقائيًا كل ١٥ دقيقة</b>
-    وبعد كل تحديث يدوي — والعدّاد جنب كل كارت بيقول القايمة دي عمرها قد إيه.
+    وبعد كل تحديث يدوي — والعدّاد في كل صف بيقول الرقم ده عمره قد إيه.
   </div>
 
   <div class="woc-home-sec">
     <div class="woc-home-sec-title">الطوابير</div>
-    <div class="woc-home-grid">
 
-      <!-- ⚠️ الإيموجي **نفس** إيموجي هيدر `print.html` بالحرف
-           (U+1F5A8 U+FE0F) — من غير الـ FE0F بيترسم مربع فاضي على
-           أجهزة المخزن، وده فشل صامت الموظف مش هيبلّغ عنه. -->
-      <a class="woc-card" href="print.html">
-        <div class="woc-card-top">
+    <!-- ⚠️ الإيموجي **نفس** إيموجي هيدر الأداة نفسها بالحرف
+         (U+1F5A8 U+FE0F للطباعة) — من غير الـ FE0F بيترسم مربع فاضي
+         على أجهزة المخزن، وده فشل صامت الموظف مش هيبلّغ عنه. -->
+      <a class="woc-row" href="print.html">
+        <div class="woc-row-id">
           <span class="woc-card-ico ico-blue">🖨️</span>
           <div>
             <div class="woc-card-name">جاهز للطباعة</div>
             <div class="woc-card-desc">فواتير مستنية الطباعة</div>
           </div>
         </div>
-        <div class="woc-num"><span class="woc-count pending" id="cntPrint">—</span><span class="woc-unit">أوردر</span></div>
-        <div class="woc-chips" id="chipsPrint"></div>
-        <div class="woc-fail" id="failPrint" style="display:none"></div>
-        <div class="woc-foot">
-          <div class="woc-fresh">
-            <div class="woc-fresh-row">
-              <span class="woc-fresh-lbl">آخر تحديث</span>
-              <span class="woc-ago" id="agoPrint">لسه ما اتحدّثش</span>
-            </div>
-            <div class="woc-fresh-row" id="stampPrint"><span class="woc-stamp-chip">—</span></div>
+        <div class="woc-row-num woc-num">
+          <span class="woc-count pending" id="cntPrint">—</span><span class="woc-unit">أوردر</span>
+        </div>
+        <div class="woc-row-mid">
+          <div class="woc-chips" id="chipsPrint"></div>
+          <div class="woc-fail" id="failPrint" style="display:none"></div>
+          <div class="woc-fresh-row">
+            <span class="woc-fresh-lbl">آخر تحديث</span>
+            <span class="woc-ago" id="agoPrint">لسه ما اتحدّثش</span>
+            <span id="stampPrint"><span class="woc-stamp-chip">—</span></span>
           </div>
+        </div>
+        <div class="woc-row-act">
           <button class="woc-rbtn" id="btnPrint"
                   onclick="event.preventDefault();event.stopPropagation();loadQueue('print', false)">
             <span class="woc-rbtn-ico">↺</span><span>تحديث</span><span class="woc-rbtn-badge" id="badgePrint">—</span>
           </button>
         </div>
       </a>
-
-      <a class="woc-card" href="pack.html">
-        <div class="woc-card-top">
+      <a class="woc-row" href="pack.html">
+        <div class="woc-row-id">
           <span class="woc-card-ico ico-green">📦</span>
           <div>
             <div class="woc-card-name">جاهز للتغليف</div>
             <div class="woc-card-desc">اتطبع ولسه ما اتغلّفش</div>
           </div>
         </div>
-        <div class="woc-num"><span class="woc-count pending" id="cntPack">—</span><span class="woc-unit">أوردر</span></div>
-        <div class="woc-chips" id="chipsPack"></div>
-        <div class="woc-fail" id="failPack" style="display:none"></div>
-        <div class="woc-foot">
-          <div class="woc-fresh">
-            <div class="woc-fresh-row">
-              <span class="woc-fresh-lbl">آخر تحديث</span>
-              <span class="woc-ago" id="agoPack">لسه ما اتحدّثش</span>
-            </div>
-            <div class="woc-fresh-row" id="stampPack"><span class="woc-stamp-chip">—</span></div>
+        <div class="woc-row-num woc-num">
+          <span class="woc-count pending" id="cntPack">—</span><span class="woc-unit">أوردر</span>
+        </div>
+        <div class="woc-row-mid">
+          <div class="woc-chips" id="chipsPack"></div>
+          <div class="woc-fail" id="failPack" style="display:none"></div>
+          <div class="woc-fresh-row">
+            <span class="woc-fresh-lbl">آخر تحديث</span>
+            <span class="woc-ago" id="agoPack">لسه ما اتحدّثش</span>
+            <span id="stampPack"><span class="woc-stamp-chip">—</span></span>
           </div>
+        </div>
+        <div class="woc-row-act">
           <button class="woc-rbtn" id="btnPack"
                   onclick="event.preventDefault();event.stopPropagation();loadQueue('pack', false)">
             <span class="woc-rbtn-ico">↺</span><span>تحديث</span><span class="woc-rbtn-badge" id="badgePack">—</span>
           </button>
         </div>
       </a>
-
-    </div>
   </div>
 
   <div class="woc-home-sec">
     <div class="woc-home-sec-title">أدوات</div>
-    <div class="woc-home-grid tools">
-      <a class="woc-card" href="remove.html">
-        <div class="woc-card-top">
-          <span class="woc-card-ico">🗑️</span>
-          <div><div class="woc-card-name">حذف منتج</div></div>
-        </div>
-        <div class="woc-card-desc">شيل بند من أوردر COD غير مسدد — بتأكيدين إلزاميين</div>
+    <div class="woc-tools-grid">
+      <a class="woc-tool" href="remove.html">
+        <span class="woc-card-ico">🗑️</span>
+        <div class="woc-card-name">حذف منتج</div>
+        <div class="woc-card-desc">أوردر COD غير مسدد — بتأكيدين</div>
       </a>
-      <a class="woc-card" href="journey.html">
-        <div class="woc-card-top">
-          <span class="woc-card-ico">🔎</span>
-          <div><div class="woc-card-name">رحلة الأوردر</div></div>
-        </div>
-        <div class="woc-card-desc">كل اللي حصل لأوردر واحد عبر التلات أدوات</div>
+      <a class="woc-tool" href="journey.html">
+        <span class="woc-card-ico">🔎</span>
+        <div class="woc-card-name">رحلة الأوردر</div>
+        <div class="woc-card-desc">تاريخ أوردر واحد عبر التلات أدوات</div>
       </a>
     </div>
   </div>
@@ -243,10 +239,10 @@
             <li>التحديث التلقائي <b>بيقف والتاب مقفول</b> ويكمّل أول ما ترجع.
                 <code>get_ready_orders</code> بيصفّح كل الأوردرات ويصنّف S2 لكل واحد،
                 فاستعلام على شاشة محدش شايفها تكلفته حقيقية على الـ Worker وعلى شوبيفاي.</li>
-            <li>عدّاد «آخر تحديث» جنب كل كارت <b>بيلوّن نفسه</b>: أخضر أقل من ٥ دقايق ·
+            <li>عدّاد «آخر تحديث» في كل صف <b>بيلوّن نفسه</b>: أخضر أقل من ٥ دقايق ·
                 أزرق أقل من ١٥ · كهرماني بعدها (والزرار كمان) · أحمر بعد ساعة.
                 والعدّاد بيتحدّث كل نص دقيقة <b>بلا أي نداء شبكة</b>.</li>
-            <li>زرار «تحديث» جوّه كل كارت <b>لكل طابور لوحده</b> — الاتنين Workers
+            <li>زرار «تحديث» جوّه كل صف <b>لكل طابور لوحده</b> — الاتنين Workers
                 مستقلين، وزرار موحّد كان هيخبّي مين اللي فشل.</li>
             <li>قبل أول جلب ناجح العدد <b>«—» مش «0»</b> — «ما اتحدّثش» ≠ «مفيش شغل».</li>
             <li>الفشل بيعرض <b>حالة فشل</b> مش صفر، والدخول للأداة <b>لسه شغّال</b>:
@@ -297,13 +293,25 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.2.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.3.0</span>
+          <span class="cl-ver-date">06-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>الطوابير بقت <b>صفوف بعرض الشاشة</b> بدل كروت جنب بعض — الرقم والتقسيمة ولوحة «آخر تحديث» وزرار التحديث كلهم <b>على سطر واحد</b>، والقراءة بقت من فوق لتحت.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>رسالة الفشل بقى ليها <b>مساحة كاملة</b> جوّه الصف بدل ما تزوّد طول الكارت وتبوّظ محاذاة اللي جنبه.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>الأدوات بقت <b>مربعات مضغوطة</b> تحت الطوابير، والصف بيتوسّع لوحده لو أداة جديدة اتضافت.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.2.0</span>
           <span class="cl-ver-date">06-09-2026</span>
         </div>
         <ul class="cl-items">
           <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>تحديث تلقائي كل ١٥ دقيقة</b> للأعداد في الشاشة الرئيسية — بيقف والتاب مقفول ويكمّل أول ما ترجع، والعدّاد بيتسلّح من آخر تحديث ناجح مش من الدخول.</span></li>
           <li class="cl-item"><span class="cl-tag new">جديد</span><span>لوحة <b>«آخر تحديث»</b> جوّه كل كارت — ختم بالتاريخ والوقت + عدّاد بيلوّن نفسه بالقِدَم، وزرار التحديث بيبقى كهرماني بعد ١٥ دقيقة.</span></li>
-          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>كروت الشاشة الرئيسية اتصمّمت من أول وجديد: أيقونة أكبر في مربع ملوّن · الرقم أوضح بوحدة «أوردر» · التقسيمة بقت <b>شيبس ملوّنة</b> · زرار تحديث أساسي ببادج العدد.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>الشاشة الرئيسية اتصمّمت من أول وجديد: أيقونة أكبر في مربع ملوّن · الرقم أوضح بوحدة «أوردر» · التقسيمة بقت <b>شيبس ملوّنة</b> · زرار تحديث أساسي ببادج العدد.</span></li>
           <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>أيقونة الطباعة في الشاشة الرئيسية كانت بتترسم <b>مربع فاضي</b> على أجهزة المخزن — بقت نفس أيقونة هيدر صفحة الطباعة بالحرف.</span></li>
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span>زرار <b>🏠 الرئيسية</b> بقى مصمت أزرق و<b>في نص الهيدر</b> في كل الصفحات — كان بنفس شكل باقي الزراير بالظبط.</span></li>
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span>زرار الموظف بقى <b>«الاسم ✕»</b> بدل «👤 الاسم — خروج».</span></li>
