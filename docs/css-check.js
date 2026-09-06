@@ -1,6 +1,6 @@
 // فحص CSS بـ parser حقيقي — مش grep. بيتأكد إن كتلة التوكنز موجودة **كقاعدة**
 // مش مبلوعة جوّه selector غلط، وإن كل var(--x) مستخدمة معرّفة فعلاً.
-const postcss = require('/tmp/claude-0/node_modules/postcss');
+const postcss = require('postcss')   // ثبّته بـ npm i postcss --no-save قبل الفحص;
 const fs = require('fs');
 const path = require('path');
 
