@@ -253,27 +253,46 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 
 /* ══════════════════════════════════════════════════════════════
    §WOC-HOME — كروت الشاشة الرئيسية (الهب بس)
-   الصف الأول: طوابير بعدّاد حيّ · الصف التاني: أدوات بلا عدّاد.
-   ⚠️ أداة جديدة بتدخل الصف التاني افتراضيًا — عدّاد حيّ = جلب تقيل
+   قسم «الطوابير» = صفوف بعدّاد حيّ (`.woc-row`) ·
+   قسم «أدوات» = مربعات مضغوطة بلا عدّاد (`.woc-tool`).
+   ⚠️ أداة جديدة بتدخل قسم «أدوات» افتراضيًا — عدّاد حيّ = جلب تقيل
       عند كل دخول وكل تحديث تلقائي، وماياخدهوش إلا اللي عنده طابور
       حقيقي وجلبه رخيص.
    ══════════════════════════════════════════════════════════════ */
 .woc-home-sec{margin-bottom:18px}
 .woc-home-sec-title{display:flex;align-items:center;gap:10px;font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:11px}
 .woc-home-sec-title::after{content:"";flex:1;height:1px;background:var(--border)}
-.woc-home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
-.woc-home-grid.tools{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+/* ══ الطوابير = صفوف بعرض الشاشة (اتجاه B — قرار أحمد 06-09-2026) ══
+   القراءة من فوق لتحت مش جنب بعض. السبب العملي: الصف بيوسّع الرقم
+   والتقسيمة والختم والزرار **على سطر واحد**، وبيسع رسالة فشل كاملة
+   من غير ما الكارت يطول ويبوّظ محاذاة اللي جنبه.
+   ⚠️ وطابور تالت بيدخل **صف زيادة** — مش تخطيط جديد. */
+.woc-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 18px;margin-bottom:10px;font-family:var(--font-body);color:var(--text-primary);text-decoration:none;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .06s}
+.woc-row:last-child{margin-bottom:0}
+.woc-row:hover{border-color:var(--accent);box-shadow:0 6px 18px rgba(37,99,235,.12)}
+.woc-row:active{transform:translateY(1px)}
+.woc-row:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--focus-ring)}
+/* المناطق الأربعة: الهوية · الرقم · التفاصيل (بتتمدّد) · الأكشن */
+.woc-row-id{display:flex;align-items:center;gap:12px;flex:0 0 auto;min-width:215px}
+.woc-row-num{flex:0 0 auto;min-width:125px}
+.woc-row-mid{flex:1 1 230px;min-width:215px;display:flex;flex-direction:column;gap:7px}
+.woc-row-act{flex:0 0 auto;margin-inline-start:auto}
 
-.woc-card{display:flex;flex-direction:column;gap:11px;text-align:right;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 18px 12px;font-family:var(--font-body);color:var(--text-primary);text-decoration:none;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .06s}
-.woc-card:hover{border-color:var(--accent);box-shadow:0 6px 18px rgba(37,99,235,.12)}
-.woc-card:active{transform:translateY(1px)}
-.woc-card:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--focus-ring)}
+/* ══ الأدوات = مربعات مضغوطة تحت الطوابير ══
+   ⚠️ `auto-fit` مقصود — أداة جديدة بتدخل الصف من غير أي تعديل CSS
+      (أول مرشّح: صفحة «التنبيهات» في `docs/ALERTS-TOOL-PLAN.md`). */
+.woc-tools-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.woc-tool{display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:15px 13px;font-family:var(--font-body);color:var(--text-primary);text-decoration:none;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .06s}
+.woc-tool:hover{border-color:var(--accent);box-shadow:0 6px 18px rgba(37,99,235,.12)}
+.woc-tool:active{transform:translateY(1px)}
+.woc-tool:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--focus-ring)}
+.woc-tool .woc-card-ico{width:42px;height:42px;border-radius:11px;font-size:22px}
+.woc-tool .woc-card-name{font-size:13.5px}
 
 /* ⚠️ الأيقونة في مربع ملوّن — اللون هو اللي بيفرّق الطباعة عن التغليف
    قبل ما الموظف يقرا الاسم أصلاً. والإيموجي لازم يكون **نفس** إيموجي
    هيدر الأداة نفسها، وبـ variation selector (FE0F) عشان يترسم ملوّن
    على أجهزة المخزن بدل مربع فاضي. */
-.woc-card-top{display:flex;align-items:center;gap:12px}
 .woc-card-ico{width:52px;height:52px;flex-shrink:0;border-radius:13px;display:grid;place-items:center;font-size:28px;line-height:1;border:1px solid var(--border);background:var(--surface-2)}
 .woc-card-ico.ico-blue{background:var(--accent-light);border-color:var(--accent-border)}
 .woc-card-ico.ico-green{background:var(--green-light);border-color:var(--green-border)}
@@ -295,10 +314,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .woc-chip.chip-s1{background:var(--accent-light);color:var(--accent-dark);border-color:var(--accent-border)}
 .woc-chip.chip-s2{background:var(--purple-light);color:var(--purple-dark);border-color:var(--purple-border)}
 
-/* فوتر الكارت — لوحة «آخر تحديث» + زرار التحديث.
-   `margin-top:auto` بيخلّي الفوترين متحاذيين مهما اختلف ارتفاع المحتوى. */
-.woc-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:10px;margin-top:auto}
-.woc-fresh{display:flex;flex-direction:column;gap:4px}
+/* لوحة «آخر تحديث» — سطر واحد جوّه منطقة التفاصيل */
 .woc-fresh-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .woc-fresh-lbl{font-size:10px;font-weight:800;color:var(--text-muted)}
 /* ختم «آخر تحديث» — بيتسجّل حتى لو الطابور رجع فاضي.
@@ -329,7 +345,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 
 /* حالة الفشل — ⚠️ + «حاول تاني»، والدخول للأداة **لسه شغّال**:
    الطابور مش شرط للشغل، الموظف يقدر يسكن باركود عادي. */
-.woc-fail{display:flex;align-items:center;gap:7px;background:var(--red-light);border:1px solid var(--red-border);color:var(--red);border-radius:var(--radius-sm);padding:8px 10px;font-size:12px;font-weight:700;line-height:1.6}
+.woc-fail{display:flex;align-items:center;gap:7px;background:var(--red-light);border:1px solid var(--red-border);color:var(--red);border-radius:var(--radius-sm);padding:7px 10px;font-size:11.5px;font-weight:700;line-height:1.55}
 
 /* شريط الرجوع للطابور — بيظهر لما الصفحة اتفتحت من جدول التغليف */
 .woc-back-bar{display:none;align-items:center;justify-content:space-between;gap:10px;background:var(--accent-light);border:1px solid var(--accent-border);color:var(--accent-dark);border-radius:var(--radius-sm);padding:9px 14px;margin-bottom:12px;font-size:13px;font-weight:700}
