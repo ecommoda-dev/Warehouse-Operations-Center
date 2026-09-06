@@ -137,7 +137,17 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.5.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.5.1</span>
+          <span class="cl-ver-date">06-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span><b>تاب «📜 سجل العمليات» في صفحة حذف منتج بقى موجود.</b> شريط التابات كان <b>ناقص من الـ HTML</b> — البانل و<code>switchMainTab</code> وكل §LOG-JS كانوا موجودين بالكامل بس مفيش أي زرار بينادي عليهم، فالتاب كان مستحيل يتفتح. واتضاف كمان تعبئة فلتر الموظف من <code>get_employees</code> — كانت أثر جانبي لشاشة الدخول اللي اتشالت من الصفحة.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.5.0</span>
           <span class="cl-ver-date">06-09-2026</span>
         </div>
         <ul class="cl-items">
@@ -354,6 +364,17 @@
 </div>
 
 
+<!-- ══ §TABS — شريط التابات ══
+     🔴 الكتلة دي كانت **ناقصة** من الصفحة لحد v1.5.1: `switchMainTab` والبانل
+        `#logTabContent` وكل §LOG-JS كانوا موجودين، بس مفيش أي زرار بينادي
+        عليهم — فتاب «سجل العمليات» كان مستحيل يتفتح. نفس عيلة الباج بتاعت
+        chip التاب في `print.html` (كتلة كانت جوّه الهيدر القديم وراحت معاه
+        وقت التحويل لـ `wocHeader`). -->
+<div class="main-tabs-bar">
+  <button class="main-tab-btn active" id="mainTabRemove" onclick="switchMainTab('remove')">🔍 البحث والحذف</button>
+  <button class="main-tab-btn" id="mainTabLog" onclick="switchMainTab('log')">📜 سجل العمليات</button>
+</div>
+
 <!-- ══ §TOOL — Remove Tab ══ -->
 <div id="removeTabContent" class="tab-panel active">
   <div class="card">
@@ -468,7 +489,32 @@ function switchMainTab(tab) {
   document.getElementById('mainTabLog').classList.toggle('active', !isRemove);
   document.getElementById('removeTabContent').style.display = isRemove ? 'block' : 'none';
   document.getElementById('logTabContent').style.display = isRemove ? 'none' : 'block';
-  if (!isRemove && !logLoaded) fetchLog();
+  if (!isRemove && !logLoaded) { loadLogEmployees(); fetchLog(); }
+}
+
+// ⚠️ في الأداة المستقلة الفلتر ده كان بيتعبّى **أثر جانبي** لـ
+//    `loadEmployeesList()` بتاعة شاشة الدخول. الشاشة دي مش موجودة هنا
+//    (§AUTH-JS اتشال — الدخول في `index.html`)، فمن غير النداء ده الفلتر
+//    بيفضل «كل الموظفين» بس **من غير أي خطأ**.
+// ⚠️ الفشل **مايوقّفش** السجل — الجدول بيتجاب عادي والفلتر بيفضل بخيار واحد.
+let logEmployeesLoaded = false;
+async function loadLogEmployees() {
+  if (logEmployeesLoaded) return;
+  const sel = document.getElementById('logFilterEmployee');
+  if (!sel) return;
+  try {
+    const data = await apiGet('get_employees');
+    const employees = data.employees || [];
+    const keep = sel.value;
+    sel.innerHTML = '<option value="">كل الموظفين</option>';
+    employees.forEach(e => {
+      const o = document.createElement('option');
+      o.value = e.username; o.textContent = e.display_name || e.username;
+      sel.appendChild(o);
+    });
+    sel.value = keep;
+    logEmployeesLoaded = true;
+  } catch { /* الفلتر يفضل بخيار واحد — السجل نفسه شغّال */ }
 }
 
 // ─── §TOOL-JS::lookupOrder ───
