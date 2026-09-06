@@ -4,7 +4,7 @@
 <!-- skills: html-builder v6.3.0 · worker-builder v2.0.0 · constants v1.6.0 · order-lifecycle v1.2.0 · shopify-graphql-helper v1.0.0 · bosta-api-helper — 05-09-2026 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>تشييك التغليف — مركز عمليات المخزن</title>
+  <title>قسم التغليف — مركز عمليات المخزن</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 
@@ -674,7 +674,20 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.1.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.2.0</span>
+          <span class="cl-ver-date">06-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>اسم الصفحة بقى <b>«قسم التغليف»</b> بدل «تشييك التغليف» — عرض بس، اسم الأداة في السجل (<code>pack_checker</code>) ما اتغيّرش.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>زرار <b>🏠 الرئيسية</b> بقى مصمت أزرق و<b>في نص الهيدر</b> — كان بنفس شكل باقي الزراير بالظبط.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>زرار الموظف بقى <b>«الاسم ✕»</b> بدل «👤 الاسم — خروج».</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>الشاشة الرئيسية بقى فيها <b>تحديث تلقائي كل ١٥ دقيقة</b> للأعداد + لوحة «آخر تحديث» بعدّاد بيلوّن نفسه.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.1.0</span>
           <span class="cl-ver-date">06-09-2026</span>
         </div>
         <ul class="cl-items">
@@ -3823,7 +3836,9 @@ async function exportLogXLSX() {
 // ══════════════════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('headerMount').innerHTML = wocHeader({
-    icon: '📦', title: 'تشييك التغليف', subtitle: 'مركز عمليات المخزن', session,
+    // ⚠️ الاسم المعروض بس — قيمة `tool` في D1 لسه `pack_checker`
+    //    والـ Worker ما اتلمسش (قرار أحمد 06-09-2026).
+    icon: '📦', title: 'قسم التغليف', subtitle: 'مركز عمليات المخزن', session,
   });
   renderVersionUI();
   checkWorkerVersion(PAGE_WORKERS);
