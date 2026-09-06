@@ -1,6 +1,8 @@
 <div dir="rtl" style="text-align: right;">
 
-# ملف تحديث المهارات — بعد بناء `Warehouse-Operations-Center` v1.0.0
+# ملف تحديث المهارات — بعد بناء `Warehouse-Operations-Center`
+
+![version](https://img.shields.io/badge/version-v2.0.0-blue)
 
 > **الغرض:** الملف ده **مصدر واحد** للّي لازم يتحدّث في المهارات بعد بناء الهب.
 > بيتقرا في محادثة تانية مخصّصة لتحديث المهارات — **مش** محادثة بناء أدوات.
@@ -10,7 +12,22 @@
 
 ---
 
-## ملخّص تنفيذي — ٨ تعديلات في ٤ مهارات
+## ✅ حالة البنود الثمانية — **اتطبّقوا كلهم** (اتأكّد 06-09-2026)
+
+مقارنة بالمهارات المثبّتة فعليًا وقت تعديل الهب v1.6.0:
+
+| المهارة | الإصدار وقت كتابة الملف | **المثبّت دلوقتي** | البنود اللي دخلت |
+|---|---|---|---|
+| `ecommoda-html-builder` | v6.3.0 | **v6.6.0** | ① بند ٤٠ · ② بند ٤١ · ③ Step 9 · ⑦ بند ٤٢ |
+| `ecommoda-worker-builder` | v2.0.0 | **v2.1.0** | ⑥ `appId`/`AUTH_APPS` · ⑧ شكل `checks` |
+| `ecommoda-constants` | v1.6.0 | **v1.10.0** | ④ مجموعة `warehouse_ops` بأربع مستهلكين · ⑤ §7 |
+
+> ✅ **الثمانية اتقفلوا.** الجدول تحت بيفضل **مرجع تاريخي** — نصوصه وأرقامه
+> هي مصدر البنود اللي في المهارات دلوقتي. **البند ⑨ تحت هو الوحيد المفتوح.**
+
+---
+
+## ملخّص تنفيذي — ٨ تعديلات في ٤ مهارات (اتقفلوا) + ١ مفتوح
 
 | # | المهارة | البند | التصنيف المقترح | إلزامي؟ |
 |---|---|---|---|---|
@@ -22,6 +39,8 @@
 | ٦ | `ecommoda-worker-builder` | باراميتر `appId` + قايمة `AUTH_APPS` البيضاء | **مُستحسن** (v2.1.0) | 🟡 مستحسن |
 | ٧ | `ecommoda-html-builder` | بند ٤٢ — **فحص CSS بـ parser**، وgrep مش بديل عنه | **مُستحسن** (نفس النسخة) | 🔴 نعم |
 | ٨ | `ecommoda-worker-builder` | توحيد شكل `checks` في `diag` | **مُستحسن** (نفس النسخة) | 🟡 مستحسن |
+
+| **⑨** | **`ecommoda-constants`** | **§6 — `warehouse_ops` بقت ٤ Workers و٥ مستهلكين** | **تحريري** (v1.10.1) | 🔴 **نعم — مفتوح** |
 
 > ⚠️ **البنود ١ و٣ و٤ و٧ إلزامية**: من غيرهم أول مراجعة للهب هتقرا
 > الاستثناءات **غلطة** مش قرار، وفحص Step 9 هيفشل على مشروع مبني صح —
@@ -613,6 +632,57 @@ function diagRows(checks) {
 
 ---
 
+## ⑨ `ecommoda-constants` — §6: `warehouse_ops` بقت **٤ Workers و٥ مستهلكين**
+
+**التصنيف المقترح:** تحريري (v1.10.1) · **إلزامي 🔴**
+**المصدر:** انضمام `order-sku-barcode-printer-worker` للمجموعة مع الهب v1.6.0
+(06-09-2026) — صفحة `sku-barcode.html`.
+
+**ليه إلزامي:** قاعدة ٢ في §6 نفسها بتقول «العضوية تتسجّل هنا في §6 وفي
+`CLAUDE.md` بتاع كل Worker عضو. **من غير سجل، التدوير مستحيل** — مش هتعرف
+تغيّر إيه». عضو مش مسجّل = تدوير بيسيبه على السر القديم، والهب بيرجّع `401`
+من صفحة واحدة بس — أصعب تشخيص من انهيار كامل.
+
+### النص الجاهز للّصق — بديل جدول «المجموعات المسجَّلة»
+
+```
+| المجموعة | الواجهة | مفتاح localStorage | الأعضاء |
+|---|---|---|---|
+| warehouse_ops | .../Warehouse-Operations-Center/ | warehouse_ops_worker_secret | order-printer-worker · orders-packing-checker-worker · order-item-remover-worker · order-sku-barcode-printer-worker |
+```
+
+### بديل جدول «مستهلكو `warehouse_ops`»
+
+```
+| المستهلك | النوع | مفتاح localStorage |
+|---|---|---|
+| order-printer-worker | Worker | — |
+| orders-packing-checker-worker | Worker | — |
+| order-item-remover-worker | Worker | — |
+| order-sku-barcode-printer-worker | Worker (انضم 06-09-2026) | — |
+| Warehouse-Operations-Center | واجهة (هب) | warehouse_ops_worker_secret |
+```
+
+**والسطر اللي تحته يتعدّل:** «**خمسة، مش أربعة**» بدل «أربعة، مش تلاتة»،
+و«الهب بينادي **الأربعة**» بدل «التلاتة».
+
+### وسطر يتضاف تحت إجراء التدوير
+
+```
+⚠️ العضو الرابع (order-sku-barcode-printer-worker) أداة قراءة بحتة بلا D1
+   وبلا endpoints دخول — بس سره جزء من المجموعة زي أي عضو، وبينكسر بنفس
+   الطريقة. «مش بيكتب» ≠ «مش محتاج تدوير».
+```
+
+> ℹ️ **مفيش تعديل مطلوب على §7** — الأداة **مابتكتبش أي صف في D1**، فمفيش
+> قيمة `tool` تتسجّل. لو اتقرر تسجيل الطباعة بعدين، **ساعتها** يتضاف صف
+> `order_sku_barcode_printer` في §7 **قبل** أول `writeLog` (Rule 7).
+
+> ⚠️ **ومرشّحو المجموعة تحت الجدول يتحدّثوا** — `order-sku-barcode-printer-worker`
+> يتشال من قايمة «لسه ما انضمّوش» لو كان مكتوب فيها.
+
+---
+
 ## المصادر — الكود الفعلي اللي البنود دي اتستخرجت منه
 
 | البند | الملف |
@@ -625,9 +695,10 @@ function diagRows(checks) {
 | ⑥  `appId` | `Orders-Packing-Checker/index.js` §CONSTANTS::authApps |
 | ⑦  فحص CSS | `Warehouse-Operations-Center/docs/css-check.js` · `CLAUDE.md` §فحص CSS بـ parser · commit `4044934` |
 | ⑧  شكلَي `diag` | `shared/shell.js` §UI `diagRows` · `order-item-remover/index.js` `handleDiag` |
+| ⑨  العضو الرابع | `Order-SKU-Barcode-Printer/index.js` §CONSTANTS (`SECRET_GROUP`) · `Order-SKU-Barcode-Printer/CLAUDE.md` §مجموعة السر · `shared/shell.js` §CONFIG (`WOC_WORKERS.barcode`) |
 
 ---
 
-آخر تحديث: 05-09-2026
+آخر تحديث: 06-09-2026
 
 </div>

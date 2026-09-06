@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<!-- skills: html-builder v6.3.0 · worker-builder v2.0.0 · constants v1.6.0 · order-lifecycle v1.2.0 — 05-09-2026 -->
+<!-- skills: html-builder v6.6.0 · worker-builder v2.1.0 · constants v1.10.0 · order-lifecycle v1.2.0 — 06-09-2026 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>مركز عمليات المخزن — EcomModa</title>
@@ -221,6 +221,11 @@
         <div class="woc-card-name">إحصائيات المخزن</div>
         <div class="woc-card-desc">أرقام اليوم · الموظفين · ساعات الشغل</div>
       </a>
+      <a class="woc-tool" href="sku-barcode.html">
+        <span class="woc-card-ico">🏷️</span>
+        <div class="woc-card-name">باركود SKU</div>
+        <div class="woc-card-desc">ليبل ٢×١ إنش — بأوردر أو بـ SKU مباشرة</div>
+      </a>
     </div>
   </div>
 </div>
@@ -284,7 +289,8 @@
         <summary>السر والإعدادات</summary>
         <div class="about-sec-body">
           <ul>
-            <li>سر واحد لمجموعة <code>warehouse_ops</code> — نفس القيمة على التلات Workers.</li>
+            <li>سر واحد لمجموعة <code>warehouse_ops</code> — نفس القيمة على <b>الأربع Workers</b>
+                (الطباعة · التغليف · حذف منتج · باركود SKU).</li>
             <li>مفتاح التخزين <code>warehouse_ops_worker_secret</code>، وهو <b>الحاجة
                 الوحيدة</b> في التخزين المحلي (<code>warehouse_ops_worker_secret</code>) في الهب كله.</li>
             <li>روابط الـ Workers <b>ثوابت في الكود</b> — مش حقول إعدادات (Standards #28).</li>
@@ -302,7 +308,19 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.5.1</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.6.0</span>
+          <span class="cl-ver-date">06-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>صفحة <b>🏷️ باركود SKU</b> — طباعة ليبل ٢×١ إنش لأصناف أوردر، أو بالبحث المباشر بـ SKU/باركود من غير أوردر.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span><code>order-sku-barcode-printer-worker</code> انضم لمجموعة السر <code>warehouse_ops</code> — نفس حقل السر بيخدم الأربعة.</span></li>
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>حقل <b>WORKER SECRET</b> في الإعدادات اتشال منه الـ <code>placeholder</code> (Step 2 بند ٧) والشرح بقى سطر ثابت تحته.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.5.1</span>
           <span class="cl-ver-date">06-09-2026</span>
         </div>
         <ul class="cl-items">
@@ -406,7 +424,10 @@
 //    باقي الصفحات بتنادي الحارس في أول سطر عندها.
 
 const { apiGet, apiPost } = wocApi(WOC_WORKERS.pack);   // الدخول على Worker التغليف — أكتر الأدوات استخدامًا
-const PAGE_WORKERS = ['printer', 'pack', 'remover'];
+// ⚠️ `barcode` داخل هنا رغم إن الشاشة الرئيسية **مابتناديهوش** لأي عدد:
+//    القايمة دي بتغذّي 🩺 فحص النظام كمان (`wocRunDiag`)، والفحص من الشاشة
+//    الرئيسية هو الفحص الشامل — Worker مش في القايمة بيختفي من الفحص خالص.
+const PAGE_WORKERS = ['printer', 'pack', 'remover', 'barcode'];
 
 // ══════════════════════════════════════════════════════════════
 // §AUTH-JS — Unified Login UI (منقولة من أداة التغليف)

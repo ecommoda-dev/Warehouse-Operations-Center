@@ -1,6 +1,6 @@
 // ══════════════════════════════════════════════════════════════
 // shared/shell.js — مركز عمليات المخزن (Warehouse-Operations-Center)
-// skills: html-builder v6.3.0 · worker-builder v2.0.0 · constants v1.6.0 · order-lifecycle v1.2.0 — 05-09-2026
+// skills: html-builder v6.6.0 · worker-builder v2.1.0 · constants v1.10.0 · order-lifecycle v1.2.0 — 06-09-2026
 // ══════════════════════════════════════════════════════════════
 //
 // 🔴 **نسخة واحدة مضمّنة — ممنوع الملف ده يتنسخ في أي صفحة.**
@@ -40,9 +40,12 @@ const WOC_WORKERS = {
   // وده بالظبط نوع الفشل اللي الحارس ده اتكتب عشانه.
   pack:    { url: 'https://orders-packing-checker-worker.ecommoda-dev.workers.dev', min: '2.5.0', label: 'التغليف' },
   remover: { url: 'https://order-item-remover-worker.ecommoda-dev.workers.dev',     min: '1.3.0', label: 'حذف منتج' },
+  // 1.0.0 = أول نسخة منشورة من الريبو. الأداة **قراءة بحتة**: مفيش D1
+  // ومفيش endpoints دخول — الدخول بيحصل في الهب عبر Worker التغليف.
+  barcode: { url: 'https://order-sku-barcode-printer-worker.ecommoda-dev.workers.dev', min: '1.0.0', label: 'باركود SKU' },
 };
 
-const TOOL_VERSION = 'v1.5.1';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.6.0';                      // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const WOC_APP_ID   = 'warehouse_ops_center';         // قيمة `tool` في D1 — login/logout بس
 const SHOP_HANDLE  = '6c7e1a-53';
@@ -584,11 +587,16 @@ function wocSharedModals() {
         <div class="settings-modal-body">
           <div class="settings-field">
             <label class="settings-label">WORKER SECRET</label>
-            <input type="password" class="settings-input" id="cfgSecret" placeholder="السر المشترك لمجموعة warehouse_ops" autocomplete="off">
+            <!-- ⚠️ من غير placeholder — Step 2 بند ٧ في ecommoda-html-builder.
+                 الشرح مكانه الـ label فوق والسطر الثابت تحت، مش نص رمادي جوّه
+                 الحقل بيختفي أول ما الموظف يكتب حرف.
+                 ⚠️ التعليق ده جوّه template literal — ممنوع أي backtick فيه. -->
+            <input type="password" class="settings-input" id="cfgSecret" autocomplete="off">
+            <div class="settings-static">السر المشترك لمجموعة <code>warehouse_ops</code> — قيمة واحدة للأربع Workers</div>
           </div>
           <div class="settings-field">
             <label class="settings-label">الـ Workers</label>
-            <div class="settings-static">order-printer-worker · orders-packing-checker-worker · order-item-remover-worker</div>
+            <div class="settings-static">order-printer-worker · orders-packing-checker-worker · order-item-remover-worker · order-sku-barcode-printer-worker</div>
           </div>
           <div class="settings-field">
             <label class="settings-label">فحص النظام</label>

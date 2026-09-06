@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<!-- skills: html-builder v6.6.0 · worker-builder v2.1.0 · constants v1.10.0 · shopify-graphql-helper v1.1.0 — 06-09-2026 -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>باركود SKU — مركز عمليات المخزن</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- ⚠️ **نفس النسخة اللي `print.html` بيحمّلها بالظبط** (3.11.6 من jsdelivr).
+       النموذج الأولي كان بيضمّن المكتبة حرفيًا جوّه الصفحة، والضمّ اتشال هنا
+       بقرار: الهب فيه **صفحتين** بيرسموا باركود، ونسختين مختلفتين من نفس
+       المكتبة في هب واحد = بالظبط نمط باج R1 (منطق واحد في مصدرين بيفترقوا
+       مع أول ترقية). ومقابل الخطر ده، الحارس تحت (§PRINT-JS) بيقفل زرار
+       الطباعة برسالة صريحة لو المكتبة ما اتحمّلتش — يعني الشبكة المحجوبة
+       بتبقى **فشل معلن** مش ليبل فاضي بيخرج من الطابعة. -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+
+  <!-- 🔴 قاعدة الأسبقية: الـ shell أولاً، وستايل الصفحة بعده وبيغلب -->
+  <link rel="stylesheet" href="shared/shell.css">
+<style>
+/* ⚠️ الاستثناء الوحيد المسموح لكتلة توكنز في صفحة: `--container-max` لوحدها.
+   Tier M — جدول واحد بسيط (٥ أعمدة)، مفيش فلاتر ومفيش تاب سجل. */
+:root { --container-max: 1200px; }
+
+/* ── مربعات الدخول ────────────────────────────────────────────
+   مربعان **الاتنين ظاهرين مع بعض** ولكل واحد لونه — نفس مبدأ
+   `.entry-grid` في `pack.html`: اللون هو التمييز الوحيد بين المداخل،
+   وأي توحيد بيرجّع «سكنت في المربع الغلط». */
+.bc-entry-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media (max-width:820px){.bc-entry-grid{grid-template-columns:1fr}}
+.bc-entry{border:2px solid var(--border-strong);border-radius:var(--radius);padding:14px;background:var(--surface-2)}
+.bc-entry.order{border-color:var(--accent-border);background:var(--accent-light)}
+.bc-entry.sku  {border-color:var(--purple-border);background:var(--purple-light)}
+.bc-entry-hdr{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:800;margin-bottom:4px}
+.bc-entry.order .bc-entry-hdr{color:var(--accent-dark)}
+.bc-entry.sku   .bc-entry-hdr{color:var(--purple-dark)}
+.bc-entry-hint{font-size:11.5px;color:var(--text-secondary);font-weight:600;margin-bottom:10px;line-height:1.6}
+.bc-entry-row{display:flex;gap:8px}
+.bc-input{flex:1;min-width:0;border:1.5px solid var(--border-strong);border-radius:var(--radius-sm);padding:11px 13px;font-family:var(--font-mono);font-size:15px;font-weight:700;color:var(--text-primary);background:var(--surface);outline:none;direction:ltr;text-align:center;transition:border-color .15s,box-shadow .15s}
+.bc-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--focus-ring)}
+.bc-entry.sku .bc-input:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--focus-ring)}
+
+/* ── رأس النتيجة ──────────────────────────────────────────── */
+.bc-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.bc-badges{display:flex;gap:6px;flex-wrap:wrap}
+.bc-badge{font-size:11.5px;padding:4px 10px;border-radius:20px;font-weight:700;background:var(--accent-light);color:var(--accent);border:1px solid var(--accent-border)}
+.bc-badge.muted{background:var(--surface-2);color:var(--text-secondary);border-color:var(--border)}
+
+/* ── جدول الأصناف ─────────────────────────────────────────── */
+.bc-table{width:100%;border-collapse:collapse;font-size:13px}
+.bc-table th{background:var(--surface-2);border-bottom:2px solid var(--border);padding:9px 10px;text-align:right;font-size:11.5px;font-weight:700;color:var(--text-secondary);white-space:nowrap}
+.bc-table td{border-bottom:1px solid var(--border);padding:10px;vertical-align:middle;line-height:1.7}
+.bc-table tr:last-child td{border-bottom:none}
+.bc-table tr:hover td{background:var(--surface-hover)}
+.bc-sku{font-family:var(--font-mono);direction:ltr;text-align:left;font-weight:700}
+.bc-bar{font-family:var(--font-mono);direction:ltr;text-align:left;font-weight:600}
+/* ⚠️ «مفيش باركود» **مش** صفر ولا خطأ اتصال — صنف مالوش رقم مسجّل على
+   شوبيفاي أصلاً، والموظف لازم يعرف إن ده سببه هناك مش هنا. */
+.bc-bar.missing{color:var(--red);font-size:12px;font-family:var(--font-body);font-weight:700}
+.bc-qty{width:74px;padding:7px 8px;border:1.5px solid var(--border-strong);border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:14px;font-weight:700;text-align:center;color:var(--text-primary);background:var(--surface);outline:none}
+.bc-qty:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--focus-ring)}
+.bc-qty:disabled{background:var(--bg);color:var(--text-muted);cursor:not-allowed}
+.bc-thumb{width:40px;height:40px;border-radius:var(--radius-sm);object-fit:cover;border:1px solid var(--border);background:var(--surface-2);display:block}
+.bc-thumb-ph{width:40px;height:40px;border-radius:var(--radius-sm);border:1px dashed var(--border-strong);background:var(--surface-2)}
+
+/* ── شريط الأكشن ──────────────────────────────────────────── */
+.bc-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap}
+.bc-actions-note{font-size:12px;color:var(--text-secondary);font-weight:600;line-height:1.7}
+.bc-actions-btns{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ── البانرات والحالات ────────────────────────────────────── */
+.bc-warn{margin-bottom:12px;padding:10px 14px;border-radius:var(--radius-sm);background:var(--amber-light);border:1px solid var(--amber-border);color:var(--amber-dark);font-size:12.5px;font-weight:700;line-height:1.8}
+.bc-fail{margin-bottom:12px;padding:10px 14px;border-radius:var(--radius-sm);background:var(--red-light);border:1px solid var(--red-border);color:var(--red);font-size:13px;font-weight:700;line-height:1.8}
+.bc-state{text-align:center;padding:40px 20px;color:var(--text-muted);font-size:14px;line-height:1.9}
+
+/* ── المعاينة على الشاشة ──────────────────────────────────── */
+.bc-preview-title{font-size:12px;color:var(--text-secondary);margin-bottom:8px;font-weight:700}
+.bc-preview-grid{display:flex;flex-wrap:wrap;gap:10px}
+.bc-preview-wrap{margin-top:14px;padding-top:14px;border-top:1px dashed var(--border-strong)}
+
+/* ══════════════════════════════════════════════════════════════
+   الليبل المطبوع — 2×1 إنش، مطابق لتيمبلت "Retail Force Barcode"
+   المستخدم في المخزن: نص الـ SKU فوق بخط سيريف بولد، وتحته باركود
+   CODE128 بيشفّر **رقم الـ Barcode** (مش الـ SKU) بدون أي نص تحته.
+
+   🔴 `--font-label` معرّف في `shared/shell.css` مع باقي التوكنز (كتلة
+      التوكنز مصدر واحد). وهو **استثناء موثّق من Standards #11** (خط واحد
+      Noto Sans Arabic): الاستثناء متحدّد بالليبل **المطبوع** بس — مفيش أي
+      عنصر على الشاشة بيستخدمه. السبب إن الليبل بيطابق تيمبلت خارجي
+      موجود فعلاً على أرفف المخزن، ونفس عيلة الاستثناء الموثّق لألوان
+      الفاتورة جوّه الـ iframe.
+   ══════════════════════════════════════════════════════════════ */
+#printArea{display:none}
+.print-label{width:2in;height:1in;box-sizing:border-box;padding:.1in;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.06in;overflow:hidden;background:var(--print-paper)}
+.print-label .lbl-sku-text{font-family:var(--font-label);font-weight:700;color:var(--print-ink);white-space:nowrap;line-height:1;text-align:center;font-size:22px}
+.print-label svg{display:block;max-width:100%}
+
+@media screen{
+  .bc-preview-grid .print-label{border:1px dashed var(--border-strong);border-radius:4px}
+}
+
+@media print{
+  /* الصفحة كلها بتتخفي والليبلات بس هي اللي بتتطبع. */
+  body *{visibility:hidden}
+  #printArea,#printArea *{visibility:visible}
+  /* ⚠️ `shell.css` بيحط `padding:12px` على `body` — من غير التصفير ده
+     الليبل بينزاح داخل الورقة الصغيرة (٢×١ إنش مفيهاش هامش يستحمّل). */
+  body{padding:0;background:var(--print-paper)}
+  #printArea{display:block !important;position:absolute;top:0;right:0;left:0}
+  @page{size:2in 1in;margin:0}
+  .print-label{page-break-after:always}
+  .print-label:last-child{page-break-after:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div id="headerMount"></div>
+
+  <!-- بيظهر بس لما الصفحة اتفتحت من جدول التغليف (`?from=pack`) -->
+  <div class="woc-back-bar" id="backToQueueBar">
+    <span>📦 جاي من طابور التغليف</span>
+    <button class="btn-ghost" onclick="location.href='pack.html'">↩ رجوع للطابور</button>
+  </div>
+
+  <!-- ─── §TOOL::entry — مدخلان، الاتنين ظاهرين ─── -->
+  <div class="card">
+    <div class="card-title">🏷️ طباعة باركود SKU</div>
+    <div class="bc-entry-grid">
+
+      <div class="bc-entry order">
+        <div class="bc-entry-hdr">📦 بأوردر</div>
+        <div class="bc-entry-hint">كل أصناف الأوردر مرة واحدة — عدد النسخ بيتملّي بالكمية.</div>
+        <div class="bc-entry-row">
+          <input type="text" class="bc-input" id="bcOrderInput" autocomplete="off"
+                 placeholder="53768 أو ‎#53768" aria-label="رقم الأوردر">
+          <button class="btn-primary" id="bcOrderBtn" onclick="bcLookupOrder()">بحث</button>
+        </div>
+      </div>
+
+      <div class="bc-entry sku">
+        <div class="bc-entry-hdr">🔍 بـ SKU أو باركود</div>
+        <div class="bc-entry-hint">لإعادة طباعة ليبل ضاع — اسكن الليبل أو اكتب الـ SKU.</div>
+        <div class="bc-entry-row">
+          <input type="text" class="bc-input" id="bcSkuInput" autocomplete="off"
+                 placeholder="FL-PO-10 أو 34271298" aria-label="SKU أو رقم الباركود">
+          <button class="btn-primary" id="bcSkuBtn" onclick="bcLookupSku()">بحث</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─── §TOOL::results ─── -->
+  <div class="card" id="bcResultCard" style="display:none">
+    <div id="bcFail"></div>
+    <div id="bcWarn"></div>
+    <div class="bc-head">
+      <span id="bcHeadNum"></span>
+      <span class="bc-badges" id="bcBadges"></span>
+    </div>
+    <div id="bcBody"></div>
+
+    <div class="bc-actions">
+      <span class="bc-actions-note" id="bcNote"></span>
+      <span class="bc-actions-btns">
+        <button class="btn-ghost" id="bcOneEachBtn" onclick="bcSetAll(1)">نسخة لكل صنف</button>
+        <button class="btn-ghost" id="bcByQtyBtn"  onclick="bcSetAll('qty')">بالكمية</button>
+        <button class="btn-green" id="bcPrintBtn"  onclick="bcPrint()">🖨️ طباعة الباركود</button>
+      </span>
+    </div>
+
+    <div class="bc-preview-wrap" id="bcPreviewWrap" style="display:none">
+      <div class="bc-preview-title">معاينة الليبل قبل الطباعة (مقاس 2×1 إنش):</div>
+      <div class="bc-preview-grid" id="bcPreviewGrid"></div>
+    </div>
+  </div>
+
+  <div class="card bc-state" id="bcIdle">
+    اكتب رقم أوردر، أو اسكن ليبل موجود، عشان تطبع الباركود.
+  </div>
+</div>
+
+<!-- منطقة الطباعة الفعلية — مخفية على الشاشة، بتبان وقت الطباعة بس -->
+<div id="printArea"></div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     §MODALS — About و Changelog
+     ══════════════════════════════════════════════════════════════ -->
+<div class="eco-overlay" id="aboutOverlay" onclick="if(event.target===this)closeAbout()">
+  <div class="eco-modal">
+    <div class="eco-modal-hdr"><span>ℹ️ عن باركود SKU</span><button class="modal-close-x" onclick="closeAbout()">✕</button></div>
+    <div class="eco-modal-body">
+      <details class="about-sec" open>
+        <summary>الصفحة بتعمل إيه</summary>
+        <div class="about-sec-body">
+          <p>بتطبع ليبل <b>2×1 إنش</b> لكل صنف — نص الـ SKU فوق، وتحته باركود
+             <code>CODE128</code> بيشفّر <b>رقم الـ Barcode</b> المسجّل على المتغيّر
+             في شوبيفاي. مطابق للتيمبلت اللي المخزن شغّال بيه دلوقتي
+             (<i>Retail Force Barcode</i>).</p>
+
+          <h4>مين بيستخدمها</h4>
+          <p>المخزن — عند استقبال بضاعة جديدة، أو لما ليبل يقع أو يتمسح.</p>
+
+          <h4>إزاي بتشتغل</h4>
+          <ol>
+            <li><b>بأوردر</b> — بتجيب بنود الأوردر الفعّالة، وعدد النسخ بيتملّي
+                بكمية كل بند.</li>
+            <li><b>بـ SKU أو باركود</b> — بحث مباشر في متغيّرات المنتجات من غير
+                أوردر، وعدد النسخ بيبدأ من نسخة واحدة.</li>
+            <li>تظبط عدد النسخ لكل صنف، وتضغط <b>طباعة الباركود</b>.</li>
+            <li>المعاينة على الشاشة <b>هي نفس عناصر الطباعة بالظبط</b> — مش نسخة
+                منفصلة، فاللي بتشوفه هو اللي هيطلع.</li>
+          </ol>
+
+          <h4>الـ Endpoints</h4>
+          <table>
+            <tr><th>action</th><th>بيعمل إيه</th></tr>
+            <tr><td><code>get_order</code></td><td>بنود الأوردر الفعّالة + SKU وباركود وكمية كل بند</td></tr>
+            <tr><td><code>search_sku</code></td><td>بحث في متغيّرات المنتجات بـ SKU أو رقم باركود</td></tr>
+            <tr><td><code>get_config</code></td><td>نسخة الـ Worker — حارس النسخة بيقارنها بالحد الأدنى</td></tr>
+            <tr><td><code>diag</code></td><td>فحص ذاتي: المتغيّرات · بصمة السر · صلاحيات شوبيفاي</td></tr>
+          </table>
+
+          <div id="aboutWorkers"></div>
+        </div>
+      </details>
+
+      <details class="about-sec">
+        <summary>🔧 تشريح الكود</summary>
+        <div class="about-sec-body">
+          <h4>FEATURE MAP</h4>
+          <ul>
+            <li><code>§TOOL::entry</code> — مربعا الدخول (أوردر · SKU) بلونين مختلفين</li>
+            <li><code>§TOOL::results</code> — جدول الأصناف + شريط الأكشن + المعاينة</li>
+            <li><code>§SCAN</code> — مدخل السكانر لمربع الـ SKU (قراءة ومسح جوّه المعالج)</li>
+            <li><code>§LABEL-JS</code> — بناء عنصر الليبل + ضبط حجم خط الـ SKU</li>
+            <li><code>§PRINT-JS</code> — بناء الدفعة والمعاينة و<code>window.print()</code></li>
+          </ul>
+
+          <h4>KEY VARIABLES</h4>
+          <ul>
+            <li><code>PAGE_WORKERS = ['barcode']</code> — الصفحة بتنادي Worker واحد بس</li>
+            <li><code>BC_LABEL_MAX_W_IN = 1.8</code> — عرض المحتوى جوّه ليبل ٢ إنش (بعد الحشو)</li>
+            <li><code>bcRows</code> — مصدر الرسم والطباعة الوحيد، بيتملّي من المدخلين</li>
+            <li>التخزين المحلي: <code>warehouse_ops_worker_secret</code> بس (مفتاح المجموعة)</li>
+          </ul>
+
+          <h4>NOTES / QUIRKS</h4>
+          <ul>
+            <li>🔴 <b>الباركود بيشفّر <code>barcode</code> مش <code>sku</code>.</b> النص
+                اللي فوق هو الـ SKU، والرقم اللي جوّه الخطوط هو الـ Barcode —
+                الاتنين مختلفين، وعكسهم بيخلّي السكانر يقرا رقم مالوش وجود.</li>
+            <li>🔴 <b>صنف بلا باركود مابيتطبعش</b> — صفّه بيتعلّم بالأحمر وخانة
+                النسخ بتتقفل على صفر. الحل على شوبيفاي مش هنا.</li>
+            <li>⚠️ <b>قياس عرض النص بـ Canvas مش <code>scrollWidth</code>.</b>
+                <code>#printArea</code> عليه <code>display:none</code> طول الوقت، فأي قياس
+                معتمد على الـ layout بيرجّع <b>صفر دايمًا</b> والحلقة بتوهم إنها
+                شغالة وهي واقفة من أول لفة.</li>
+            <li>⚠️ <b><code>requestAnimationFrame</code> مزدوجة قبل الطباعة</b> — الـ SVG
+                بيتضاف ديناميكيًا، والطباعة من غير انتظار رسم فعلي بتطلّع ورق
+                <b>بلا باركود</b>.</li>
+            <li>⚠️ <code>currentQuantity</code> مش <code>quantity</code> — التانية بتشمل
+                البنود الملغية، يعني ليبل لصنف اتشال من الأوردر.</li>
+            <li>⚠️ الصورة بترجع من <b>المتغيّر أولاً وبعدين المنتج</b> — أغلب
+                المتغيّرات مالهاش صورة خاصة بيها، فمن غير الرجوع للمنتج العمود
+                بيفضل فاضي دايمًا.</li>
+            <li>ℹ️ الصفحة <b>مابتكتبش أي صف في D1</b> — قراءة بحتة بقرار
+                (06-09-2026). يعني مفيش تاب سجل، ومفيش أثر لمين طبع إيه.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+    <div class="eco-modal-ftr"><button class="btn-ghost" onclick="closeAbout()">إغلاق</button></div>
+  </div>
+</div>
+
+<div class="eco-overlay" id="changelogOverlay" onclick="if(event.target===this)closeChangelog()">
+  <div class="eco-modal">
+    <div class="eco-modal-hdr"><span>📋 سجل التغييرات</span><button class="modal-close-x" onclick="closeChangelog()">✕</button></div>
+    <div class="eco-modal-body">
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.6.0</span>
+          <span class="cl-ver-date">06-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>صفحة <b>🏷️ باركود SKU</b> — طباعة ليبل ٢×١ إنش لأصناف أوردر، أو بالبحث المباشر بـ SKU/باركود من غير أوردر.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span><code>order-sku-barcode-printer-worker</code> انضم لمجموعة السر <code>warehouse_ops</code> — نفس حقل السر في الإعدادات بيخدم الأربعة.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.5.1</span>
+          <span class="cl-ver-date">06-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span><b>تاب «📜 سجل العمليات» في صفحة حذف منتج بقى موجود.</b> شريط التابات كان <b>ناقص من الـ HTML</b> — البانل و<code>switchMainTab</code> وكل §LOG-JS كانوا موجودين بالكامل بس مفيش أي زرار بينادي عليهم.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.5.0</span>
+          <span class="cl-ver-date">06-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>صفحة <b>📊 إحصائيات المخزن</b> — أرقام الفترة · جدول الموظفين · توزيع ساعات الشغل · مؤشرات الجودة.</span></li>
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>سلّم «آخر تحديث» (<code>agoInfo</code>) اتنقل لـ <code>shared/shell.js</code>.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.4.0</span>
+          <span class="cl-ver-date">06-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>لوحة «آخر تحديث» بقت ملزوقة بزرار التحديث</b> في الشاشة الرئيسية وبنفس شكلها في صفحة التغليف.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.3.0</span>
+          <span class="cl-ver-date">06-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>طوابير الشاشة الرئيسية بقت <b>صفوف بعرض الشاشة</b> بدل كروت جنب بعض.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.2.0</span>
+          <span class="cl-ver-date">06-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>زرار <b>🏠 الرئيسية</b> بقى مصمت أزرق و<b>في نص الهيدر</b>، وزرار الموظف بقى «الاسم ✕».</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>الشاشة الرئيسية بقى فيها <b>تحديث تلقائي كل ١٥ دقيقة</b> للأعداد.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.1.0</span>
+          <span class="cl-ver-date">06-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>حارس الفاتورة اللاغية</b> في صفحة الطباعة + سطر تاريخ الطباعة في آخر كل فاتورة.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.0.0</span>
+          <span class="cl-ver-date">05-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>أول إصدار — دخول واحد وتنقّل بين الطباعة والتغليف وحذف المنتج.</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="eco-modal-ftr"><button class="btn-ghost" onclick="closeChangelog()">إغلاق</button></div>
+  </div>
+</div>
+
+<div id="sharedMount"></div>
+
+<!-- 🔴 نسخة واحدة مضمّنة — ممنوع محتوى الملف ده يتنسخ هنا -->
+<script src="shared/shell.js"></script>
+<script>document.getElementById('sharedMount').innerHTML = wocSharedModals();</script>
+<script>
+// ══════════════════════════════════════════════════════════════
+// §INIT — الجلسة أولاً، قبل أي حاجة تانية
+// ══════════════════════════════════════════════════════════════
+const session = requireSession();
+const currentEmployee = { username: session.username, displayName: session.displayName };
+
+// الصفحة بتنادي Worker واحد بس — فحارس النسخة بيمشي عليه لوحده.
+const PAGE_WORKERS = ['barcode'];
+
+// ⚠️ الحلقة دي مكرّرة في كل الصفحات **عن قصد**: `WOC_WORKERS` و`cmpVersion`
+//    في الـ shell، بس فحص Step 9 بيطلب وجودهم في كل صفحة، والقايمة نفسها
+//    بتفرق من صفحة للتانية.
+async function renderAboutWorkers() {
+  const box = document.getElementById('aboutWorkers');
+  if (!box) return;
+  const rows = await Promise.all(PAGE_WORKERS.map(async (key) => {
+    const w = WOC_WORKERS[key];
+    let got = '—', mark = '❌';
+    try {
+      const cfg = await wocApi(w).apiGet('get_config');
+      got = cfg.version || cfg.WORKER_VERSION || '—';
+      mark = cmpVersion(got, w.min) < 0 ? '⚠️' : '✅';
+    } catch { got = 'تعذّر الوصول'; }
+    return `<tr><td>${mark} ${esc(w.label)}</td><td><code>${esc(got)}</code></td><td><code>${esc(w.min)}</code></td></tr>`;
+  }));
+  box.innerHTML = `<h4>الـ Worker</h4>
+    <table><tr><th>الأداة</th><th>نسخة الـ Worker</th><th>الحد الأدنى</th></tr>${rows.join('')}</table>
+    <p>نسخة الواجهة (الهب كله): <code>${esc(TOOL_VERSION)}</code></p>`;
+}
+
+function onSettingsSaved() { checkWorkerVersion(PAGE_WORKERS); }
+
+function showBackToQueue() { document.getElementById('backToQueueBar')?.classList.add('visible'); }
+
+// ══════════════════════════════════════════════════════════════
+// §TOOL-JS
+// ══════════════════════════════════════════════════════════════
+
+// عرض المحتوى جوّه ليبل ٢ إنش بعد الحشو (0.1in على كل ناحية).
+const BC_LABEL_MAX_W_IN = 1.8;
+const BC_PX_PER_IN      = 96;   // 96 CSS px ≈ إنش
+
+// 🔴 **مصدر الرسم والطباعة الوحيد.** المدخلان (أوردر · SKU) بيملّوه بنفس
+//    الشكل، فمفيش مسار رسم تاني يفترق مع أول تعديل (درس R1).
+//    الشكل: { title, variantTitle, sku, barcode, image, quantity, copies }
+let bcRows  = [];
+let bcBusy  = false;
+let bcMode  = null;   // 'order' | 'sku' — بيغيّر نص الأزرار والملحوظات بس
+
+const bcApi = () => wocApi(WOC_WORKERS.barcode);
+
+// ─── §TOOL-JS::bcResetView ───
+function bcSetBusy(on) {
+  bcBusy = on;
+  for (const id of ['bcOrderBtn', 'bcSkuBtn']) {
+    const b = document.getElementById(id);
+    if (b) b.disabled = on;
+  }
+}
+
+function bcShowResultShell() {
+  document.getElementById('bcIdle').style.display = 'none';
+  const card = document.getElementById('bcResultCard');
+  card.style.display = '';
+  document.getElementById('bcFail').innerHTML = '';
+  document.getElementById('bcWarn').innerHTML = '';
+  document.getElementById('bcPreviewWrap').style.display = 'none';
+  document.getElementById('bcPreviewGrid').innerHTML = '';
+}
+
+function bcFail(msg) {
+  document.getElementById('bcFail').innerHTML = `<div class="bc-fail">⚠️ ${esc(msg)}</div>`;
+  document.getElementById('bcBody').innerHTML  = '';
+  document.getElementById('bcHeadNum').innerHTML = '';
+  document.getElementById('bcBadges').innerHTML = '';
+  document.getElementById('bcNote').textContent = '';
+  bcRows = [];
+  bcRenderActions();
+}
+
+// ─── §TOOL-JS::bcLookupOrder ───
+async function bcLookupOrder() {
+  if (bcBusy) return;
+  const raw = document.getElementById('bcOrderInput').value.trim();
+  if (!raw) { showToast('اكتب رقم الأوردر الأول', 'warning'); return; }
+
+  bcSetBusy(true);
+  bcShowResultShell();
+  document.getElementById('bcBody').innerHTML = '<div class="bc-state">جارٍ الجلب...</div>';
+
+  try {
+    const d = await bcApi().apiGet('get_order', { order: raw });
+    bcMode = 'order';
+
+    // رقم الأوردر **لينك** لصفحته على شوبيفاي (قاعدة #20). من غير `orderId`
+    // بيفضل نص عادي — لينك رايح لـ `orders/undefined` بيخلّي الموظف يفتكر
+    // إن الأوردر اتمسح.
+    document.getElementById('bcHeadNum').innerHTML =
+      `<a class="order-name" target="_blank" rel="noopener" href="${shopifyOrderUrl(d.orderId)}">${esc(d.orderName)}</a>`;
+    if (!d.orderId) {
+      document.getElementById('bcHeadNum').innerHTML = `<span class="order-name">${esc(d.orderName)}</span>`;
+    }
+
+    const badges = [];
+    if (d.financialStatus)   badges.push(`<span class="bc-badge">${esc(d.financialStatus)}</span>`);
+    if (d.fulfillmentStatus) badges.push(`<span class="bc-badge muted">${esc(d.fulfillmentStatus)}</span>`);
+    document.getElementById('bcBadges').innerHTML = badges.join('');
+
+    // ⚠️ القطع **بيتقال**. ليبل ناقص في السكوت = قطعة بتخرج من المخزن من
+    //    غير باركود، والموظف فاكر إنه طبع كل حاجة.
+    if (d.itemsTruncated) {
+      document.getElementById('bcWarn').innerHTML =
+        `<div class="bc-warn">⚠️ الأوردر فيه أكتر من ${Number(d.itemsCap).toLocaleString('en-US')} بند —
+         اللي تحت أول ${Number(d.itemsCap).toLocaleString('en-US')} بس. طبّع الباقي من مربع الـ SKU.</div>`;
+    }
+
+    bcRows = (d.items || []).map(it => ({
+      title:        it.title,
+      variantTitle: it.variantTitle,
+      sku:          it.sku,
+      barcode:      it.barcode,
+      image:        it.image,
+      quantity:     it.quantity,
+      copies:       it.barcode ? it.quantity : 0,
+    }));
+    bcRenderRows('مفيش بنود فعّالة في الأوردر ده');
+  } catch (e) {
+    bcFail(e.message);
+  } finally {
+    bcSetBusy(false);
+  }
+}
+
+// ─── §TOOL-JS::bcLookupSku ───
+async function bcLookupSku(termArg) {
+  if (bcBusy) return;
+  const input = document.getElementById('bcSkuInput');
+  const term  = (termArg ?? input.value).trim();
+  if (!term)           { showToast('اكتب SKU أو رقم باركود', 'warning'); return; }
+  if (term.length < 3) { showToast('اكتب ٣ حروف على الأقل', 'warning'); return; }
+
+  bcSetBusy(true);
+  bcShowResultShell();
+  document.getElementById('bcBody').innerHTML = '<div class="bc-state">جارٍ البحث...</div>';
+
+  try {
+    const d = await bcApi().apiGet('search_sku', { term });
+    bcMode = 'sku';
+
+    document.getElementById('bcHeadNum').innerHTML =
+      `<span class="order-name">🔍 ${esc(term)}</span>`;
+    document.getElementById('bcBadges').innerHTML =
+      `<span class="bc-badge muted">${Number((d.variants || []).length).toLocaleString('en-US')} نتيجة</span>`;
+
+    if (d.truncated) {
+      document.getElementById('bcWarn').innerHTML =
+        `<div class="bc-warn">⚠️ فيه نتايج أكتر من ${Number(d.cap).toLocaleString('en-US')} —
+         اللي تحت مش كل اللي مطابق. ضيّق البحث.</div>`;
+    }
+
+    // البحث المباشر بيبدأ من **نسخة واحدة** — مفيش كمية أوردر هنا،
+    // وافتراض أي رقم تاني بيطلّع ورق من غير ما حد طلبه.
+    bcRows = (d.variants || []).map(v => ({
+      title:        v.title,
+      variantTitle: v.variantTitle,
+      sku:          v.sku,
+      barcode:      v.barcode,
+      image:        v.image,
+      quantity:     1,
+      copies:       v.barcode ? 1 : 0,
+    }));
+    bcRenderRows('مفيش أي صنف مطابق للبحث ده');
+  } catch (e) {
+    bcFail(e.message);
+  } finally {
+    bcSetBusy(false);
+    input.focus();
+  }
+}
+
+// ─── §TOOL-JS::bcRenderRows ───
+function bcRenderRows(emptyMsg) {
+  const body = document.getElementById('bcBody');
+
+  if (!bcRows.length) {
+    body.innerHTML = `<div class="bc-state">${esc(emptyMsg)}</div>`;
+    document.getElementById('bcNote').textContent = '';
+    bcRenderActions();
+    return;
+  }
+
+  const qtyHead = bcMode === 'order' ? 'الكمية' : 'المتاح';
+  body.innerHTML = `
+    <div style="overflow-x:auto">
+      <table class="bc-table">
+        <thead><tr>
+          <th></th><th>المنتج</th><th>SKU</th><th>Barcode</th><th>${esc(qtyHead)}</th><th>عدد الطباعة</th>
+        </tr></thead>
+        <tbody>${bcRows.map((r, i) => `
+          <tr>
+            <td>${r.image
+                  ? `<img class="bc-thumb" src="${esc(r.image)}" alt="" loading="lazy">`
+                  : '<div class="bc-thumb-ph"></div>'}</td>
+            <td>${esc(r.title)}${r.variantTitle
+                  ? `<div style="font-size:11px;color:var(--text-secondary);font-weight:600">${esc(r.variantTitle)}</div>`
+                  : ''}</td>
+            <td class="bc-sku">${r.sku ? esc(r.sku) : '—'}</td>
+            <td class="bc-bar${r.barcode ? '' : ' missing'}">${r.barcode ? esc(r.barcode) : '⚠️ مفيش Barcode'}</td>
+            <td>${bcMode === 'order' ? Number(r.quantity).toLocaleString('en-US') : '—'}</td>
+            <td><input type="number" class="bc-qty" min="0" max="99" value="${r.copies}"
+                       id="bcQty${i}" onchange="bcOnQty(${i})" ${r.barcode ? '' : 'disabled'}
+                       aria-label="عدد نسخ الطباعة"></td>
+          </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+
+  const missing = bcRows.filter(r => !r.barcode).length;
+  document.getElementById('bcNote').innerHTML = missing
+    ? `⚠️ <b>${Number(missing).toLocaleString('en-US')}</b> صنف من غير رقم Barcode مسجّل —
+       مش هيتطبع لحد ما يتسجّل على شوبيفاي.`
+    : '';
+
+  bcRenderActions();
+}
+
+// خانة النسخ بتتقري في الحال بدل ما تتقري وقت الطباعة — قيمة غلط
+// بتتصلّح على الشاشة، مش بتطلع ورق.
+function bcOnQty(i) {
+  const el = document.getElementById(`bcQty${i}`);
+  let v = parseInt(el.value, 10);
+  if (!Number.isFinite(v) || v < 0) v = 0;
+  if (v > 99) v = 99;
+  el.value = v;
+  bcRows[i].copies = bcRows[i].barcode ? v : 0;
+  bcRenderActions();
+}
+
+function bcSetAll(mode) {
+  bcRows.forEach((r, i) => {
+    r.copies = r.barcode ? (mode === 'qty' ? Number(r.quantity) || 1 : 1) : 0;
+    const el = document.getElementById(`bcQty${i}`);
+    if (el) el.value = r.copies;
+  });
+  bcRenderActions();
+}
+
+// زرار الطباعة بيقول **العدد الفعلي** — «طباعة» لوحدها بتخلّي الموظف
+// يضغط من غير ما يعرف إنه رايح يطلّع ٤٢ ورقة.
+function bcRenderActions() {
+  const total = bcRows.reduce((s, r) => s + (r.copies || 0), 0);
+  const btn   = document.getElementById('bcPrintBtn');
+  const ready = bcLibReady();
+  btn.disabled    = !total || !ready;
+  btn.textContent = !ready ? '🖨️ المكتبة ما اتحمّلتش'
+                  : total  ? `🖨️ طباعة ${total.toLocaleString('en-US')} ليبل`
+                           : '🖨️ طباعة الباركود';
+  const byQty = document.getElementById('bcByQtyBtn');
+  if (byQty) byQty.style.display = bcMode === 'order' ? '' : 'none';
+}
+
+// ══════════════════════════════════════════════════════════════
+// §SCAN — مدخل السكانر (مربع الـ SKU/الباركود)
+// ══════════════════════════════════════════════════════════════
+//
+// ⚠️ **القراءة والمسح جوّه المعالج، مش جوّه الـ listener.** مسح القيمة في
+//    الـ listener بيقطع دفعة السكانر في نصّها — السكانر بيبعت `input`
+//    ورا بعضه بفارق أقل من ٨٠ms، فالمسح المبكر بيمسح نص الكود.
+const BC_SCAN_GAP_MS = 400;   // مهلة كافية للكتابة اليدوي كمان
+let bcScanTimer = null;
+
+const bcSkuEl = document.getElementById('bcSkuInput');
+bcSkuEl.addEventListener('input', () => {
+  clearTimeout(bcScanTimer);
+  bcScanTimer = setTimeout(bcHandleScan, BC_SCAN_GAP_MS);
+});
+bcSkuEl.addEventListener('keydown', (e) => {
+  // السكانر بيقفل بـ Enter — نلغي المهلة وننفّذ فورًا بدل ما نستنى ٤٠٠ms
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  clearTimeout(bcScanTimer);
+  bcHandleScan();
+});
+
+function bcHandleScan() {
+  const val = bcSkuEl.value.trim();   // القراءة هنا
+  bcSkuEl.value = '';                  // والمسح هنا — مش في الـ listener
+  bcSkuEl.focus();
+  if (!val || val.length < 3) return;
+  bcLookupSku(val);
+}
+
+// مربع الأوردر مش هدف سكانر (رقم الأوردر بيتكتب أو بيتنقل من طابور
+// التغليف) — فبيفضل بـ Enter عادي وبيحتفظ بقيمته زي `journey.html`.
+document.getElementById('bcOrderInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') bcLookupOrder();
+});
+
+// ══════════════════════════════════════════════════════════════
+// §LABEL-JS — بناء الليبل: نص الـ SKU فوق + باركود الـ Barcode تحته
+// ══════════════════════════════════════════════════════════════
+//
+// مطابق لتيمبلت «Retail Force Barcode» الحالي: 2in × 1in، خط سيريف بولد
+// للنص، وبدون أي نص تحت الباركود.
+
+function bcLibReady() { return typeof JsBarcode !== 'undefined'; }
+
+// ⚠️ **ليه Canvas `measureText` مش `el.scrollWidth`:** `#printArea` عليه
+//    `display:none` طول الوقت لحد الطباعة الفعلية (`@media print` بس) —
+//    يعني أي قياس بيعتمد على الـ layout (`scrollWidth`/`offsetWidth`)
+//    بيرجّع **صفر دايمًا**، والحلقة بتوهم إنها شغالة وهي بتقف من أول لفة
+//    من غير أي تصغير حقيقي. `measureText` بيحسب العرض من الخط نفسه من غير
+//    ما العنصر يكون مرسوم.
+const _bcMeasureCtx = document.createElement('canvas').getContext('2d');
+function bcTextWidth(text, sizePx, fontFamily) {
+  _bcMeasureCtx.font = `700 ${sizePx}px ${fontFamily}`;
+  return _bcMeasureCtx.measureText(text).width;
+}
+function bcFitLabelText(el, text, maxWidthPx) {
+  const family = getComputedStyle(document.documentElement)
+    .getPropertyValue('--font-label').trim() || 'Georgia, serif';
+  let size = 22;
+  while (size > 8 && bcTextWidth(text, size, family) > maxWidthPx) size -= 1;
+  el.style.fontSize = size + 'px';
+}
+
+// بيبني عنصر ليبل واحد — **نفس العنصر** بيتستخدم في الطباعة وفي المعاينة،
+// فمفيش نسختين يفترقوا.
+function bcBuildLabel(row) {
+  const wrap = document.createElement('div');
+  wrap.className = 'print-label';
+
+  const textEl = document.createElement('div');
+  textEl.className = 'lbl-sku-text';
+  textEl.textContent = row.sku || row.barcode;
+  wrap.appendChild(textEl);
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  wrap.appendChild(svg);
+
+  // 🔴 الباركود بيشفّر **رقم الـ Barcode**، مش الـ SKU.
+  //    JsBarcode متزامنة — بترسم فورًا بلا أي `setTimeout`.
+  try {
+    JsBarcode(svg, row.barcode, {
+      format: 'CODE128', width: 1.7, height: 34, margin: 0,
+      displayValue: false,   // زي الإعداد الحالي: "Content below barcode: None"
+    });
+  } catch (e) {
+    // رمز فيه حروف مش مدعومة — نادر مع الأرقام، بس ليبل واحد **مايوقّفش**
+    // باقي الدفعة، والليبل التالف بيبان تالف بدل ما يطلع فاضي.
+    svg.remove();
+    const err = document.createElement('div');
+    err.style.cssText = 'color:var(--red);font-size:10px;font-weight:700';
+    err.textContent = 'تعذّر رسم الباركود';
+    wrap.appendChild(err);
+  }
+  return wrap;
+}
+
+// ══════════════════════════════════════════════════════════════
+// §PRINT-JS
+// ══════════════════════════════════════════════════════════════
+function bcPrint() {
+  // 🔴 المكتبة من CDN — لو الشبكة حاجباه، الفشل لازم يبقى **معلن**.
+  //    من غير الحارس ده الطابعة بتطلّع ورق فيه النص من غير خطوط.
+  if (!bcLibReady()) {
+    showToast('مكتبة الباركود (JsBarcode) ما اتحمّلتش — اعمل ريفريش، ولو استمرت المشكلة الشبكة بتحجب jsdelivr.', 'error', 8000);
+    return;
+  }
+
+  const labels = [];
+  for (const r of bcRows) {
+    if (!r.barcode) continue;
+    for (let c = 0; c < (r.copies || 0); c++) labels.push(r);
+  }
+  if (!labels.length) { showToast('مفيش أي صنف بـ Barcode وعدد طباعة أكبر من صفر', 'warning'); return; }
+
+  const printArea = document.getElementById('printArea');
+  printArea.innerHTML = '';
+  const els = labels.map(r => { const el = bcBuildLabel(r); printArea.appendChild(el); return el; });
+
+  const grid = document.getElementById('bcPreviewGrid');
+  grid.innerHTML = '';
+  document.getElementById('bcPreviewWrap').style.display = '';
+
+  const maxW = BC_LABEL_MAX_W_IN * BC_PX_PER_IN;
+  for (const el of els) {
+    const t = el.querySelector('.lbl-sku-text');
+    if (t) bcFitLabelText(t, t.textContent, maxW);
+    // المعاينة **نسخة من عناصر الطباعة نفسها** — مش بناء تاني.
+    grid.appendChild(el.cloneNode(true));
+  }
+
+  // ⚠️ **انتظار رسم فعلي قبل `window.print()`.** الـ SVG اتضاف ديناميكيًا،
+  //    والطباعة من غير الانتظار ده بتطلّع ورق **بلا باركود**.
+  //    `requestAnimationFrame` مزدوجة بتضمن إن المتصفح خلص layout + paint —
+  //    أدق من `setTimeout` بمدة ثابتة.
+  requestAnimationFrame(() => requestAnimationFrame(() => window.print()));
+}
+
+// ══════════════════════════════════════════════════════════════
+// §INIT
+// ══════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('headerMount').innerHTML = wocHeader({
+    icon: '🏷️', title: 'باركود SKU', subtitle: 'مركز عمليات المخزن', session,
+  });
+  renderVersionUI();
+  checkWorkerVersion(PAGE_WORKERS);
+  renderAboutWorkers();
+  bcRenderActions();
+
+  if (!bcLibReady()) {
+    showToast('مكتبة الباركود ما اتحمّلتش — الطباعة مقفولة لحد ما تتحمّل. جرّب ريفريش.', 'error', 8000);
+  }
+
+  // `?order=` بيفلتر ويعرض بس — **مايطبعش**. طباعة تلقائية من رابط =
+  // ورق بيطلع من غير ما حد يضغط.
+  const params = new URLSearchParams(location.search);
+  const num = params.get('order');
+  if (params.get('from') === 'pack') showBackToQueue();
+  if (num) {
+    document.getElementById('bcOrderInput').value = num;
+    bcLookupOrder();
+  } else {
+    document.getElementById('bcOrderInput').focus();
+  }
+});
+</script>
+</body>
+</html>
