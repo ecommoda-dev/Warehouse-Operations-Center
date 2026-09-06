@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<!-- skills: html-builder v6.3.0 · dashboard-builder v3.3.0 · worker-builder v2.0.0 · constants v1.6.0 — 06-09-2026 -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إحصائيات المخزن — مركز عمليات المخزن</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- 🔴 قاعدة الأسبقية: الـ shell أولاً، وستايل الصفحة بعده وبيغلب -->
+  <link rel="stylesheet" href="shared/shell.css">
+<style>
+/* ⚠️ **مفيش كتلة توكنز هنا عن قصد.** Tier L (1400px) هو الافتراضي في الـ shell
+   أصلاً، والجدول هنا بثمن أعمدة — فمحتاجينه زي ما هو. `remove.html` و
+   `journey.html` بينزّلوا Tier M لأن جداولهم أضيق. */
+
+/* ── شريط النطاق + الطزاجة + التحديث ───────────────────────── */
+/* 🔴 الختم والزرار في **حاوية واحدة على سطر واحد** — قاعدة مثبّتة في
+   `ecommoda-dashboard-builder` Step 7، ومطبّقة في الشاشة الرئيسية وفي
+   طابور التغليف بنفس الشكل بالظبط. */
+.st-bar{display:flex;align-items:stretch;gap:12px;flex-wrap:wrap;justify-content:space-between}
+.st-presets{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.st-preset{padding:9px 16px;border-radius:var(--radius-sm);border:1.5px solid var(--border-strong);background:var(--surface);color:var(--text-primary);font-family:var(--font-body);font-size:13px;font-weight:700;cursor:pointer;transition:border-color .15s,background .15s,color .15s}
+.st-preset:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
+.st-preset:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--focus-ring)}
+.st-preset.active{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.st-act{display:flex;align-items:stretch;gap:9px;margin-inline-start:auto}
+.st-range-lbl{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:var(--text-secondary)}
+.st-range-chip{font-family:var(--font-mono);direction:ltr;font-size:12px;font-weight:700;color:var(--text-mid);background:var(--surface-2);border:1px solid var(--border);border-radius:20px;padding:2px 9px}
+
+/* ── بانرات ────────────────────────────────────────────────── */
+/* ⚠️ «مصدر واقع» و«النتيجة مقصوصة» بانرين **مختلفين** — نفس تفرقة
+   `s2Failed` / `s2Truncated` في طابور التغليف. */
+.st-fail{margin-bottom:12px;padding:10px 14px;border-radius:var(--radius-sm);background:var(--red-light);border:1px solid var(--red-border);color:var(--red);font-size:13px;font-weight:700;line-height:1.85}
+.st-note{margin-bottom:12px;padding:10px 14px;border-radius:var(--radius-sm);background:var(--amber-light);border:1px solid var(--amber-border);color:var(--amber-dark);font-size:12.5px;font-weight:600;line-height:1.8}
+.st-state{text-align:center;padding:40px 20px;color:var(--text-muted);font-size:14px;line-height:1.9}
+.st-fail-inline{color:var(--red);font-size:15px;font-weight:800}
+
+/* ── الأرقام الكبيرة ───────────────────────────────────────── */
+.st-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:11px}
+.st-kpi{display:flex;flex-direction:column;gap:5px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 15px}
+.st-kpi-top{display:flex;align-items:center;gap:9px}
+.st-kpi-ico{width:34px;height:34px;flex-shrink:0;border-radius:10px;display:grid;place-items:center;font-size:18px;line-height:1;border:1px solid var(--border);background:var(--surface)}
+.st-kpi-val{font-family:var(--font-mono);direction:ltr;font-size:27px;font-weight:800;line-height:1.1;color:var(--text-primary);font-variant-numeric:tabular-nums}
+.st-kpi-lbl{font-size:12.5px;font-weight:700;color:var(--text-secondary)}
+.st-kpi-sub{font-size:11.5px;font-weight:600;color:var(--text-muted);line-height:1.7}
+.st-delta{font-size:11.5px;font-weight:800;line-height:1.6}
+.st-delta.up{color:var(--green-dark)}
+.st-delta.down{color:var(--red-dark)}
+.st-delta.neutral{color:var(--text-secondary);font-family:var(--font-mono);direction:ltr;text-align:right}
+
+/* ── مؤشرات الجودة ─────────────────────────────────────────── */
+.st-q-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.st-q{display:flex;align-items:flex-start;gap:11px;border-radius:var(--radius-sm);padding:11px 13px;border:1px solid var(--border);background:var(--surface-2)}
+.st-q-val{font-family:var(--font-mono);direction:ltr;font-size:21px;font-weight:800;line-height:1.15;flex-shrink:0;min-width:34px;text-align:center;font-variant-numeric:tabular-nums}
+.st-q-txt{display:flex;flex-direction:column;gap:3px}
+.st-q-lbl{font-size:12.5px;font-weight:800;line-height:1.5}
+.st-q-hint{font-size:11px;font-weight:600;color:var(--text-secondary);line-height:1.65}
+.st-q.sev-red{background:var(--red-light);border-color:var(--red-border)}
+.st-q.sev-red .st-q-val,.st-q.sev-red .st-q-lbl{color:var(--red-dark)}
+.st-q.sev-amber{background:var(--amber-light);border-color:var(--amber-border)}
+.st-q.sev-amber .st-q-val,.st-q.sev-amber .st-q-lbl{color:var(--amber-dark)}
+.st-q.sev-info{background:var(--accent-light);border-color:var(--accent-border)}
+.st-q.sev-info .st-q-val,.st-q.sev-info .st-q-lbl{color:var(--accent-dark)}
+.st-q.sev-ok .st-q-val{color:var(--green-dark)}
+.st-clean{display:flex;align-items:center;gap:9px;background:var(--green-light);border:1px solid var(--green-border);color:var(--green-dark);border-radius:var(--radius-sm);padding:11px 14px;font-size:13px;font-weight:700}
+
+/* ── الجداول ───────────────────────────────────────────────── */
+.st-scroll{overflow-x:auto}
+.st-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.st-tbl th{background:var(--surface-2);border-bottom:2px solid var(--border);padding:9px 10px;text-align:right;font-size:11.5px;font-weight:700;color:var(--text-secondary);white-space:nowrap}
+.st-tbl td{border-bottom:1px solid var(--border);padding:9px 10px;line-height:1.7;white-space:nowrap}
+.st-tbl tr:last-child td{border-bottom:none}
+.st-tbl tbody tr:hover td{background:var(--surface-hover)}
+.st-tbl tfoot td{border-top:2px solid var(--border);border-bottom:none;font-weight:800;background:var(--surface-2)}
+.st-who{font-weight:700}
+.st-who.unknown{color:var(--text-muted);font-weight:600}
+.st-n{font-family:var(--font-mono);direction:ltr;font-weight:700;font-variant-numeric:tabular-nums}
+.st-n.zero{color:var(--text-muted);font-weight:600}
+.st-when{font-family:var(--font-mono);direction:ltr;font-size:12.5px;color:var(--text-mid)}
+
+/* ── الخط الزمني بالساعة — CSS خالص، صفر مكتبة خارجية ──────── */
+/* ⚠️ الأعمدة **مكدّسة** مش جنب بعض: ٢٤ ساعة × ٣ سلاسل جنب بعض بتبقى
+   ٧٢ عمود رفيّع مالوش معنى على شاشة المخزن. المكدّس بيقول «الشغل كله في
+   الساعة دي» وبيوري التقسيمة في نفس الوقت. */
+/* ⚠️ `direction:ltr` على الحاوية — من غيره الصفحة RTL بتقلب المحور فيبدأ
+   من ٢٣ وينتهي عند ٠٠. المحور الزمني تسلسل رقمي، وبيتقرا من الشمال
+   لليمين زي كل قيمة رقمية في الستاك (`.st-when` · `.st-n` · `.order-link`). */
+.st-hours{display:flex;direction:ltr;align-items:flex-end;gap:3px;height:180px;padding-top:6px}
+.st-hcol{flex:1 1 0;display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;min-width:0}
+.st-hstack{flex:1;width:100%;display:flex;flex-direction:column;justify-content:flex-end;border-radius:3px 3px 0 0;overflow:hidden;background:var(--surface-2)}
+.st-hseg{width:100%}
+.st-hseg.s-print{background:var(--accent)}
+.st-hseg.s-pack{background:var(--green)}
+.st-hseg.s-rm{background:var(--red)}
+.st-hlbl{font-family:var(--font-mono);direction:ltr;font-size:9.5px;font-weight:700;color:var(--text-muted);line-height:1}
+.st-hcol.busy .st-hlbl{color:var(--text-primary);font-weight:800}
+.st-legend{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:12px;font-weight:700;color:var(--text-secondary)}
+.st-lg{display:inline-flex;align-items:center;gap:6px}
+.st-lg-dot{width:11px;height:11px;border-radius:3px;display:inline-block}
+.st-lg-dot.s-print{background:var(--accent)}
+.st-lg-dot.s-pack{background:var(--green)}
+.st-lg-dot.s-rm{background:var(--red)}
+.st-details{margin-top:12px}
+.st-details summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(--accent);padding:6px 0}
+.st-details summary:hover{color:var(--accent-dark)}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div id="headerMount"></div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       §RANGE — النطاق + الطزاجة + التحديث
+       ══════════════════════════════════════════════════════════ -->
+  <div class="card">
+    <div class="st-bar">
+      <div>
+        <div class="st-presets" id="stPresets"></div>
+        <div class="st-range-lbl" style="margin-top:9px">
+          <span>الفترة المعروضة</span>
+          <span class="st-range-chip" id="stRangeChip">—</span>
+        </div>
+      </div>
+      <div class="st-act">
+        <div class="woc-fresh">
+          <div class="woc-fresh-row">
+            <span class="woc-fresh-lbl">آخر تحديث</span>
+            <span class="woc-ago" id="stAgo">لسه ما اتحدّثش</span>
+          </div>
+          <div class="woc-fresh-row" id="stStamp"><span class="woc-stamp-chip">—</span></div>
+        </div>
+        <button class="woc-rbtn" id="stRefreshBtn" onclick="stLoad()" title="تحديث الأرقام">
+          <span class="woc-rbtn-ico">↺</span><span>تحديث</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="stBanners"></div>
+
+  <!-- §KPIS -->
+  <div class="card">
+    <div class="card-title">📊 أرقام الفترة</div>
+    <div class="st-kpis" id="stKpis">
+      <div class="st-state">جارٍ الجلب من التلات أدوات...</div>
+    </div>
+  </div>
+
+  <!-- §QUALITY -->
+  <div class="card">
+    <div class="card-title">⚠️ محتاج نظرة</div>
+    <div id="stQuality"><div class="st-state">—</div></div>
+  </div>
+
+  <!-- §EMPLOYEES -->
+  <div class="card">
+    <div class="card-title">👥 الموظفين</div>
+    <div id="stEmployees"><div class="st-state">—</div></div>
+  </div>
+
+  <!-- §HOURS -->
+  <div class="card">
+    <div class="card-title">🕐 توزيع العمليات على ساعات اليوم — بتوقيت القاهرة</div>
+    <div id="stHours"><div class="st-state">—</div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     §MODALS — About و Changelog
+     ══════════════════════════════════════════════════════════════ -->
+<div class="eco-overlay" id="aboutOverlay" onclick="if(event.target===this)closeAbout()">
+  <div class="eco-modal">
+    <div class="eco-modal-hdr"><span>ℹ️ عن إحصائيات المخزن</span><button class="modal-close-x" onclick="closeAbout()">✕</button></div>
+    <div class="eco-modal-body">
+      <details class="about-sec" open>
+        <summary>الصفحة بتعمل إيه</summary>
+        <div class="about-sec-body">
+          <p><b>إيه اللي حصل للمخزن في الفترة دي</b> — في شاشة واحدة: أرقام الطباعة
+             والتغليف والحذف، مين عملها، امتى في اليوم، وفيه حاجة محتاجة تدخّل ولا لأ.</p>
+          <h4>مصدر البيانات — صفر تعديل Worker</h4>
+          <p>كل الأرقام محسوبة من <b>سجل D1</b> عبر <code>?action=get_logs</code> في
+             التلات Workers. <b>مفيش أي نداء لشوبيفاي</b>، والصفحة <b>مابتكتبش
+             ولا صف واحد</b> — قراءة بحتة.</p>
+          <div id="aboutWorkers"></div>
+        </div>
+      </details>
+      <details class="about-sec">
+        <summary>🔴 الحدود المعروفة — اقراها قبل ما تبني عليها قرار</summary>
+        <div class="about-sec-body">
+          <ul>
+            <li>🔴 <b>«موظفين عملوا عمليات» مش «الحضور».</b> صفوف
+                <code>login</code>/<code>logout</code> مستبعدة في <b>SQL</b> جوّه
+                التلات Workers، فمستحيل توصل للصفحة دي. موظف داخل وقاعد من غير شغل
+                <b>مش هيبان</b>.</li>
+            <li>🔴 <b>«فرق الفترة» (طبعنا − غلّفنا) مش قايمة أخطاء.</b> أوردر اتطبع
+                ٦ مساءً وهيتغلّف بكرة الصبح مسار طبيعي. السؤال الصح مكانه
+                <b>طابور التغليف</b> اللي بيسأل «اتطبع بعد آخر تغليف؟».</li>
+            <li>⏱️ <b>وسيط الزمن</b> محسوب على أوردرات <b>اتغلّفت في الفترة</b>
+                ولقينا لها طباعة في آخر ٧ أيام قبلها. الأوردرات اللي مالهاش طباعة
+                في النافذة دي <b>بتتستبعد وبتتعدّ صراحةً</b>، والرقم مابيتعرضش
+                لو العيّنة أقل من ٥.</li>
+            <li>📅 <b>اليوم هنا يوم القاهرة مش يوم UTC.</b> الـ Worker بيفلتر بيوم
+                UTC، فالصفحة بتطلب <b>يومين</b> وبتفلتر بنفسها — من غير كده كانت
+                هتفقد آخر ٣ ساعات من الوردية.</li>
+            <li>⚠️ <b>التوقيت الصيفي:</b> الحساب مثبّت على <code>UTC+3</code> في
+                الستاك كله. لما مصر ترجع <code>UTC+2</code> آخر أكتوبر، العمليات بين
+                ١٢ و١ بالليل هتتحسب على اليوم اللي فات لحد ما الـ shell يتصلّح.</li>
+            <li>🚫 <b>مفيش تحديث تلقائي.</b> الأرقام بتتحدّث بزرار «تحديث» أو بتغيير
+                الفترة بس — العدّاد اللي فوق بيتحرّك لوحده بلا أي نداء شبكة.</li>
+            <li>📄 صفوف <code>metafields_change</code> مش داخلة الحساب — محتاجة
+                مصدر رابع.</li>
+          </ul>
+        </div>
+      </details>
+      <details class="about-sec">
+        <summary>الفشل والاقتطاع</summary>
+        <div class="about-sec-body">
+          <ul>
+            <li><b>أداة واقعة مابتصفّرش رقمها</b> — بتعرض «تعذّر»، والمصدر بيتسمّى
+                <b>بالاسم</b>. «تعذّر الاستعلام» ≠ «مفيش شغل».</li>
+            <li>🔴 <b>أي رقم بيجمع أكتر من أداة بيتقفل بالكامل</b> («—») طول ما فيه
+                مصدر واقع — إجمالي ناقص بيرندر زي السليم بالظبط، وده أخطر من
+                شاشة فاضية.</li>
+            <li>الجلب بيتصفّح ١٠٠ صف للصفحة وبيقف أول ما يعدّي بداية الفترة. لو ضرب
+                السقف، بانر أصفر بيقول كده — <b>الاقتطاع غير الفشل</b>.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+    <div class="eco-modal-ftr"><button class="btn-ghost" onclick="closeAbout()">إغلاق</button></div>
+  </div>
+</div>
+
+<div class="eco-overlay" id="changelogOverlay" onclick="if(event.target===this)closeChangelog()">
+  <div class="eco-modal">
+    <div class="eco-modal-hdr"><span>📋 سجل التغييرات</span><button class="modal-close-x" onclick="closeChangelog()">✕</button></div>
+    <div class="eco-modal-body">
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.5.0</span>
+          <span class="cl-ver-date">06-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>صفحة <b>📊 إحصائيات المخزن</b> — أرقام الفترة · جدول الموظفين · توزيع ساعات الشغل · مؤشرات الجودة. قراءة سجل D1 بحتة، <b>صفر تعديل Worker</b>.</span></li>
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>سلّم «آخر تحديث» (<code>agoInfo</code>) اتنقل لـ <code>shared/shell.js</code> — كان نسخة في الشاشة الرئيسية لوحدها.</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="eco-modal-ftr"><button class="btn-ghost" onclick="closeChangelog()">إغلاق</button></div>
+  </div>
+</div>
+
+<div id="sharedMount"></div>
+
+<!-- 🔴 نسخة واحدة مضمّنة — ممنوع محتوى الملف ده يتنسخ هنا -->
+<script src="shared/shell.js"></script>
+<script>document.getElementById('sharedMount').innerHTML = wocSharedModals();</script>
+<script>
+// ══════════════════════════════════════════════════════════════
+// §INIT — الجلسة أولاً، قبل أي حاجة تانية
+// ══════════════════════════════════════════════════════════════
+const session = requireSession();
+const currentEmployee = { username: session.username, displayName: session.displayName };
+
+// ⚠️ الصفحة دي **قراءة سجل بس** — مفيش عقد جديد مع أي Worker، فحارس النسخة
+//    بياخد قايمة فاضية زي `journey.html`. الجدول في About بيعرض التلاتة
+//    عشان الموظف يعرف مصدر كل رقم، مش كحارس.
+const PAGE_WORKERS = [];
+const ST_TOOLS = [
+  { key: 'printer', label: 'الطباعة',  icon: '🖨' },
+  { key: 'pack',    label: 'التغليف',  icon: '📦' },
+  { key: 'remover', label: 'حذف منتج', icon: '🗑' },
+];
+
+// ⚠️ الحلقة دي مكرّرة في الست صفحات **عن قصد**: `WOC_WORKERS` و`cmpVersion`
+//    في الـ shell، بس فحص Step 9 بيطلب وجودهم في كل صفحة.
+async function renderAboutWorkers() {
+  const box = document.getElementById('aboutWorkers');
+  if (!box) return;
+  const rows = await Promise.all(ST_TOOLS.map(async ({ key }) => {
+    const w = WOC_WORKERS[key];
+    let got = '—', mark = '❌';
+    try {
+      const cfg = await wocApi(w).apiGet('get_config');
+      got = cfg.version || cfg.WORKER_VERSION || '—';
+      mark = cmpVersion(got, w.min) < 0 ? '⚠️' : '✅';
+    } catch { got = 'تعذّر الوصول'; }
+    return `<tr><td>${mark} ${esc(w.label)}</td><td><code>${esc(got)}</code></td><td><code>${esc(w.min)}</code></td></tr>`;
+  }));
+  box.innerHTML = `<table><tr><th>الأداة</th><th>نسخة الـ Worker</th><th>الحد الأدنى</th></tr>${rows.join('')}</table>
+     <p>نسخة الواجهة (الهب كله): <code>${esc(TOOL_VERSION)}</code></p>`;
+}
+
+function onSettingsSaved() { stLoad(); }
+
+// ══════════════════════════════════════════════════════════════
+// §STATS-CONFIG
+// ══════════════════════════════════════════════════════════════
+//
+// 🔴 **مفيش polling هنا** — `ecommoda-dashboard-builder` Step 2 قاعدة ١.
+//    الشاشة الرئيسية بتعمل polling كل ١٥ دقيقة لأنها **طابور شغل حي**
+//    الموظف بيتصرّف عليه دلوقتي؛ الصفحة دي **مرجع بيتقرا**، بيتفتح ويتقفل.
+//    مصدرين للتحديث بس: زرار «تحديث» · تغيير الفترة.
+const STATS_TICK_MS   = 30 * 1000;   // نبضة عرض — **صفر نداء شبكة**
+const STATS_PAGE      = 100;         // سقف `get_logs` المفروض من الـ Worker
+// ⚠️ حارس حلقة، **مش سقف بيانات**. لو اتضرب فعلاً، بانر الاقتطاع بيظهر —
+//    ممنوع رقم ناقص يعدّي في صمت.
+const STATS_MAX_PAGES = 15;
+const STATS_MIN_DELTA_BASE = 5;   // تحت كده اعرض الانتقال مش نسبة
+const STATS_MIN_MEDIAN_N   = 5;   // تحت كده الوسيط مايتعرضش خالص
+const STATS_LOOKBACK_DAYS  = 7;   // نافذة الطباعة الموسّعة لمطابقة الوسيط
+
+const ST_RANGES = {
+  today:     { label: 'النهاردة',   days: 1, offset: 0, prevLabel: 'امبارح' },
+  yesterday: { label: 'امبارح',     days: 1, offset: 1, prevLabel: 'اليوم اللي قبله' },
+  week:      { label: 'آخر ٧ أيام', days: 7, offset: 0, prevLabel: 'الـ ٧ اللي قبلهم' },
+};
+
+// ══════════════════════════════════════════════════════════════
+// §STATS-DATE — 🔴 يوم القاهرة، مش يوم UTC
+// ══════════════════════════════════════════════════════════════
+//
+// 🔴 الـ Worker بيفلتر بـ `substr(timestamp,1,10)` = **يوم UTC**، والعرض
+//    بتوقيت القاهرة (UTC+3). يوم القاهرة D بيبدأ الساعة `D-1T21:00Z`،
+//    يعني آخر ٣ ساعات من الوردية بتقع في يوم UTC اللي بعده.
+//
+//    من غير التعويض ده «إحصائيات النهاردة» بتفقد من ٩ مساءً لـ ١٢ بالليل
+//    **من غير أي خطأ** — الرقم بيبان طبيعي تمامًا وهو ناقص.
+//
+//    الحل بلا أي تعديل Worker: اطلب **يوم UTC زيادة** وفلتر هنا بـ
+//    `cairoDayStr` اللي في الـ shell.
+function stAddDays(dayStr, n) {
+  const [y, m, d] = dayStr.split('-').map(Number);
+  const x = new Date(Date.UTC(y, m - 1, d) + n * 86400000);
+  const pad = v => String(v).padStart(2, '0');
+  return `${x.getUTCFullYear()}-${pad(x.getUTCMonth() + 1)}-${pad(x.getUTCDate())}`;
+}
+
+// بداية يوم القاهرة بالملّي — تُستخدم للخروج المبكر من التصفيح
+function stDayStartMs(dayStr) { return Date.parse(`${dayStr}T00:00:00Z`) - 3 * 3600 * 1000; }
+
+function stDaySet(from, to) {
+  const set = new Set();
+  for (let d = from; d <= to; d = stAddDays(d, 1)) set.add(d);
+  return set;
+}
+
+function stWindow(rangeKey) {
+  const r     = ST_RANGES[rangeKey];
+  const today = cairoDayStr(new Date());
+  const end   = stAddDays(today, -r.offset);
+  const start = stAddDays(end, -(r.days - 1));
+  const prevEnd   = stAddDays(start, -1);
+  const prevStart = stAddDays(prevEnd, -(r.days - 1));
+  return { start, end, prevStart, prevEnd };
+}
+
+// ══════════════════════════════════════════════════════════════
+// §STATS-STATE
+// ══════════════════════════════════════════════════════════════
+const stState = {
+  range:   'today',
+  at:      null,     // Date آخر جلب **ناجح** — بيفضل زي ما هو لو كله فشل
+  loading: false,
+  win:     null,
+  rows:    { printer: null, pack: null, remover: null },   // null = مصدر واقع
+  fail:    { printer: null, pack: null, remover: null },
+  wide:    null,     // طباعة النافذة الموسّعة — للوسيط بس
+  wideFail: null,
+  truncated: [],
+  tickTimer: null,
+};
+
+// `extra` بيتخزّن نص JSON — التحليل الفاشل **مايكسرش الصف**، بيرجّع {}.
+function stExtra(e) {
+  if (!e || !e.extra) return {};
+  if (typeof e.extra === 'object') return e.extra;
+  try { return JSON.parse(e.extra) || {}; } catch { return {}; }
+}
+
+function stNormOrder(v) { return String(v ?? '').replace('#', '').trim(); }
+function stInt(v) { const n = Number(v); return Number.isFinite(n) ? n : 0; }
+function stFmt(n) { return Number(n).toLocaleString('en-US'); }
+
+// 🔴 **`extra.result` ليها تلات أشكال في التلات أدوات:**
+//      الطباعة → **كائن** `{ status, actions, warnings, errors, … }`
+//      التغليف → **نص**   `'success'` / `'warning'`
+//      الحذف   → **نص**   `'success'` / `'warning'`
+//    قارئ موحّد (`ex.result === 'warning'`) بيرجّع `false` **دايمًا** على
+//    صفوف الطباعة، ومؤشر تحذيرها بيفضل **صفر للأبد** من غير أي خطأ.
+//
+// ⚠️ الصف اللي مالوش الحقل ده بيرجّع `null` — **مش** `'success'`. الصفوف
+//    القديمة إحنا فعليًا مش عارفين نتيجتها، والافتراض بنجاح بيزوّق الرقم.
+function stResultStatus(toolKey, ex) {
+  if (toolKey === 'printer') {
+    return (ex.result && typeof ex.result === 'object') ? (ex.result.status || null) : null;
+  }
+  return typeof ex.result === 'string' ? ex.result : null;
+}
+
+// ══════════════════════════════════════════════════════════════
+// §STATS-FETCH
+// ══════════════════════════════════════════════════════════════
+//
+// التصفيح بخروج مبكر: `get_logs` بيرتّب `timestamp DESC` والفترة بتنتهي
+// دلوقتي، فالصفوف المطلوبة في أول الترتيب. أول ما صفحة تخلص بصف أقدم من
+// بداية النافذة، مافيش داعي لصفحة تانية.
+async function stFetchTool(key, dateFrom, dateTo, startMs) {
+  const api  = wocApi(WOC_WORKERS[key]);
+  const rows = [];
+  for (let page = 0; page < STATS_MAX_PAGES; page++) {
+    const res  = await api.apiGet('get_logs', {
+      limit: STATS_PAGE, offset: page * STATS_PAGE, dateFrom, dateTo,
+    });
+    const got = res?.entries || [];
+    rows.push(...got);
+    if (got.length < STATS_PAGE) return { rows, truncated: false };
+    const last = got[got.length - 1];
+    if (last && new Date(last.timestamp).getTime() < startMs) return { rows, truncated: false };
+  }
+  return { rows, truncated: true };
+}
+
+// ⚠️ **الطابعة عندها مصدر تاني أرخص**: `POST /logs` بيرجّع لحد ٥٠٠٠ صف في
+//    نداء واحد — بس بأربع أعمدة **من غير `extra`**. فبنستخدمه للنافذة
+//    الموسّعة (مطابقة «طباعة → تغليف») بس، والأرقام اللي محتاجة `extra`
+//    بتيجي من `get_logs` المصفّح زي باقي الأدوات.
+async function stFetchPrintWide(dateFrom, dateTo) {
+  const res = await wocApi(WOC_WORKERS.printer).apiPath('/logs', { dateFrom, dateTo });
+  return { rows: res?.entries || [], truncated: !!res?.truncated };
+}
+
+function stPrep(rows, tsKey = 'timestamp') {
+  return rows.map(r => {
+    const ts = r[tsKey];
+    return Object.assign({}, r, {
+      _day: ts ? cairoDayStr(ts) : null,
+      _ms:  ts ? new Date(ts).getTime() : 0,
+      _ex:  stExtra(r),
+    });
+  });
+}
+
+async function stLoad() {
+  if (stState.loading) return;
+  stState.loading = true;
+  stSetRefreshing(true);
+
+  const win = stWindow(stState.range);
+  stState.win = win;
+
+  // 🔴 يوم UTC زيادة على الطرفين — يوم القاهرة `prevStart` بيبدأ في يوم
+  //    UTC اللي قبله. من غير السطر ده أول ٣ ساعات من الفترة بتضيع.
+  const dateFrom = stAddDays(win.prevStart, -1);
+  const dateTo   = win.end;
+  const startMs  = stDayStartMs(win.prevStart);
+
+  // النافذة الموسّعة للطباعة — الوسيط لازم يشوف الطباعات اللي قبل الفترة،
+  // وإلا الأوردرات البطيئة بتتستبعد بالتعريف والرقم يبقى متحيّز لأسفل.
+  const wideFrom = stAddDays(dateFrom, -STATS_LOOKBACK_DAYS);
+
+  // 🔴 `allSettled` مش `all` — أداة واقعة مالهاش تخفي أرقام الأداتين التانيين.
+  const tasks = [
+    stFetchTool('printer', dateFrom, dateTo, startMs),
+    stFetchTool('pack',    dateFrom, dateTo, startMs),
+    stFetchTool('remover', dateFrom, dateTo, startMs),
+    stFetchPrintWide(wideFrom, dateTo),
+  ];
+  const res = await Promise.allSettled(tasks);
+
+  const truncated = [];
+  ST_TOOLS.forEach((t, i) => {
+    const r = res[i];
+    if (r.status === 'fulfilled') {
+      stState.rows[t.key] = stPrep(r.value.rows);
+      stState.fail[t.key] = null;
+      if (r.value.truncated) truncated.push(t.label);
+    } else {
+      stState.rows[t.key] = null;
+      stState.fail[t.key] = r.reason?.message || 'خطأ غير معروف';
+    }
+  });
+
+  const w = res[3];
+  if (w.status === 'fulfilled') {
+    stState.wide = stPrep(w.value.rows);
+    stState.wideFail = null;
+    if (w.value.truncated) truncated.push('سجل الطباعة الموسّع');
+  } else {
+    stState.wide = null;
+    stState.wideFail = w.reason?.message || 'خطأ غير معروف';
+  }
+  stState.truncated = truncated;
+
+  // ⚠️ الختم بيتحرّك **بس** لو مصدر واحد على الأقل نجح. لو كله فشل، الختم
+  //    بيفضل زي ما هو — ما نقولش للموظف إن الأرقام دي جديدة وهي مش جديدة.
+  const anyOk = ST_TOOLS.some(t => stState.rows[t.key] !== null);
+  if (anyOk) stState.at = new Date();
+
+  stState.loading = false;
+  stSetRefreshing(false);
+  stRender();
+  stStartTicker();
+}
+
+function stSetRefreshing(on) {
+  const btn = document.getElementById('stRefreshBtn');
+  if (!btn) return;
+  btn.disabled = on;
+  btn.classList.toggle('loading', on);
+  document.querySelectorAll('.st-preset').forEach(b => { b.disabled = on; });
+}
+
+// ══════════════════════════════════════════════════════════════
+// §STATS-AGGREGATE — كل الأرقام محسوبة في المتصفح من صفوف D1
+// ══════════════════════════════════════════════════════════════
+//
+// ⚠️ الرقم بيرجع `null` لما مصدره **واقع** — مش `0`. «تعذّر الاستعلام»
+//    ≠ «مفيش شغل» (نفس قاعدة ٤ في الشاشة الرئيسية).
+function stAggregate(days) {
+  const P = stState.rows.printer, K = stState.rows.pack, R = stState.rows.remover;
+  const fp = P && P.filter(r => days.has(r._day));
+  const fk = K && K.filter(r => days.has(r._day));
+  const fr = R && R.filter(r => days.has(r._day));
+
+  const a = { fp, fk, fr };
+
+  a.print   = fp ? fp.length : null;
+  a.printS1 = fp ? fp.filter(r => r.type === 'S1').length : null;
+  a.printS2 = fp ? fp.filter(r => r.type === 'S2').length : null;
+
+  a.pack   = fk ? fk.length : null;
+  a.packS1 = fk ? fk.filter(r => (r.stage || r._ex.stage) === 'S1').length : null;
+  a.packS2 = fk ? fk.filter(r => (r.stage || r._ex.stage) === 'S2').length : null;
+  // «قطع اتغلّفت» مقياس شغل أصدق من عدد الأوردرات — أوردر بـ ٧ قطع مش
+  // زي أوردر بقطعة واحدة.
+  a.pieces = fk ? fk.reduce((s, r) => s + stInt(r.item_count ?? r._ex.itemCount), 0) : null;
+
+  a.removeOk   = fr ? fr.filter(r => r.type === 'remove_item').length : null;
+  a.removeFail = fr ? fr.filter(r => r.type === 'remove_failed').length : null;
+
+  // 👥 **عابر للأدوات** — بيتقفل بالكامل لو أي مصدر واقع (مش بيقلّ).
+  if (fp && fk && fr) {
+    const who = new Set();
+    [...fp, ...fk, ...fr].forEach(r => { if (r.employee) who.add(r.employee); });
+    a.actors = who.size;
+  } else {
+    a.actors = null;
+  }
+
+  // ── مؤشرات الجودة ──────────────────────────────────────────
+  // ✂️ إقرار قطع الفاتورة اللاغية — `extra.guard` بيتكتب من بوابة الطباعة
+  //    (Worker v2.3.0). الرقم ده **نجاح للحارس**، وارتفاعه معناه إن التعديل
+  //    بعد الطباعة بيكتر.
+  a.voidCut = fp ? fp.filter(r => r._ex.guard && r._ex.guard.cutConfirmed === true).length : null;
+
+  // 🔁 أوردرات اتطبعت أكتر من مرة في الفترة + الورق الزيادة
+  if (fp) {
+    const byOrder = new Map();
+    fp.forEach(r => {
+      const k = stNormOrder(r.order_name);
+      if (k) byOrder.set(k, (byOrder.get(k) || 0) + 1);
+    });
+    let orders = 0, extraSheets = 0;
+    byOrder.forEach(n => { if (n > 1) { orders++; extraSheets += n - 1; } });
+    a.reprintOrders = orders;
+    a.reprintSheets = extraSheets;
+  } else { a.reprintOrders = null; a.reprintSheets = null; }
+
+  a.printWarn = fp ? fp.filter(r => stResultStatus('printer', r._ex) === 'warning').length : null;
+  a.packWarn  = fk ? fk.filter(r => stResultStatus('pack',    r._ex) === 'warning').length : null;
+  // الصفوف القديمة بلا `extra.result` — «معرفناش» مش «تمام»
+  a.packUnknown = fk ? fk.filter(r => stResultStatus('pack', r._ex) === null).length : null;
+  a.repack = fk ? fk.filter(r => r._ex.repack === true || r.edit_reason || r._ex.editReason).length : null;
+
+  // 📊 فرق الفترة — **عابر للأدوات**، ومحايد مش خطر (اقرا About)
+  a.gap = (a.print !== null && a.pack !== null) ? a.print - a.pack : null;
+
+  return a;
+}
+
+// ⏱️ وسيط الزمن من الطباعة للتغليف — عابر للأدوات (التغليف + الطباعة الموسّعة)
+function stCycle(days) {
+  if (!stState.rows.pack || !stState.wide) return null;
+  const idx = new Map();
+  stState.wide.forEach(e => {
+    const k = stNormOrder(e.orderNumber ?? e.order_name);
+    if (!k) return;
+    if (!idx.has(k)) idx.set(k, []);
+    idx.get(k).push(e._ms);
+  });
+
+  const mins = [];
+  let unmatched = 0;
+  stState.rows.pack.filter(r => days.has(r._day)).forEach(r => {
+    const list = idx.get(stNormOrder(r.order_name));
+    // آخر طباعة **قبل** التغليف — طباعة بعده مش جزء من الدورة دي
+    const before = list ? list.filter(t => t <= r._ms) : [];
+    if (!before.length) { unmatched++; return; }
+    mins.push(Math.round((r._ms - Math.max(...before)) / 60000));
+  });
+
+  if (!mins.length) return { n: 0, median: null, unmatched };
+  const sorted = [...mins].sort((x, y) => x - y);
+  const mid = Math.floor(sorted.length / 2);
+  const median = sorted.length % 2
+    ? sorted[mid]
+    : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
+  return { n: sorted.length, median, unmatched };
+}
+
+// ══════════════════════════════════════════════════════════════
+// §STATS-RENDER
+// ══════════════════════════════════════════════════════════════
+function stNum(v) {
+  return v === null ? '<span class="st-fail-inline">تعذّر</span>' : esc(stFmt(v));
+}
+
+// Δ% — 🔴 حارس المقام الأدنى. `prev = 1` بتطلّع «▲ 4000%»، رقم بلا معنى
+//    بياكل مصداقية الشاشة كلها.
+function stDelta(cur, prev, prevLabel) {
+  if (cur === null || prev === null) return '';
+  if (prev === 0 && cur === 0) return '';
+  if (prev < STATS_MIN_DELTA_BASE) {
+    return `<div class="st-delta neutral">${esc(stFmt(prev))} ← ${esc(stFmt(cur))}</div>`;
+  }
+  const pct = ((cur - prev) / prev) * 100;
+  const cls = pct > 0 ? 'up' : pct < 0 ? 'down' : 'neutral';
+  const ico = pct > 0 ? '▲' : pct < 0 ? '▼' : '=';
+  return `<div class="st-delta ${cls}">${ico} ${esc(Math.abs(pct).toFixed(1))}% عن ${esc(prevLabel)}</div>`;
+}
+
+function stKpi(ico, label, value, sub, delta) {
+  return `<div class="st-kpi">
+      <div class="st-kpi-top">
+        <span class="st-kpi-ico">${ico}</span>
+        <span class="st-kpi-val">${value}</span>
+      </div>
+      <span class="st-kpi-lbl">${esc(label)}</span>
+      ${sub ? `<span class="st-kpi-sub">${sub}</span>` : ''}
+      ${delta || ''}
+    </div>`;
+}
+
+function stRenderBanners() {
+  const parts = [];
+  const failed = ST_TOOLS.filter(t => stState.fail[t.key]);
+  if (failed.length) {
+    parts.push(`<div class="st-fail">⚠️ ${failed.map(t =>
+      `تعذّر جلب سجل ${esc(WOC_WORKERS[t.key].label)} — ${esc(stState.fail[t.key])}`).join('<br>')}
+      <br><b>أرقام المصدر ده بتتعرض «تعذّر»، وأي رقم بيجمع أكتر من أداة بيتقفل بالكامل.</b></div>`);
+  }
+  if (stState.wideFail && !stState.fail.printer) {
+    parts.push(`<div class="st-note">⚠️ تعذّر جلب سجل الطباعة الموسّع (${esc(stState.wideFail)}) — وسيط الزمن من الطباعة للتغليف مش هيتعرض. باقي الأرقام سليمة.</div>`);
+  }
+  if (stState.truncated.length) {
+    parts.push(`<div class="st-note">⚠️ النتيجة <b>مقصوصة</b> عند سقف الصفحات في: ${esc(stState.truncated.join(' · '))}.
+      الأرقام تحت <b>ناقصة</b> — جرّب فترة أقصر. (الاقتطاع غير الفشل: المصدر رد، بس رجّع أكتر من اللي بنجيبه.)</div>`);
+  }
+  document.getElementById('stBanners').innerHTML = parts.join('');
+}
+
+function stRenderKpis(cur, prev, r) {
+  const box = document.getElementById('stKpis');
+  const pl  = r.prevLabel;
+  box.innerHTML = [
+    stKpi('🖨', 'فواتير اتطبعت', stNum(cur.print),
+      cur.print === null ? '' : `عادي ${esc(stFmt(cur.printS1))} · استبدال/استرجاع ${esc(stFmt(cur.printS2))}`,
+      stDelta(cur.print, prev.print, pl)),
+    stKpi('📦', 'أوردرات اتغلّفت', stNum(cur.pack),
+      cur.pack === null ? '' : `S1 ${esc(stFmt(cur.packS1))} · S2 ${esc(stFmt(cur.packS2))}`,
+      stDelta(cur.pack, prev.pack, pl)),
+    stKpi('🔢', 'قطع اتغلّفت', stNum(cur.pieces),
+      'مجموع القطع — مش عدد الأوردرات',
+      stDelta(cur.pieces, prev.pieces, pl)),
+    stKpi('🗑', 'بنود اتحذفت', stNum(cur.removeOk),
+      cur.removeFail ? `<span class="st-fail-inline" style="font-size:11.5px">فشل ${esc(stFmt(cur.removeFail))}</span>` : '',
+      stDelta(cur.removeOk, prev.removeOk, pl)),
+    // ⚠️ الليبل ده **قرار مش تزويق**: «الحضور» كان هيخلّي الصفر يتقري
+    //    «محدش جه» بينما الحقيقة «محدش عمل حاجة».
+    stKpi('👥', 'موظفين عملوا عمليات', stNum(cur.actors),
+      'مش حضور — صفوف الدخول مستبعدة في الـ Worker', ''),
+  ].join('');
+}
+
+function stQ(sev, val, label, hint) {
+  return `<div class="st-q sev-${sev}"><span class="st-q-val">${val}</span>
+    <span class="st-q-txt"><span class="st-q-lbl">${esc(label)}</span>
+    ${hint ? `<span class="st-q-hint">${esc(hint)}</span>` : ''}</span></div>`;
+}
+
+function stRenderQuality(cur) {
+  const box = document.getElementById('stQuality');
+  const items = [];
+
+  if (cur.removeFail) items.push(stQ('red', esc(stFmt(cur.removeFail)), 'حذف بند فشل',
+    'أداة هدّامة وقفت في النص — راجع رحلة الأوردر'));
+  if (cur.voidCut)    items.push(stQ('red', esc(stFmt(cur.voidCut)), 'فواتير لاغية اتأكّد قطعها',
+    'الحارس اشتغل صح — ارتفاع الرقم معناه التعديل بعد الطباعة بيكتر'));
+  if (cur.reprintOrders) items.push(stQ('amber', esc(stFmt(cur.reprintOrders)), 'أوردرات اتطبعت أكتر من مرة',
+    `ورق زيادة: ${stFmt(cur.reprintSheets)} ورقة`));
+  if (cur.printWarn)  items.push(stQ('amber', esc(stFmt(cur.printWarn)), 'طباعة بتحذير',
+    'اتسجّلت بس فيه فعل ما تمّش (الحالة مثلاً)'));
+  if (cur.packWarn)   items.push(stQ('amber', esc(stFmt(cur.packWarn)), 'تغليف بتحذير',
+    'العملية تمت والكتابة نجحت، بس فيه فعل ما تمّش'));
+  if (cur.repack)     items.push(stQ('amber', esc(stFmt(cur.repack)), 'إعادة تغليف بعد تعديل',
+    'الأوردر اتفتح تاني وبنوده اتغيّرت'));
+
+  // 📊 محايد بالكامل — **مش** قايمة أخطاء (اقرا About §الحدود المعروفة)
+  if (cur.gap !== null) {
+    items.push(stQ('info', esc(stFmt(cur.gap)), 'فرق الفترة (طبعنا − غلّفنا)',
+      `طبعنا ${stFmt(cur.print)} · غلّفنا ${stFmt(cur.pack)} — الفرق طبيعي، مش تأخير`));
+  }
+
+  const cyc = stCycle(stCurDays());
+  if (cyc && cyc.n >= STATS_MIN_MEDIAN_N && cyc.median !== null) {
+    const h = Math.floor(cyc.median / 60), m = cyc.median % 60;
+    const txt = h ? `${arHour(h)}${m ? ` و${arMin(m)}` : ''}` : arMin(cyc.median);
+    items.push(stQ('info', '⏱', `وسيط الزمن من الطباعة للتغليف: ${txt}`,
+      `ن = ${cyc.n}${cyc.unmatched ? ` · ${cyc.unmatched} أوردر مالهوش طباعة في آخر ${STATS_LOOKBACK_DAYS} أيام (مستبعد)` : ''}`));
+  } else if (cyc && cyc.n > 0) {
+    items.push(stQ('info', '⏱', 'وسيط الزمن مش معروض',
+      `العيّنة ${cyc.n} أقل من الحد الأدنى (${STATS_MIN_MEDIAN_N}) — رقم على عيّنة صغيرة ضوضاء بثقة كاملة`));
+  }
+
+  if (cur.packUnknown) {
+    items.push(stQ('info', esc(stFmt(cur.packUnknown)), 'صفوف تغليف بلا نتيجة مسجّلة',
+      'صفوف قديمة قبل ما الحقل يتضاف — «معرفناش» مش «تمام»'));
+  }
+
+  box.innerHTML = items.length
+    ? `<div class="st-q-grid">${items.join('')}</div>`
+    : '<div class="st-clean">✅ مفيش أي حاجة محتاجة نظرة في الفترة دي.</div>';
+}
+
+function stRenderEmployees(cur) {
+  const box = document.getElementById('stEmployees');
+  const missing = ST_TOOLS.filter(t => stState.rows[t.key] === null);
+  const head = missing.length
+    ? `<div class="st-note">⚠️ الجدول ده ناقص ${esc(missing.map(t => t.label).join(' · '))} — الأعمدة دي مش محسوبة.</div>`
+    : '';
+
+  const map = new Map();
+  const bump = (emp, field, n) => {
+    const key = emp || '';
+    if (!map.has(key)) map.set(key, { emp: key, s1: 0, s2: 0, pack: 0, pieces: 0, rm: 0, first: Infinity, last: 0 });
+    const row = map.get(key);
+    row[field] += n;
+  };
+  const touch = (emp, ms) => {
+    const row = map.get(emp || '');
+    if (!row) return;
+    if (ms < row.first) row.first = ms;
+    if (ms > row.last)  row.last  = ms;
+  };
+
+  (cur.fp || []).forEach(r => { bump(r.employee, r.type === 'S2' ? 's2' : 's1', 1); touch(r.employee, r._ms); });
+  (cur.fk || []).forEach(r => {
+    bump(r.employee, 'pack', 1);
+    bump(r.employee, 'pieces', stInt(r.item_count ?? r._ex.itemCount));
+    touch(r.employee, r._ms);
+  });
+  (cur.fr || []).forEach(r => { bump(r.employee, 'rm', 1); touch(r.employee, r._ms); });
+
+  const rows = [...map.values()].sort((a, b) =>
+    (b.s1 + b.s2 + b.pack + b.rm) - (a.s1 + a.s2 + a.pack + a.rm));
+
+  if (!rows.length) {
+    box.innerHTML = head + '<div class="st-state">مفيش أي عملية مسجّلة في الفترة دي.</div>';
+    return;
+  }
+
+  const tot = rows.reduce((s, r) => ({
+    s1: s.s1 + r.s1, s2: s.s2 + r.s2, pack: s.pack + r.pack, pieces: s.pieces + r.pieces, rm: s.rm + r.rm,
+  }), { s1: 0, s2: 0, pack: 0, pieces: 0, rm: 0 });
+
+  const cell = n => `<td class="st-n${n ? '' : ' zero'}">${esc(stFmt(n))}</td>`;
+
+  box.innerHTML = head + `<div class="st-scroll"><table class="st-tbl">
+    <thead><tr>
+      <th>الموظف</th><th>طباعة عادي</th><th>طباعة استبدال</th><th>تغليف</th>
+      <th>قطع</th><th>حذف</th><th>أول عملية</th><th>آخر عملية</th>
+    </tr></thead>
+    <tbody>${rows.map(r => `<tr>
+      ${r.emp
+        ? `<td class="st-who">${esc(r.emp.replace(/_/g, ' '))}</td>`
+        // ⚠️ الطابعة عمود `employee` فاضي في كل صفوفها قبل v2.0.0.
+        //    الصف ده **مايتحذفش ومايتوزّعش** — حذفه بيخلّي مجموع الجدول
+        //    ≠ المربعات فوق، وده أسوأ من صف صريح.
+        : '<td class="st-who unknown">غير مسجّل</td>'}
+      ${cell(r.s1)}${cell(r.s2)}${cell(r.pack)}${cell(r.pieces)}${cell(r.rm)}
+      <td class="st-when">${r.last ? esc(formatTimeOnly(new Date(r.first).toISOString())) : '—'}</td>
+      <td class="st-when">${r.last ? esc(formatTimeOnly(new Date(r.last).toISOString()))  : '—'}</td>
+    </tr>`).join('')}</tbody>
+    <tfoot><tr><td>الإجمالي</td>${cell(tot.s1)}${cell(tot.s2)}${cell(tot.pack)}${cell(tot.pieces)}${cell(tot.rm)}<td></td><td></td></tr></tfoot>
+  </table></div>`;
+}
+
+function stRenderHours(cur) {
+  const box = document.getElementById('stHours');
+  const hours = Array.from({ length: 24 }, () => ({ print: 0, pack: 0, rm: 0 }));
+  const put = (rows, k) => (rows || []).forEach(r => {
+    if (!r._ms) return;
+    hours[toCairo(new Date(r._ms).toISOString()).getUTCHours()][k]++;
+  });
+  put(cur.fp, 'print'); put(cur.fk, 'pack'); put(cur.fr, 'rm');
+
+  const totals = hours.map(h => h.print + h.pack + h.rm);
+  const max = Math.max(...totals);
+  if (!max) { box.innerHTML = '<div class="st-state">مفيش عمليات في الفترة دي.</div>'; return; }
+
+  const seg = (n, cls) => n ? `<span class="st-hseg ${cls}" style="height:${(n / max * 100).toFixed(2)}%"></span>` : '';
+  const bars = hours.map((h, i) => `<div class="st-hcol${totals[i] ? ' busy' : ''}" title="الساعة ${i}:00 — ${totals[i]} عملية">
+      <span class="st-hstack">${seg(h.rm, 's-rm')}${seg(h.pack, 's-pack')}${seg(h.print, 's-print')}</span>
+      <span class="st-hlbl">${String(i).padStart(2, '0')}</span>
+    </div>`).join('');
+
+  // 🔴 جدول مكافئ جنب الرسم — الرسم بيوري الشكل، الجدول بيجاوب «كام بالظبط».
+  const tbl = hours.map((h, i) => totals[i] ? `<tr>
+      <td class="st-when">${String(i).padStart(2, '0')}:00</td>
+      <td class="st-n">${esc(stFmt(h.print))}</td><td class="st-n">${esc(stFmt(h.pack))}</td>
+      <td class="st-n">${esc(stFmt(h.rm))}</td><td class="st-n">${esc(stFmt(totals[i]))}</td>
+    </tr>` : '').join('');
+
+  box.innerHTML = `<div class="st-hours">${bars}</div>
+    <div class="st-legend">
+      <span class="st-lg"><span class="st-lg-dot s-print"></span>طباعة</span>
+      <span class="st-lg"><span class="st-lg-dot s-pack"></span>تغليف</span>
+      <span class="st-lg"><span class="st-lg-dot s-rm"></span>حذف</span>
+      <span>·</span><span>أعلى ساعة: ${esc(stFmt(max))} عملية</span>
+    </div>
+    <details class="st-details"><summary>📋 الأرقام بالظبط</summary>
+      <div class="st-scroll" style="margin-top:8px"><table class="st-tbl">
+        <thead><tr><th>الساعة</th><th>طباعة</th><th>تغليف</th><th>حذف</th><th>الإجمالي</th></tr></thead>
+        <tbody>${tbl}</tbody></table></div>
+    </details>`;
+}
+
+function stCurDays() {
+  const w = stState.win;
+  return stDaySet(w.start, w.end);
+}
+
+function stRender() {
+  const r = ST_RANGES[stState.range];
+  const w = stState.win;
+  document.getElementById('stRangeChip').textContent =
+    w.start === w.end ? w.start : `${w.start} → ${w.end}`;
+
+  stRenderBanners();
+  const cur  = stAggregate(stDaySet(w.start, w.end));
+  const prev = stAggregate(stDaySet(w.prevStart, w.prevEnd));
+  stRenderKpis(cur, prev, r);
+  stRenderQuality(cur);
+  stRenderEmployees(cur);
+  stRenderHours(cur);
+  stRenderFreshness();
+}
+
+// ── الطزاجة — المؤشر الوحيد بين المستخدم والبيانات القديمة ───
+// (مفيش تحديث تلقائي، فالسلّم ده هو الحارس. `agoInfo` في الـ shell —
+//  نفس السلّم بالظبط اللي في الشاشة الرئيسية وطابور التغليف.)
+function stRenderFreshness(now = Date.now()) {
+  const info = agoInfo(stState.at, now);
+  const ago  = document.getElementById('stAgo');
+  if (!ago) return;
+  ago.className   = `woc-ago ${info.cls}`;
+  ago.textContent = info.text;
+  const iso = stState.at ? stState.at.toISOString() : null;
+  document.getElementById('stStamp').innerHTML = iso
+    ? `<span class="woc-stamp-chip">${esc(formatDate(iso))}</span>`
+      + `<span class="woc-stamp-chip">${esc(formatTimeOnly(iso))}</span>`
+    : '<span class="woc-stamp-chip">—</span>';
+  document.getElementById('stRefreshBtn').classList.toggle('is-stale', info.stale);
+}
+
+// ── النبضة — **صفر نداء شبكة**، زي `WOC_TICK_MS` و`rdyTick` بالظبط ───
+function stStartTicker() {
+  if (stState.tickTimer) return;
+  stState.tickTimer = setInterval(() => stRenderFreshness(), STATS_TICK_MS);
+}
+
+function stSetRange(key) {
+  if (stState.loading || key === stState.range) return;
+  stState.range = key;
+  stRenderPresets();
+  stLoad();
+}
+
+function stRenderPresets() {
+  document.getElementById('stPresets').innerHTML = Object.entries(ST_RANGES).map(([k, r]) =>
+    `<button class="st-preset${k === stState.range ? ' active' : ''}" onclick="stSetRange('${k}')">${esc(r.label)}</button>`
+  ).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// §INIT
+// ══════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('headerMount').innerHTML = wocHeader({
+    icon: '📊', title: 'إحصائيات المخزن', subtitle: 'مركز عمليات المخزن', session,
+  });
+  renderVersionUI();
+  checkWorkerVersion(PAGE_WORKERS);   // قايمة فاضية — قراءة سجل بس
+  renderAboutWorkers();
+  stRenderPresets();
+  stLoad();
+});
+</script>
+</body>
+</html>
