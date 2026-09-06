@@ -157,13 +157,15 @@
         <div class="woc-row-mid">
           <div class="woc-chips" id="chipsPrint"></div>
           <div class="woc-fail" id="failPrint" style="display:none"></div>
-          <div class="woc-fresh-row">
-            <span class="woc-fresh-lbl">آخر تحديث</span>
-            <span class="woc-ago" id="agoPrint">لسه ما اتحدّثش</span>
-            <span id="stampPrint"><span class="woc-stamp-chip">—</span></span>
-          </div>
         </div>
         <div class="woc-row-act">
+          <div class="woc-fresh">
+            <div class="woc-fresh-row">
+              <span class="woc-fresh-lbl">آخر تحديث</span>
+              <span class="woc-ago" id="agoPrint">لسه ما اتحدّثش</span>
+            </div>
+            <div class="woc-fresh-row" id="stampPrint"><span class="woc-stamp-chip">—</span></div>
+          </div>
           <button class="woc-rbtn" id="btnPrint"
                   onclick="event.preventDefault();event.stopPropagation();loadQueue('print', false)">
             <span class="woc-rbtn-ico">↺</span><span>تحديث</span><span class="woc-rbtn-badge" id="badgePrint">—</span>
@@ -184,13 +186,15 @@
         <div class="woc-row-mid">
           <div class="woc-chips" id="chipsPack"></div>
           <div class="woc-fail" id="failPack" style="display:none"></div>
-          <div class="woc-fresh-row">
-            <span class="woc-fresh-lbl">آخر تحديث</span>
-            <span class="woc-ago" id="agoPack">لسه ما اتحدّثش</span>
-            <span id="stampPack"><span class="woc-stamp-chip">—</span></span>
-          </div>
         </div>
         <div class="woc-row-act">
+          <div class="woc-fresh">
+            <div class="woc-fresh-row">
+              <span class="woc-fresh-lbl">آخر تحديث</span>
+              <span class="woc-ago" id="agoPack">لسه ما اتحدّثش</span>
+            </div>
+            <div class="woc-fresh-row" id="stampPack"><span class="woc-stamp-chip">—</span></div>
+          </div>
           <button class="woc-rbtn" id="btnPack"
                   onclick="event.preventDefault();event.stopPropagation();loadQueue('pack', false)">
             <span class="woc-rbtn-ico">↺</span><span>تحديث</span><span class="woc-rbtn-badge" id="badgePack">—</span>
@@ -293,7 +297,17 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.3.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.4.0</span>
+          <span class="cl-ver-date">06-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>لوحة «آخر تحديث» بقت ملزوقة بزرار التحديث</b> في الشاشة الرئيسية، و<b>بنفس شكلها في صفحة التغليف</b> بالحرف — صندوق بسطرين: اللافتة وعدّاد القِدَم فوق، وختم التاريخ والوقت تحت.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.3.0</span>
           <span class="cl-ver-date">06-09-2026</span>
         </div>
         <ul class="cl-items">
