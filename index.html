@@ -308,7 +308,20 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.7.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.8.0</span>
+          <span class="cl-ver-date">07-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>🔴 <b>حذف منتج:</b> سبب الإلغاء كان بيتكتب <code>«عطلان»</code> — قيمة <b>مش موجودة</b> في خيارات الميتافيلد على شوبيفاي، فكل حذف كان بيشيل البند ويفشل في كتابة الحالة/السبب. بقت <b>«المنتج غير متوفر»</b>.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🔴 <b>حارس قبل التنفيذ</b> في <code>order-item-remover-worker</code>: القيم بتتفحص مقابل تعريف الميتافيلد <b>قبل</b> أي كتابة، وأي قيمة مرفوضة = إلغاء العملية بالكامل والأوردر ما بيتلمسش.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>⚠️ تحذيرات صفحة الحذف بقت <b>نافذة</b> بتفاصيل كاملة بدل توست بيختفي لوحده.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <code>remover.min</code> بقى <code>1.4.0</code> — <b>Promote مطلوب</b> لـ <code>order-item-remover-worker</code> v1.4.0.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.7.0</span>
           <span class="cl-ver-date">07-09-2026</span>
         </div>
         <ul class="cl-items">
