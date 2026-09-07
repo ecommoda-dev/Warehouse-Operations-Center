@@ -81,9 +81,20 @@ await page.route('**order-printer-worker.ecommoda-dev.workers.dev/**', async (ro
   if (url.pathname === '/invoice')
     return route.fulfill({ status:500, contentType:'application/json',
                            body: JSON.stringify({ error:'اختبار: فشل تحضير الفاتورة' }) });
+  // `/lookup` — أوردر بعينه مهما كانت حالته (Worker v2.4.0). هنا أوردر
+  // **بوسطة** حالته Ready: بيوصل من كارت إعادة الطباعة بس.
+  if (url.pathname === '/lookup')
+    return route.fulfill(J({ ok:true, inPrintQueue:false, zoneExcluded:1, order:{
+      id:'gid://shopify/Order/10', orderId:'10', name:'#53410', createdAt:'2026-09-05T08:00:00Z',
+      customer:'ريم', type:'S1', status:'Ready', s1Status:'Ready', s2Status:null,
+      printingTimeS1:'2026-09-05T09:00:00Z', packingTimeS1:null, printingTimeS2:null, packingTimeS2:null,
+      zone:'Other_Regions', zoneKnown:true, channel:'awb',
+      total:1000, totalOriginal:1000, tags:['Printed(S1)'], isPrinted:true } }));
   if (url.pathname === '/logs') return route.fulfill(J({ok:true, entries:[], count:0, total:0, cap:5000, truncated:false}));
   if (action === 'bosta_lookup') {
     const mk = (o) => {
+      if (!o) return { id:'gid://shopify/Order/10', name:'#53410', found:true, ok:true, reason:null, codMismatch:null,
+             selected:{ deliveryId:'dl10', trackingNumber:'TR10', stateCode:20, stateName:'Route Assigned', type:'Send', cod:1000 }, deliveries:[] };
       if (o.name === '#53402') return { id:o.id, name:o.name, found:false, ok:false, reason:'not_found', selected:null, deliveries:[], codMismatch:null };
       const cod = o.name === '#53400' ? 1500 : o.total;   // #53400 عنده فرق تحصيل
       return { id:o.id, name:o.name, found:true, ok:true, reason:null, codMismatch: cod!==o.total?{cod,total:o.total,diff:cod-o.total}:null,
@@ -234,6 +245,38 @@ await page.click('#chanBtn-showroom'); await page.waitForTimeout(250);
 check('قناة شو روم فيها صف واحد', (await page.$$('#printTableBody tr')).length === 1);
 check('عمود القناة بيقول شو روم', (await page.textContent('#printTableBody')).includes('شو روم'));
 
+
+console.log('\n── ③ إعادة طباعة أوردر بوسطة خرج من الطابور ──');
+// 🔴 الفخ اللي البند ده اتكتب عشانه: صف `/lookup` بيعدّي على نفس البوابة
+//    ونفس مسار الطباعة. لو `channel` غاب منه، الصف بيتقري «بلا قناة»
+//    وأوردر بوسطة بيتطبعله **فاتورة شوبيفاي بدل البوليصة** — من غير أي خطأ.
+calls.length = 0;
+await page.evaluate(() => openReprintFor('53410', '10'));
+await page.waitForSelector('#rpActions', { state:'visible', timeout:10000 });
+check('كارت إعادة الطباعة اتفتح', await page.isVisible('#reprintCard.open'));
+check('نادى /lookup', calls.some(c => c.path === '/lookup'));
+
+await page.click('#rpPrintBtn');
+await page.waitForSelector('#gateOverlay.open', { timeout:10000 });
+// الأوردر ده حالته `Ready` وما اتعدّلش، فمفيش إقرار مطلوب — البوابة بتتفتح
+// على تنبيه 🟡 «سبق طباعته» بس.
+// 🔴 والبند ده بيحرس على حالة **بوابة بلا إقرارات**: زرار «اطبع الكل» لازم
+//    يفضل **شغّال**. شرط `boxes.length > 0` في `gateSyncState` كان بيقفله
+//    للأبد على كل دفعة سبق طباعتها — اتمسك هنا.
+const rpBoxes = await page.$$('#pgBody [data-gate-need]');
+check('البوابة فتحت على تنبيه بلا إقرارات', rpBoxes.length === 0, String(rpBoxes.length));
+check('«سبق طباعته» ظاهر', (await page.textContent('#pgBody')).includes('سبق طباعتهم'));
+check('🔴 «اطبع الكل» شغّال مع بوابة بلا إقرارات', !(await page.isDisabled('#pgPrintAllBtn')));
+await page.click('#pgPrintAllBtn');
+await page.waitForSelector('#trackResultOverlay.open', { timeout:15000 });
+await page.waitForTimeout(300);
+
+check('🔴 نادى bosta_awb — مش /invoice', calls.some(c=>c.action==='bosta_awb') && !calls.some(c=>c.path==='/invoice'),
+      JSON.stringify(calls.map(c=>c.action||c.path)));
+const rpTrack = calls.filter(c => c.path === '/track');
+check('/track بعت doc=AWB في إعادة الطباعة', rpTrack.length===1 && rpTrack[0].body.doc==='AWB',
+      JSON.stringify(rpTrack.map(t=>({type:t.body.type,doc:t.body.doc}))));
+check('مفيش إقرار متبعت (مفيش فعل مطلوب)', !rpTrack[0]?.body?.guard, JSON.stringify(rpTrack[0]?.body?.guard));
 
 check('صفر أخطاء في الكونسول وصفر أخطاء صفحة', errs.length === 0, errs.join(' | '));
 
