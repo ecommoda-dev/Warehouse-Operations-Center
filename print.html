@@ -1360,8 +1360,21 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
       <div class="cl-entry">
         <div class="cl-head">
-          <span class="cl-ver">v1.11.0</span>
+          <span class="cl-ver">v1.11.1</span>
           <span class="cl-badge" id="clLatestBadge">آخر نسخة</span>
+          <span class="cl-date">07-09-2026</span>
+        </div>
+        <div class="cl-list">
+          <div class="cl-item"><span class="cl-tag fix">إصلاح</span><span>🔴 <strong>بادج بوسطة كان بيقول ٦٦ والجدول تحته فيه ٦</strong> — البادج بقى بيعدّ <strong>اللي بيتعرض فعلاً</strong> بنفس بوابة الجدول بالحرف. رقم على زرار مش بيتقرا كحاشية — بيتقرا كوعد بشغل موجود.</span></div>
+          <div class="cl-item"><span class="cl-tag fix">إصلاح</span><span>🔴 <strong>نفس الفرق كان على الشاشة الرئيسية</strong> — «جاهز للطباعة ٨٤» ومربع «بوسطة ٦٦». الإجمالي والمربعات بقوا <strong>اللي ينفع يتطبع دلوقتي</strong>.</span></div>
+          <div class="cl-item"><span class="cl-tag new">جديد</span><span>مربعان في الشاشة الرئيسية: <strong>⏳ مستنية رفع على بوسطة</strong> و<strong>⏸️ استبدال بوسطة (مؤجّل)</strong> — بيظهروا بس لما يكون فيهم فعلاً، فالمستبعَد ما بيختفيش في صمت.</span></div>
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span>بوابة القناة اتنقلت لـ <code>shared/shell.js</code> §BOSTA-GATE — الرئيسية والطباعة بيعدّوا من <strong>مصدر واحد</strong>، ومستحيل يفترقوا.</span></div>
+        </div>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-head">
+          <span class="cl-ver">v1.11.0</span>
           <span class="cl-date">07-09-2026</span>
         </div>
         <div class="cl-list">
@@ -1732,10 +1745,10 @@ async function openReprintFor(cleanNum, oid) {
   row.printedBy = vi.printedBy;
   row.printedAt = vi.printedAt || (o.type === 'S2' ? o.printingTimeS2 : o.printingTimeS1)
                   || (printLastS1Map[cleanNum]?.timestamp || null);
-  // 🔴 القناة — من غيرها `uiChannel` بترجّع "none" وأوردر بوسطة بيتطبعله
+  // 🔴 القناة — من غيرها `wocChannelOf` بترجّع "none" وأوردر بوسطة بيتطبعله
   //    **فاتورة شوبيفاي بدل البوليصة**. الحقل بييجي من `/lookup` (Worker
   //    v2.5.0) بنفس شكل صف `/orders` بالحرف.
-  row.chan = uiChannel(o);
+  row.chan = wocChannelOf(o);
   reprintRow = row;
 
   const packAt = o.type === 'S2' ? o.packingTimeS2 : o.packingTimeS1;
@@ -2480,24 +2493,12 @@ function rebuildPrintFilterItems() {
 // 🔴 القناة `null` = **مش عارفين**. الصف بيظهر والطباعة مقفولة برسالة.
 //    ممنوع أي تخمين ومنوع أي اشتقاق من العنوان (قاعدة ١٦)، وممنوع الإخفاء —
 //    الإخفاء هو اللي أنتج «الأوردر مش ظاهر» مع `ZONE_FILTER`.
-const ZONE_SHOWROOM = "Show_Room";
-
-// 🔴 §BOSTA-GATE — «اترفع على بوسطة؟» (قرار أحمد 07-09-2026)
-//
-// الرفع على داشبورد بوسطة **بوابة إلزامية قبل الطباعة**
-// (`ecommoda-order-lifecycle` → `zone-routing.md` §2.2)، والتاج ده هو
-// أثرها على شوبيفاي: موجود = الأوردر على بوسطة · غايب = **لسه ما اترفعش**.
-// طابور بوسطة من غير الحارس ده كان بيعرض أوردرات مستحيل تتطبع أصلاً —
-// الموظف يحددها ويدوس طباعة، والدفعة ترجع صف أحمر `not_found` لكل واحدة.
-//
-// ⚠️ **حارس عرض مش حارس أمان.** الحارس الحقيقي لسه `bosta_lookup` (بيرجّع
-//    `not_found` لأي أوردر مالوش شحنة) — التاج بيوفّر الرحلة الضايعة دي بس.
-//    عشان كده **مش** مطبَّق على كارت إعادة الطباعة: ده فعل مقصود على أوردر
-//    بعينه، والبوابة الحقيقية بتقول لأ لو الأوردر مش هناك.
-//
-// ⚠️ **الأوردر المستبعَد مش مخفي في صمت** — عدده بيتعرض فوق الجدول بنفس
-//    نمط `chanHiddenS2` بالظبط. أوردر مختفي بلا سبب = تذكرة دعم.
-const BOSTA_UPLOADED_TAG = "Bosta_Uploaded_S1";
+// 🔴 `ZONE_SHOWROOM` و`BOSTA_UPLOADED_TAG` و`wocChannelOf` و`wocChannelGate`
+//    كلهم في `shared/shell.js` §BOSTA-GATE — **مش هنا**. الشاشة الرئيسية
+//    بتعدّ من نفس رد `/orders` بالظبط، ونسخة تانية من أي قاعدة فيهم معناها
+//    إن الرئيسية تقول رقم والصفحة تفتح على رقم تاني (اللي حصل في v1.11.0:
+//    بادج ٦٦ وجدول ٦). ⛔ ممنوع أي صفحة تعرّفهم تاني — تعريف في صفحة بيغلب
+//    الـ shell (بيتحمّل قبلها) والقاعدتين هيفترقوا في صمت (درس R1).
 
 const CHANNELS = {
   invoice:  { label: "فاتورة — قاهرة+جيزة", short: "قاهرة+جيزة", action: "invoice" },
@@ -2505,32 +2506,6 @@ const CHANNELS = {
   awb:      { label: "بوليصة بوسطة",         short: "بوسطة",      action: "awb"     },
   none:     { label: "بلا قناة",             short: "بلا قناة",   action: null      },
 };
-
-// ⚠️ **الـ Worker هو مصدر قرار الطباعة** (`o.channel` = 'invoice' · 'awb' ·
-//    null). الواجهة بتزوّد تفرقة **عرض** واحدة بس: الشو روم بيتفصل عن
-//    قاهرة+جيزة عشان العدّ والفلترة — والاتنين بيطبعوا نفس الفاتورة.
-//    ⛔ ممنوع نبني خريطة زون→قناة تانية هنا: خريطتين هيفترقوا مع أول تعديل.
-function uiChannel(o) {
-  if (o.zone === ZONE_SHOWROOM && o.channel === "invoice") return "showroom";
-  if (o.channel === "awb")     return "awb";
-  if (o.channel === "invoice") return "invoice";
-  return "none";
-}
-
-// 🔴 §BOSTA-GATE::channelGateReason — **المصدر الوحيد** لسؤال «الصف ده
-//    بيتعرض في القناة دي ولا لأ؟». الجدول والـ KPIs بيعدّوا منها الاتنين.
-//    نسخة تانية من الشرط هتفترق مع أول تعديل (درس R1).
-//    بترجّع `null` = معروض · أو سبب الاستبعاد بالاسم.
-function channelGateReason(o, chan) {
-  if (o.chan !== chan) return "other-channel";
-  if (chan === "awb") {
-    // S2 على بوسطة مخفية مؤقتًا بقرار (أحمد 07-09-2026).
-    if (o.type === "S2") return "s2";
-    // لسه ما اترفعش على داشبورد بوسطة — مفيش شحنة، فمفيش بوليصة.
-    if (!o.bostaUploaded) return "not-uploaded";
-  }
-  return null;
-}
 
 // القناة النشطة — **في الذاكرة بس** زي `lastEntryMode` في `pack.html`:
 // موظف جديد على نفس الجهاز بيبدأ من الافتراضي.
@@ -2554,7 +2529,15 @@ function setChannel(ch) {
 function renderChannelCounts() {
   const rows   = decoratePrintRows();
   const counts = { invoice: 0, showroom: 0, awb: 0, none: 0 };
-  for (const r of rows) counts[r.chan] = (counts[r.chan] || 0) + 1;
+  // 🔴 البادج بيعدّ **اللي بيتعرض في القناة فعلاً** — بنفس بوابة الجدول
+  //    بالحرف (`wocChannelGate`). قبل v1.11.1 كان بيعدّ القناة كلها،
+  //    فبادج بوسطة كان بيقول ٦٦ والجدول تحته فيه ٦: الفرق كان متفسَّر في
+  //    الملاحظة، بس **رقم على زرار مش بيتقرا كحاشية** — بيتقرا كوعد بشغل
+  //    موجود. المستبعَد بيتقال بعدده في الملاحظة، مش في العدّاد.
+  for (const r of rows) {
+    const chan = r.chan;
+    if (wocChannelGate(r, chan) === null) counts[chan] = (counts[chan] || 0) + 1;
+  }
 
   for (const key of Object.keys(CHANNELS)) {
     const btn = document.getElementById(`chanBtn-${key}`);
@@ -2675,7 +2658,7 @@ function prtSinceText(iso) {
 function decoratePrintRows() {
   return allOrders.map(o => {
     const vi   = voidInvoiceInfo(o);
-    const chan = uiChannel(o);
+    const chan = wocChannelOf(o);
     return {
       ...o,
       chan,
@@ -2687,7 +2670,7 @@ function decoratePrintRows() {
         : null,
       // §BOSTA-GATE — `tags` بترجع من `/orders` أصلاً (نفس المصدر بتاع
       //    `isPrinted`)، فمفيش نداء زيادة ومفيش تعديل Worker للبند ده.
-      bostaUploaded: (o.tags || []).includes(BOSTA_UPLOADED_TAG),
+      bostaUploaded: wocBostaUploaded(o),
       count: getPrintCount(o),
       date:  o.createdAt,
       time:  o.createdAt,          // نفس الـ timestamp — عمودان للعرض بس
@@ -2702,7 +2685,7 @@ function decoratePrintRows() {
 function updatePrintKPIs() {
   // ⚠️ الأرقام دي بتوصف **القناة النشطة** — مش الطابور كله. عدّاد كل قناة
   //    ظاهر في شريط القناة فوق، فمفيش رقم مخفي.
-  const rows = decoratePrintRows().filter(r => channelGateReason(r, activeChannel) === null);
+  const rows = decoratePrintRows().filter(r => wocChannelGate(r, activeChannel) === null);
   document.getElementById("kpiS1").textContent = rows.filter(o => o.type === "S1").length.toLocaleString("en-US");
   document.getElementById("kpiS2").textContent = rows.filter(o => o.type === "S2").length.toLocaleString("en-US");
 
@@ -2725,7 +2708,7 @@ function applyPrintFilters() {
     // ① بوابة القناة أولاً — مش فلتر، ده وضع الأداة الحالي. والاستبعاد
     //    بيترصد بسببه: كل اللي بيتشال بيتعدّ وبيتقال فوق الجدول، فالغياب
     //    **معلوم** مش صامت.
-    const gate = channelGateReason(o, activeChannel);
+    const gate = wocChannelGate(o, activeChannel);
     if (gate === "s2")           { chanHiddenS2++;  return false; }
     if (gate === "not-uploaded") { chanHiddenNew++; return false; }
     if (gate)                    { return false; }
