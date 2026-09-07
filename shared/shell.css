@@ -322,6 +322,15 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .woc-chip b{font-family:var(--font-mono);font-variant-numeric:tabular-nums;direction:ltr}
 .woc-chip.chip-s1{background:var(--accent-light);color:var(--accent-dark);border-color:var(--accent-border)}
 .woc-chip.chip-s2{background:var(--purple-light);color:var(--purple-dark);border-color:var(--purple-border)}
+/* مربعات قناة الشحن على الشاشة الرئيسية (v1.7.0) — طابور الطباعة بقى فيه
+   تلات قنوات، والتقسيمة S1/S2 مابقتش هي السؤال المهم فيه.
+   ⚠️ الألوان **نفس ألوان عمود المندوب في `pack.html`** وعمود القناة في
+      `print.html`: بوسطة أحمر · قاهرة+جيزة أزرق · شو روم أخضر. نفس
+      المعلومة بلونين مختلفين = الموظف بيتعلّمها مرتين (درس R1). */
+.woc-chip.chip-ch-invoice{background:var(--accent-light);color:var(--accent-dark);border-color:var(--accent-border)}
+.woc-chip.chip-ch-awb{background:var(--red-light);color:var(--red-dark);border-color:var(--red-border)}
+.woc-chip.chip-ch-showroom{background:var(--green-light);color:var(--green-dark);border-color:var(--green-border)}
+.woc-chip.chip-ch-none{background:var(--amber-light);color:var(--amber-dark);border-color:var(--amber-border)}
 
 /* لوحة «آخر تحديث» — **نفس شكل `.rdy-fresh` في `pack.html`** بالحرف:
    صندوق محدّد بسطرين، الأول اللافتة + عدّاد القِدَم والتاني ختم

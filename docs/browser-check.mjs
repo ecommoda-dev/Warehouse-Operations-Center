@@ -1,0 +1,244 @@
+// فحص متصفح فعلي لصفحة الطباعة — `print.html` مع Worker وهمي.
+//
+// ليه الملف ده موجود: عطلان في `bosta-awb-print` v1.0.0 (مودال الإعدادات
+// بيفتح فوق شاشة الدخول · الفوكس بيتسحب جوّه الـ PDF) **ما اتمسكوش بمراجعة
+// كود** — اتمسكوا بتشغيل الصفحة في متصفح حقيقي. ونفس الحكاية مع
+// `direction:ltr` في `stats.html`.
+//
+// التشغيل:
+//   npm i playwright --no-save
+//   node docs/browser-check.mjs
+//
+// الفحص ده **مع** `docs/css-check.js` وفحص Step 9، مش بديل عنهم.
+//
+// ⚠️ فخّان في كتابة الاختبار نفسه، الاتنين كلّفوا وقت:
+//   ① `frame.evaluate()` على frame فيه PDF **بتعلّق للأبد** في هيدلس —
+//      التبليغ من جوّه الصفحة بـ `exposeFunction` بدلها.
+//   ② `browser.close()` بتعلّق برضه لو فيه frame PDF مفتوح — سباق بمهلة.
+
+import { chromium } from 'playwright';
+import http from 'http'; import fs from 'fs'; import path from 'path';
+
+const ROOT = '/home/user/Warehouse-Operations-Center';
+const MIME = {'.html':'text/html','.js':'text/javascript','.css':'text/css'};
+const srv = http.createServer((req,res)=>{
+  const f = path.join(ROOT, decodeURIComponent(req.url.split('?')[0]));
+  if (!fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); return res.end('nf'); }
+  res.writeHead(200,{'Content-Type':MIME[path.extname(f)]||'text/plain'});
+  res.end(fs.readFileSync(f));
+});
+await new Promise(r=>srv.listen(0, r));
+const PORT = srv.address().port;   // منفذ عشوائي — مفيش تصادم مع تشغيل قديم عالق
+
+// PDF بعدد صفحات محدد — countPdfPages بيدوّر على /Type /Page اللي مش /Pages
+const mkPdf = (n) => Buffer.from('%PDF-1.4\n'+'/Type /Page \n'.repeat(n)+'/Type /Pages \ntrailer\n%%EOF').toString('base64');
+
+const ORDERS = [
+  {id:'gid://shopify/Order/1', orderId:'1', name:'#53400', createdAt:'2026-09-06T08:00:00Z', customer:'أحمد', type:'S1', status:'Confirmed',        zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:1200, totalOriginal:1200, printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false},
+  {id:'gid://shopify/Order/2', orderId:'2', name:'#53401', createdAt:'2026-09-06T09:00:00Z', customer:'منى',  type:'S1', status:'Confirmed + Edit', zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:800,  totalOriginal:800,  printingTimeS1:'2026-09-05T10:00:00Z', packingTimeS1:null, tags:[], isPrinted:true},
+  {id:'gid://shopify/Order/3', orderId:'3', name:'#53402', createdAt:'2026-09-06T10:00:00Z', customer:'سيد',  type:'S1', status:'Confirmed',        zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:500,  totalOriginal:500,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false},
+  {id:'gid://shopify/Order/4', orderId:'4', name:'#53403', createdAt:'2026-09-06T11:00:00Z', customer:'هدى',  type:'S2', status:'Confirmed + RETURN',zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:300,  totalOriginal:300,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false},
+  {id:'gid://shopify/Order/5', orderId:'5', name:'#53404', createdAt:'2026-09-06T12:00:00Z', customer:'كريم', type:'S1', status:'Confirmed',        zone:'Cairo+Giza',    zoneKnown:true,  channel:'invoice', total:900,  totalOriginal:900,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false},
+  {id:'gid://shopify/Order/6', orderId:'6', name:'#53405', createdAt:'2026-09-06T13:00:00Z', customer:'ندى',  type:'S1', status:'Confirmed',        zone:'Show_Room',     zoneKnown:true,  channel:'invoice', total:400,  totalOriginal:400,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false},
+  {id:'gid://shopify/Order/7', orderId:'7', name:'#53406', createdAt:'2026-09-06T14:00:00Z', customer:'طارق', type:'S1', status:'Confirmed',        zone:null,            zoneKnown:false, channel:null,      total:700,  totalOriginal:700,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false},
+  {id:'gid://shopify/Order/8', orderId:'8', name:'#53407', createdAt:'2026-09-06T15:00:00Z', customer:'سلمى', type:'S1', status:'Confirmed',        zone:'Cairo',         zoneKnown:false, channel:null,      total:650,  totalOriginal:650,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false},
+];
+
+const calls = [];
+const browser = await chromium.launch({ executablePath:'/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const page = await browser.newPage();
+const errs = [];
+page.on('pageerror', e => errs.push('PAGEERROR: '+e.message));
+// أخطاء تحميل موارد خارجية (خط جوجل محجوب بالبروكسي هنا) مش أخطاء كود.
+page.on('console', m => { if (m.type()==='error' && !/Failed to load resource/.test(m.text())) errs.push('CONSOLE: '+m.text()); });
+page.on('requestfailed', r => { if (!/fonts\.googleapis|fonts\.gstatic|jsdelivr|cdnjs\.cloudflare/.test(r.url())) errs.push('REQFAIL: '+r.url()+' '+r.failure()?.errorText); });
+
+const printHits = [];
+await page.exposeFunction('__hit', (k) => { printHits.push(k); });
+await page.addInitScript(() => {
+  localStorage.setItem('warehouse_ops_worker_secret','x'.repeat(40));
+  sessionStorage.setItem('woc_session', JSON.stringify({v:1,username:'Ahmed_Ibraheem',displayName:'Ahmed Ibraheem',loginAt:new Date().toISOString()}));
+  // في هيدلس مفيش PDF plugin، فـ iframe الـ blob مش frame قابل للسكربت
+  // و`contentWindow.print()` بترمي — وده بالظبط المسار اللي الـ fallback
+  // اتكتب عشانه. الاختبار بيتأكد إن **واحد** من المسارين اشتغل.
+  window.print = () => { window.__hit && window.__hit('print'); };
+  window.open  = () => { window.__hit && window.__hit('open'); return null; };
+});
+
+const J = (o) => ({ status:200, contentType:'application/json', body: JSON.stringify(o) });
+
+await page.route('**order-printer-worker.ecommoda-dev.workers.dev/**', async (route) => {
+  const req = route.request(); const url = new URL(req.url());
+  const action = url.searchParams.get('action') || '';
+  let body = {}; try { body = req.postData() ? JSON.parse(req.postData()) : {}; } catch {}
+  calls.push({ path:url.pathname, action, body });
+
+  if (action === 'get_config') return route.fulfill(J({ok:true, version:'2.4.0', tool:'order_printer'}));
+  if (url.pathname === '/orders')
+    return route.fulfill(J({ok:true, orders:ORDERS, total:ORDERS.length, zoneExcluded:0, allZones:body.allZones===true, fetchedAt:new Date().toISOString()}));
+  // مسار الفاتورة بيرجّع خطأ في المجموعة التانية — عشان نختبر **الفشل
+  // الجزئي** من غير ما نحاكي فاتورة كاملة بكل حقولها.
+  if (url.pathname === '/invoice')
+    return route.fulfill({ status:500, contentType:'application/json',
+                           body: JSON.stringify({ error:'اختبار: فشل تحضير الفاتورة' }) });
+  if (url.pathname === '/logs') return route.fulfill(J({ok:true, entries:[], count:0, total:0, cap:5000, truncated:false}));
+  if (action === 'bosta_lookup') {
+    const mk = (o) => {
+      if (o.name === '#53402') return { id:o.id, name:o.name, found:false, ok:false, reason:'not_found', selected:null, deliveries:[], codMismatch:null };
+      const cod = o.name === '#53400' ? 1500 : o.total;   // #53400 عنده فرق تحصيل
+      return { id:o.id, name:o.name, found:true, ok:true, reason:null, codMismatch: cod!==o.total?{cod,total:o.total,diff:cod-o.total}:null,
+               selected:{ deliveryId:'dl'+o.orderId, trackingNumber:'TR'+o.orderId, stateCode:20, stateName:'Route Assigned', type:'Send', cod }, deliveries:[] };
+    };
+    return route.fulfill(J({ ok:true, results:(body.orders||[]).map(b => mk(ORDERS.find(o=>o.id===b.id))), truncated:false, searchLimit:50, logged:true }));
+  }
+  if (action === 'bosta_awb') {
+    const n = (body.deliveryIds||[]).length;
+    return route.fulfill(J({ ok:true, status:'success', mode:n>1?'mass':'single', requested:n, pages:n,
+      pdfBase64: mkPdf(n), pdfBytes: 1000*n, pdfLooksValid:true, latestAWBPrintDate:null, warnings:[] }));
+  }
+  if (url.pathname === '/track')
+    return route.fulfill(J({ ok:true, status:'success', actions:['تاج Printed(S1)','وقت الطباعة (printing_time_s1)','الحالة Confirmed → Ready'],
+      warnings:[], errors:[], orderId:body.orderId, orderNumber:body.orderNumber, type:body.type, doc:body.doc, logged:true }));
+  return route.fulfill(J({ ok:true }));
+});
+
+let fails = 0;
+const check = (name, cond, extra='') => {
+  if(!cond) fails++;
+  console.log((cond?'✅ ':'❌ ')+name+(cond?'':'  << '+extra));
+};
+
+console.log('\n── ① مسار بوسطة ──────────────────────────────');
+await page.goto(`http://localhost:${PORT}/print.html`);
+await page.waitForSelector('#printDashboard', { state:'visible', timeout:15000 });
+await page.waitForTimeout(600);
+
+// ① allZones اتبعت
+const ordersCall = calls.find(c => c.path === '/orders');
+check('allZones:true اتبعت للـ Worker', ordersCall?.body?.allZones === true, JSON.stringify(ordersCall?.body));
+
+// ② عدّادات القنوات
+const n = async (k) => (await page.textContent(`#chanN-${k}`)).trim();
+check('عدّاد قاهرة+جيزة = 1', await n('invoice')==='1', await n('invoice'));
+check('عدّاد بوسطة = 4',      await n('awb')==='4',     await n('awb'));
+check('عدّاد شو روم = 1',     await n('showroom')==='1',await n('showroom'));
+check('عدّاد بلا قناة = 2',   await n('none')==='2',    await n('none'));
+check('زرار «بلا قناة» ظاهر', await page.isVisible('#chanBtn-none'));
+
+// ③ الافتراضي قاهرة+جيزة
+check('القناة الافتراضية قاهرة+جيزة', await page.getAttribute('#chanBtn-invoice','class') === 'chan-btn ch-invoice active');
+check('الجدول فيه صف واحد بس', (await page.$$('#printTableBody tr')).length === 1);
+
+// ④ قناة «بلا قناة» — الصفوف مقفولة
+await page.click('#chanBtn-none');
+await page.waitForTimeout(200);
+const lockedRows = await page.$$('#printTableBody tr.row-locked');
+check('صفوف «بلا قناة» ظاهرة ومعلّمة مقفولة', lockedRows.length === 2, String(lockedRows.length));
+check('مربعات التحديد متعطّلة', (await page.$$('#printTableBody tr.row-locked input[disabled]')).length === 2);
+check('سبب القفل مكتوب في الصف', (await page.textContent('#printTableBody')).includes('الزون لسه ما اتحددش'));
+check('قيمة الزون غير المعروفة معروضة زي ما هي', (await page.textContent('#printTableBody')).includes('زون غير معروف: Cairo'));
+check('ملاحظة «بلا قناة» ظاهرة', await page.isVisible('#chanNote'));
+await page.click('#selectAllVisibleBtn'); await page.waitForTimeout(200);
+check('«تحديد كل النتائج» مابيحددش المقفول', (await page.textContent('#selectedInfo')).includes('لم يتم تحديد'));
+
+// ⑤ قناة بوسطة — S2 مخفية والعدد معروض
+await page.click('#chanBtn-awb');
+await page.waitForTimeout(200);
+check('صفوف بوسطة = 3 (S2 مخفية)', (await page.$$('#printTableBody tr')).length === 3, String((await page.$$('#printTableBody tr')).length));
+check('عدد S2 المخفية معروض', (await page.textContent('#chanNote')).includes('1 أوردر استبدال'), await page.textContent('#chanNote'));
+check('عمود القناة بيقول بوسطة', (await page.textContent('#printTableBody')).includes('بوسطة'));
+
+// ⑥ التبديل بيمسح التحديد
+await page.click('#selectAllVisibleBtn'); await page.waitForTimeout(200);
+check('اتحدد 3 أوردرات بوسطة', (await page.textContent('#selectedInfo')).includes('3'), await page.textContent('#selectedInfo'));
+await page.click('#chanBtn-invoice'); await page.waitForTimeout(200);
+check('تبديل القناة مسح التحديد', (await page.textContent('#selectedInfo')).includes('لم يتم تحديد'));
+
+// ⑦ دفعة بوسطة كاملة
+await page.click('#chanBtn-awb'); await page.waitForTimeout(200);
+await page.click('#selectAllVisibleBtn'); await page.waitForTimeout(200);
+await page.click('#printSelectedBtn');
+await page.waitForSelector('#gateOverlay.open', { timeout:10000 });
+const gate = await page.textContent('#pgBody');
+check('البوابة اتفتحت', true);
+check('#53400 في البوابة بفرق تحصيل', gate.includes('#53400') && gate.includes('فرق'), '');
+check('#53401 في البوابة كفاتورة لاغية', gate.includes('#53401'));
+check('#53402 (مش على بوسطة) مش في البوابة', !gate.includes('#53402'));
+const boxes = await page.$$('#pgBody [data-gate-need]');
+check('عدد مربعات الإقرار = 4 (أوردرين × سؤالين)', boxes.length === 4, String(boxes.length));
+check('السؤال التاني بتاع بوسطة موجود', gate.includes('عدّلت الشحنة على بوسطة'));
+check('«اطبع الكل» متعطّل قبل الإقرار', await page.isDisabled('#pgPrintAllBtn'));
+check('«إلغاء» شغّال دايمًا', !(await page.isDisabled('#pgCancelBtn')));
+
+// علّم مربع واحد بس — لازم يفضل متعطّل (ده اللي بيمسك باج «كل صف» بدل «كل مربع»)
+await boxes[0].check(); await page.waitForTimeout(100);
+check('مربع واحد مش كفاية — الزرار لسه متعطّل', await page.isDisabled('#pgPrintAllBtn'));
+for (const b of boxes) await b.check();
+await page.waitForTimeout(150);
+check('بعد كل المربعات — الزرار اتفعّل', !(await page.isDisabled('#pgPrintAllBtn')));
+
+await page.click('#pgPrintAllBtn');
+await page.waitForSelector('#trackResultOverlay.open', { timeout:15000 });
+await page.waitForTimeout(400);
+
+// ⑧ نداءات الـ Worker
+const awbCall = calls.filter(c => c.action === 'bosta_awb').pop();
+check('bosta_awb اتنادى بـ 2 معرّفات', awbCall?.body?.deliveryIds?.length === 2, JSON.stringify(awbCall?.body));
+const tracks = calls.filter(c => c.path === '/track');
+check('/track اتنادى مرتين', tracks.length === 2, String(tracks.length));
+check('/track بعت type=S1 (الماكينة)', tracks.every(t => t.body.type === 'S1'), JSON.stringify(tracks.map(t=>t.body.type)));
+check('/track بعت doc=AWB (المستند)',  tracks.every(t => t.body.doc  === 'AWB'), JSON.stringify(tracks.map(t=>t.body.doc)));
+check('/track بعت بيانات الشحنة',      tracks.every(t => t.body.bosta?.trackingNumber), '');
+check('الإقرار فيه bostaUpdated',      tracks.every(t => t.body.guard?.bostaUpdated === true), JSON.stringify(tracks.map(t=>t.body.guard)));
+check('الإقرار فيه cutConfirmed',      tracks.every(t => t.body.guard?.cutConfirmed === true), '');
+check('مفيش أي نداء /invoice في مسار بوسطة', !calls.some(c => c.path === '/invoice'));
+
+// ⑨ نافذة النتيجة
+const res = await page.textContent('#trackResultBody');
+check('#53402 اتعرض بسبب «ما اترفعش»', res.includes('#53402') && res.includes('ما اترفعش'), '');
+check('شارة البوليصة ظاهرة', res.includes('بوليصة'));
+check('لوحة معاينة البوليصة ظهرت', await page.isVisible('#awbPanel'));
+// ⚠️ `printAwbPdf` بتنادي `print()` على **نافذة الـ iframe** مش الرئيسية.
+//    و`frame.evaluate()` على frame فيه PDF **بتعلّق للأبد** في هيدلس —
+//    فالتبليغ بيحصل بـ binding من جوّه الصفحة نفسها.
+const printed = printHits.filter(h=>h==='print').length;
+const opened  = printHits.filter(h=>h==='open').length;
+check('الطباعة اتنفّذت (print على الـ iframe أو fallback لتاب)', printed>0 || opened>0, `printed=${printed} opened=${opened} frames=${page.frames().length}`);
+
+
+console.log('\n── ② انحدار: مسار الفاتورة (قاهرة+جيزة · شو روم) ──');
+await page.reload();
+await page.waitForSelector('#printDashboard', { state:'visible', timeout:15000 });
+await page.waitForTimeout(400);
+calls.length = 0;
+
+// ── انحدار: مسار الفاتورة (قاهرة+جيزة) لسه شغّال زي ما هو ──
+check('القناة الافتراضية = فاتورة قاهرة+جيزة', (await page.getAttribute('#chanBtn-invoice','class')).includes('active'));
+await page.click('#selectAllVisibleBtn'); await page.waitForTimeout(200);
+check('اتحدد أوردر قاهرة+جيزة واحد', (await page.textContent('#selectedInfo')).includes('1'), await page.textContent('#selectedInfo'));
+
+await page.click('#printSelectedBtn');
+await page.waitForSelector('#trackResultOverlay.open', { timeout:20000 });
+await page.waitForTimeout(300);
+
+check('نادى /invoice (مسار الفاتورة) مش bosta_lookup', calls.some(c=>c.path==='/invoice') && !calls.some(c=>c.action==='bosta_lookup'),
+      JSON.stringify(calls.map(c=>c.action||c.path)));
+check('مفيش نداء bosta_awb في مسار الفاتورة', !calls.some(c=>c.action==='bosta_awb'));
+const res2 = await page.textContent('#trackResultBody');
+check('الأوردر الفاشل اتعرض بالاسم (فشل جزئي)', res2.includes('#53404'), res2.slice(0,200));
+check('البوابة ما اتفتحتش لأوردر نضيف', !(await page.isVisible('#gateOverlay.open')));
+
+// شو روم قناة منفصلة وبتطبع فاتورة برضه
+await page.click('#trackResultOverlay .btn-primary'); await page.waitForTimeout(200);
+await page.click('#chanBtn-showroom'); await page.waitForTimeout(250);
+check('قناة شو روم فيها صف واحد', (await page.$$('#printTableBody tr')).length === 1);
+check('عمود القناة بيقول شو روم', (await page.textContent('#printTableBody')).includes('شو روم'));
+
+
+check('صفر أخطاء في الكونسول وصفر أخطاء صفحة', errs.length === 0, errs.join(' | '));
+
+console.log(fails ? `\n❌ ${fails} فحص فشل` : `\n✅ كل الفحوص عدّت`);
+// ⚠️ سباق بمهلة — `browser.close()` بتعلّق مع frame فيه PDF.
+await Promise.race([browser.close().catch(()=>{}), new Promise(r=>setTimeout(r,4000))]);
+srv.close();
+process.exit(fails?1:0);

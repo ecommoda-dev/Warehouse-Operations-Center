@@ -659,12 +659,29 @@ const HOME_QUEUES = {
     ids: { count:'cntPrint', chips:'chipsPrint', fail:'failPrint',
            ago:'agoPrint', stamp:'stampPrint', btn:'btnPrint', badge:'badgePrint' },
     async fetch() {
-      const data = await wocApi(WOC_WORKERS.printer).apiPath('/orders', {});
+      // 🔴 `allZones: true` لازم يبقى **مطابق** لللي `print.html` بيبعته —
+      //    الاتنين بيكتبوا نفس الكاش (`WOC_CACHE_PRINT`)، ولو الرقم هنا
+      //    قناة واحدة والصفحة تلاتة، الرئيسية تقول ١٢ والصفحة تفتح على ٤٩.
+      const data = await wocApi(WOC_WORKERS.printer).apiPath('/orders', { allZones: true });
       cacheSet(WOC_CACHE_PRINT, data);
       const orders = data.orders || [];
-      return { total: orders.length,
-               s1: orders.filter(o => o.type === 'S1').length,
-               s2: orders.filter(o => o.type === 'S2').length };
+      // التقسيمة بقت **بالقناة** مش S1/S2: طابور الطباعة بقى تلات قنوات
+      // بتطبع حاجات مختلفة على ورق مختلف، ودي المعلومة اللي الموظف
+      // بيتصرّف عليها. مربع «بلا قناة» بيظهر بس لما يكون فيه فعلاً.
+      const n = { invoice: 0, awb: 0, showroom: 0, none: 0 };
+      for (const o of orders) {
+        if (o.zone === 'Show_Room' && o.channel === 'invoice') n.showroom++;
+        else if (o.channel === 'awb')     n.awb++;
+        else if (o.channel === 'invoice') n.invoice++;
+        else n.none++;
+      }
+      const chips = [
+        { cls: 'chip-ch-invoice',  label: 'قاهرة+جيزة', n: n.invoice },
+        { cls: 'chip-ch-awb',      label: 'بوسطة',      n: n.awb },
+        { cls: 'chip-ch-showroom', label: 'شو روم',     n: n.showroom },
+      ];
+      if (n.none) chips.push({ cls: 'chip-ch-none', label: '⚠️ بلا قناة', n: n.none });
+      return { total: orders.length, chips };
     },
   },
   pack: {
@@ -675,9 +692,10 @@ const HOME_QUEUES = {
       const data = await wocApi(WOC_WORKERS.pack).apiGet('get_ready_orders');
       cacheSet(WOC_CACHE_PACK, data);
       const orders = data.orders || [];
-      return { total: data.total ?? orders.length,
-               s1: orders.filter(o => o.orderType === 'S1').length,
-               s2: orders.filter(o => o.orderType === 'S2').length };
+      return { total: data.total ?? orders.length, chips: [
+        { cls: 'chip-s1', label: TYPE_LABEL.S1, n: orders.filter(o => o.orderType === 'S1').length },
+        { cls: 'chip-s2', label: TYPE_LABEL.S2, n: orders.filter(o => o.orderType === 'S2').length },
+      ] };
     },
   },
 };
@@ -726,7 +744,7 @@ async function loadQueue(key, silent = true) {
   try {
     const r = await def.fetch();
     clearFail(def.ids.fail);
-    setCount(key, r.total, r.s1, r.s2);
+    setCount(key, r.total, r.chips);
     // ⚠️ الختم بيتسجّل **حتى لو الطابور رجع فاضي** — «اتحدّث ورجع صفر»
     //    معلومة، و«ما اتحدّثش» معلومة تانية خالص.
     q.at = new Date();
@@ -744,14 +762,15 @@ async function loadQueue(key, silent = true) {
   }
 }
 
-function setCount(key, total, s1, s2) {
+// ⚠️ التقسيمة بقت **من الطابور نفسه** مش ثابتة S1/S2 — طابور الطباعة
+//    بيقسّم بالقناة وطابور التغليف بيقسّم بالنوع، وكل واحد بيبعت مربعاته.
+function setCount(key, total, chips = []) {
   const ids = HOME_QUEUES[key].ids;
   const c = document.getElementById(ids.count);
   c.textContent = String(total);
   c.classList.remove('pending', 'failed');
-  document.getElementById(ids.chips).innerHTML =
-    `<span class="woc-chip chip-s1">${TYPE_LABEL.S1} <b>${s1}</b></span>` +
-    `<span class="woc-chip chip-s2">${TYPE_LABEL.S2} <b>${s2}</b></span>`;
+  document.getElementById(ids.chips).innerHTML = chips.map(ch =>
+    `<span class="woc-chip ${esc(ch.cls)}">${esc(ch.label)} <b>${ch.n}</b></span>`).join('');
   document.getElementById(ids.badge).textContent = String(total);
 }
 

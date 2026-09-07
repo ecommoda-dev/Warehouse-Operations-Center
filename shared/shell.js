@@ -34,7 +34,10 @@
 //    Worker ده (Standards #29). ترفيعه بلا سبب = تحذير كاذب على أي
 //    rollback مشروع.
 const WOC_WORKERS = {
-  printer: { url: 'https://order-printer-worker.ecommoda-dev.workers.dev',          min: '2.3.0', label: 'الطباعة' },
+  // 2.4.0 = أول نسخة فيها `bosta_lookup`/`bosta_awb` و`allZones` في `/orders`
+  // و`doc: 'AWB'` في `/track`. `print.html` **معتمدة عليهم فعلاً** — من غيرهم
+  // قناة بوسطة مش موجودة أصلاً، فالترفيع مشروع (Standards #29).
+  printer: { url: 'https://order-printer-worker.ecommoda-dev.workers.dev',          min: '2.4.0', label: 'الطباعة' },
   // 2.5.0 = أول نسخة بتقبل `appId` في `verify_employee`/`log_logout`.
   // من غيرها الدخول بيتسجّل `pack_checker` **في صمت** بدل اسم الهب —
   // وده بالظبط نوع الفشل اللي الحارس ده اتكتب عشانه.
@@ -45,7 +48,7 @@ const WOC_WORKERS = {
   barcode: { url: 'https://order-sku-barcode-printer-worker.ecommoda-dev.workers.dev', min: '1.0.0', label: 'باركود SKU' },
 };
 
-const TOOL_VERSION = 'v1.6.0';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.7.0';                      // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const WOC_APP_ID   = 'warehouse_ops_center';         // قيمة `tool` في D1 — login/logout بس
 const SHOP_HANDLE  = '6c7e1a-53';
