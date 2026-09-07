@@ -351,6 +351,86 @@
 }
 .print-bar-info { font-size: 13px; font-weight: 700; color: var(--accent); }
 
+/* ══════════════════════════════════════════════════════════════
+   §CHANNEL — مبدّل القناة (v1.7.0)
+   ══════════════════════════════════════════════════════════════
+   🔴 اختيار **أحادي إلزامي**، مش فلتر. القناة بتحدد **إيه اللي بيتطبع**:
+      فاتورة شوبيفاي على A4، ولا بوليصة بوسطة على ملصق حراري. الورق مختلف
+      والطابعة مختلفة والحارس مختلف — فدفعة مختلطة معناها نافذتي طباعة
+      وصياغتين حارس ونافذة نتيجة مالهاش نص مفهوم.
+   ⚠️ الألوان **نفس ألوان عمود المندوب في `pack.html`** بالحرف
+      (`.courier-bosta` أحمر · `.courier-other` أزرق · `.courier-showroom`
+      أخضر). نفس المعلومة بلونين مختلفين = الموظف بيتعلّمها مرتين (درس R1).
+   ⚠️ الشكل مقتبس من `.zchip` في `pack.html` بس **من غير علامة ✕** — دي
+      مش فلتر بيتقفل، دي وضع الأداة الحالي ولازم يفضل واحد مختار دايمًا. */
+.chan-bar {
+  display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 10px 14px; margin-bottom: 12px;
+}
+.chan-bar-lbl { font-size: 11.5px; font-weight: 800; color: var(--text-secondary); margin-inline-end: 2px; }
+.chan-btn {
+  display: inline-flex; align-items: center; gap: 9px; padding: 9px 15px;
+  border-radius: var(--radius-sm); border: 1.5px solid var(--border);
+  background: var(--surface-2); color: var(--text-secondary);
+  font-family: var(--font-body); font-size: 13px; font-weight: 800;
+  cursor: pointer; white-space: nowrap; transition: filter .12s, transform .1s, box-shadow .15s;
+}
+.chan-btn:hover  { filter: brightness(.97); }
+.chan-btn:active { transform: translateY(1px); }
+.chan-n {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 26px; height: 22px; padding: 0 7px; border-radius: 20px;
+  background: var(--surface); border: 1px solid currentColor;
+  font-family: var(--font-mono); font-size: 12.5px; font-weight: 800; line-height: 1;
+}
+.chan-btn.ch-invoice  { background: var(--accent-light); color: var(--accent-dark); border-color: var(--accent-border); }
+.chan-btn.ch-awb      { background: var(--red-light);    color: var(--red-dark);    border-color: var(--red-border); }
+.chan-btn.ch-showroom { background: var(--green-light);  color: var(--green-dark);  border-color: var(--green-border); }
+.chan-btn.ch-none     { background: var(--amber-light);  color: var(--amber-dark);  border-color: var(--amber-border); }
+/* المختار لازم يبان من بعيد — الموظف اللي مش فاهم ليه الجدول شكله كده
+   بيدوّر على الزرار المولّع ده. */
+.chan-btn.active { box-shadow: 0 0 0 2px currentColor inset; }
+
+/* عمود القناة في الجدول — نفس ألوان المبدّل */
+.chan-cell { font-weight: 800; white-space: nowrap; font-size: 12px; }
+.chan-cell.ch-invoice  { color: var(--accent); }
+.chan-cell.ch-awb      { color: var(--red); }
+.chan-cell.ch-showroom { color: var(--green); }
+.chan-cell.ch-none     { color: var(--amber-dark); }
+
+/* صف مقفول الطباعة — بيظهر ومايتحددش. الإخفاء هو اللي أنتج
+   «الأوردر مش ظاهر» مع ZONE_FILTER، فالقفل هنا **معلن** مش صامت. */
+.row-locked { background: var(--amber-light); }
+.row-locked td { opacity: .82; }
+.lock-note { display: block; font-size: 10.5px; font-weight: 700; color: var(--amber-dark); margin-top: 3px; }
+
+/* سطر ملاحظة تحت شريط القناة — S2 بوسطة المخفية مؤقتًا · القصّ · الفشل */
+.chan-note {
+  display: none; align-items: center; gap: 8px; flex-wrap: wrap;
+  border: 1.5px solid var(--amber-border); background: var(--amber-light);
+  color: var(--amber-dark); border-radius: var(--radius-sm);
+  padding: 8px 12px; font-size: 12px; font-weight: 700; line-height: 1.7;
+  margin-bottom: 12px;
+}
+.chan-note.visible { display: flex; }
+
+/* ── معاينة البوليصة — PDF جاي من بوسطة كما هو ──
+   ⛔ ممنوع أي إعادة رسم أو scaling: الملف ده بيطلع مظبوط على الملصق
+      الحراري من داشبورد بوسطة، فأي تدخل مننا بيكسر ضمانة قايمة. */
+.awb-panel { display: none; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow); padding: 12px; margin-bottom: 14px; }
+.awb-panel.visible { display: block; }
+.awb-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.awb-head-t { font-size: 13px; font-weight: 800; }
+.awb-head-m { font-size: 11.5px; font-weight: 700; color: var(--text-muted); font-family: var(--font-mono); }
+.awb-frame { width: 100%; height: 460px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); }
+
+/* بوابة المراجعة — سؤالين لأوردر بوسطة بدل سؤال واحد (قرار أحمد 07-09-2026).
+   نفس نمط التأكيدين الإلزاميين في `remove.html` — مش نمط جديد. */
+.pg-checks { display: flex; flex-direction: column; gap: 5px; }
+.pg-check  { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; cursor: pointer; }
+
 /* ── §RESULTS — نتيجة الطباعة: ٣ حالات مش اتنين ── */
 /* ── نتيجة تسجيل الطباعة — Popup: عدّادات دايمًا، والتفاصيل بس لو فيه تحذير أو فشل ── */
 .result-modal { width: 620px; }
@@ -627,6 +707,45 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
       </div>
     </div>
 
+    <!-- ══════════════════════════════════════════════════════════
+         §CHANNEL — مبدّل القناة (v1.7.0)
+         🔴 اختيار **أحادي إلزامي**. `custom.zone` قرار توجيه شحن مش
+            جغرافيا: ١٨٪ من عناوين القاهرة/الجيزة بتروح بوسطة (قياس حي —
+            `zone-routing.md` §3)، يعني الموظف **مايقدرش** يعرف القناة من
+            العنوان. عشان كده القناة معروضة صراحةً ومختارة بضغطة، مش
+            متروكة لتقديره.
+         ⚠️ تبديل القناة **بيمسح التحديد** — ده اللي بيمنع الدفعة المختلطة
+            من أصلها بدل ما نتحقق منها بعد كده.
+         ══════════════════════════════════════════════════════════ -->
+    <div class="chan-bar" id="chanBar">
+      <span class="chan-bar-lbl">القناة:</span>
+      <button class="chan-btn ch-invoice"  id="chanBtn-invoice"  onclick="setChannel('invoice')">
+        🧾 فاتورة — قاهرة+جيزة <span class="chan-n" id="chanN-invoice">—</span></button>
+      <button class="chan-btn ch-awb"      id="chanBtn-awb"      onclick="setChannel('awb')">
+        🚚 بوليصة بوسطة <span class="chan-n" id="chanN-awb">—</span></button>
+      <button class="chan-btn ch-showroom" id="chanBtn-showroom" onclick="setChannel('showroom')">
+        🏬 فاتورة — شو روم <span class="chan-n" id="chanN-showroom">—</span></button>
+      <!-- ⚠️ بيظهر **بس** لما يكون فيه أوردرات بلا قناة. صفر مايتعرضش عشان
+           الشاشة ماتتعوّدش على تحذير دايم فتبطّل تشوفه. -->
+      <button class="chan-btn ch-none" id="chanBtn-none" style="display:none;" onclick="setChannel('none')">
+        ⚠️ بلا قناة <span class="chan-n" id="chanN-none">—</span></button>
+    </div>
+
+    <div class="chan-note" id="chanNote"></div>
+
+    <!-- ─── §AWB — معاينة البوليصة الراجعة من بوسطة ─── -->
+    <div class="awb-panel" id="awbPanel">
+      <div class="awb-head">
+        <span class="awb-head-t">🚚 بوليصة بوسطة</span>
+        <span class="awb-head-m" id="awbMeta"></span>
+        <div style="flex:1;"></div>
+        <button class="btn btn-primary btn-sm" onclick="printAwbPdf()">🖨️ اطبع تاني</button>
+        <button class="btn btn-ghost btn-sm"   onclick="openAwbTab()">↗ افتح في تاب</button>
+        <button class="btn btn-ghost btn-sm"   onclick="closeAwbPanel()">✕ إغلاق</button>
+      </div>
+      <iframe class="awb-frame" id="awbFrame" title="معاينة بوليصة بوسطة"></iframe>
+    </div>
+
     <!-- ─── §TOOL::printBar ─── -->
     <div class="print-bar">
       <span class="print-bar-info" id="selectedInfo">لم يتم تحديد أي أوردر</span>
@@ -805,6 +924,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
               <th class="sortable-th" data-sort-key="time"     onclick="toggleSort('print','time')">الوقت<span class="sort-icon" data-sort-key="time"></span></th>
               <th class="sortable-th" data-sort-key="customer" onclick="toggleSort('print','customer')">العميل<span class="sort-icon" data-sort-key="customer"></span></th>
               <th class="sortable-th" data-sort-key="type"     onclick="toggleSort('print','type')">النوع<span class="sort-icon" data-sort-key="type"></span></th>
+              <th class="sortable-th" data-sort-key="chan"     onclick="toggleSort('print','chan')">القناة<span class="sort-icon" data-sort-key="chan"></span></th>
               <th class="sortable-th" data-sort-key="status"   onclick="toggleSort('print','status')">الحالة<span class="sort-icon" data-sort-key="status"></span></th>
               <th class="sortable-th" data-sort-key="count"    onclick="toggleSort('print','count')">مرات الطباعة<span class="sort-icon" data-sort-key="count"></span></th>
             </tr></thead>
@@ -1070,6 +1190,27 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <p>الصفحة دي <b>جزء من الهب</b> — الدخول بيحصل مرة واحدة في الشاشة
              الرئيسية، والهوية بتوصل هنا من <code>sessionStorage</code>.</p>
           <div id="aboutWorkers"></div>
+          <h4>🚚 قناة بوسطة</h4>
+          <ul>
+            <li><b>أوردر بوسطة بياخد بوليصة بس — من غير فاتورة</b> (قرار أحمد 07-09-2026)،
+                والطباعة على <b>ملصق حراري</b>. الـ PDF بيتطبع <b>زي ما جه من بوسطة بالظبط</b>:
+                مفيش إعادة رسم ومفيش تحجيم — عشان يطلع مطابق للي بيطلع من داشبورد بوسطة.</li>
+            <li><b>الطباعة هي اللي بتحوّل الأوردر لـ <code>Ready</code></b> — زي مسار الفاتورة
+                بالظبط: تاج <code>Printed(S1)</code> + <code>printing_time_s1</code> + الحالة.
+                يعني أوردر بوسطة بيدخل طابور التغليف بعد الطباعة.</li>
+            <li><b>الشحنة غير المؤهلة بتتقال بالاسم</b> — ملغية · راجعة للتاجر · منتهية · ضايعة.
+                بوسطة مابتطلّعش بوليصة للحالات دي، وفي الدفعة بترفضها <b>في صمت</b>،
+                فالأداة بتستبعدها قبل الإرسال وبتعدّ صفحات الـ PDF كشبكة أمان.</li>
+            <li><b>أكتر من شحنة صادرة حيّة على نفس الأوردر = مافيش تخمين.</b> الأوردر بيطلع من
+                الدفعة والتحديد بيتم بإيدك من داشبورد بوسطة — ملصق غلط على كرتونة أسوأ من
+                صف مستني.</li>
+            <li><b>«آخر طباعة في بوسطة» للعرض بس.</b> بوسطة بتحدّث الرقم ده مع <b>كل</b> جلب
+                للبوليصة حتى لو الورقة ما خرجتش من الطابعة، فهو بيقول «حد جابها» مش «اتطبعت» —
+                وعشان كده حارس إعادة الطباعة بيقرا من سجل D1 لوحده.</li>
+            <li>أوردرات <b>الاستبدال/الاسترجاع (S2) على بوسطة مخفية مؤقتًا</b> بقرار،
+                والعدد بيتعرض فوق الجدول.</li>
+          </ul>
+
           <h4>🔴 بوابة المراجعة قبل الطباعة</h4>
           <ul>
             <li>نافذة <b>واحدة</b> بتجمع تلات تنبيهات بالخطورة، وكل أوردر بيتعرض
@@ -1126,7 +1267,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <ol>
             <li>الموظف بيسجّل دخول باسمه + PIN (Universal D1 Auth).</li>
             <li>الأداة بتجيب أوردرات <code>Confirmed</code> و<code>Confirmed + Edit</code> (S1) و<code>Confirmed + RETURN</code> و<code>Confirmed + EXCHANGE</code> (S2) المنشأة من <code>2026-04-01</code>.</li>
-            <li>بتفلتر بالـ <code>custom.zone</code> على <code>Cairo+Giza</code> و<code>Show_Room</code> — والعدد المستبعَد بيرجع في <code>/orders</code> لكنه مش معروض في الواجهة.</li>
+            <li>بتعرض <b>كل القنوات</b> (<code>allZones</code>) — قاهرة+جيزة وشو روم بيطبعوا فاتورة شوبيفاي، و<code>Other_Regions</code> بيطبع <b>بوليصة بوسطة</b>. والأوردر اللي زونه فاضي أو مش من القايمة بيتعرض ومربع تحديده مقفول.</li>
             <li>الموظف بيحدد الأوردرات ويضغط طباعة؛ لو فيه أوردر سبق طباعته بتظهر نافذة تأكيد.</li>
             <li>الأداة بتجيب بيانات كل فاتورة، بترسمها، وبتفتح نافذة طباعة المتصفح (Save as PDF).</li>
             <li>بعدها بتنادي <code>/track</code> لكل أوردر، وبتفتح نافذة النتيجة: العدد بتلات حالات (تم · تم جزئيًا · فشل)، والتفاصيل بتتعرض بس لو فيه تحذير أو فشل.</li>
@@ -1135,7 +1276,9 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <h4>الـ Endpoints الرئيسية</h4>
           <table>
             <tr><th>المسار / action</th><th>الوصف</th></tr>
-            <tr><td><code>POST /orders</code></td><td>الأوردرات الجاهزة — عادي (<code>S1</code>) واستبدال/استرجاع (<code>S2</code>) — و<code>zoneExcluded</code> و<code>printingTimeS1</code>/<code>packingTimeS1</code> (حارس الفاتورة اللاغية · S1 بس)</td></tr>
+            <tr><td><code>POST /orders</code></td><td>الأوردرات الجاهزة — عادي (<code>S1</code>) واستبدال/استرجاع (<code>S2</code>) — و<code>zone</code>/<code>channel</code> و<code>zoneExcluded</code> و<code>printingTimeS1</code>/<code>packingTimeS1</code> (حارس الفاتورة اللاغية · S1 بس)</td></tr>
+            <tr><td><code>?action=bosta_lookup</code></td><td>تحويل أرقام الأوردرات لشحنات بوسطة — <b>قراءة بحتة</b>. بترجّع المعرّف والحالة والنوع والتحصيل، وبتسجّل «مش على بوسطة»</td></tr>
+            <tr><td><code>?action=bosta_awb</code></td><td>البوليصة كـ PDF — مفردة أو مجمّعة، مع التحقق من عدد الصفحات</td></tr>
             <tr><td><code>POST /invoice</code></td><td>بيانات فاتورة أوردر واحد (+ <code>truncatedLineItems</code> · <code>truncatedReturns</code> · <code>multiCycle</code> · <code>cycleCount</code>)</td></tr>
             <tr><td><code>POST /track</code></td><td>تسجيل الطباعة + تاج + ميتافيلد الوقت + الحالة <code>Ready</code> — بيطلب <code>employee</code>، وبياخد <code>guard</code> اختياري (إقرار قطع الفاتورة → <code>extra.guard</code>)</td></tr>
             <tr><td><code>POST /logs</code></td><td>سجل الطباعة (+ <code>cap</code> · <code>total</code> · <code>truncated</code>)</td></tr>
@@ -1188,7 +1331,8 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
           <h4>NOTES / QUIRKS</h4>
           <ul>
-            <li><code>ZONE_FILTER</code> بيتطبّق في الـ Worker — «الأوردر مش ظاهر» يعني <code>custom.zone</code> بره <code>Cairo+Giza</code>/<code>Show_Room</code> (أو فاضي خالص). العدد المستبعَد لسه بيرجع في <code>/orders</code> كـ <code>zoneExcluded</code> لكنه مش معروض في الواجهة.</li>
+            <li><b>«الأوردر مش ظاهر» بقت إجابتها على الشاشة.</b> الصفحة بتعرض كل القنوات وكمان الأوردرات بلا زون، فالأوردر الغايب دلوقتي إما حالته مش في الطابور أصلاً وإما مفلتر بفلتر شغّال — مش مستبعَد في صمت زي قبل كده.</li>
+            <li><b>الأوردر ده على بوسطة ومش لاقيينه؟</b> يبقى ما اترفعش على داشبورد بوسطة (أو اترفع بمرجع مختلف). الرفع خطوة <b>إلزامية</b> قبل الطباعة.</li>
             <li><code>Delivered</code> حالة نهائية — الطباعة بتتسجّل بس الحالة <strong>مش</strong> بتتكتب، والنتيجة بترجع <code>warning</code>.</li>
             <li>عدّاد «مرات الطباعة» بيتبني من سجل D1، وبيقصّ عند سقف الـ Worker — البانر فوق جدول السجل بيقول لو ده حصل.</li>
             <li>مستند الـ <code>iframe</code> بتاع الفاتورة مالوش وصول لكتلة التوكنز، فألوانه حرفية — استثناء تقني موثّق من Standards #35.</li>
@@ -1216,9 +1360,28 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
       <div class="cl-entry">
         <div class="cl-head">
-          <span class="cl-ver">v1.7.0</span>
+          <span class="cl-ver">v1.9.0</span>
           <span class="cl-badge" id="clLatestBadge">آخر نسخة</span>
           <span class="cl-date">07-09-2026</span>
+        </div>
+        <div class="cl-list">
+          <div class="cl-item"><span class="cl-tag new">جديد</span><span><strong>🚚 أوردرات بوسطة بقت في نفس أداة الطباعة.</strong> القناة الأكبر في المتجر (<code>Other_Regions</code>) كانت مستبعَدة من الطابور خالص — دلوقتي ليها مكان، وبتطبع <strong>بوليصة بوسطة</strong> على الملصق الحراري.</span></div>
+          <div class="cl-item"><span class="cl-tag new">جديد</span><span><strong>مبدّل القناة</strong> فوق الطابور: قاهرة+جيزة · بوسطة · شو روم. اختيار <strong>واحد</strong> في المرة — الورق والطابعة والحارس مختلفين، فالدفعة المختلطة ممنوعة، وتبديل القناة بيمسح التحديد.</span></div>
+          <div class="cl-item"><span class="cl-tag new">جديد</span><span><strong>عمود «القناة»</strong> في الجدول. الزون <strong>قرار توجيه مش جغرافيا</strong>: ١٨٪ من عناوين القاهرة/الجيزة بتروح بوسطة، فالموظف مايقدرش يعرفها من العنوان.</span></div>
+          <div class="cl-item"><span class="cl-tag new">جديد</span><span><strong>الأوردرات اللي زونها فاضي أو غير معروف بقت ظاهرة</strong> — بتتعرض ومربع تحديدها مقفول برسالة «الزون لسه ما اتحددش». الإخفاء كان بيخلّيها تختفي من كل مكان.</span></div>
+          <div class="cl-item"><span class="cl-tag new">جديد</span><span><strong>الأوردر اللي ما اترفعش على بوسطة بيتقال بالاسم</strong> — الرفع خطوة إلزامية قبل الطباعة، والأداة بقت بتكشف تخطّيها بدل ما تعدّي في صمت.</span></div>
+          <div class="cl-item"><span class="cl-tag new">جديد</span><span>بوابة المراجعة بقت <strong>بسؤالين</strong> لأوردر بوسطة: «قطعت الورقة القديمة؟» و«عدّلت الشحنة على بوسطة؟» — إعادة طباعة البوليصة <strong>مش</strong> بتصلّح بيانات غلط، لأنها بتتولد من بيانات بوسطة مش من شوبيفاي.</span></div>
+          <div class="cl-item"><span class="cl-tag new">جديد</span><span><strong>تنبيه فرق التحصيل</strong> — لو الرقم اللي على البوليصة مختلف عن قيمة الأوردر، الأوردر بينزل في البوابة حتى لو حالته عادية تمامًا.</span></div>
+          <div class="cl-item"><span class="cl-tag fix">تنبيه</span><span>لو بوسطة رجّعت بوالص أقل من المطلوب، الأداة بتحدد <strong>الشحنة الناقصة بالاسم</strong> وبتكمّل بالباقي — مابتقولش «تم» على دفعة ناقصة.</span></div>
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span>مربعات الشاشة الرئيسية لطابور الطباعة بقت <strong>بالقناة</strong> بدل عادي/استبدال.</span></div>
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span>أوردرات <strong>الاستبدال/الاسترجاع على بوسطة مخفية مؤقتًا</strong> — والعدد بيتعرض فوق الجدول عشان الغياب يبقى معلوم.</span></div>
+        </div>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-head">
+          <span class="cl-ver">v1.7.0</span>
+          <span class="cl-date">06-09-2026</span>
         </div>
         <div class="cl-list">
           <div class="cl-item"><span class="cl-tag new">جديد</span><span>زرار <b>«إعادة 🖨»</b> في طابور التغليف بقى <b>بيشتغل فعلاً</b>. كان بيفتح صفحة الطباعة مفلترة على أوردر <b>مش موجود فيها</b> — لأن طابور الطباعة بيفلتر على حالات «مؤكَّد»، وأوردر اتطبع خلاص حالته <code>Ready</code>. الموظف كان بيشوف «لا توجد أوردرات تطابق الفلاتر» وتوست بيقول إن الجدول اتفلتر عليه، والحل الوحيد كان إن حد يرجّع الحالة يدوي.</span></div>
@@ -1543,6 +1706,10 @@ async function openReprintFor(cleanNum, oid) {
   row.printedBy = vi.printedBy;
   row.printedAt = vi.printedAt || (o.type === 'S2' ? o.printingTimeS2 : o.printingTimeS1)
                   || (printLastS1Map[cleanNum]?.timestamp || null);
+  // 🔴 القناة — من غيرها `uiChannel` بترجّع "none" وأوردر بوسطة بيتطبعله
+  //    **فاتورة شوبيفاي بدل البوليصة**. الحقل بييجي من `/lookup` (Worker
+  //    v2.5.0) بنفس شكل صف `/orders` بالحرف.
+  row.chan = uiChannel(o);
   reprintRow = row;
 
   const packAt = o.type === 'S2' ? o.packingTimeS2 : o.packingTimeS1;
@@ -1575,6 +1742,22 @@ async function startReprint() {
   const row = reprintRow;
   btn.disabled = true;
   try {
+    // 🔴 القناة بتحدد المسار هنا زي ما بتحدده في الطابور بالظبط.
+    //    من غير التفريع ده أوردر بوسطة كان هياخد **فاتورة شوبيفاي** بدل
+    //    البوليصة — ورق غلط بيخرج من الطابعة من غير أي خطأ.
+    if (row.chan === "none") {
+      showToast("الأوردر ده مالوش زون — الأداة مش قادرة تعرف تطبع فاتورة ولا بوليصة. " +
+                "حدّد الزون على شوبيفاي الأول.", "warn", 9000);
+      return;
+    }
+    if (row.chan === "awb") {
+      // نفس مسار الطابور بالظبط — بوابة السؤالين وحارس الحالة وعدّ الصفحات
+      // كلهم جوّاه. **مفيش مسار طباعة تاني لبوسطة** (درس R1).
+      await startPrintAWB([row]);
+      await openReprintFor(String(row.name).replace('#', ''), row.orderId);
+      return;
+    }
+
     // 🔴 **نفس البوابة** — أوردر إعادة الطباعة بيتصنّف فيها 🟡 «سبق طباعته»
     //    على الأقل (شرط `o.reprint` في `runPreprintGate`)، و🔴 لو حالته
     //    فعلاً من `VOID_INVOICE_STATUSES`.
@@ -2127,7 +2310,10 @@ async function loadOrders(forceRefresh = false) {
   showPrint("printLoadingState");
   try {
     const [ordersData, logsData] = await Promise.all([
-      apiPath("/orders", { forceRefresh }),
+      // 🔴 `allZones: true` — الهب بيعرض **كل** القنوات، وكمان الأوردرات
+      //    اللي زونها فاضي أو غير معروف (قرار أحمد 07-09-2026). الأداة
+      //    المستقلة مابتبعتش الباراميتر ده فبتفضل على قاهرة+جيزة زي ما هي.
+      apiPath("/orders", { forceRefresh, allZones: true }),
       apiPath("/logs", {}),
     ]);
     allOrders = ordersData.orders || [];
@@ -2195,6 +2381,101 @@ function rebuildPrintFilterItems() {
 }
 
 // ══════════════════════════════════════════════════════════════
+// §CHANNEL — القناة: إيه اللي بيتطبع للأوردر ده
+// ══════════════════════════════════════════════════════════════
+//
+// `custom.zone` **قرار توجيه شحن، مش جغرافيا** (`ecommoda-order-lifecycle`
+// قاعدة ١٦ · `zone-routing.md`). المقاس الحي: ٤ من ٢٢ عنوان قاهرة/جيزة
+// (≈١٨٪) بيروحوا `Other_Regions` — العبور المثال القايم، مافيهاش مندوب.
+// يعني الموظف **مايقدرش** يستنتج القناة من العنوان، فالأداة بتقولها له.
+//
+// 🔴 القناة `null` = **مش عارفين**. الصف بيظهر والطباعة مقفولة برسالة.
+//    ممنوع أي تخمين ومنوع أي اشتقاق من العنوان (قاعدة ١٦)، وممنوع الإخفاء —
+//    الإخفاء هو اللي أنتج «الأوردر مش ظاهر» مع `ZONE_FILTER`.
+const ZONE_SHOWROOM = "Show_Room";
+
+const CHANNELS = {
+  invoice:  { label: "فاتورة — قاهرة+جيزة", short: "قاهرة+جيزة", action: "invoice" },
+  showroom: { label: "فاتورة — شو روم",     short: "شو روم",     action: "invoice" },
+  awb:      { label: "بوليصة بوسطة",         short: "بوسطة",      action: "awb"     },
+  none:     { label: "بلا قناة",             short: "بلا قناة",   action: null      },
+};
+
+// ⚠️ **الـ Worker هو مصدر قرار الطباعة** (`o.channel` = 'invoice' · 'awb' ·
+//    null). الواجهة بتزوّد تفرقة **عرض** واحدة بس: الشو روم بيتفصل عن
+//    قاهرة+جيزة عشان العدّ والفلترة — والاتنين بيطبعوا نفس الفاتورة.
+//    ⛔ ممنوع نبني خريطة زون→قناة تانية هنا: خريطتين هيفترقوا مع أول تعديل.
+function uiChannel(o) {
+  if (o.zone === ZONE_SHOWROOM && o.channel === "invoice") return "showroom";
+  if (o.channel === "awb")     return "awb";
+  if (o.channel === "invoice") return "invoice";
+  return "none";
+}
+
+// القناة النشطة — **في الذاكرة بس** زي `lastEntryMode` في `pack.html`:
+// موظف جديد على نفس الجهاز بيبدأ من الافتراضي.
+let activeChannel = "invoice";
+let chanHiddenS2  = 0;      // أوردرات S2 بوسطة المخفية مؤقتًا (قرار أحمد)
+
+function setChannel(ch) {
+  if (!CHANNELS[ch] || ch === activeChannel) return;
+  activeChannel = ch;
+  // 🔴 مسح التحديد عند التبديل — ده اللي بيمنع الدفعة المختلطة **من أصلها**.
+  //    ورق مختلف وطابعة مختلفة وحارس مختلف؛ دفعة مختلطة معناها نافذتي طباعة
+  //    ونافذة نتيجة مالهاش نص مفهوم.
+  selectedIds.clear();
+  closeAwbPanel();
+  applyPrintFilters();
+}
+
+// عدّادات القنوات — بتتحسب من الطابور **كله** مش من المفلتر، عشان الموظف
+// يشوف إن فيه شغل في قناة تانية حتى وهو واقف على قناة فاضية.
+function renderChannelCounts() {
+  const rows   = decoratePrintRows();
+  const counts = { invoice: 0, showroom: 0, awb: 0, none: 0 };
+  for (const r of rows) counts[r.chan] = (counts[r.chan] || 0) + 1;
+
+  for (const key of Object.keys(CHANNELS)) {
+    const btn = document.getElementById(`chanBtn-${key}`);
+    const n   = document.getElementById(`chanN-${key}`);
+    if (!btn || !n) continue;
+    n.textContent = counts[key].toLocaleString("en-US");
+    btn.classList.toggle("active", key === activeChannel);
+    // «بلا قناة» بيظهر **بس** لما يكون فيه فعلاً — صفر مايتكتبش عشان الشاشة
+    // ماتتعوّدش على تحذير دايم فتبطّل تشوفه (نفس مبدأ `kpiS1Void`).
+    if (key === "none") btn.style.display = (counts.none || key === activeChannel) ? "" : "none";
+  }
+  return counts;
+}
+
+function renderChannelNote() {
+  const box = document.getElementById("chanNote");
+  if (!box) return;
+  const parts = [];
+  if (activeChannel === "awb" && chanHiddenS2) {
+    // قرار أحمد 07-09-2026: S2 على بوسطة **مخفية مؤقتًا**. بنعرض العدد عشان
+    // الغياب يبقى **معلوم** مش خفي — أوردر مختفي بلا سبب = تذكرة دعم.
+    parts.push(`ℹ️ ${chanHiddenS2.toLocaleString("en-US")} أوردر استبدال/استرجاع على بوسطة ` +
+               `<b>مخفيين مؤقتًا</b> — طباعة بوسطة للأوردرات العادية (S1) بس دلوقتي.`);
+  }
+  if (activeChannel === "none") {
+    parts.push("⚠️ الأوردرات دي <b>مالهاش زون</b> (أو زونها مش من القايمة المعتمدة)، " +
+               "فالأداة <b>مش قادرة</b> تعرف تطبع فاتورة ولا بوليصة. " +
+               "القرار ده بيتاخد على شوبيفاي — والطباعة هنا مقفولة لحد ما يتاخد.");
+  }
+  box.innerHTML = parts.join("<br>");
+  box.classList.toggle("visible", parts.length > 0);
+}
+
+function closeAwbPanel() {
+  const panel = document.getElementById("awbPanel");
+  if (panel) panel.classList.remove("visible");
+  const f = document.getElementById("awbFrame");
+  if (f) f.removeAttribute("src");
+  revokeAwbUrl();
+}
+
+// ══════════════════════════════════════════════════════════════
 // 🔴 §VOID-INVOICE — كشف «الفاتورة اللاغية» (قرار أحمد 06-09-2026)
 // ══════════════════════════════════════════════════════════════
 //
@@ -2257,9 +2538,17 @@ function prtSinceText(iso) {
 
 function decoratePrintRows() {
   return allOrders.map(o => {
-    const vi = voidInvoiceInfo(o);
+    const vi   = voidInvoiceInfo(o);
+    const chan = uiChannel(o);
     return {
       ...o,
+      chan,
+      // 🔴 الصف بيظهر دايمًا. `printable:false` معناه **مقفول بسبب معلن**،
+      //    مش مخفي — والسبب بيتكتب في الصف نفسه جنب الأوردر.
+      printable:  CHANNELS[chan].action !== null,
+      lockReason: CHANNELS[chan].action === null
+        ? (o.zone ? `زون غير معروف: ${o.zone}` : "الزون لسه ما اتحددش")
+        : null,
       count: getPrintCount(o),
       date:  o.createdAt,
       time:  o.createdAt,          // نفس الـ timestamp — عمودان للعرض بس
@@ -2272,12 +2561,15 @@ function decoratePrintRows() {
 }
 
 function updatePrintKPIs() {
-  document.getElementById("kpiS1").textContent = allOrders.filter(o => o.type === "S1").length.toLocaleString("en-US");
-  document.getElementById("kpiS2").textContent = allOrders.filter(o => o.type === "S2").length.toLocaleString("en-US");
+  // ⚠️ الأرقام دي بتوصف **القناة النشطة** — مش الطابور كله. عدّاد كل قناة
+  //    ظاهر في شريط القناة فوق، فمفيش رقم مخفي.
+  const rows = decoratePrintRows().filter(r => r.chan === activeChannel);
+  document.getElementById("kpiS1").textContent = rows.filter(o => o.type === "S1").length.toLocaleString("en-US");
+  document.getElementById("kpiS2").textContent = rows.filter(o => o.type === "S2").length.toLocaleString("en-US");
 
   // 🔴 العدد بيتعرض بس لما يبقى فيه فعلاً فواتير لاغية — صفر مايتكتبش
   //    عشان الشاشة ماتتعوّدش على تحذير دايم فتبطّل تشوفه.
-  const voidCount = decoratePrintRows().filter(r => r.flag).length;
+  const voidCount = rows.filter(r => r.flag).length;
   const el = document.getElementById("kpiS1Void");
   if (!el) return;
   el.style.display = voidCount ? "" : "none";
@@ -2288,7 +2580,13 @@ function applyPrintFilters() {
   updateFilterIconState("print");
   const s = sec.print;
   const q = s.searchTerm.trim().toLowerCase();
+  chanHiddenS2 = 0;
   filteredOrders = decoratePrintRows().filter(o => {
+    // ① القناة أولاً — مش فلتر، ده وضع الأداة الحالي.
+    if (o.chan !== activeChannel) return false;
+    // ② S2 على بوسطة مخفية مؤقتًا بقرار (أحمد 07-09-2026) — والعدد بيتعرض
+    //    في سطر الملاحظة فوق الجدول، فالغياب **معلوم** مش صامت.
+    if (activeChannel === "awb" && o.type === "S2") { chanHiddenS2++; return false; }
     if (q && !(String(o.name).toLowerCase().includes(q) || String(o.customer).toLowerCase().includes(q))) return false;
     if (msState.pType.selected.size   && !msState.pType.selected.has(o.type))     return false;
     if (msState.pStatus.selected.size && !msState.pStatus.selected.has(o.status)) return false;
@@ -2300,44 +2598,59 @@ function applyPrintFilters() {
   });
   renderPrintTable(applySort("print", filteredOrders));
   document.getElementById("filteredCount-print").textContent = filteredOrders.length.toLocaleString("en-US");
+  renderChannelCounts();
+  renderChannelNote();
   updatePrintBar();
 }
 
 function renderPrintTable(rows) {
   const tbody = document.getElementById("printTableBody");
   if (!rows.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="8">لا توجد أوردرات تطابق الفلاتر</td></tr>';
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="9">لا توجد أوردرات تطابق الفلاتر</td></tr>';
   } else {
     tbody.innerHTML = rows.map(o => {
       const isSel = selectedIds.has(o.id);
       const c = o.count;
-      return `<tr class="${isSel ? "selected" : ""}">
-        <td><input type="checkbox" ${isSel ? "checked" : ""} onchange="toggleRow('${o.id}', this.checked)"></td>
+      // ⛔ صف بلا قناة: مربع التحديد **متعطّل** والسبب مكتوب جنبه. الصف
+      //    بيظهر عشان الموظف يعرف إن فيه أوردر مستني قرار، مش عشان يطبعه.
+      const lock = !o.printable;
+      return `<tr class="${isSel ? "selected" : ""}${lock ? " row-locked" : ""}">
+        <td><input type="checkbox" ${isSel ? "checked" : ""} ${lock ? "disabled" : ""}
+             onchange="toggleRow('${o.id}', this.checked)"></td>
         <td>${prtOrderLink(o.name, o.orderId)}</td>
         <td>${formatDate(o.createdAt)}</td>
         <td>${formatTimeOnly(o.createdAt)}</td>
         <td>${escHtml(o.customer)}</td>
         <td>${typeBadge(o.type)}</td>
+        <td><span class="chan-cell ch-${escHtml(o.chan)}">${escHtml(CHANNELS[o.chan].short)}</span>${
+          lock ? `<span class="lock-note">⚠️ ${escHtml(o.lockReason)}</span>` : ""}</td>
         <td>${statusCell(o.status)}${o.flag ? `<br>${flagChips(o)}` : ""}</td>
         <td><span class="count-badge ${countClass(c)}">${c}</span>${
           o.printedAt ? `<span class="cell-sub">آخر طباعة ${escHtml(prtSinceText(o.printedAt))}</span>` : ""}</td>
       </tr>`;
     }).join("");
   }
-  const allSel = rows.length > 0 && rows.every(o => selectedIds.has(o.id));
+  // «تحديد الكل» بيتحسب على **القابل للطباعة** بس — وإلا بيفضل مش متعلّم
+  // للأبد في قناة فيها صف مقفول واحد.
+  const sel = rows.filter(o => o.printable);
+  const allSel = sel.length > 0 && sel.every(o => selectedIds.has(o.id));
   document.getElementById("selectAll").checked = allSel;
 }
 
 function toggleRow(id, checked) {
+  const row = filteredOrders.find(o => o.id === id);
+  if (checked && row && !row.printable) return;   // حزام أمان تاني جنب `disabled`
   checked ? selectedIds.add(id) : selectedIds.delete(id);
   applyPrintFilters();
 }
 function toggleSelectAll(checked) {
-  filteredOrders.forEach(o => checked ? selectedIds.add(o.id) : selectedIds.delete(o.id));
+  filteredOrders.filter(o => o.printable)
+    .forEach(o => checked ? selectedIds.add(o.id) : selectedIds.delete(o.id));
   applyPrintFilters();
 }
 function selectAllVisible() {
-  const allSel = filteredOrders.length > 0 && filteredOrders.every(o => selectedIds.has(o.id));
+  const sel = filteredOrders.filter(o => o.printable);
+  const allSel = sel.length > 0 && sel.every(o => selectedIds.has(o.id));
   toggleSelectAll(!allSel);
 }
 function clearSelection() { selectedIds.clear(); applyPrintFilters(); }
@@ -2350,8 +2663,9 @@ function updatePrintBar() {
 }
 
 function printAll() {
-  if (!filteredOrders.length) { showToast("لا توجد أوردرات للطباعة", "warn"); return; }
-  selectedIds = new Set(filteredOrders.map(o => o.id));
+  const printable = filteredOrders.filter(o => o.printable);
+  if (!printable.length) { showToast("لا توجد أوردرات قابلة للطباعة في القناة دي", "warn"); return; }
+  selectedIds = new Set(printable.map(o => o.id));
   applyPrintFilters();
   startPrint();
 }
@@ -2359,8 +2673,13 @@ function printAll() {
 const gateLink = prtOrderLink;   // نفس كود البوابة في الملفين — الفرق الوحيد السطر ده
 
 async function startPrint() {
-  const selected = filteredOrders.filter(o => selectedIds.has(o.id));
+  const selected = filteredOrders.filter(o => selectedIds.has(o.id) && o.printable);
   if (!selected.length) { showToast("لم يتم تحديد أي أوردر", "warn"); return; }
+
+  // القناة النشطة هي اللي بتحدد المسار — والتحديد اتمسح وقت التبديل،
+  // فالدفعة **مستحيل** تبقى مختلطة.
+  if (activeChannel === "awb") return startPrintAWB(selected);
+
   const gate = await runPreprintGate(selected);
   if (!gate) { showToast("اتلغت الطباعة", "info"); return; }
   if (!gate.orders.length) { showToast("مفيش أوردرات باقية للطباعة", "warn"); return; }
@@ -2404,7 +2723,11 @@ async function fetchTodayPrintMap() {
 }
 
 // بترجّع { orders, guards } للطباعة · أو `null` لو الموظف لغى.
-async function runPreprintGate(selected) {
+// `lookupById` (اختيارية · مسار بوسطة) — نتيجة `bosta_lookup` لكل أوردر.
+// منها بيتقرا **فرق التحصيل**: ده مش حارس تاني، ده **مُشغِّل** لنفس البوابة،
+// وقيمته إنه بيمسك الحالة اللي الحالة نفسها مابتقولش عنها حاجة — أوردر لسه
+// `Confirmed` عادي والرقم على الملصق مختلف عن قيمة الأوردر.
+async function runPreprintGate(selected, lookupById = null) {
   let todayMap = {};
   try {
     todayMap = await fetchTodayPrintMap();
@@ -2415,27 +2738,35 @@ async function runPreprintGate(selected) {
 
   const cutoff = Date.now() - REPRINT_WARN_MINUTES * 60000;
   const rows = selected.map(o => {
-    const entry = todayMap[String(o.name).replace("#", "")] || null;
+    const entry  = todayMap[String(o.name).replace("#", "")] || null;
     const recent = entry && new Date(entry.timestamp).getTime() > cutoff ? entry : null;
-    // ⚠️ `o.reprint` (v1.6.0) — أوردر جاي من §REPRINT **اتطبع بالتأكيد**
+    // ⚠️ `o.reprint` (v1.7.0) — أوردر جاي من §REPRINT **اتطبع بالتأكيد**
     //    (ده شرط وجوده في طابور التغليف أصلاً)، فمينفعش يقع في `clean` لو
     //    السجل مالوش صف: `LOGS_FETCH_MAX` بيقص، والصفوف قبل v2.0.0 مفيهاش
     //    موظف. «معرفناش» هنا لازم تتقري «اتطبع» مش «نضيف».
-    const level = o.flag ? o.flag : (recent ? "recent" : ((o.count > 0 || o.reprint) ? "printed" : "clean"));
-    return { order: o, level, recent };
+    // ⚠️ و`cod` (v1.9.0) — فرق التحصيل بين بوسطة وشوبيفاي. ترتيب الأولوية
+    //    مقصود: `flag` (فاتورة لاغية) أعلى، وبعدها `cod`، وبعدها التنبيهات.
+    const cod   = lookupById ? (lookupById[o.id]?.codMismatch || null) : null;
+    const level = o.flag ? o.flag
+                : (cod ? "cod"
+                : (recent ? "recent" : ((o.count > 0 || o.reprint) ? "printed" : "clean")));
+    return { order: o, level, recent, cod };
   });
 
-  const need = rows.filter(r => r.level === "void" || r.level === "packed");
+  const need = rows.filter(r => GATE_NEED_LEVELS.includes(r.level));
   const rest = rows.filter(r => r.level === "recent" || r.level === "printed");
   if (!need.length && !rest.length) return { orders: selected, guards: {} };
   return openGate(rows);
 }
 
+// المستويات اللي بتطلب **إقرار** مش تنبيه. `cod` انضم في v1.7.0 لمسار بوسطة.
+const GATE_NEED_LEVELS = ["void", "packed", "cod"];
+
 function closeGate() { document.getElementById("gateOverlay").classList.remove("open"); }
 
 function openGate(rows) {
   return new Promise(resolve => {
-    const need    = rows.filter(r => r.level === "void" || r.level === "packed");
+    const need    = rows.filter(r => GATE_NEED_LEVELS.includes(r.level));
     const recent  = rows.filter(r => r.level === "recent");
     const printed = rows.filter(r => r.level === "printed");
     const clean   = rows.filter(r => r.level === "clean");
@@ -2443,6 +2774,22 @@ function openGate(rows) {
 
     // 🔴 الأوردر بيتحدد **بالاسم** — «٣ فواتير لاغية» من غير أسماء يعني
     //    الموظف مايقدرش يقرر.
+    // 🔴 الأوردر بيتحدد **بالاسم** — «٣ فواتير لاغية» من غير أسماء يعني
+    //    الموظف مايقدرش يقرر.
+    // 🔴 وأوردر بوسطة بياخد **سؤالين** مش سؤال (قرار أحمد 07-09-2026):
+    //    الورقة اتقطعت، **و**الشحنة اتعدّلت على بوسطة. السبب اللي رجّع
+    //    الأوردر للطابور **مش مهم للمخزن** — المهم الفعلين دول.
+    //    ⚠️ إعادة طباعة البوليصة **مابتصلّحش** بيانات غلط: البوليصة بتتولد
+    //       من بيانات بوسطة مش من شوبيفاي، فالتعديل مكانه داشبورد بوسطة.
+    //    ✅ نفس نمط التأكيدين الإلزاميين في `remove.html` — مش نمط جديد.
+    const gateChecks = (o) => {
+      const items = [{ kind: "cut", text: "قطعت الورقة القديمة" }];
+      if (o.chan === "awb") items.push({ kind: "bosta", text: "عدّلت الشحنة على بوسطة" });
+      return `<span class="pg-checks">${items.map(it =>
+        `<label class="pg-check"><input type="checkbox" data-gate-need="${escHtml(o.id)}"
+           data-gate-kind="${it.kind}" onchange="gateSyncState()"> ${it.text}</label>`).join("")}</span>`;
+    };
+
     const rowHTML = (r, withCheck) => {
       const o = r.order;
       const when = r.level === "recent"
@@ -2450,25 +2797,37 @@ function openGate(rows) {
         : (o.printedAt
             ? `اتطبعت ${escHtml(prtSinceText(o.printedAt))}${o.printedBy ? " · " + escHtml(o.printedBy) : ""}`
             : `اتطبع ${o.count.toLocaleString("en-US")} مرة`);
-      return `<label class="pg-row${withCheck ? " need" : ""}">
-        ${withCheck ? `<input type="checkbox" data-gate-need="${escHtml(o.id)}" onchange="gateSyncState()">` : ""}
+      const codLine = r.cod
+        ? `<span class="pg-meta">💰 التحصيل على بوسطة ${money(r.cod.cod)} · وقيمة الأوردر ${money(r.cod.total)} ` +
+          `(فرق ${money(r.cod.diff)})</span>`
+        : "";
+      return `<div class="pg-row${withCheck ? " need" : ""}">
         <span class="pg-row-main">
           <span class="pg-row-top">${gateLink(o.name, o.orderId)} ${flagChips(o)}</span>
           <span class="pg-meta">${when} · ${escHtml(o.status || "—")}</span>
+          ${codLine}
+          ${withCheck ? gateChecks(o) : ""}
         </span>
-      </label>`;
+      </div>`;
     };
 
     const sections = [];
     if (need.length) {
       const anyPacked = need.some(r => r.level === "packed");
+      const anyCod    = need.some(r => r.level === "cod");
+      const isAwb     = need.some(r => r.order.chan === "awb");
+      const headText  = isAwb
+        ? "🔴 ورق لاغي في المخزن — لازم يتقطّع والشحنة تتعدّل قبل الطباعة"
+        : "🔴 فواتير لاغية — لازم تتقطّع قبل الطباعة";
       sections.push(`<div class="pg-sec red">
-        <div class="pg-sec-head"><span>🔴 فواتير لاغية — لازم تتقطّع قبل الطباعة</span>
+        <div class="pg-sec-head"><span>${headText}</span>
           <span class="pg-sec-count">${need.length.toLocaleString("en-US")}</span></div>
         <div class="pg-list">${need.map(r => rowHTML(r, true)).join("")}</div>
         <div class="pg-note">الأوردرات دي رجعت للطابور بعد ما اتطبعت، يعني الورقة المطبوعة عندها محتوى قديم.
           ${anyPacked ? "<b>واحد أو أكتر منها متغلّف — الفاتورة جوّه الطرد، لازم يتفتح.</b> " : ""}
-          علّم على اللي قطعته بس.</div>
+          ${anyCod ? "<b>وفيه شحنة أو أكتر تحصيلها على بوسطة مختلف عن قيمة الأوردر — إعادة طباعة البوليصة " +
+                     "مش بتصلّح ده، التعديل مكانه داشبورد بوسطة.</b> " : ""}
+          علّم على اللي عملته بس.</div>
       </div>`);
     }
     if (recent.length) {
@@ -2526,12 +2885,18 @@ function openGate(rows) {
 // «اطبع الكل» متعطّل لحد ما كل مربعات القطع تتظبط. «اطبع الباقيين» و«إلغاء»
 // **مش** بيتعطّلوا أبدًا — دايمًا فيه مخرج من غير ما الموظف يكدب.
 function gateSyncState() {
-  const ids = window.gateNeedIds || [];
-  const done = ids.every(id =>
-    document.querySelector(`[data-gate-need="${id}"]`)?.checked);
+  // ⚠️ **كل مربع**، مش كل صف — أوردر بوسطة عنده مربعين، والتحقق على مستوى
+  //    الصف كان هيعدّي بمربع واحد متعلّم.
+  const boxes = [...document.querySelectorAll("#pgBody [data-gate-need]")];
+  // ⚠️ **مفيش مربعات = الزرار شغّال.** البوابة بتتفتح كمان على تنبيهات
+  //    لوحدها (🟠 اتطبع من شوية · 🟡 سبق طباعته) من غير أي إقرار مطلوب —
+  //    وشرط `boxes.length > 0` هنا كان بيقفل «اطبع الكل» على الحالات دي
+  //    **للأبد**، يعني الموظف مايقدرش يطبع دفعة سبق طباعتها خالص.
+  //    (اتمسك في `docs/browser-check.mjs` — مسار إعادة طباعة أوردر بوسطة)
+  const done  = boxes.every(b => b.checked);
   const btn = document.getElementById("pgPrintAllBtn");
   btn.disabled = !done;
-  btn.title = done ? "" : "علّم على كل الفواتير اللاغية اللي قطعتها الأول";
+  btn.title = done ? "" : "علّم على كل الخطوات اللي عملتها الأول";
 }
 
 // إقرار القطع بيتسجّل في D1 جوّه `extra.guard` بتاع صف الطباعة — من غير
@@ -2545,6 +2910,9 @@ function buildGateGuards(need) {
       prevPackAt:   r.order.packingTimeS1 || "",
       statusAtGate: r.order.status || "",
       cutConfirmed: true,
+      // ⚠️ المفتاح ده لازم يكون في `GUARD_KEYS` في الـ Worker وإلا **بيتسقط
+      //    في صمت**: البوابة تشتغل والسجل يقول إن الموظف ما أقرّش بحاجة.
+      ...(r.order.chan === "awb" ? { bostaUpdated: true } : {}),
     };
   }
   return guards;
@@ -2652,6 +3020,247 @@ async function executePrint(selectedOrders, guards = {}) {
   }
 }
 
+// ══════════════════════════════════════════════════════════════
+// §AWB-JS — مسار بوسطة: بحث → بوابة → بوليصة → تسجيل → طباعة
+// ══════════════════════════════════════════════════════════════
+//
+// الترتيب ده **مقصود بالكامل**:
+//   ① `bosta_lookup` بيجيب كل بيانات المراجعة (المعرّف · الحالة · النوع ·
+//      التحصيل) في نداء واحد — فالبوابة بتشتغل من غير أي نداء زيادة.
+//   ② البوابة قبل أي جلب بوليصة — مافيش داعي نجيب بوليصة أوردر البوابة
+//      هتشيله، والأهم إن `latestAWBPrintDate` بيتحدّث مع كل جلب فبيكدب
+//      على نفسه لو جبناها لأوردر ما اتطبعش.
+//   ③ التسجيل **قبل** الطباعة — نفس ترتيب مسار الفاتورة بالحرف.
+//
+// ⛔ ومفيش `/invoice` هنا خالص: أوردر بوسطة بياخد **بوليصة بس، من غير
+//    فاتورة** (قرار أحمد 07-09-2026).
+
+const AWB_BLOCK_MSG = {
+  not_found:     "مفيش شحنة على بوسطة بالرقم ده — الأوردر ما اترفعش (أو اترفع بمرجع مختلف). " +
+                 "الرفع على بوسطة خطوة إلزامية قبل الطباعة.",
+  ambiguous:     "أكتر من شحنة صادرة حيّة على الأوردر ده — التحديد لازم يتم بإيدك من داشبورد بوسطة. " +
+                 "الأداة مابتخمّنش: ملصق غلط على كرتونة أسوأ من صف مستني.",
+  blocked_state: "الشحنة على بوسطة مش مؤهلة لطباعة بوليصة.",
+};
+
+function awbBlockedRow(o, res) {
+  const reason = res?.reason || "not_found";
+  const extra  = reason === "blocked_state" && res.blockedAs ? ` (${res.blockedAs})` : "";
+  return {
+    status: "error", orderNumber: o.name, orderId: o.orderId, type: o.type,
+    actions: [], warnings: [],
+    errors: [(AWB_BLOCK_MSG[reason] || "الشحنة مش جاهزة للطباعة") + extra],
+  };
+}
+
+// ─── §AWB-JS::startPrintAWB ───
+async function startPrintAWB(selected) {
+  showPrintLoading(`جاري مراجعة ${selected.length.toLocaleString("en-US")} شحنة على بوسطة...`);
+
+  let look;
+  try {
+    look = await apiPost("bosta_lookup", {
+      orders:   selected.map(o => ({ id: o.id, name: o.name, total: o.total })),
+      employee: currentEmployee.username,
+    });
+  } catch (err) {
+    hidePrintLoading();
+    // 🔴 فشل بوسطة **بيبان باسمه**. لو بلعناه كان هيتقري «الشحنة مش موجودة»
+    //    والموظف يروح يرفع الأوردر تاني — ودي رسالة كاذبة بتعمل ضرر.
+    showToast("تعذّر الوصول لبوسطة: " + err.message, "error", 10000);
+    return;
+  }
+  hidePrintLoading();
+
+  const byId = {};
+  for (const r of (look.results || [])) byId[r.id] = r;
+
+  if (look.truncated) {
+    showToast(`⚠️ بحث بوسطة وصل السقف (${(look.searchLimit || 50).toLocaleString("en-US")}) في شريحة أو أكتر — ` +
+              `ممكن يكون فيه شحنة ما ظهرتش. قلّل عدد الأوردرات في الدفعة.`, "warn", 10000);
+  }
+  if (look.logged === false) {
+    showToast("⚠️ المراجعة تمت لكن تسجيل «مش على بوسطة» في السجل فشل" +
+              (look.logError ? ` — ${look.logError}` : ""), "warn", 8000);
+  }
+
+  const ready   = selected.filter(o =>  byId[o.id]?.ok);
+  const blocked = selected.filter(o => !byId[o.id]?.ok).map(o => awbBlockedRow(o, byId[o.id]));
+
+  if (!ready.length) {
+    renderTrackResults(blocked);
+    showToast("مفيش ولا شحنة جاهزة للطباعة في الدفعة دي", "error", 8000);
+    return;
+  }
+
+  const gate = await runPreprintGate(ready, byId);
+  if (!gate) { showToast("اتلغت الطباعة", "info"); return; }
+  if (!gate.orders.length) {
+    if (blocked.length) renderTrackResults(blocked);
+    showToast("مفيش أوردرات باقية للطباعة", "warn");
+    return;
+  }
+
+  await executePrintAWB(gate.orders, gate.guards, byId, blocked);
+}
+
+// ─── §AWB-JS::fetchAwbBatch ───
+// بترجّع { pdfBase64, printed: [orders], failed: [{order, message}] }.
+//
+// 🔴 المسار السريع `mass-awb` بيدمج عندنا نداء واحد — بس بيشيل الـ IDs غير
+//    المؤهلة **في صمت** ويقول success. حارس عدّ الصفحات بيمسك الفرق، بس
+//    **مابيقولش مين** اللي اتشال. فلما يحصل فرق بنرجع لنداء مفرد لكل شحنة
+//    (`mapLimit`) عشان نعرف الفاشل **بالاسم**، وبعدين نعيد المجمّع على
+//    الناجحين بس — فالنتيجة تفضل PDF واحد ونافذة طباعة واحدة.
+// ⚠️ التكلفة الزيادة دي بتحصل في حالة الفشل بس. اليوم العادي نداء واحد.
+async function fetchAwbBatch(orders, byId) {
+  const idOf = (o) => byId[o.id].selected.deliveryId;
+
+  const res = await apiPost("bosta_awb", { deliveryIds: orders.map(idOf) });
+  const mismatch = res.pages !== null && res.pages !== orders.length;
+  if (!mismatch) return { res, printed: orders, failed: [] };
+
+  showPrintLoading("بوسطة رجّعت بوالص أقل من المطلوب — بنحدد أنهي شحنة بالاسم...");
+  const probes = await mapLimit(orders, PRINT_CONCURRENCY, async (o) => {
+    await apiPost("bosta_awb", { deliveryIds: [idOf(o)] });
+    return true;
+  });
+
+  const printed = [], failed = [];
+  probes.forEach((r, i) => {
+    if (r.ok) printed.push(orders[i]);
+    else failed.push({ order: orders[i], message: r.error?.message || String(r.error) });
+  });
+
+  if (!printed.length) return { res: null, printed: [], failed };
+
+  showPrintLoading("جاري تجميع البوالص الناجحة...");
+  const res2 = await apiPost("bosta_awb", { deliveryIds: printed.map(idOf) });
+  return { res: res2, printed, failed };
+}
+
+// ─── §AWB-JS::executePrintAWB ───
+async function executePrintAWB(orders, guards = {}, byId = {}, blockedRows = []) {
+  if (!currentEmployee) { showToast("سجّل الدخول أولاً", "error"); return; }
+  const total = orders.length;
+  showPrintLoading(`جاري جلب ${total.toLocaleString("en-US")} بوليصة من بوسطة...`);
+
+  try {
+    const { res, printed, failed } = await fetchAwbBatch(orders, byId);
+
+    const failedRows = failed.map(f => ({
+      status: "error", orderNumber: f.order.name, orderId: f.order.orderId, type: f.order.type,
+      actions: [], warnings: [],
+      errors: [`تعذّر جلب البوليصة من بوسطة — ${f.message}`],
+    }));
+
+    if (!printed.length || !res) {
+      hidePrintLoading();
+      renderTrackResults([...blockedRows, ...failedRows]);
+      showToast("مفيش ولا بوليصة رجعت — مفيش أي طباعة ومفيش أي تسجيل", "error", 9000);
+      return;
+    }
+
+    for (const w of (res.warnings || [])) showToast(`⚠️ ${w}`, "warn", 9000);
+
+    // ③ التسجيل قبل الطباعة — نفس ترتيب مسار الفاتورة.
+    //    🔴 `type` = الماكينة (S1) · `doc` = المستند (AWB). الخلط بينهم
+    //       بيكتب تاج `Printed(AWB)` وميتافيلد `printing_time_awb`،
+    //       والاتنين مابيفشلوش — و`isPrinted` يفضل false للأبد.
+    let tracked = 0;
+    const trackSettled = await mapLimit(printed, PRINT_CONCURRENCY, async (o) => {
+      const d = byId[o.id].selected;
+      const r = await apiPath("/track", {
+        orderId: o.id, orderNumber: o.name,
+        type: "S1", doc: "AWB",
+        employee: currentEmployee.username,
+        bosta: {
+          deliveryId:     d.deliveryId,
+          trackingNumber: d.trackingNumber,
+          stateCode:      d.stateCode,
+          stateName:      d.stateName,
+          deliveryType:   d.type,
+          cod:            d.cod,
+          batchSize:      printed.length,
+        },
+        ...(guards[o.id] ? { guard: guards[o.id] } : {}),
+      });
+      tracked++;
+      showPrintLoading(`جاري تسجيل الطباعة... ${tracked.toLocaleString("en-US")}/${printed.length.toLocaleString("en-US")}`);
+      return { ...r, orderNumber: r.orderNumber || o.name, orderId: r.orderId || o.orderId, type: o.type };
+    });
+    const trackedRows = trackSettled.map((r, i) => {
+      if (r.ok) return r.value;
+      const o = printed[i];
+      return { status: "error", orderNumber: o.name, orderId: o.orderId, type: o.type,
+               actions: [], warnings: [], errors: [r.error?.message || String(r.error)], logged: false };
+    });
+
+    showPrintLoading("جاري فتح نافذة الطباعة...");
+    showAwbPdf(res, printed.length);
+    printAwbPdf();
+
+    for (const o of printed) {
+      const num = String(o.name).replace("#", "");
+      printCountsMap[num] = (printCountsMap[num] || 0) + 1;
+    }
+    clearSelection();
+    hidePrintLoading();
+    renderTrackResults([...blockedRows, ...failedRows, ...trackedRows]);
+    await loadOrders(true);
+    if (logsLoaded) loadLogs();
+  } catch (err) {
+    hidePrintLoading();
+    showToast("خطأ: " + err.message, "error", 9000);
+  }
+}
+
+// ─── §AWB-JS::showAwbPdf ───
+// ⛔ الـ PDF بيتعرض ويتطبع **زي ما جه بايت ببايت**. مفيش إعادة رسم ومفيش
+//    scaling ومفيش `@page` من عندنا: الملف ده بيطلع مظبوط على الملصق
+//    الحراري من داشبورد بوسطة، فأي تدخل مننا بيكسر ضمانة قايمة.
+let currentAwbUrl = null;
+function revokeAwbUrl() {
+  if (currentAwbUrl) { URL.revokeObjectURL(currentAwbUrl); currentAwbUrl = null; }
+}
+
+function showAwbPdf(res, count) {
+  revokeAwbUrl();
+  try {
+    const bin   = atob(res.pdfBase64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    currentAwbUrl = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+    document.getElementById("awbFrame").src = currentAwbUrl;
+    document.getElementById("awbMeta").textContent =
+      `${count.toLocaleString("en-US")} بوليصة · ${(res.pages ?? "?")} صفحة · ` +
+      `${(res.pdfBytes || 0).toLocaleString("en-US")} بايت` +
+      // 🔴 للعرض بس — ممنوع يدخل أي حارس: أداتنا نفسها بتحدّث الحقل ده مع
+      //    كل جلب، فهو بيقول «حد جاب البوليصة» مش «ورقة اتطبعت».
+      (res.latestAWBPrintDate ? ` · بوسطة بتقول آخر طباعة ${formatDateTime(res.latestAWBPrintDate)}` : "");
+    document.getElementById("awbPanel").classList.add("visible");
+  } catch (e) {
+    showToast(`تعذّر فتح ملف البوليصة: ${e.message}`, "error", 8000);
+  }
+}
+
+function printAwbPdf() {
+  if (!currentAwbUrl) return;
+  const f = document.getElementById("awbFrame");
+  try {
+    f.contentWindow.focus();
+    f.contentWindow.print();
+  } catch {
+    // بعض المتصفحات بتمنع الطباعة من جوّه iframe فيه blob — نفتحها في تاب.
+    openAwbTab();
+  }
+}
+
+function openAwbTab() {
+  if (!currentAwbUrl) return;
+  window.open(currentAwbUrl, "_blank", "noopener");
+}
+
 // ─── §TOOL-JS::renderTrackResults ───
 // ٣ حالات مش اتنين — والحالة جاية من الـ Worker كما هي، مش مشتقّة من success.
 // الشكل Popup: عدّادات بس لو كله نجح، وتفاصيل كل أوردر لو فيه تحذير أو فشل.
@@ -2692,7 +3301,10 @@ function renderTrackResults(rows) {
     sorted.map(r => {
       const st = r.status || "error";
       const parts = [
-        `<div>${badge(st)} ${prtOrderLink(r.orderNumber || "", r.orderId)} <span style="color:var(--text-secondary)">[${escHtml(typeLabel(r.type))}]</span></div>`,
+        `<div>${badge(st)} ${prtOrderLink(r.orderNumber || "", r.orderId)} <span style="color:var(--text-secondary)">[${escHtml(typeLabel(r.type))}]</span>` +
+           // المستند اللي اتطبع — النافذة الواحدة ممكن تجمع صفوف بوليصة
+           // وصفوف اتوقفت قبل الطباعة، فالتمييز لازم يبان.
+           `${r.doc === "AWB" ? ' <span class="chan-cell ch-awb">🚚 بوليصة</span>' : ""}</div>`,
         `<div class="result-actions">ما تم فعليًا: ${(r.actions && r.actions.length) ? escHtml(r.actions.join(" · ")) : "لا شيء"}</div>`,
       ];
       (r.warnings || []).forEach(w => parts.push(`<div class="result-warn">⚠ ${escHtml(w)}</div>`));
