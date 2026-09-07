@@ -1360,8 +1360,20 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
       <div class="cl-entry">
         <div class="cl-head">
-          <span class="cl-ver">v1.10.0</span>
+          <span class="cl-ver">v1.11.0</span>
           <span class="cl-badge" id="clLatestBadge">آخر نسخة</span>
+          <span class="cl-date">07-09-2026</span>
+        </div>
+        <div class="cl-list">
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span>🚚 <strong>طابور بوسطة بقى بيعرض الأوردرات اللي اترفعت على بوسطة بس</strong> — شرط تاج <code>Bosta_Uploaded_S1</code>. الأوردر اللي لسه ما اترفعش <strong>مستحيل تتطبع بوليصته</strong>، فكان بياخد مكان في الطابور ويرجع صف أحمر «مش على بوسطة» بعد الطباعة.</span></div>
+          <div class="cl-item"><span class="cl-tag new">جديد</span><span><strong>عدد الأوردرات اللي لسه ما اترفعتش معروض فوق الجدول</strong> — الغياب معلوم مش خفي، والرقم بيقول إن بوابة الرفع واقفة.</span></div>
+          <div class="cl-item"><span class="cl-tag fix">إصلاح</span><span>🔴 <strong>الأوردر المطبوع كان بيفضل في الطابور بعد التحديث</strong> — فهرس بحث شوبيفاي مش فوري، فالتحديث اللي بعد الطباعة كان بيرجّعه تاني لثواني والموظف يفتكر إن الطباعة ما اتسجّلتش. بقى بيتشال فورًا وبيفضل مشيول لحد ما الفهرس يلحق.</span></div>
+        </div>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-head">
+          <span class="cl-ver">v1.10.0</span>
           <span class="cl-date">07-09-2026</span>
         </div>
         <div class="cl-list">
@@ -2319,6 +2331,65 @@ function showPrint(id) {
   });
 }
 
+// ══════════════════════════════════════════════════════════════
+// 🔴 §JUST-PRINTED — الأوردر المطبوع بيختفي من الطابور **فورًا**
+// ══════════════════════════════════════════════════════════════
+//
+// المشكلة: `/orders` بيفلتر بـ `metafields.custom.manual_status` عبر **فهرس
+// بحث شوبيفاي**، والفهرس ده **مش فوري**. الطباعة بتحوّل الحالة لـ `Ready`
+// وبعدها التحديث بيتنادى على طول — فالرد بيرجّع الأوردر المطبوع **وهو لسه
+// في الطابور** لثواني. الموظف بيشوفه قدامه بعد ما طبعه، فيفتكر إن الطباعة
+// ما اتسجّلتش ويطبع تاني.
+//
+// 🔴 مجرد شيله محليًا **مش كفاية** — التحديث اللي بعده بيرجّعه تاني، فالصف
+//    بيرفرف. عشان كده الاستبعاد **بيعيش عبر التحديثات** لحد ما الـ Worker
+//    نفسه يبطّل يرجّعه (= الفهرس لحق).
+//
+// ⚠️ **مش تخمين ومش تفاؤل:** الأوردر مابيتشالش إلا لما شوبيفاي **تأكّد**
+//    إن حالته بقت `Ready` (`statusAfter` من `/track`، و`setStatusToReady`
+//    بتقرا القيمة اللي رجعت من `metafieldsSet` وبترمي لو مش مطابقة).
+//    طباعة رجعت `warning` عشان الحالة فشلت = الأوردر **بيفضل في الطابور**.
+//
+// ⚠️ **سقف زمني إلزامي.** لو حصل أي شيء غير متوقع وفضل الـ Worker يرجّع
+//    الأوردر، بيرجع للطابور بعد الفترة دي بدل ما يتخفي للأبد. الاتجاه
+//    الآمن دايمًا «يرجع» مش «يفضل مخفي».
+//
+// ⚠️ **في الذاكرة بس** زي `activeChannel` — ريفريش الصفحة بيصفّرها، وساعتها
+//    الفهرس بيكون لحق من زمان.
+const PRINTED_HIDE_MS = 10 * 60 * 1000;
+const recentlyPrinted = new Map();   // رقم الأوردر (بلا #) → وقت الطباعة
+
+// بتتنادى بعد `/track` وقبل التحديث — من **مسار الفاتورة ومسار بوسطة** الاتنين.
+function markPrintedAway(rows) {
+  for (const r of (rows || [])) {
+    // 🔴 `statusAfter` من Worker v2.6.0. من غيره (Worker أقدم) بنرجع لـ
+    //    `status === 'success'` — وهي أضيق: النجاح الكامل معناه إن التلات
+    //    كتابات نجحت، والحالة منهم. التدهور **آمن**: أسوأ حالة إن الأوردر
+    //    يفضل ظاهر ثواني زي دلوقتي بالظبط، مش إنه يختفي غلط.
+    const leftQueue = r.statusAfter ? r.statusAfter === "Ready" : r.status === "success";
+    if (!leftQueue) continue;
+    const num = String(r.orderNumber || "").replace("#", "").trim();
+    if (num) recentlyPrinted.set(num, Date.now());
+  }
+}
+
+function dropRecentlyPrinted(orders) {
+  if (!recentlyPrinted.size) return orders;
+  const now  = Date.now();
+  const kept = [];
+  const seen = new Set();
+  for (const o of orders) {
+    const num = String(o.name).replace("#", "").trim();
+    const at  = recentlyPrinted.get(num);
+    if (at === undefined) { kept.push(o); continue; }
+    if (now - at > PRINTED_HIDE_MS) { recentlyPrinted.delete(num); kept.push(o); continue; }
+    seen.add(num);   // لسه راجع من الـ Worker = الفهرس ما لحقش
+  }
+  // بطّل يرجع؟ الفهرس لحق — نسيبه يخرج من القايمة ونوقّف الاستبعاد.
+  for (const num of [...recentlyPrinted.keys()]) if (!seen.has(num)) recentlyPrinted.delete(num);
+  return kept;
+}
+
 async function loadOrders(forceRefresh = false) {
   if (!isConfigured()) { openSettings(); return; }
   showPrint("printLoadingState");
@@ -2330,7 +2401,10 @@ async function loadOrders(forceRefresh = false) {
       apiPath("/orders", { forceRefresh, allZones: true }),
       apiPath("/logs", {}),
     ]);
-    allOrders = ordersData.orders || [];
+    // §JUST-PRINTED — نقطة الاستبعاد **الوحيدة**. كل اللي بعدها (الجدول ·
+    //   العدّادات · الـ KPIs · «تحديد الكل» · الكاش) بيتبني من `allOrders`،
+    //   فمفيش أي مصدر تاني يقدر يفترق عنها (درس R1).
+    allOrders = dropRecentlyPrinted(ordersData.orders || []);
     selectedIds.clear();
 
     // 🔴 تدهور آمن: Worker أقدم من 2.3.0 مابيرجّعش `printingTimeS1` خالص،
@@ -2347,10 +2421,11 @@ async function loadOrders(forceRefresh = false) {
 
     // ⚠️ الكاش لازم يتكتب بعد **كل** جلب ناجح، وإلا الشاشة الرئيسية
     //    هتفضل على عدد قديم.
-    cacheSet(WOC_CACHE_PRINT, ordersData);
+    // ⚠️ الكاش بيتكتب **مفلتر** — الشاشة الرئيسية بتقرا منه، وعدّاد فيه
+    //    أوردر اتطبع خلاص بيخلّي الرئيسية تقول رقم والصفحة تفتح على رقم تاني.
+    cacheSet(WOC_CACHE_PRINT, { ...ordersData, orders: allOrders, total: allOrders.length });
 
     rebuildPrintFilterItems();
-    updatePrintKPIs();
     applyPrintFilters();
     stampUpdated();
     showPrint("printDashboard");
@@ -2372,10 +2447,9 @@ function stampUpdated(iso) {
 //    بيفضل صفر لحد ما `loadLogs()` ترد — وده مقصود: عدّاد غلط من كاش قديم
 //    أسوأ من عدّاد لسه بيتحمّل.
 function renderOrdersFrom(data) {
-  allOrders = data?.orders || [];
+  allOrders = dropRecentlyPrinted(data?.orders || []);
   selectedIds.clear();
   rebuildPrintFilterItems();
-  updatePrintKPIs();
   applyPrintFilters();
   showPrint("printDashboard");
   measureSticky();
@@ -2408,6 +2482,23 @@ function rebuildPrintFilterItems() {
 //    الإخفاء هو اللي أنتج «الأوردر مش ظاهر» مع `ZONE_FILTER`.
 const ZONE_SHOWROOM = "Show_Room";
 
+// 🔴 §BOSTA-GATE — «اترفع على بوسطة؟» (قرار أحمد 07-09-2026)
+//
+// الرفع على داشبورد بوسطة **بوابة إلزامية قبل الطباعة**
+// (`ecommoda-order-lifecycle` → `zone-routing.md` §2.2)، والتاج ده هو
+// أثرها على شوبيفاي: موجود = الأوردر على بوسطة · غايب = **لسه ما اترفعش**.
+// طابور بوسطة من غير الحارس ده كان بيعرض أوردرات مستحيل تتطبع أصلاً —
+// الموظف يحددها ويدوس طباعة، والدفعة ترجع صف أحمر `not_found` لكل واحدة.
+//
+// ⚠️ **حارس عرض مش حارس أمان.** الحارس الحقيقي لسه `bosta_lookup` (بيرجّع
+//    `not_found` لأي أوردر مالوش شحنة) — التاج بيوفّر الرحلة الضايعة دي بس.
+//    عشان كده **مش** مطبَّق على كارت إعادة الطباعة: ده فعل مقصود على أوردر
+//    بعينه، والبوابة الحقيقية بتقول لأ لو الأوردر مش هناك.
+//
+// ⚠️ **الأوردر المستبعَد مش مخفي في صمت** — عدده بيتعرض فوق الجدول بنفس
+//    نمط `chanHiddenS2` بالظبط. أوردر مختفي بلا سبب = تذكرة دعم.
+const BOSTA_UPLOADED_TAG = "Bosta_Uploaded_S1";
+
 const CHANNELS = {
   invoice:  { label: "فاتورة — قاهرة+جيزة", short: "قاهرة+جيزة", action: "invoice" },
   showroom: { label: "فاتورة — شو روم",     short: "شو روم",     action: "invoice" },
@@ -2426,10 +2517,26 @@ function uiChannel(o) {
   return "none";
 }
 
+// 🔴 §BOSTA-GATE::channelGateReason — **المصدر الوحيد** لسؤال «الصف ده
+//    بيتعرض في القناة دي ولا لأ؟». الجدول والـ KPIs بيعدّوا منها الاتنين.
+//    نسخة تانية من الشرط هتفترق مع أول تعديل (درس R1).
+//    بترجّع `null` = معروض · أو سبب الاستبعاد بالاسم.
+function channelGateReason(o, chan) {
+  if (o.chan !== chan) return "other-channel";
+  if (chan === "awb") {
+    // S2 على بوسطة مخفية مؤقتًا بقرار (أحمد 07-09-2026).
+    if (o.type === "S2") return "s2";
+    // لسه ما اترفعش على داشبورد بوسطة — مفيش شحنة، فمفيش بوليصة.
+    if (!o.bostaUploaded) return "not-uploaded";
+  }
+  return null;
+}
+
 // القناة النشطة — **في الذاكرة بس** زي `lastEntryMode` في `pack.html`:
 // موظف جديد على نفس الجهاز بيبدأ من الافتراضي.
 let activeChannel = "invoice";
 let chanHiddenS2  = 0;      // أوردرات S2 بوسطة المخفية مؤقتًا (قرار أحمد)
+let chanHiddenNew = 0;      // أوردرات بوسطة لسه ما اترفعتش (§BOSTA-GATE)
 
 function setChannel(ch) {
   if (!CHANNELS[ch] || ch === activeChannel) return;
@@ -2466,6 +2573,21 @@ function renderChannelNote() {
   const box = document.getElementById("chanNote");
   if (!box) return;
   const parts = [];
+  if (recentlyPrinted.size) {
+    // §JUST-PRINTED — الاختفاء متوقّع، بس الرقم بيقوله بدل ما يعدّي بالصمت.
+    parts.push(`🖨️ ${recentlyPrinted.size.toLocaleString("en-US")} أوردر اتطبعوا ` +
+               `دلوقتي و<b>اتشالوا من الطابور</b> — فهرس بحث شوبيفاي لسه ` +
+               `بيلحق، فبيرجعوا في رد الـ Worker لثواني بعد الطباعة.`);
+  }
+  if (activeChannel === "awb" && chanHiddenNew) {
+    // 🔴 الغياب لازم يبقى **معلوم**: الأوردرات دي مش «مش موجودة»، دي
+    //    مستنية خطوة الرفع على بوسطة — والرقم ده بيقول للموظف إن البوابة
+    //    دي واقفة، بدل ما الطابور يبان فاضي بلا سبب.
+    parts.push(`🚚 ${chanHiddenNew.toLocaleString("en-US")} أوردر بوسطة ` +
+               `<b>لسه ما اترفعوش على داشبورد بوسطة</b> (مفيش تاج ` +
+               `<code>${escHtml(BOSTA_UPLOADED_TAG)}</code>) — الرفع خطوة ` +
+               `إلزامية قبل الطباعة، فمش معروضين هنا.`);
+  }
   if (activeChannel === "awb" && chanHiddenS2) {
     // قرار أحمد 07-09-2026: S2 على بوسطة **مخفية مؤقتًا**. بنعرض العدد عشان
     // الغياب يبقى **معلوم** مش خفي — أوردر مختفي بلا سبب = تذكرة دعم.
@@ -2563,6 +2685,9 @@ function decoratePrintRows() {
       lockReason: CHANNELS[chan].action === null
         ? (o.zone ? `زون غير معروف: ${o.zone}` : "الزون لسه ما اتحددش")
         : null,
+      // §BOSTA-GATE — `tags` بترجع من `/orders` أصلاً (نفس المصدر بتاع
+      //    `isPrinted`)، فمفيش نداء زيادة ومفيش تعديل Worker للبند ده.
+      bostaUploaded: (o.tags || []).includes(BOSTA_UPLOADED_TAG),
       count: getPrintCount(o),
       date:  o.createdAt,
       time:  o.createdAt,          // نفس الـ timestamp — عمودان للعرض بس
@@ -2577,7 +2702,7 @@ function decoratePrintRows() {
 function updatePrintKPIs() {
   // ⚠️ الأرقام دي بتوصف **القناة النشطة** — مش الطابور كله. عدّاد كل قناة
   //    ظاهر في شريط القناة فوق، فمفيش رقم مخفي.
-  const rows = decoratePrintRows().filter(r => r.chan === activeChannel);
+  const rows = decoratePrintRows().filter(r => channelGateReason(r, activeChannel) === null);
   document.getElementById("kpiS1").textContent = rows.filter(o => o.type === "S1").length.toLocaleString("en-US");
   document.getElementById("kpiS2").textContent = rows.filter(o => o.type === "S2").length.toLocaleString("en-US");
 
@@ -2594,13 +2719,16 @@ function applyPrintFilters() {
   updateFilterIconState("print");
   const s = sec.print;
   const q = s.searchTerm.trim().toLowerCase();
-  chanHiddenS2 = 0;
+  chanHiddenS2  = 0;
+  chanHiddenNew = 0;
   filteredOrders = decoratePrintRows().filter(o => {
-    // ① القناة أولاً — مش فلتر، ده وضع الأداة الحالي.
-    if (o.chan !== activeChannel) return false;
-    // ② S2 على بوسطة مخفية مؤقتًا بقرار (أحمد 07-09-2026) — والعدد بيتعرض
-    //    في سطر الملاحظة فوق الجدول، فالغياب **معلوم** مش صامت.
-    if (activeChannel === "awb" && o.type === "S2") { chanHiddenS2++; return false; }
+    // ① بوابة القناة أولاً — مش فلتر، ده وضع الأداة الحالي. والاستبعاد
+    //    بيترصد بسببه: كل اللي بيتشال بيتعدّ وبيتقال فوق الجدول، فالغياب
+    //    **معلوم** مش صامت.
+    const gate = channelGateReason(o, activeChannel);
+    if (gate === "s2")           { chanHiddenS2++;  return false; }
+    if (gate === "not-uploaded") { chanHiddenNew++; return false; }
+    if (gate)                    { return false; }
     if (q && !(String(o.name).toLowerCase().includes(q) || String(o.customer).toLowerCase().includes(q))) return false;
     if (msState.pType.selected.size   && !msState.pType.selected.has(o.type))     return false;
     if (msState.pStatus.selected.size && !msState.pStatus.selected.has(o.status)) return false;
@@ -2610,6 +2738,10 @@ function applyPrintFilters() {
     if (s.dateTo   && o.day > s.dateTo)   return false;
     return true;
   });
+  // 🔴 الـ KPIs بتوصف **القناة النشطة**، والقناة بتتغيّر من هنا — فحسابها
+  //    لازم يعدّي من نفس المسار. قبل كده كانت بتتحسب عند الجلب بس، فتبديل
+  //    القناة كان بيسيب أرقام القناة اللي قبلها معروضة تحت ليبل القناة الجديدة.
+  updatePrintKPIs();
   renderPrintTable(applySort("print", filteredOrders));
   document.getElementById("filteredCount-print").textContent = filteredOrders.length.toLocaleString("en-US");
   renderChannelCounts();
@@ -3026,6 +3158,7 @@ async function executePrint(selectedOrders, guards = {}) {
     hidePrintLoading();
     // الفشل في تحضير الفاتورة والفشل في التسجيل الاتنين بيظهروا في نفس النافذة
     renderTrackResults([...failedRows, ...tracked]);
+    markPrintedAway(tracked);          // §JUST-PRINTED — **قبل** التحديث
     await loadOrders(true);
     if (logsLoaded) loadLogs();
   } catch (err) {
@@ -3221,6 +3354,7 @@ async function executePrintAWB(orders, guards = {}, byId = {}, blockedRows = [])
     clearSelection();
     hidePrintLoading();
     renderTrackResults([...blockedRows, ...failedRows, ...trackedRows]);
+    markPrintedAway(trackedRows);      // §JUST-PRINTED — **قبل** التحديث
     await loadOrders(true);
     if (logsLoaded) loadLogs();
   } catch (err) {

@@ -34,13 +34,16 @@ const PORT = srv.address().port;   // منفذ عشوائي — مفيش تصا�
 const mkPdf = (n) => Buffer.from('%PDF-1.4\n'+'/Type /Page \n'.repeat(n)+'/Type /Pages \ntrailer\n%%EOF').toString('base64');
 
 const ORDERS = [
-  {id:'gid://shopify/Order/1', orderId:'1', name:'#53400', createdAt:'2026-09-06T08:00:00Z', customer:'أحمد', type:'S1', status:'Confirmed',        zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:1200, totalOriginal:1200, printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false},
-  {id:'gid://shopify/Order/2', orderId:'2', name:'#53401', createdAt:'2026-09-06T09:00:00Z', customer:'منى',  type:'S1', status:'Confirmed + Edit', zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:800,  totalOriginal:800,  printingTimeS1:'2026-09-05T10:00:00Z', packingTimeS1:null, tags:[], isPrinted:true},
-  {id:'gid://shopify/Order/3', orderId:'3', name:'#53402', createdAt:'2026-09-06T10:00:00Z', customer:'سيد',  type:'S1', status:'Confirmed',        zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:500,  totalOriginal:500,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false},
-  {id:'gid://shopify/Order/4', orderId:'4', name:'#53403', createdAt:'2026-09-06T11:00:00Z', customer:'هدى',  type:'S2', status:'Confirmed + RETURN',zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:300,  totalOriginal:300,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false},
+  {id:'gid://shopify/Order/1', orderId:'1', name:'#53400', createdAt:'2026-09-06T08:00:00Z', customer:'أحمد', type:'S1', status:'Confirmed',        zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:1200, totalOriginal:1200, printingTimeS1:null, packingTimeS1:null, tags:['Bosta_Uploaded_S1'], isPrinted:false},
+  {id:'gid://shopify/Order/2', orderId:'2', name:'#53401', createdAt:'2026-09-06T09:00:00Z', customer:'منى',  type:'S1', status:'Confirmed + Edit', zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:800,  totalOriginal:800,  printingTimeS1:'2026-09-05T10:00:00Z', packingTimeS1:null, tags:['Bosta_Uploaded_S1'], isPrinted:true},
+  {id:'gid://shopify/Order/3', orderId:'3', name:'#53402', createdAt:'2026-09-06T10:00:00Z', customer:'سيد',  type:'S1', status:'Confirmed',        zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:500,  totalOriginal:500,  printingTimeS1:null, packingTimeS1:null, tags:['Bosta_Uploaded_S1'], isPrinted:false},
+  {id:'gid://shopify/Order/4', orderId:'4', name:'#53403', createdAt:'2026-09-06T11:00:00Z', customer:'هدى',  type:'S2', status:'Confirmed + RETURN',zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:300,  totalOriginal:300,  printingTimeS1:null, packingTimeS1:null, tags:['Bosta_Uploaded_S1'], isPrinted:false},
   {id:'gid://shopify/Order/5', orderId:'5', name:'#53404', createdAt:'2026-09-06T12:00:00Z', customer:'كريم', type:'S1', status:'Confirmed',        zone:'Cairo+Giza',    zoneKnown:true,  channel:'invoice', total:900,  totalOriginal:900,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false},
   {id:'gid://shopify/Order/6', orderId:'6', name:'#53405', createdAt:'2026-09-06T13:00:00Z', customer:'ندى',  type:'S1', status:'Confirmed',        zone:'Show_Room',     zoneKnown:true,  channel:'invoice', total:400,  totalOriginal:400,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false},
   {id:'gid://shopify/Order/7', orderId:'7', name:'#53406', createdAt:'2026-09-06T14:00:00Z', customer:'طارق', type:'S1', status:'Confirmed',        zone:null,            zoneKnown:false, channel:null,      total:700,  totalOriginal:700,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false},
+  // 🚚 §BOSTA-GATE — أوردر بوسطة **من غير** تاج الرفع: لسه ما اترفعش على
+  //    داشبورد بوسطة، فمستحيل تتطبع بوليصته. لازم يتشال من الجدول ويتعدّ.
+  {id:'gid://shopify/Order/9', orderId:'9', name:'#53408', createdAt:'2026-09-06T16:00:00Z', customer:'ياسر', type:'S1', status:'Confirmed',        zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:550,  totalOriginal:550,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false},
   {id:'gid://shopify/Order/8', orderId:'8', name:'#53407', createdAt:'2026-09-06T15:00:00Z', customer:'سلمى', type:'S1', status:'Confirmed',        zone:'Cairo',         zoneKnown:false, channel:null,      total:650,  totalOriginal:650,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false},
 ];
 
@@ -73,7 +76,7 @@ await page.route('**order-printer-worker.ecommoda-dev.workers.dev/**', async (ro
   let body = {}; try { body = req.postData() ? JSON.parse(req.postData()) : {}; } catch {}
   calls.push({ path:url.pathname, action, body });
 
-  if (action === 'get_config') return route.fulfill(J({ok:true, version:'2.4.0', tool:'order_printer'}));
+  if (action === 'get_config') return route.fulfill(J({ok:true, version:'2.6.0', tool:'order_printer'}));
   if (url.pathname === '/orders')
     return route.fulfill(J({ok:true, orders:ORDERS, total:ORDERS.length, zoneExcluded:0, allZones:body.allZones===true, fetchedAt:new Date().toISOString()}));
   // مسار الفاتورة بيرجّع خطأ في المجموعة التانية — عشان نختبر **الفشل
@@ -107,9 +110,13 @@ await page.route('**order-printer-worker.ecommoda-dev.workers.dev/**', async (ro
     return route.fulfill(J({ ok:true, status:'success', mode:n>1?'mass':'single', requested:n, pages:n,
       pdfBase64: mkPdf(n), pdfBytes: 1000*n, pdfLooksValid:true, latestAWBPrintDate:null, warnings:[] }));
   }
+  // ⚠️ الـ Worker الوهمي **بيفضل يرجّع الأوردر المطبوع في `/orders`** —
+  //    ده بالظبط سلوك فهرس بحث شوبيفاي بعد الطباعة على طول (مش فوري).
+  //    §JUST-PRINTED هو اللي لازم يشيله من الجدول رغم كده.
   if (url.pathname === '/track')
     return route.fulfill(J({ ok:true, status:'success', actions:['تاج Printed(S1)','وقت الطباعة (printing_time_s1)','الحالة Confirmed → Ready'],
-      warnings:[], errors:[], orderId:body.orderId, orderNumber:body.orderNumber, type:body.type, doc:body.doc, logged:true }));
+      warnings:[], errors:[], orderId:body.orderId, orderNumber:body.orderNumber, type:body.type, doc:body.doc,
+      statusBefore:'Confirmed', statusAfter:'Ready', logged:true }));
   return route.fulfill(J({ ok:true }));
 });
 
@@ -131,7 +138,7 @@ check('allZones:true اتبعت للـ Worker', ordersCall?.body?.allZones === t
 // ② عدّادات القنوات
 const n = async (k) => (await page.textContent(`#chanN-${k}`)).trim();
 check('عدّاد قاهرة+جيزة = 1', await n('invoice')==='1', await n('invoice'));
-check('عدّاد بوسطة = 4',      await n('awb')==='4',     await n('awb'));
+check('عدّاد بوسطة = 5',      await n('awb')==='5',     await n('awb'));
 check('عدّاد شو روم = 1',     await n('showroom')==='1',await n('showroom'));
 check('عدّاد بلا قناة = 2',   await n('none')==='2',    await n('none'));
 check('زرار «بلا قناة» ظاهر', await page.isVisible('#chanBtn-none'));
@@ -157,11 +164,17 @@ await page.click('#chanBtn-awb');
 await page.waitForTimeout(200);
 check('صفوف بوسطة = 3 (S2 مخفية)', (await page.$$('#printTableBody tr')).length === 3, String((await page.$$('#printTableBody tr')).length));
 check('عدد S2 المخفية معروض', (await page.textContent('#chanNote')).includes('1 أوردر استبدال'), await page.textContent('#chanNote'));
+// 🚚 §BOSTA-GATE — الأوردر اللي لسه ما اترفعش مستحيل تتطبع بوليصته
+check('🚚 الأوردر بلا تاج الرفع مش في الجدول', !(await page.textContent('#printTableBody')).includes('#53408'), '');
+check('🚚 عدد اللي لسه ما اترفعش معروض', (await page.textContent('#chanNote')).includes('1 أوردر بوسطة'), await page.textContent('#chanNote'));
+check('🚚 اسم التاج مكتوب في الملاحظة', (await page.textContent('#chanNote')).includes('Bosta_Uploaded_S1'), '');
+check('🚚 KPI بيوصف المعروض مش القناة كلها', (await page.textContent('#kpiS1')) === '3', await page.textContent('#kpiS1'));
 check('عمود القناة بيقول بوسطة', (await page.textContent('#printTableBody')).includes('بوسطة'));
 
 // ⑥ التبديل بيمسح التحديد
 await page.click('#selectAllVisibleBtn'); await page.waitForTimeout(200);
 check('اتحدد 3 أوردرات بوسطة', (await page.textContent('#selectedInfo')).includes('3'), await page.textContent('#selectedInfo'));
+check('🚚 «تحديد كل النتائج» مااخدش الأوردر بلا تاج', !(await page.textContent('#selectedInfo')).includes('4'), await page.textContent('#selectedInfo'));
 await page.click('#chanBtn-invoice'); await page.waitForTimeout(200);
 check('تبديل القناة مسح التحديد', (await page.textContent('#selectedInfo')).includes('لم يتم تحديد'));
 
@@ -216,6 +229,20 @@ const printed = printHits.filter(h=>h==='print').length;
 const opened  = printHits.filter(h=>h==='open').length;
 check('الطباعة اتنفّذت (print على الـ iframe أو fallback لتاب)', printed>0 || opened>0, `printed=${printed} opened=${opened} frames=${page.frames().length}`);
 
+
+// ⑩ 🔴 §JUST-PRINTED — الأوردر المطبوع بيختفي من الطابور **فورًا**، رغم إن
+//    الـ Worker الوهمي لسه بيرجّعه في `/orders` (زي فهرس شوبيفاي بالظبط).
+const ordersAfter = calls.filter(c => c.path === '/orders').length;
+check('🔴 التحديث اتنادى تلقائيًا بعد الطباعة', ordersAfter >= 2, String(ordersAfter));
+await page.click('#trackResultOverlay .btn-primary');   // اقفل نافذة النتيجة
+await page.waitForTimeout(400);
+const afterBody = await page.textContent('#printTableBody');
+check('🔴 #53400 المطبوع اتشال من الطابور', !afterBody.includes('#53400'), afterBody.slice(0,200));
+check('🔴 #53401 المطبوع اتشال من الطابور', !afterBody.includes('#53401'), '');
+check('🔴 #53402 (ما اتطبعش) لسه في الطابور', afterBody.includes('#53402'), '');
+check('🔴 عدّاد بوسطة نزل لـ 3', await n('awb')==='3', await n('awb'));
+check('🔴 سبب الاختفاء مكتوب فوق الجدول', (await page.textContent('#chanNote')).includes('اتشالوا من الطابور'),
+      await page.textContent('#chanNote'));
 
 console.log('\n── ② انحدار: مسار الفاتورة (قاهرة+جيزة · شو روم) ──');
 await page.reload();
