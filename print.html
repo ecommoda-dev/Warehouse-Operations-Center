@@ -1216,9 +1216,9 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
       <div class="cl-entry">
         <div class="cl-head">
-          <span class="cl-ver">v1.6.0</span>
+          <span class="cl-ver">v1.7.0</span>
           <span class="cl-badge" id="clLatestBadge">آخر نسخة</span>
-          <span class="cl-date">06-09-2026</span>
+          <span class="cl-date">07-09-2026</span>
         </div>
         <div class="cl-list">
           <div class="cl-item"><span class="cl-tag new">جديد</span><span>زرار <b>«إعادة 🖨»</b> في طابور التغليف بقى <b>بيشتغل فعلاً</b>. كان بيفتح صفحة الطباعة مفلترة على أوردر <b>مش موجود فيها</b> — لأن طابور الطباعة بيفلتر على حالات «مؤكَّد»، وأوردر اتطبع خلاص حالته <code>Ready</code>. الموظف كان بيشوف «لا توجد أوردرات تطابق الفلاتر» وتوست بيقول إن الجدول اتفلتر عليه، والحل الوحيد كان إن حد يرجّع الحالة يدوي.</span></div>
@@ -1226,6 +1226,17 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <div class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>الحالة مابتتغيّرش</b> — أوردر <code>Ready</code> بيفضل <code>Ready</code>. اللي بيتحدّث: التاج + <b>ميتافيلد وقت الطباعة بالوقت الجديد</b> + صف جديد في السجل باسم الموظف. ⏱️ الثمن المُعلَن: عمود «الوقت منذ الطباعة» في طابور التغليف بيرجع لأول اليوم.</span></div>
           <div class="cl-item"><span class="cl-tag fix">إصلاح</span><span>🔴 لغم كان هيطبع <b>فاتورة ببنود غلط</b>: الـ Worker بيحدد نوع الفاتورة من <code>status_2_r_e ∈ {Confirmed + RETURN, Confirmed + EXCHANGE}</code> بس، فأوردر S2 حالته <code>Ready</code> كان هيتقري <code>S1</code> — والنوع ده بيختار البنود نفسها، وبعدين بيتبعت لـ <code>/track</code> اللي بيكتب على ماكينة S1. النوع بقى بيتبعت <b>صريح</b> في مسار إعادة الطباعة بس.</span></div>
           <div class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>Worker الطباعة لازم Promote لـ v2.4.0</b> — <code>printer.min</code> بقى <code>2.4.0</code>. من غيره كارت إعادة الطباعة بيقول بالنص إن النسخة أقدم، وباقي الصفحة شغّال عادي.</span></div>
+        </div>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-head">
+          <span class="cl-ver">v1.6.0</span>
+          <span class="cl-date">06-09-2026</span>
+        </div>
+        <div class="cl-list">
+          <div class="cl-item"><span class="cl-tag new">جديد</span><span>صفحة <strong>🏷️ باركود SKU</strong> — طباعة ليبل ٢×١ إنش لأصناف أوردر، أو بالبحث المباشر بـ SKU/باركود من غير أوردر.</span></div>
+          <div class="cl-item"><span class="cl-tag new">جديد</span><span><code>order-sku-barcode-printer-worker</code> انضم لمجموعة السر <code>warehouse_ops</code> — نفس حقل السر بيخدم الأربعة.</span></div>
         </div>
       </div>
 

@@ -2,17 +2,22 @@
 
 # مركز عمليات المخزن — Warehouse Operations Center (`Warehouse-Operations-Center`)
 
-![version](https://img.shields.io/badge/version-v1.6.0-blue)
+![version](https://img.shields.io/badge/version-v1.7.0-blue)
 
 **بتعمل إيه:** هب واحد لمحطة المخزن. الموظف بيدخل **مرة واحدة**، وبعدين
 بيتنقّل بين الطباعة والتغليف وحذف المنتج ورحلة الأوردر من غير ما يدخل تاني
 ومن غير ما يفتح تبويبات متفرقة.
 **مين بيستخدمها:** المخزن
-**الإصدار:** `v1.6.0` — **واحد للهب كله** (`TOOL_VERSION` في `shared/shell.js`)
+**الإصدار:** `v1.7.0` — **واحد للهب كله** (`TOOL_VERSION` في `shared/shell.js`)
 
 > 🔴 **الهب واجهة بحتة.** مفيش Worker جديد، مفيش `wrangler.toml`، مفيش
-> `index.js`، مفيش ربط Cloudflare Builds ومفيش Promote من الريبو ده.
-> بينادي التلات Workers الموجودين أصلاً.
+> `index.js`، مفيش ربط Cloudflare Builds ومفيش Promote **من الريبو ده**.
+> بينادي **أربع** Workers عايشين في ريبوهاتهم.
+
+> ⚠️ **«الأربعة» من v1.6.0** — `order-sku-barcode-printer-worker` انضم
+> (صفحة `sku-barcode.html`). الـ Worker ده في ريبو
+> `Order-SKU-Barcode-Printer`، والـ Promote بتاعه **من هناك** — القاعدة فوق
+> ما اتكسرتش.
 
 > 🔴 **الأدوات القديمة التلاتة لسه منشورة وشغّالة** كنقطة رجوع طول التجربة
 > الحية. تحويلها لصفحات تحويل = قرار منفصل بعد نجاح التجربة.
@@ -22,7 +27,7 @@
 ```
 الواجهة : https://ecommoda-dev.github.io/Warehouse-Operations-Center/
 tool في D1 : warehouse_ops_center      ← login · logout بس
-مجموعة السر : warehouse_ops
+مجموعة السر : warehouse_ops            ← ٤ Workers + الهب (خمس مستهلكين)
 مفتاح localStorage : warehouse_ops_worker_secret   ← Standards #39
 ```
 
@@ -35,19 +40,25 @@ tool في D1 : warehouse_ops_center      ← login · logout بس
 | `pack.html` | قسم التغليف | `orders-packing-checker-worker` | **`2.5.0`** | L (1400) |
 | `remove.html` | حذف منتج من الأوردر | `order-item-remover-worker` | `1.3.0` | M (1200) |
 | `journey.html` | رحلة الأوردر | التلاتة (قراءة سجل) | — | M (1200) |
-| `stats.html` | إحصائيات المخزن (**جديدة**) | التلاتة (قراءة سجل) | — | L (1400) |
+| `stats.html` | إحصائيات المخزن | التلاتة (قراءة سجل) | — | L (1400) |
+| `sku-barcode.html` | باركود SKU (**جديدة**) | `order-sku-barcode-printer-worker` | `1.0.0` | M (1200) |
 
-> ⚠️ **تلات `min` مستقلة تمامًا** — مالهمش أي علاقة ببعض ولا بـ
+> ⚠️ **أربع `min` مستقلة تمامًا** — مالهمش أي علاقة ببعض ولا بـ
 > `TOOL_VERSION`. `min` مايترفعش إلا لما الهب **يعتمد فعلاً** على حاجة جديدة
 > في الـ Worker ده (Standards #29). ترفيعه بلا سبب = تحذير كاذب على أي
 > rollback مشروع.
 
-> ⚠️ **`printer.min = '2.4.0'` مشروع (اترفع في v1.6.0):** `print.html` بقى
+> ⚠️ **`printer.min = '2.4.0'` مشروع (اترفع في v1.7.0):** `print.html` بقى
 > بينادي `POST /lookup` — المسار اللي بيجيب أوردر بعينه مهما كانت حالته، وهو
 > **الشرط الوحيد** لإعادة طباعة فاتورة أوردر خرج من طابور الطباعة. Worker أقدم
 > مافيهوش المسار ده أصلاً فبيرجّع 404، والكارت بيقول بالنص «محتاجة Worker
 > v2.4.0» بدل «الأوردر مش موجود». (وقبله في v1.5.0 كان الاعتماد على
 > `printingTimeS1`/`packingTimeS1` في رد `/orders` — Worker v2.3.0.)
+
+> ⚠️ **`barcode.min = '1.0.0'` مشروع:** دي **أول** نسخة منشورة من ريبو
+> `Order-SKU-Barcode-Printer` — وهي أول نسخة فيها `get_config` و`search_sku`
+> أصلاً. النسخة اليدوية القديمة على الداشبورد مافيهاش الاتنين، فالحارس
+> بيولّع عليها **صح**: الصفحة معتمدة على `search_sku` في مربع البحث المباشر.
 
 > ⚠️ **`pack.min = '2.5.0'` مشروع:** الهب بيبعت `appId` في `verify_employee`
 > و`log_logout`، والباراميتر ده اتضاف في Worker التغليف v2.5.0. نسخة أقدم
@@ -122,11 +133,19 @@ tool في D1 : warehouse_ops_center      ← login · logout بس
 | `.toast-container` · `.toast` + أنواعه | CSS الفاتورة جوّه الـ iframe |
 | `.btn-primary` · `.btn-ghost` · `.btn-green` · `.btn-red` · `.btn-outline` | |
 | `.order-link` · `.order-num` · `.order-name` · `.no-link` | |
+| `--font-label` (للطباعة بس) | `.bc-*` (باركود SKU) · `.print-label` · `.lbl-sku-text` |
 | `.woc-home-*` · `.woc-row*` · `.woc-tool*` · `.woc-card-ico/-name/-desc` · `.woc-num` · `.woc-chip*` · `.woc-fresh*` · `.woc-ago*` · `.woc-stamp-chip` · `.woc-rbtn*` · `.woc-fail` · `.woc-back-bar` | |
 
 > 🔴 **كتلة التوكنز في `shared/shell.css` بس.** أي كتلة توكنز في صفحة = التوكنز
 > اتفرّقت. **الاستثناء الوحيد المسموح:** `remove.html` و`journey.html`
-> بيعرّفوا `--container-max: 1200px` لوحدها (Tier M) وخلاص.
+> و`sku-barcode.html` بيعرّفوا `--container-max: 1200px` لوحدها (Tier M) وخلاص.
+
+> ⚠️ **`--font-label` في الـ shell — وهو استثناء موثّق من Standards #11**
+> (خط واحد `Noto Sans Arabic` لكل الأدوات). الاستثناء متحدّد بـ **الليبل
+> المطبوع** في `sku-barcode.html` بس: الليبل بيطابق تيمبلت خارجي
+> (Retail Force Barcode) موجود فعلاً على أرفف المخزن، فتغيير خطه معناه إن
+> الليبل الجديد مايبقاش شبه القديم على نفس الرف. **ممنوع أي عنصر على الشاشة
+> يستخدمه** — نفس عيلة استثناء ألوان الفاتورة جوّه الـ iframe.
 
 **التوكنز المتعارضة — القرار المتنفَّذ:**
 
@@ -410,7 +429,7 @@ polling أعمى على أتقل endpoint في الستاك × عدد الأجه
   و`buildTabChipMenu` كانت بترمي على كل تحميل لما الهيدر اتشال. **الباج ده
   حصل فعلاً واتصلح.**
 
-#### 🔁 §REPRINT — إعادة طباعة أوردر خرج من الطابور (v1.6.0 · قرار أحمد 06-09-2026)
+#### 🔁 §REPRINT — إعادة طباعة أوردر خرج من الطابور (v1.7.0 · قرار أحمد 06-09-2026)
 
 طابور الطباعة بيعرض **حالات «مؤكَّد» بس**، وأوردر اتطبع خلاص حالته `Ready` —
 يعني **مش في الجدول بحكم التعريف**. زرار «إعادة 🖨» في `pack.html` كان بيفتح
@@ -507,7 +526,7 @@ const REPRINT_WARN_MINUTES = 30;   // ثابت مسمّى — تغييره قر�
 - **زراري «خيارات» بقوا صفحات جوّه الهب** بلا `target="_blank"`، ولسه **بلا
   أي أكشن على الأوردر ومفيش نداء للـ Worker** — بيفتحوا صفحة وبس. لو حد ضاف
   أكشن هناك بعدين، لازم يعدّي على حارس التغليف زي أي كتابة تانية.
-- **زرار «إعادة 🖨» بيبعت `oid` كمان من v1.6.0** (`o.orderId`) — `print.html`
+- **زرار «إعادة 🖨» بيبعت `oid` كمان من v1.7.0** (`o.orderId`) — `print.html`
   بتجيب الأوردر بالـ id مباشرةً بدل بحث بالاسم. الاسم لوحده بيشتغل برضه
   (الـ Worker بيطابق تمامًا)، بس الـ id بيشيل أي التباس ويوفّر استعلام.
   ⚠️ **الزرار لسه لينك — لسه مايطبعش.** الطباعة بتحصل من الكارت في
@@ -617,12 +636,56 @@ const REPRINT_WARN_MINUTES = 30;   // ثابت مسمّى — تغييره قر�
 - ⚠️ **`MIN_DELTA_BASE = 5`** — تحت كده اعرض الانتقال (`0 ← 1`) مش نسبة.
   `prev = 1` بتطلّع «▲ 4000%»، رقم بلا معنى بياكل مصداقية الشاشة كلها.
 
+### `sku-barcode.html` (باركود SKU — **جديدة v1.6.0**)
+
+الصفحة **قراءة بحتة**: صفر كتابة على شوبيفاي · صفر صف في D1 · مفيش تاب سجل.
+الـ Worker في ريبو `Order-SKU-Barcode-Printer` والتفاصيل الكاملة والانحرافات
+المعتمدة في `CLAUDE.md` بتاعه.
+
+- 🔴 **الباركود بيشفّر `barcode` مش `sku`.** النص فوق الليبل هو الـ SKU
+  (`FL-PO-10 / Black / 43`)، والرقم جوّه الخطوط هو الـ Barcode (`34271298`).
+  عكسهم بيخلّي السكانر يقرا رقم **مالوش وجود** في المخزون — من غير أي خطأ.
+- 🔴 **قياس عرض نص الـ SKU بـ Canvas `measureText` مش `el.scrollWidth`.**
+  `#printArea` عليه `display:none` طول الوقت (بيبان في `@media print` بس)،
+  فأي قياس معتمد على الـ layout بيرجّع **صفر دايمًا** وحلقة التصغير بتوهم
+  إنها شغالة وهي واقفة من أول لفة. **متحوّلهاش لـ `scrollWidth`.**
+- 🔴 **`requestAnimationFrame` مزدوجة قبل `window.print()`.** الـ SVG بيتضاف
+  ديناميكيًا، والطباعة من غير انتظار رسم فعلي بتطلّع ورق **بلا باركود**.
+  `setTimeout` بمدة ثابتة مش بديل — بيعدّي في الاختبار ويقع على جهاز أبطأ.
+- 🔴 **المعاينة `cloneNode` من عناصر الطباعة نفسها** — مش بناء تاني. نسختين
+  معناها إن اللي على الشاشة مش اللي هيطلع من الطابعة (درس R1).
+- ⚠️ **JsBarcode من نفس CDN ونفس نسخة `print.html`** (`3.11.6` من jsdelivr).
+  النموذج الأولي كان بيضمّن المكتبة حرفيًا؛ الضمّ اتشال عشان الهب مايبقاش
+  فيه نسختين من نفس المكتبة. **ومقابل خطر الـ CDN المحجوب:** حارس
+  `bcLibReady()` بيقفل زرار الطباعة برسالة صريحة — الشبكة المحجوبة بتبقى
+  **فشل معلن** مش ليبل فاضي بيخرج من الطابعة.
+- ⚠️ **مربعا الدخول الاتنين ظاهرين مع بعض ولكل واحد لونه** (أزرق للأوردر ·
+  بنفسجي للـ SKU) — نفس مبدأ `.entry-grid` في `pack.html`. أي توحيد بيرجّع
+  «سكنت في المربع الغلط».
+- ⚠️ **§SCAN على مربع الـ SKU بس.** القراءة والمسح **جوّه `bcHandleScan`**
+  مش جوّه الـ listener — المسح في الـ listener بيقطع دفعة السكانر في نصّها.
+  مربع الأوردر بـ Enter وبيحتفظ بقيمته (زي `journey.html`) — مش هدف سكانر.
+- ⚠️ **البحث المباشر بيبدأ من نسخة واحدة** — مفيش كمية أوردر هنا، وافتراض أي
+  رقم تاني بيطلّع ورق من غير ما حد طلبه.
+- ⚠️ **صنف بلا `barcode` مابيتطبعش** — صفّه أحمر وخانة النسخ مقفولة على صفر.
+  الحل على شوبيفاي مش هنا، والرسالة بتقول كده صراحةً.
+- ⚠️ **القطع بيتبلّغ عنه ببانر أصفر** (`itemsTruncated` · `truncated`) —
+  ليبل ناقص في السكوت = قطعة بتخرج من المخزن من غير باركود.
+- ⚠️ **`--font-label` استثناء موثّق من Standards #11** — فوق في قاعدة الأسبقية.
+- ℹ️ **مفيش تسجيل D1 بقرار** (أحمد 06-09-2026) — يعني **مفيش أثر لمين طبع إيه**.
+  لو اتغيّر: الصف `order_sku_barcode_printer` يتسجّل في `ecommoda-constants`
+  §7 **قبل** أول `writeLog`، مش بعده.
+
 ## `?order=` — التنقل بين الصفحات
 
 ```
 pack.html  →  remove.html?order=<num>&from=pack
 pack.html  →  print.html?order=<num>&from=pack
 ```
+
+`sku-barcode.html` بتقبل `?order=` و`?from=pack` بنفس العقد بالظبط — **بتفلتر
+وتعرض بس، مابتطبعش**. لسه مفيش زرار في `pack.html` بيروّح لها؛ إضافته قرار
+منفصل.
 
 > 🔴 **الباراميتر بيفلتر ويحدّد — مايطبعش ومايحذفش.** طباعة تلقائية من رابط =
 > ورق بيطلع من غير ما حد يضغط. الموظف بيراجع ويضغط بنفسه.
@@ -636,6 +699,7 @@ pack.html  →  print.html?order=<num>&from=pack
 | التغليف | `get_employees` · `check_employee` · `register_pin` · **`verify_employee` (+`appId`)** · **`log_logout` (+`appId`)** · `get_config` · `diag` · `get_ready_orders` · `get_order` · `complete_pack` · `get_logs*` |
 | الطباعة | `get_config` · `diag` · `get_logs*` · والمسارات `/orders` · `/invoice` · `/track` · `/logs` |
 | الحذف | `get_config` · `diag` · `get_logs*` · وباقي مسار الحذف |
+| باركود SKU | `get_config` · `diag` · `get_order` · `search_sku` — **مفيش `get_logs`** (الأداة مابتكتبش) |
 
 > ⚠️ **الطابعة بترّوت بالـ path كمان** (`/orders` · `/invoice` · `/track` ·
 > `/logs`) — شكل تاريخي متساب **عمدًا**، مش غلط يتصلّح. عشان كده `wocApi`
@@ -658,6 +722,8 @@ type  : login · logout      ← بس. الهب **مابيكتبش** أي فعل
 
 **صفر تعديل مطلوب.** التلات Workers بيسمحوا بـ `https://ecommoda-dev.github.io`
 **على مستوى الدومين**، والمسار مش جزء من الـ Origin.
+و`order-sku-barcode-printer-worker` على **Option A (wildcard)** — أداة قراءة
+فقط، فمفيش allowlist أصلاً.
 
 ## النشر
 
@@ -673,14 +739,15 @@ localStorage.setItem('warehouse_ops_worker_secret',
                      localStorage.getItem('pack_checker_worker_secret'));
 ```
 
-| | مطلوب؟ |
+| | مطلوب من الريبو ده؟ |
 |---|---|
-| Worker جديد · `wrangler.toml` · ربط Builds · Promote · تعديل CORS | ❌ كلهم |
+| Worker جديد · `wrangler.toml` · `index.js` · تعديل CORS | ❌ كلهم |
+| ربط Builds · Promote | ❌ من هنا — **بس مطلوبين في `Order-SKU-Barcode-Printer`** (تحت في المسائل المفتوحة) |
 
 ## 🔴 فحص CSS بـ parser — إلزامي، وgrep مش بديل عنه
 
 ```bash
-node docs/css-check.js shared/shell.css index.html print.html pack.html remove.html journey.html stats.html
+node docs/css-check.js shared/shell.css index.html print.html pack.html remove.html journey.html stats.html sku-barcode.html
 ```
 
 **السبب:** v1.0.0 اتنشرت وشكلها مكسور تمامًا (خطوط serif · كروت شفافة ·
@@ -707,6 +774,7 @@ node docs/css-check.js shared/shell.css index.html print.html pack.html remove.h
 | الـ Worker | الشكل |
 |---|---|
 | الطباعة · التغليف | **مصفوفة** `[{ ok, label\|name, detail }]` |
+| **باركود SKU** | **مصفوفة** `[{ ok, label, detail }]` — الشكل المعتمد للجديد |
 | حذف منتج | **كائن عادي** `{ d1: 'ok', oauth: 'FAILED: …' }` |
 
 `diagRows()` في الـ shell بتفهم الاتنين. v1.0.0 كانت بتعمل `for…of` على
@@ -733,6 +801,14 @@ node docs/css-check.js shared/shell.css index.html print.html pack.html remove.h
 - 🔴 **Promote لـ `order-printer-worker` v2.4.0** — من غيره `POST /lookup`
   مابيردّش، و**زرار «إعادة 🖨» في طابور التغليف مايشتغلش** (الكارت بيقول بالنص
   إن النسخة أقدم). وبيشيل كمان بند v2.3.0 اللي تحت.
+- 🔴 **`order-sku-barcode-printer-worker` لسه مرفوع يدوي وبسر خاص بيه.**
+  بندان لازم يتعملوا قبل ما `sku-barcode.html` تشتغل أصلاً:
+  ① **اربط ريبو `Order-SKU-Barcode-Printer` بـ Workers Builds** وانشر
+  `index.js` — النسخة المنشورة دلوقتي مافيهاش `get_config` ولا `search_sku`.
+  ② **حوّل `WORKER_SECRET` لقيمة مجموعة `warehouse_ops` → Promote.**
+  من غير ② الصفحة بترجّع `401`؛ من غير ① الحارس بيقول «Worker باركود SKU
+  نسخة قديمة» ومربع البحث المباشر بيفشل. الإجراء الكامل في `CLAUDE.md` بتاع
+  الريبو ده.
 - 🔴 **Promote لـ `order-printer-worker` v2.3.0** — من غيره `printingTimeS1`
   مابيرجعش، وحارس الفاتورة اللاغية بيشتغل بسجل D1 بس (بتوست صريح).
 - 🔴 **Promote لـ Worker التغليف v2.5.0** — من غيره الدخول بيتسجّل
@@ -749,6 +825,20 @@ node docs/css-check.js shared/shell.css index.html print.html pack.html remove.h
 - 🟢 **مفيش `metafields_change` في رحلة الأوردر** — محتاج مصدر رابع.
 - 🟢 **مفيش توحيد لـ CSS الجداول بين الصفحات** — قاعدة الأسبقية بتخلّي كل
   صفحة بجدولها. توحيدها تمريرة منفصلة لو التكرار كبر.
+- 🟡 **خمس صفحات لسه مبصومة بإصدارات مهارات قديمة** (`print` · `pack` ·
+  `remove` · `journey` · `stats` → html-builder `v6.3.0`). تعديل v1.6.0 عليهم
+  كان **بند سجل تغييرات بس**، والبصمة **ادعاء إن الملف اتراجع على الإصدار
+  ده** — فرفعها من غير مراجعة فعلية تزوير. المطلوب تمريرة مراجعة على كل صفحة
+  مقابل html-builder v6.6.0 (بنود ٣٠ · ٣٥–٣٨ · ٤٠–٤٢ اتضافوا بعد بنائهم)،
+  والبصمة تترفع ساعتها.
+- 🟡 **`print.html` و`pack.html` بشكل سجل تغييرات مختلف** — بيستخدموا
+  `.cl-entry`/`.cl-ver`/`#clLatestBadge` بدل `.cl-version-block`/
+  `.cl-ver-badge`/`#clLatestVerBadge`. النتيجة إن `renderVersionUI()`
+  **مابتلمسش** بادج النسخة عندهم، فالرقم مكتوب بإيد في الملفين — مخالفة
+  Standards #24 (مصدر واحد للنسخة). التوحيد تمريرة منفصلة؛ لحد ساعتها **أي
+  رفع نسخة لازم يتعمل يدوي في الملفين**.
+- 🟢 **مفيش زرار من `pack.html` لـ `sku-barcode.html`** — الصفحة بتقبل
+  `?order=`&`from=pack` جاهزة، بس إضافة الزرار قرار منفصل.
 
 ## 📄 خطة أداة «التنبيهات» — `docs/ALERTS-TOOL-PLAN.md`
 
@@ -809,17 +899,23 @@ Promote، صفر ترفيع لأي `min`، ومفيش قيمة `tool` جديدة
 
 | المهارة | الإصدار وقت آخر تعديل |
 |---|---|
-| ecommoda-html-builder | v6.3.0 (+ بند ٤٠ — استثناء الهب، مطلوب يتضاف) |
-| ecommoda-worker-builder | v2.0.0 |
-| ecommoda-constants | v1.6.0 (مجموعات السر §6 · `warehouse_ops_center` في §7) |
+| ecommoda-html-builder | **v6.6.0** |
+| ecommoda-worker-builder | **v2.1.0** |
+| ecommoda-constants | **v1.10.0** |
 | ecommoda-order-lifecycle | v1.2.0 |
-| shopify-graphql-helper | v1.0.0 |
+| shopify-graphql-helper | **v1.1.0** |
 | ecommoda-tool-migration-playbook | §13 (Promote) |
 
-آخر مطابقة: 06-09-2026 · الهب `v1.6.0`
+> ⚠️ **البصمة دي بتوصف `shared/shell.js` و`shared/shell.css` و`index.html`
+> و`sku-barcode.html` بس** — دول اللي اتراجعوا فعليًا على الإصدارات دي في
+> تعديل v1.6.0. الخمس صفحات التانية لسه على بصمتها القديمة (بند في المسائل
+> المفتوحة فوق) — **البصمة ادعاء عن الملف، مش عن الريبو**.
+
+آخر مطابقة: 07-09-2026 · الهب `v1.7.0`
+🔴 معلّقة: مراجعة `print`/`pack`/`remove`/`journey`/`stats` على html-builder v6.6.0
 
 ---
 
-آخر تحديث: 06-09-2026 — v1.6.0
+آخر تحديث: 07-09-2026 — v1.7.0
 
 </div>

@@ -1,6 +1,6 @@
 /* ══════════════════════════════════════════════════════════════
    shared/shell.css — مركز عمليات المخزن (Warehouse-Operations-Center)
-   skills: html-builder v6.3.0 · constants v1.6.0 — 05-09-2026
+   skills: html-builder v6.6.0 · constants v1.10.0 — 06-09-2026
    ══════════════════════════════════════════════════════════════
 
    🔴 قاعدة الأسبقية — أهم قاعدة في الريبو ده:
@@ -95,6 +95,12 @@
   --container-max:  1400px;
   --font-body:      'Noto Sans Arabic', -apple-system, sans-serif;
   --font-mono:      'Noto Sans Arabic', -apple-system, sans-serif;
+  /* خط **الليبل المطبوع** في `sku-barcode.html` بس — استثناء موثّق من
+     Standards #11 (خط واحد لكل الأدوات). الليبل بيطابق تيمبلت خارجي
+     (Retail Force Barcode) موجود فعلاً على أرفف المخزن، ونفس عيلة
+     الاستثناء الموثّق لألوان الفاتورة جوّه الـ iframe.
+     ⚠️ ممنوع أي عنصر على الشاشة يستخدمه — الاستثناء للطباعة بس. */
+  --font-label:     Georgia, 'Times New Roman', 'Noto Serif', serif;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary);min-height:100vh;padding:12px;direction:rtl}
