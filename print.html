@@ -508,6 +508,32 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 @media (max-width: 768px) { .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; } }
 
 
+/* ═══ §REPRINT — كارت إعادة طباعة أوردر مش في الطابور (v1.6.0) ═══
+   ⚠️ كلاسات الصفحة — مش في `shell.css`. الكارت ده خاص بالطابعة لوحدها. */
+.rp-card {
+  display: none; background: var(--amber-light); border: 1.5px solid var(--amber-border);
+  border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; margin-bottom: 14px;
+}
+.rp-card.open { display: block; }
+.rp-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.rp-title { font-size: 14px; font-weight: 800; color: var(--amber-dark); flex: 1; }
+.rp-x {
+  background: transparent; border: none; color: var(--text-secondary);
+  font-size: 15px; cursor: pointer; padding: 2px 6px; border-radius: var(--radius-sm);
+}
+.rp-x:hover { background: var(--surface); color: var(--text-primary); }
+.rp-body { font-size: 13px; color: var(--text-mid); line-height: 1.9; }
+.rp-grid { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-bottom: 8px; }
+.rp-f { display: flex; gap: 6px; align-items: center; }
+.rp-f-k { color: var(--text-secondary); font-size: 12px; }
+.rp-f-v { font-weight: 700; color: var(--text-primary); }
+.rp-note {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 8px 10px; margin: 8px 0 10px; font-size: 12px; color: var(--text-mid); line-height: 1.8;
+}
+.rp-warn { color: var(--red); font-weight: 700; }
+.rp-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
 @media print {
   .app-header, .main, .overlay, .print-loading-overlay,
   .login-overlay, .toast-container { display: none !important; }
@@ -566,6 +592,23 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
     <div style="font-size:40px;">⚠️</div>
     <p id="printErrorMsg" class="state-msg">فشل الاتصال</p>
     <button class="btn btn-ghost" onclick="loadOrders(true)">إعادة المحاولة</button>
+  </div>
+
+  <!-- ═══ 🔁 §REPRINT — إعادة طباعة أوردر خرج من الطابور ═══
+       ⚠️ **برّه `#printDashboard` عن قصد.** الكارت لازم يفضل شغّال حتى لو
+          جلب الطابور فشل — الأوردر ده جاي من `?order=` مش من الطابور، وفشل
+          الطابور مايمنعش الشغل (نفس قاعدة ٧ في الشاشة الرئيسية). -->
+  <div class="rp-card" id="reprintCard">
+    <div class="rp-hdr">
+      <span aria-hidden="true">🔁</span>
+      <span class="rp-title" id="rpTitle">إعادة طباعة الفاتورة</span>
+      <button class="rp-x" onclick="closeReprintCard()" aria-label="إخفاء كارت إعادة الطباعة">✕</button>
+    </div>
+    <div class="rp-body" id="rpBody"></div>
+    <div class="rp-actions" id="rpActions" style="display:none;">
+      <button class="btn btn-primary" id="rpPrintBtn" onclick="startReprint()">🖨️ إعادة طباعة الفاتورة</button>
+      <button class="btn btn-ghost" onclick="closeReprintCard()">إخفاء</button>
+    </div>
   </div>
 
   <div id="printDashboard" style="display:none;">
@@ -1048,6 +1091,28 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <h4><code>?order=</code> — الجاي من طابور التغليف</h4>
           <p>🔴 الباراميتر <b>بيفلتر ويحدّد — مايطبعش</b>. طباعة تلقائية من رابط =
              ورق بيطلع من غير ما حد يضغط. الموظف بيراجع وبيضغط بنفسه.</p>
+
+          <h4>🔁 إعادة طباعة أوردر خرج من الطابور (v1.6.0)</h4>
+          <ul>
+            <li>طابور الطباعة بيعرض <b>حالات «مؤكَّد» بس</b> — وأوردر اتطبع خلاص حالته
+                <code>Ready</code>، يعني <b>مش موجود في الجدول بحكم التعريف</b>. لما
+                <code>?order=</code> مايطابقش أي صف، الصفحة بتنادي
+                <code>POST /lookup</code> وبتطلّع كارت <b>🔁 إعادة طباعة الفاتورة</b>.</li>
+            <li><b>الحالة مابتتغيّرش.</b> <code>/track</code> عنده فرع صريح: الحالة
+                الحالية = الهدف → مفيش كتابة ومفيش خطأ. اللي بيتحدّث: التاج +
+                <b>ميتافيلد وقت الطباعة بالوقت الجديد</b> + صف جديد في السجل باسم الموظف.</li>
+            <li>⏱️ <b>وقت الطباعة بيتدهس عن قصد</b> — الميتافيلد معناه «آخر طباعة» مش
+                «أول طباعة». الثمن: عمود «الوقت منذ الطباعة» في طابور التغليف بيرجع
+                لأول اليوم، والكارت بيقول ده قبل الضغط.</li>
+            <li>🔴 الصف بيعدّي على <b>نفس بوابة المراجعة</b> — أوردر إعادة الطباعة
+                بيتصنّف 🟡 «سبق طباعته» <b>على الأقل</b>، حتى لو السجل مالوش صف
+                (<code>LOGS_FETCH_MAX</code> بيقص، والصفوف القديمة مفيهاش موظف).</li>
+            <li>🔴 نوع الفاتورة بيتبعت <b>صريح</b> في المسار ده — أوردر S2 حالته
+                <code>Ready</code> كان هيتقري <code>S1</code> في القاعدة الافتراضية،
+                والنوع بيختار <b>بنود الفاتورة</b> مش العنوان. محتاج
+                <b>Worker v2.4.0</b>؛ الأقدم بيدّي رسالة صريحة في الكارت.</li>
+            <li>❌ مفيش أي كتابة على شوبيفاي في <code>/lookup</code> — قراءة بحتة.</li>
+          </ul>
         </div>
       </details>
 
@@ -1151,8 +1216,22 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
       <div class="cl-entry">
         <div class="cl-head">
-          <span class="cl-ver">v1.6.0</span>
+          <span class="cl-ver">v1.7.0</span>
           <span class="cl-badge" id="clLatestBadge">آخر نسخة</span>
+          <span class="cl-date">07-09-2026</span>
+        </div>
+        <div class="cl-list">
+          <div class="cl-item"><span class="cl-tag new">جديد</span><span>زرار <b>«إعادة 🖨»</b> في طابور التغليف بقى <b>بيشتغل فعلاً</b>. كان بيفتح صفحة الطباعة مفلترة على أوردر <b>مش موجود فيها</b> — لأن طابور الطباعة بيفلتر على حالات «مؤكَّد»، وأوردر اتطبع خلاص حالته <code>Ready</code>. الموظف كان بيشوف «لا توجد أوردرات تطابق الفلاتر» وتوست بيقول إن الجدول اتفلتر عليه، والحل الوحيد كان إن حد يرجّع الحالة يدوي.</span></div>
+          <div class="cl-item"><span class="cl-tag new">جديد</span><span>كارت <b>🔁 إعادة طباعة الفاتورة</b> بيطلع أوتوماتيك لما الأوردر مش في الطابور: الحالة · النوع · العميل · آخر طباعة · عدد مرات الطباعة، وبيعدّي على <b>نفس بوابة المراجعة</b> بتاعة الطباعة العادية.</span></div>
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>الحالة مابتتغيّرش</b> — أوردر <code>Ready</code> بيفضل <code>Ready</code>. اللي بيتحدّث: التاج + <b>ميتافيلد وقت الطباعة بالوقت الجديد</b> + صف جديد في السجل باسم الموظف. ⏱️ الثمن المُعلَن: عمود «الوقت منذ الطباعة» في طابور التغليف بيرجع لأول اليوم.</span></div>
+          <div class="cl-item"><span class="cl-tag fix">إصلاح</span><span>🔴 لغم كان هيطبع <b>فاتورة ببنود غلط</b>: الـ Worker بيحدد نوع الفاتورة من <code>status_2_r_e ∈ {Confirmed + RETURN, Confirmed + EXCHANGE}</code> بس، فأوردر S2 حالته <code>Ready</code> كان هيتقري <code>S1</code> — والنوع ده بيختار البنود نفسها، وبعدين بيتبعت لـ <code>/track</code> اللي بيكتب على ماكينة S1. النوع بقى بيتبعت <b>صريح</b> في مسار إعادة الطباعة بس.</span></div>
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>Worker الطباعة لازم Promote لـ v2.4.0</b> — <code>printer.min</code> بقى <code>2.4.0</code>. من غيره كارت إعادة الطباعة بيقول بالنص إن النسخة أقدم، وباقي الصفحة شغّال عادي.</span></div>
+        </div>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-head">
+          <span class="cl-ver">v1.6.0</span>
           <span class="cl-date">06-09-2026</span>
         </div>
         <div class="cl-list">
@@ -1373,7 +1452,13 @@ function onSettingsSaved() { checkWorkerVersion(PAGE_WORKERS); loadOrders(true);
 //
 // 🔴 الباراميتر **بيفلتر ويحدّد — مايطبعش**. طباعة تلقائية من رابط =
 //    ورق بيطلع من غير ما حد يضغط. الموظف بيراجع وبيضغط بنفسه.
-function applyOrderParam() {
+// ⚠️ **بتتنادى بعد ما الطابور والسجل الاتنين يستقروا** (v1.6.0) مش عند
+//    التحميل. السبب: القرار اللي جوّاها «الأوردر ده في الطابور ولا لأ؟»،
+//    ومن غير الطابور الجواب **دايمًا** «لأ» فكارت إعادة الطباعة كان هيطلع
+//    على كل أوردر عادي. وسجل الطباعة (`printCountsMap`/`printLastS1Map`) هو
+//    اللي بيدي «اتطبع كام مرة» و«آخر طباعة» للبوابة — من غيره أوردر متطبَّع
+//    بيعدّي على البوابة كأنه نضيف.
+async function applyOrderParam() {
   const p = new URLSearchParams(location.search);
   const num = p.get('order');
   if (p.get('from') === 'pack') showBackToQueue();
@@ -1383,8 +1468,127 @@ function applyOrderParam() {
   el.value = num;
   onSearchInput('print', el);
   showToast(`الجدول مفلتر على الأوردر ${num}`, 'info', 4000);
+
+  // الأوردر في الطابور خلاص → الفلترة كفاية ومفيش كارت. المقارنة **تامة**
+  // بعد شيل الـ `#` — `includes` كان هيطابق `#5362` مع `#53621`.
+  const clean = String(num).replace('#', '');
+  if (allOrders.some(o => String(o.name).replace('#', '') === clean)) return;
+
+  await openReprintFor(clean, p.get('oid'));
 }
 function showBackToQueue() { document.getElementById('backToQueueBar')?.classList.add('visible'); }
+
+// ══════════════════════════════════════════════════════════════
+// 🔁 §REPRINT — إعادة طباعة أوردر خرج من طابور الطباعة (v1.6.0)
+// ══════════════════════════════════════════════════════════════
+//
+// 🔴 **المشكلة اللي بيحلّها:** `/orders` بيفلتر على أربع حالات «مؤكَّد»، وأوردر
+//    اتطبع خلاص حالته `Ready` — فمستحيل يوصل للجدول. زرار «إعادة 🖨» في طابور
+//    التغليف كان بيفتح الصفحة دي مفلترة على أوردر **مش موجود فيها**، فالموظف
+//    يشوف «لا توجد أوردرات تطابق الفلاتر» وتوست بيقول إن الجدول اتفلتر عليه —
+//    رسالتين متناقضتين، والحل الوحيد كان إن حد يرجّع حالة الأوردر يدوي.
+//
+// ⚠️ **مفيش مسار طباعة تاني هنا.** الصف بيتبني بنفس شكل صف `/orders` بالحرف،
+//    وبيعدّي على **نفس** `runPreprintGate` و**نفس** `executePrint`. مسار موازي
+//    معناه بوابتين مراجعة يفترقوا مع أول تعديل — درس R1 بالظبط.
+//
+// ⚠️ **الحالة مابتتغيّرش.** `/track` عنده فرع صريح: `statusBefore === target`
+//    → `skipped: 'same_value'` بلا كتابة وبلا خطأ. اللي بيتحدّث فعلاً: التاج +
+//    **ميتافيلد وقت الطباعة (بالوقت الجديد)** + صف `S1`/`S2` جديد في D1.
+//
+// 🔴 **وقت الطباعة بيتدهس عن قصد** (قرار أحمد 06-09-2026) — الميتافيلد معناه
+//    «آخر طباعة» مش «أول طباعة» (`known-gaps` G-4). الثمن اللي لازم يتقال:
+//    عمود «الوقت منذ الطباعة» في طابور التغليف بيرجع 🟢 أخضر، فأوردر متأخر
+//    ٣ أيام بيبان كأنه اتطبع دلوقتي. الكارت بيقول ده للموظف قبل ما يضغط.
+let reprintRow = null;
+
+function closeReprintCard() {
+  document.getElementById('reprintCard').classList.remove('open');
+  reprintRow = null;
+}
+
+async function openReprintFor(cleanNum, oid) {
+  const card = document.getElementById('reprintCard');
+  const body = document.getElementById('rpBody');
+  const acts = document.getElementById('rpActions');
+  reprintRow = null;
+  acts.style.display = 'none';
+  document.getElementById('rpTitle').textContent = `إعادة طباعة الفاتورة — #${cleanNum}`;
+  body.innerHTML = '<span class="rp-f-k">جاري جلب بيانات الأوردر…</span>';
+  card.classList.add('open');
+
+  let res;
+  try {
+    // `oid` بييجي من طابور التغليف — بيوفّر بحث بالاسم وبيشيل أي التباس.
+    // من غيره البحث بالاسم، والـ Worker بيطابق **تمامًا** مش بالبادئة.
+    res = await apiPath('/lookup', oid ? { orderId: oid } : { name: cleanNum });
+  } catch (err) {
+    // 🔴 تدهور آمن ومُعلَن: Worker أقدم من 2.4.0 مافيهوش المسار ده أصلاً،
+    //    فبيرجّع `{ error: 'Not found' }` بـ 404 — نفس كود الأوردر المش
+    //    موجود. الفرق في نص الرسالة، والفرق ده هو اللي بيفرّق بين
+    //    «الأوردر مش موجود» و«الـ Worker محتاج Promote».
+    const staleWorker = err.status === 404 && err.payload?.error === 'Not found';
+    body.innerHTML = staleWorker
+      ? '<span class="rp-warn">إعادة الطباعة محتاجة Worker الطباعة v2.4.0 على الأقل — النسخة المنشورة أقدم (محتاجة Promote).</span>'
+      : `<span class="rp-warn">${escHtml(err.message)}</span>`;
+    return;
+  }
+
+  const o = res.order;
+
+  // الصف **مطابق لصف الطابور** + حقلين زيادة بس (`reprint` · `forceType`).
+  const row = { ...o, count: getPrintCount(o), reprint: true, forceType: o.type };
+  const vi  = voidInvoiceInfo(row);      // نفس دالة الطابور — صفر منطق مكرّر
+  row.flag      = vi.level;
+  row.printedBy = vi.printedBy;
+  row.printedAt = vi.printedAt || (o.type === 'S2' ? o.printingTimeS2 : o.printingTimeS1)
+                  || (printLastS1Map[cleanNum]?.timestamp || null);
+  reprintRow = row;
+
+  const packAt = o.type === 'S2' ? o.packingTimeS2 : o.packingTimeS1;
+  const f = (k, v) => `<div class="rp-f"><span class="rp-f-k">${k}</span><span class="rp-f-v">${v}</span></div>`;
+
+  const notes = [];
+  notes.push(`الحالة <b>مش هتتغيّر</b> — <code>${escHtml(o.status || '(فاضية)')}</code> زي ما هي. اللي هيتحدّث: التاج + <b>وقت الطباعة</b> + صف جديد في السجل.`);
+  notes.push(`⏱️ <b>وقت الطباعة هيتكتب من جديد بوقت دلوقتي</b> — عمود «الوقت منذ الطباعة» في طابور التغليف هيرجع لأول اليوم.`);
+  if (packAt) notes.push(`<span class="rp-warn">📦 الفاتورة القديمة جوّه طرد متغلّف (${escHtml(formatDate(packAt))}) — دي مش ورقة تتقطع، دي طرد يتفتح.</span>`);
+  if (res.zoneExcluded) notes.push(`الأوردر ده <b>خارج <code>ZONE_FILTER</code></b> (المنطقة: ${escHtml(o.zone || 'مفيش')}) — عشان كده مش بيظهر في الطابور أصلاً.`);
+  if (res.inPrintQueue) notes.push(`<span class="rp-warn">⚠️ الأوردر ده <b>مفروض في طابور الطباعة</b> بحالته دي — لو مش ظاهر في الجدول، اعمل تحديث قبل ما تطبع من هنا.</span>`);
+
+  body.innerHTML =
+    `<div class="rp-grid">
+       ${f('الأوردر', prtOrderLink(o.name, o.orderId))}
+       ${f('النوع', escHtml(typeLabel(o.type)))}
+       ${f('الحالة', escHtml(o.status || '—'))}
+       ${f('العميل', escHtml(o.customer || '-'))}
+       ${f('تاريخ الأوردر', escHtml(formatDate(o.createdAt)))}
+       ${f('اتطبع', row.count > 0 ? `${row.count.toLocaleString('en-US')} مرة` : 'مفيش سجل')}
+       ${f('آخر طباعة', row.printedAt ? escHtml(prtSinceText(row.printedAt)) : '—')}
+     </div>
+     <div class="rp-note">${notes.map(n => `<div>• ${n}</div>`).join('')}</div>`;
+  acts.style.display = '';
+}
+
+async function startReprint() {
+  if (!reprintRow) return;
+  const btn = document.getElementById('rpPrintBtn');
+  const row = reprintRow;
+  btn.disabled = true;
+  try {
+    // 🔴 **نفس البوابة** — أوردر إعادة الطباعة بيتصنّف فيها 🟡 «سبق طباعته»
+    //    على الأقل (شرط `o.reprint` في `runPreprintGate`)، و🔴 لو حالته
+    //    فعلاً من `VOID_INVOICE_STATUSES`.
+    const gate = await runPreprintGate([row]);
+    if (!gate)                { showToast('اتلغت الطباعة', 'info'); return; }
+    if (!gate.orders.length)  { showToast('مفيش أوردرات باقية للطباعة', 'warn'); return; }
+    await executePrint(gate.orders, gate.guards);
+    // الكارت بيتبني من جديد عشان «آخر طباعة» و«اتطبع كام مرة» يبقوا صح لو
+    // الموظف احتاج نسخة تانية — رقم قديم في كارت مفتوح أسوأ من مفيش رقم.
+    await openReprintFor(String(row.name).replace('#', ''), row.orderId);
+  } finally {
+    btn.disabled = false;
+  }
+}
 
 // ─── §SHELL-JS::tabs + Freeze on Scroll (tabs-and-modals § 1b) ───
 const TAB_IDS = ["print", "log"];
@@ -2213,7 +2417,11 @@ async function runPreprintGate(selected) {
   const rows = selected.map(o => {
     const entry = todayMap[String(o.name).replace("#", "")] || null;
     const recent = entry && new Date(entry.timestamp).getTime() > cutoff ? entry : null;
-    const level = o.flag ? o.flag : (recent ? "recent" : (o.count > 0 ? "printed" : "clean"));
+    // ⚠️ `o.reprint` (v1.6.0) — أوردر جاي من §REPRINT **اتطبع بالتأكيد**
+    //    (ده شرط وجوده في طابور التغليف أصلاً)، فمينفعش يقع في `clean` لو
+    //    السجل مالوش صف: `LOGS_FETCH_MAX` بيقص، والصفوف قبل v2.0.0 مفيهاش
+    //    موظف. «معرفناش» هنا لازم تتقري «اتطبع» مش «نضيف».
+    const level = o.flag ? o.flag : (recent ? "recent" : ((o.count > 0 || o.reprint) ? "printed" : "clean"));
     return { order: o, level, recent };
   });
 
@@ -2355,7 +2563,11 @@ async function executePrint(selectedOrders, guards = {}) {
     //    كرسالة CORS واحدة، صفر فاتورة، وصفر صف في D1.
     let fetched = 0;
     const settled = await mapLimit(selectedOrders, PRINT_CONCURRENCY, async (o) => {
-      const d = await apiPath("/invoice", { orderId: o.id });
+      // 🔴 `forceType` — صف §REPRINT بس هو اللي بيبعته. أوردر S2 حالته
+      //    `Ready` بيتقري S1 في القاعدة الافتراضية بتاعة الـ Worker، والنوع
+      //    ده بيختار **بنود الفاتورة** مش العنوان. صفوف الطابور بتسيبه فاضي
+      //    عن قصد — الافتراضي هناك صح، وتمريره كان هيغيّر سلوك قائم.
+      const d = await apiPath("/invoice", { orderId: o.id, ...(o.forceType ? { type: o.forceType } : {}) });
       fetched++;
       showPrintLoading(`جاري تحضير الفواتير... ${fetched.toLocaleString("en-US")}/${total.toLocaleString("en-US")}`);
 
@@ -3024,10 +3236,14 @@ window.addEventListener("load", () => {
   //    ومختوم بوقته، والجلب بيحصل في الخلفية لو عدّى الـ TTL.
   const cached = cacheGet(WOC_CACHE_PRINT);
   if (cached) { renderOrdersFrom(cached.data); markFreshness(cached.at); }
-  if (!cached || cached.ageMs > WOC_CACHE_TTL_MS) loadOrders();
+  const queueReady = (!cached || cached.ageMs > WOC_CACHE_TTL_MS) ? loadOrders() : Promise.resolve();
 
-  loadLogs();          // عدّاد «مرات الطباعة» + خريطة آخر طباعة
-  applyOrderParam();   // ?order= الجاي من طابور التغليف
+  const logsReady = loadLogs();   // عدّاد «مرات الطباعة» + خريطة آخر طباعة
+
+  // ⚠️ `allSettled` مش `all` — فشل الطابور أو السجل **مايمنعش** كارت إعادة
+  //    الطباعة. الأوردر جاي من الرابط، والفشل ده مالوش علاقة بيه (نفس قاعدة
+  //    ٧ في الشاشة الرئيسية: الطابور مش شرط للشغل).
+  Promise.allSettled([queueReady, logsReady]).then(applyOrderParam);   // ?order=
 });
 </script>
 </body>

@@ -133,7 +133,21 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.6.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.7.0</span>
+          <span class="cl-ver-date">07-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>زرار <b>«إعادة 🖨»</b> في طابور التغليف بقى <b>بيشتغل فعلاً</b>. كان بيفتح صفحة الطباعة مفلترة على أوردر <b>مش موجود فيها</b> — لأن طابور الطباعة بيفلتر على حالات «مؤكَّد»، وأوردر اتطبع خلاص حالته <code>Ready</code>. الموظف كان بيشوف «لا توجد أوردرات تطابق الفلاتر» وتوست بيقول إن الجدول اتفلتر عليه، والحل الوحيد كان إن حد يرجّع الحالة يدوي.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>كارت <b>🔁 إعادة طباعة الفاتورة</b> بيطلع أوتوماتيك لما الأوردر مش في الطابور: الحالة · النوع · العميل · آخر طباعة · عدد مرات الطباعة، وبيعدّي على <b>نفس بوابة المراجعة</b> بتاعة الطباعة العادية.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>الحالة مابتتغيّرش</b> — أوردر <code>Ready</code> بيفضل <code>Ready</code>. اللي بيتحدّث: التاج + <b>ميتافيلد وقت الطباعة بالوقت الجديد</b> + صف جديد في السجل باسم الموظف. ⏱️ الثمن المُعلَن: عمود «الوقت منذ الطباعة» في طابور التغليف بيرجع لأول اليوم.</span></li>
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>🔴 لغم كان هيطبع <b>فاتورة ببنود غلط</b>: الـ Worker بيحدد نوع الفاتورة من <code>status_2_r_e ∈ {Confirmed + RETURN, Confirmed + EXCHANGE}</code> بس، فأوردر S2 حالته <code>Ready</code> كان هيتقري <code>S1</code> — والنوع ده بيختار البنود نفسها، وبعدين بيتبعت لـ <code>/track</code> اللي بيكتب على ماكينة S1. النوع بقى بيتبعت <b>صريح</b> في مسار إعادة الطباعة بس.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>Worker الطباعة لازم Promote لـ v2.4.0</b> — <code>printer.min</code> بقى <code>2.4.0</code>. من غيره كارت إعادة الطباعة بيقول بالنص إن النسخة أقدم، وباقي الصفحة شغّال عادي.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.6.0</span>
           <span class="cl-ver-date">06-09-2026</span>
         </div>
         <ul class="cl-items">
