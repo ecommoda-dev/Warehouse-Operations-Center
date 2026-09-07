@@ -308,7 +308,19 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.10.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.13.0</span>
+          <span class="cl-ver-date">07-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 صف <b>«جاهز للتغليف»</b> بقى بيقسّم <b>بالمندوب</b> (بوسطة / مناديب) بدل «عادي / استبدال-استرجاع». دي نفس تقسيمة مربعات صفحة التغليف اللي الصف بيفتح عليها، ودي اللي بتفرق فعلاً في الشغل: ورق وملصق ومحطة تسليم مختلفين.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>قاعدة تجميع المندوب اتحطّت في <code>shared/shell.js</code> §COURIER-GROUP — <b>نسخة واحدة</b> للرئيسية ولصفحة التغليف، فمستحيل الرئيسية تقول رقم والصفحة تفتح على رقم تاني.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>أداة الطباعة مابقتش بتفتح على قناة مختارة</b> — الجدول بيعرض القنوات كلها، والمربعات بقت بنفس سلوك مربعَي «بوسطة/مناديب» هنا (ضغطة تفلتر · ضغطة تانية ترجّع الكل). و<b>الطباعة مقفولة لحد ما تتختار قناة</b> لأن الورق والطابعة بيختلفوا.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.10.0</span>
           <span class="cl-ver-date">07-09-2026</span>
         </div>
         <ul class="cl-items">
@@ -665,7 +677,6 @@ async function finishLogin(username, displayName, logged) {
 // ══════════════════════════════════════════════════════════════
 // §HOME-JS — الشاشة الرئيسية
 // ══════════════════════════════════════════════════════════════
-const TYPE_LABEL = { S1: 'عادي', S2: 'استبدال/استرجاع' };
 
 // 🔴 التحديث التلقائي — كل ١٥ دقيقة (قرار أحمد 06-09-2026).
 //
@@ -747,10 +758,18 @@ const HOME_QUEUES = {
       const data = await wocApi(WOC_WORKERS.pack).apiGet('get_ready_orders');
       cacheSet(WOC_CACHE_PACK, data);
       const orders = data.orders || [];
-      return { total: data.total ?? orders.length, chips: [
-        { cls: 'chip-s1', label: TYPE_LABEL.S1, n: orders.filter(o => o.orderType === 'S1').length },
-        { cls: 'chip-s2', label: TYPE_LABEL.S2, n: orders.filter(o => o.orderType === 'S2').length },
-      ] };
+      // 🔴 التقسيمة **بالمندوب** مش بالنوع (قرار أحمد 07-09-2026). السبب
+      //    نفس سبب تقسيمة الطباعة بالقناة: «عادي/استبدال» رقم صحيح بس
+      //    الموظف مابيتصرّفش عليه — الطابور بيتغلّف بنفس الطريقة في
+      //    الحالتين. اللي بيفرق فعلاً هو **بوسطة ولا مندوب**: ورق مختلف
+      //    وملصق مختلف ومحطة تسليم مختلفة. ودي بالظبط نفس تقسيمة مربعات
+      //    `pack.html` اللي الصفحة بتفتح عليها.
+      // 🔴 العدّ بيعدّي على `wocCourierGroup` في الـ shell §COURIER-GROUP —
+      //    **نفس** القاعدة اللي `pack.html` بتعدّ بيها بالحرف. نسخة تانية
+      //    هنا معناها الرئيسية تقول ٣٦ والصفحة تفتح على رقم تاني (درس R1).
+      const cn = wocCourierCounts(orders);
+      return { total: data.total ?? orders.length,
+               chips: WOC_COURIER_GROUPS.map(g => ({ cls: g.cls, label: g.label, n: cn[g.key] })) };
     },
   },
 };

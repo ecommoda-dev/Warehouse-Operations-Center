@@ -48,7 +48,11 @@ const ORDERS = [
 ];
 
 const calls = [];
-const browser = await chromium.launch({ executablePath:'/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+// ⚠️ `PW_CHROMIUM` بيسمح بتمرير مسار كروميوم مثبّت مسبقًا لو Playwright
+//    ما نزّلش نسخته — نفس اللي في `docs/sku-barcode-check.mjs` بالظبط.
+//    مسار مزروع في الكود بيخلّي الاختبار يقع على أي جهاز تاني.
+const browser = await chromium.launch(
+  process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {});
 const page = await browser.newPage();
 const errs = [];
 page.on('pageerror', e => errs.push('PAGEERROR: '+e.message));
@@ -166,9 +170,36 @@ check('عدّاد شو روم = 1',     await n('showroom')==='1',await n('showr
 check('عدّاد بلا قناة = 2',   await n('none')==='2',    await n('none'));
 check('زرار «بلا قناة» ظاهر', await page.isVisible('#chanBtn-none'));
 
-// ③ الافتراضي قاهرة+جيزة
-check('القناة الافتراضية قاهرة+جيزة', await page.getAttribute('#chanBtn-invoice','class') === 'chan-btn ch-invoice active');
-check('الجدول فيه صف واحد بس', (await page.$$('#printTableBody tr')).length === 1);
+// ③ 🔴 مفيش قناة مختارة عند الفتح (v1.13.0) — والجدول بيعرض الكل
+//    نفس مربعَي «بوسطة/مناديب» في `pack.html`: مفيش حاجة مولّعة، والفلترة
+//    بضغطة. الفرق الإلزامي الوحيد إن الطباعة **مقفولة** لحد ما تتختار قناة.
+check('🔴 مفيش قناة مولّعة عند الفتح',
+      (await page.$$('#chanBar .chan-btn.active')).length === 0,
+      String((await page.$$('#chanBar .chan-btn.active')).length));
+// 1 قاهرة+جيزة + 3 بوسطة + 1 شو روم + 2 بلا قناة = 7
+check('🔴 الجدول بيعرض كل القنوات (7 صفوف)', (await page.$$('#printTableBody tr')).length === 7,
+      String((await page.$$('#printTableBody tr')).length));
+{
+  const sum = Number(await n('invoice')) + Number(await n('awb')) + Number(await n('showroom')) + Number(await n('none'));
+  check('🔴 مجموع البادجات == صفوف الجدول', sum === (await page.$$('#printTableBody tr')).length,
+        `sum=${sum} rows=${(await page.$$('#printTableBody tr')).length}`);
+}
+// 🔴 الطباعة مقفولة بلا قناة — الورق والطابعة بيختلفوا، فالدفعة المختلطة
+//    ممنوعة **من أصلها** زي ما كانت بالظبط قبل التغيير.
+check('🔴 «طباعة الكل» مقفول بلا قناة', await page.isDisabled('#printAllBtn'));
+check('🔴 البادج «—» مش رقم بلا قناة', (await page.textContent('#pbAllCount')).trim() === '—',
+      await page.textContent('#pbAllCount'));
+check('🔴 سطر «اختر قناة» ظاهر', await page.isVisible('#chanHint'));
+
+// ③-ب الاختيار ثم الإطفاء بنفس المربع (زي `.zchip` في التغليف)
+await page.click('#chanBtn-invoice'); await page.waitForTimeout(200);
+check('اختيار قاهرة+جيزة بيفلتر لصف واحد', (await page.$$('#printTableBody tr')).length === 1);
+check('سطر «اختر قناة» بيختفي بعد الاختيار', await page.isHidden('#chanHint'));
+check('«طباعة الكل» اتفعّل بعد اختيار القناة', !(await page.isDisabled('#printAllBtn')));
+await page.click('#chanBtn-invoice'); await page.waitForTimeout(200);
+check('🔴 ضغطة تانية على نفس المربع بترجّع الكل', (await page.$$('#printTableBody tr')).length === 7,
+      String((await page.$$('#printTableBody tr')).length));
+check('🔴 والطباعة رجعت مقفولة', await page.isDisabled('#printAllBtn'));
 
 // ④ قناة «بلا قناة» — الصفوف مقفولة
 await page.click('#chanBtn-none');
@@ -293,7 +324,10 @@ await page.waitForTimeout(400);
 calls.length = 0;
 
 // ── انحدار: مسار الفاتورة (قاهرة+جيزة) لسه شغّال زي ما هو ──
-check('القناة الافتراضية = فاتورة قاهرة+جيزة', (await page.getAttribute('#chanBtn-invoice','class')).includes('active'));
+// ⚠️ الريلود بيرجّع الصفحة لـ **بلا قناة** (v1.13.0) — فالاختيار صريح هنا.
+//    قبل كده كانت بتفتح على قاهرة+جيزة لوحدها.
+await page.click('#chanBtn-invoice'); await page.waitForTimeout(200);
+check('القناة المختارة = فاتورة قاهرة+جيزة', (await page.getAttribute('#chanBtn-invoice','class')).includes('active'));
 await page.click('#selectAllVisibleBtn'); await page.waitForTimeout(200);
 check('اتحدد أوردر قاهرة+جيزة واحد', (await page.textContent('#pbSelCount')).trim() === '1', await page.textContent('#pbSelCount'));
 

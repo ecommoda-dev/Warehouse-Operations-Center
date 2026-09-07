@@ -376,17 +376,21 @@
 .pb-sel .pb-badge { color: var(--accent-dark); }
 
 /* ══════════════════════════════════════════════════════════════
-   §CHANNEL — مبدّل القناة (v1.7.0)
+   §CHANNEL — مبدّل القناة (v1.7.0 · اتعاد سلوكه في v1.13.0)
    ══════════════════════════════════════════════════════════════
-   🔴 اختيار **أحادي إلزامي**، مش فلتر. القناة بتحدد **إيه اللي بيتطبع**:
-      فاتورة شوبيفاي على A4، ولا بوليصة بوسطة على ملصق حراري. الورق مختلف
-      والطابعة مختلفة والحارس مختلف — فدفعة مختلطة معناها نافذتي طباعة
-      وصياغتين حارس ونافذة نتيجة مالهاش نص مفهوم.
+   🔴 اختيار **أحادي**: مستحيل يبقى فيه قنتين مختارين. القناة بتحدد
+      **إيه اللي بيتطبع**: فاتورة شوبيفاي على A4، ولا بوليصة بوسطة على
+      ملصق حراري. الورق مختلف والطابعة مختلفة والحارس مختلف — فدفعة مختلطة
+      معناها نافذتي طباعة وصياغتين حارس ونافذة نتيجة مالهاش نص مفهوم.
+   🔴 **بس مش «إلزامي عند الفتح» من v1.13.0** (قرار أحمد 07-09-2026):
+      الصفحة بتفتح **بلا قناة**، والجدول بيعرض القنوات كلها. اللي بيمنع
+      الدفعة المختلطة بقى إن **الطباعة نفسها مقفولة** طول ما مفيش قناة
+      (`updatePrintBar`) — مش إن فيه واحدة مولّعة من غير ما حد يدوس.
    ⚠️ الألوان **نفس ألوان عمود المندوب في `pack.html`** بالحرف
       (`.courier-bosta` أحمر · `.courier-other` أزرق · `.courier-showroom`
       أخضر). نفس المعلومة بلونين مختلفين = الموظف بيتعلّمها مرتين (درس R1).
-   ⚠️ الشكل مقتبس من `.zchip` في `pack.html` بس **من غير علامة ✕** — دي
-      مش فلتر بيتقفل، دي وضع الأداة الحالي ولازم يفضل واحد مختار دايمًا. */
+   ⚠️ والشكل بقى **نسخة كاملة من `.zchip`** — بعلامة `✕` كمان، لأن المربع
+      بقى بيتقفل بضغطة تانية زي هناك بالظبط. */
 .chan-bar {
   display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
@@ -413,8 +417,21 @@
 .chan-btn.ch-showroom { background: var(--green-light);  color: var(--green-dark);  border-color: var(--green-border); }
 .chan-btn.ch-none     { background: var(--amber-light);  color: var(--amber-dark);  border-color: var(--amber-border); }
 /* المختار لازم يبان من بعيد — الموظف اللي مش فاهم ليه الجدول شكله كده
-   بيدوّر على الزرار المولّع ده. */
+   بيدوّر على الزرار المولّع ده.
+   ⚠️ علامة `✕` **نسخة طبق الأصل من `.zchip.active` في `pack.html`** (v1.13.0):
+      المربع بقى بيتقفل بضغطة تانية زي هناك بالظبط، والعلامة هي اللي بتقول
+      إن الضغطة الجاية بترجّع الكل. من غيرها الموظف بيدوس ويستنى فلتر جديد. */
 .chan-btn.active { box-shadow: 0 0 0 2px currentColor inset; }
+.chan-btn.active::after { content: '✕'; font-size: 12px; font-weight: 800; opacity: .75; }
+
+/* 🔴 سطر «اختر قناة» — مش شريط ملاحظات، ده **سبب زرار متعطّل**.
+   من غيره الموظف بيفتح الصفحة ويلاقي «طباعة الكل» رمادي من غير أي تفسير،
+   وزرار متعطّل بلا سبب بيتقري عطل في الأداة. بيختفي أول ما يختار قناة. */
+.chan-hint {
+  flex: 1 1 100%; margin: 0; font-size: 12px; font-weight: 700;
+  color: var(--amber-dark);
+}
+.chan-hint[hidden] { display: none; }
 
 /* عمود القناة في الجدول — نفس ألوان المبدّل */
 .chan-cell { font-weight: 800; white-space: nowrap; font-size: 12px; }
@@ -709,14 +726,17 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
   <div id="printDashboard" style="display:none;">
 
     <!-- ══════════════════════════════════════════════════════════
-         §CHANNEL — مبدّل القناة (v1.7.0)
-         🔴 اختيار **أحادي إلزامي**. `custom.zone` قرار توجيه شحن مش
-            جغرافيا: ١٨٪ من عناوين القاهرة/الجيزة بتروح بوسطة (قياس حي —
+         §CHANNEL — مبدّل القناة (v1.7.0 · اتعاد سلوكه في v1.13.0)
+         🔴 اختيار **أحادي**. `custom.zone` قرار توجيه شحن مش جغرافيا:
+            ١٨٪ من عناوين القاهرة/الجيزة بتروح بوسطة (قياس حي —
             `zone-routing.md` §3)، يعني الموظف **مايقدرش** يعرف القناة من
             العنوان. عشان كده القناة معروضة صراحةً ومختارة بضغطة، مش
             متروكة لتقديره.
+         🔴 **الصفحة بتفتح بلا قناة مختارة** والجدول بيعرض الكل، والطباعة
+            **مقفولة** لحد ما تتختار واحدة — والسطر تحت المربعات
+            (`#chanHint`) بيقول السبب. زرار متعطّل بلا سبب بيتقري عطل.
          ⚠️ تبديل القناة **بيمسح التحديد** — ده اللي بيمنع الدفعة المختلطة
-            من أصلها بدل ما نتحقق منها بعد كده.
+            من أصلها بدل ما نتحقق منها بعد كده. وإطفاء القناة بيمسح برضه.
          ══════════════════════════════════════════════════════════ -->
     <div class="chan-bar" id="chanBar">
       <span class="chan-bar-lbl">القناة:</span>
@@ -730,6 +750,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
            الشاشة ماتتعوّدش على تحذير دايم فتبطّل تشوفه. -->
       <button class="chan-btn ch-none" id="chanBtn-none" style="display:none;" onclick="setChannel('none')">
         ⚠️ بلا قناة <span class="chan-n" id="chanN-none">—</span></button>
+      <p class="chan-hint" id="chanHint">⚠️ اختر قناة عشان تقدر تطبع — الورق والطابعة بيختلفوا من قناة لقناة.</p>
     </div>
 
     <!-- ─── §AWB — الشريط الاحتياطي لفتح البوليصة ───
@@ -1357,8 +1378,21 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
       <div class="cl-entry">
         <div class="cl-head">
-          <span class="cl-ver">v1.12.0</span>
+          <span class="cl-ver">v1.13.0</span>
           <span class="cl-badge" id="clLatestBadge">آخر نسخة</span>
+          <span class="cl-date">07-09-2026</span>
+        </div>
+        <div class="cl-list">
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <strong>الصفحة مابقتش بتفتح على قناة مختارة.</strong> «فاتورة — قاهرة+جيزة» كان بيبقى مولّع من غير ما حد يدوس، والجدول بيعرض قناة واحدة وكأنها كل الطابور. دلوقتي <strong>مفيش مربع مولّع عند الفتح والجدول بيعرض القنوات كلها</strong>.</span></div>
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span>مربعات القناة بقت بنفس سلوك مربعَي <strong>«بوسطة/مناديب»</strong> في قسم التغليف: ضغطة بتفلتر، وضغطة تانية على نفس المربع بترجّع الكل — والعلامة <strong>✕</strong> على المربع المولّع بتقول كده.</span></div>
+          <div class="cl-item"><span class="cl-tag new">جديد</span><span>🔴 <strong>الطباعة مقفولة طول ما مفيش قناة مختارة</strong>، وبادج «طباعة الكل» بيقول <code>—</code> مش رقم. القناة هي اللي بتحدد الورق والطابعة والمسار (فاتورة A4 مقابل بوليصة حرارية)، فدفعة من غير قناة معناها ورق مختلط — و<strong>سطر تحت المربعات بيقول للموظف السبب</strong> بدل زرار رمادي بلا تفسير.</span></div>
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span>الشاشة الرئيسية — صف <strong>«جاهز للتغليف»</strong> بقى بيقسّم بالمندوب (<strong>بوسطة / مناديب</strong>) بدل «عادي / استبدال-استرجاع». دي نفس تقسيمة الصفحة اللي الصف بيفتح عليها، والقاعدة نسخة واحدة في <code>shared/shell.js</code> §COURIER-GROUP.</span></div>
+        </div>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-head">
+          <span class="cl-ver">v1.12.0</span>
           <span class="cl-date">07-09-2026</span>
         </div>
         <div class="cl-list">
@@ -2519,15 +2553,34 @@ const CHANNELS = {
 };
 
 // القناة النشطة — **في الذاكرة بس** زي `lastEntryMode` في `pack.html`:
-// موظف جديد على نفس الجهاز بيبدأ من الافتراضي.
-let activeChannel = "invoice";
+// موظف جديد على نفس الجهاز بيبدأ من نفس الحالة.
+//
+// 🔴 **`null` = مفيش قناة مختارة، والصفحة بتفتح كده** (قرار أحمد 07-09-2026،
+//    v1.13.0). قبل كده كانت بتفتح على `"invoice"` — مربع قاهرة+جيزة بيبقى
+//    مولّع من غير ما حد يدوس، والجدول بيعرض قناة واحدة وكأنها كل الطابور.
+//    دلوقتي الشكل والسلوك **نفس مربعَي «بوسطة/مناديب» في `pack.html`**:
+//    مفيش حاجة مولّعة عند الفتح · الجدول بيعرض الكل · ضغطة بتفلتر · ضغطة
+//    تانية على نفس المربع بترجّع الكل (العلامة `✕` بتقول كده).
+//
+// 🔴 **بس فيه فرق واحد إلزامي عن التغليف، ومش مسموح يتشال:** القناة هنا
+//    مش فلتر عرض — هي اللي بتحدد **مسار الطباعة** (فاتورة A4 من `/invoice`
+//    مقابل بوليصة PDF من `bosta_awb`)، والورق والطابعة والحارس ونافذة
+//    النتيجة كلهم بيختلفوا معاها. عشان كده **الطباعة مقفولة طول ما القناة
+//    `null`** (`updatePrintBar`): الجدول بيعرض الكل عشان الموظف يشوف الشغل،
+//    والدفعة المختلطة تفضل ممنوعة **من أصلها** زي ما كانت بالظبط.
+let activeChannel = null;
 
+// ⚠️ **تبديل وقفل بنفس الضغطة.** الضغط على المربع المولّع بيطفّيه ويرجّع
+//    «الكل» — نفس `rdyCourierChipClick` في `pack.html`.
 function setChannel(ch) {
-  if (!CHANNELS[ch] || ch === activeChannel) return;
-  activeChannel = ch;
-  // 🔴 مسح التحديد عند التبديل — ده اللي بيمنع الدفعة المختلطة **من أصلها**.
-  //    ورق مختلف وطابعة مختلفة وحارس مختلف؛ دفعة مختلطة معناها نافذتي طباعة
-  //    ونافذة نتيجة مالهاش نص مفهوم.
+  if (!CHANNELS[ch]) return;
+  // 🔴 مسح التحديد عند **أي** تغيير في القناة — ده اللي بيمنع الدفعة
+  //    المختلطة من أصلها بدل ما نتحقق منها بعد كده. ورق مختلف وطابعة
+  //    مختلفة وحارس مختلف؛ دفعة مختلطة معناها نافذتي طباعة ونافذة نتيجة
+  //    مالهاش نص مفهوم. والقفل (`ch === activeChannel`) بيمسح برضه —
+  //    التحديد اتعمل تحت قناة، وشيل القناة معناه إن الدفعة مابقاش ليها
+  //    مسار.
+  activeChannel = (ch === activeChannel) ? null : ch;
   selectedIds.clear();
   closeAwbFallback();
   applyPrintFilters();
@@ -2558,6 +2611,9 @@ function renderChannelCounts() {
     // ماتتعوّدش على تحذير دايم فتبطّل تشوفه.
     if (key === "none") btn.style.display = (counts.none || key === activeChannel) ? "" : "none";
   }
+  // سبب الزرار المتعطّل — بيختفي أول ما يتختار قناة.
+  const hint = document.getElementById("chanHint");
+  if (hint) hint.hidden = activeChannel !== null;
   return counts;
 }
 
@@ -2665,7 +2721,11 @@ function applyPrintFilters() {
     //       من إنه يبقى كذب هو إن **بادج القناة بيعدّ المعروض فعلاً**
     //       (`renderChannelCounts` بيعدّي على نفس البوابة بالحرف)، وصف
     //       «بلا قناة» بيفضل ظاهر ومقفول بسببه مكتوب جنبه في الجدول.
-    if (wocChannelGate(o, activeChannel)) return false;
+    // 🔴 مفيش قناة مختارة = **اعرض الكل**، وكل صف بيعدّي على بوابة
+    //    **قناته هو** بالحرف — مش بوابة مفتوحة. يعني أوردر بوسطة لسه
+    //    ما اترفعش يفضل مستبعَد زي ما هو، ومجموع مربعات القنوات يفضل
+    //    مساوي لعدد صفوف الجدول بالظبط (نفس البند في فحص المتصفح).
+    if (wocChannelGate(o, activeChannel === null ? o.chan : activeChannel)) return false;
     if (q && !(String(o.name).toLowerCase().includes(q) || String(o.customer).toLowerCase().includes(q))) return false;
     if (msState.pType.selected.size   && !msState.pType.selected.has(o.type))     return false;
     if (msState.pStatus.selected.size && !msState.pStatus.selected.has(o.status)) return false;
@@ -2740,14 +2800,23 @@ function updatePrintBar() {
   //    (نفس درس بادج القناة في v1.11.1).
   const n   = selectedIds.size;
   const all = filteredOrders.filter(o => o.printable).length;
-  document.getElementById("pbAllCount").textContent = all.toLocaleString("en-US");
+  // 🔴 مفيش قناة مختارة = **مفيش مسار طباعة**، فالزراير مقفولة والبادج
+  //    بيقول `—` مش رقم. رقم على زرار متعطّل بيتقرا **وعد بشغل** والموظف
+  //    بيدوس عليه — والرقم ده مجموع تلات قنوات بتطبع على ورق مختلف، يعني
+  //    وعد مستحيل ننفّذه أصلاً (نفس درس بادج ٦٦ فوق جدول فيه ٦ في v1.11.1).
+  const hasChan = activeChannel !== null;
+  document.getElementById("pbAllCount").textContent = hasChan ? all.toLocaleString("en-US") : "—";
   document.getElementById("pbSelCount").textContent = n.toLocaleString("en-US");
-  document.getElementById("printAllBtn").disabled      = all === 0;
-  document.getElementById("printSelectedBtn").disabled = n === 0;
+  // ⚠️ بيتعطّلوا **ما بيختفوش** — زرار بيظهر ويختفي بيزحلق اللي جنبه تحت
+  //    إيد الموظف وهو بيدوس، والدوسة الغلط هنا معناها دفعة ورق.
+  document.getElementById("printAllBtn").disabled      = !hasChan || all === 0;
+  document.getElementById("printSelectedBtn").disabled = !hasChan || n === 0;
   document.getElementById("clearSelBtn").disabled      = n === 0;
 }
 
 function printAll() {
+  // حزام أمان تاني جنب `disabled` — نفس نمط `toggleRow`.
+  if (activeChannel === null) { showToast("اختر قناة الأول — الورق والطابعة بيختلفوا من قناة لقناة", "warn"); return; }
   const printable = filteredOrders.filter(o => o.printable);
   if (!printable.length) { showToast("لا توجد أوردرات قابلة للطباعة في القناة دي", "warn"); return; }
   selectedIds = new Set(printable.map(o => o.id));
@@ -2758,6 +2827,11 @@ function printAll() {
 const gateLink = prtOrderLink;   // نفس كود البوابة في الملفين — الفرق الوحيد السطر ده
 
 async function startPrint() {
+  // 🔴 الحارس ده **آخر نقطة** قبل مسار الطباعة، ومن غيره دفعة مختلطة
+  //    ممكن توصل لـ `executePrint` لو حد نادى الدالة من الكونسول أو من
+  //    مسار جديد اتضاف بعدين. القناة هي اللي بتفرّق بين `/invoice`
+  //    و`bosta_awb` — بلا قناة مفيش مسار أصلاً.
+  if (activeChannel === null) { showToast("اختر قناة الأول — الورق والطابعة بيختلفوا من قناة لقناة", "warn"); return; }
   const selected = filteredOrders.filter(o => selectedIds.has(o.id) && o.printable);
   if (!selected.length) { showToast("لم يتم تحديد أي أوردر", "warn"); return; }
 

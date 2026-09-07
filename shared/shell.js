@@ -54,7 +54,7 @@ const WOC_WORKERS = {
   barcode: { url: 'https://order-sku-barcode-printer-worker.ecommoda-dev.workers.dev', min: '1.1.0', label: 'باركود SKU' },
 };
 
-const TOOL_VERSION = 'v1.12.0';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.13.0';                      // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const WOC_APP_ID   = 'warehouse_ops_center';         // قيمة `tool` في D1 — login/logout بس
 const SHOP_HANDLE  = '6c7e1a-53';
@@ -355,6 +355,47 @@ function wocChannelGate(o, chan) {
     if (!wocBostaUploaded(o)) return 'not-uploaded';
   }
   return null;
+}
+
+// ══════════════════════════════════════════════════════════════
+// 🚚 §COURIER-GROUP — بوسطة / مناديب (تجميع ثنائي)
+// ══════════════════════════════════════════════════════════════
+//
+// 🔴 **في الـ shell عن قصد.** الشاشة الرئيسية و`pack.html` بيقروا **نفس**
+//    رد `get_ready_orders` (ونفس الكاش `WOC_CACHE_PACK`)، فلازم يجمّعوا
+//    المندوب بنفس القاعدة بالحرف. نسخة في كل صفحة = الرئيسية تقول رقم
+//    والصفحة تفتح على رقم تاني — نفس اللي حصل مع بوابة بوسطة في v1.11.0
+//    (درس R1). ⛔ ممنوع أي صفحة تعرّف القاعدة دي تاني.
+//
+// ⚠️ التجميع **ثنائي بس**: بوسطة / أي حاجة تانية. الشو روم بيقع في
+//    «مناديب» رغم إنه أخضر في عمود المندوب في `pack.html` — ده مقصود
+//    ومكتوب من v2.6.2 هناك (المربعات بوسطة/غير-بوسطة، مش نسخة من
+//    التصنيف الرباعي `rdyCourierClass`).
+// ⚠️ والفاضي بيقع في «مناديب» كمان — «مفيش مندوب مسجل» **مش** بوسطة،
+//    وحطّه في مربع تالت كان هيدّي مربع بصفر في اليوم العادي.
+//
+// بتقبل القيمة **الخام** من الـ Worker أو النص المعروض بعد
+// `rdyFormatCourier` — التطبيع بيبلع الاتنين، فمافيش مسار تاني للنداء.
+function wocCourierGroup(courier) {
+  const k = String(courier || '').trim().toLowerCase().replace(/[\s_-]/g, '');
+  return (k === 'bosta' || k === 'بوسطة') ? 'bosta' : 'other';
+}
+
+// مربعا «بوسطة/مناديب» — نفس الترتيب ونفس الليبل ونفس الكلاس في
+// الرئيسية وفي `pack.html`. الترتيب **ثابت** (مش بالعدد): الترتيب بالعدد
+// كان هيرقّص المربعات مكانها مع كل تحديث.
+const WOC_COURIER_GROUPS = [
+  { key: 'bosta', label: 'بوسطة',  cls: 'qc-bosta'   },
+  { key: 'other', label: 'مناديب', cls: 'qc-courier' },
+];
+
+// عدّ الطابور كله على المجموعتين. ⚠️ العدّ من القايمة **الكاملة** مش
+// المفلترة — لو اتحسب على المفلتر، أول ضغطة كانت هتصفّر باقي المربع
+// فما حدش يقدر يرجّع.
+function wocCourierCounts(orders) {
+  const counts = { bosta: 0, other: 0 };
+  for (const o of orders || []) counts[wocCourierGroup(o && o.courier)]++;
+  return counts;
 }
 
 // ── حد أدنى رقمي، مش تطابق حرفي ───────────────────────────────

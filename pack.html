@@ -674,7 +674,17 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.7.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.13.0</span>
+          <span class="cl-ver-date">07-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>مربعا <b>«بوسطة/مناديب»</b> بقوا معروضين على صف «جاهز للتغليف» في الشاشة الرئيسية كمان — بنفس الألوان وبنفس الأرقام. القاعدة اتنقلت لـ <code>shared/shell.js</code> §COURIER-GROUP، <b>نسخة واحدة للصفحتين</b>. صفر تغيير في سلوك المربعات هنا.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.7.0</span>
           <span class="cl-ver-date">07-09-2026</span>
         </div>
         <ul class="cl-items">
@@ -2556,12 +2566,19 @@ function rdyCourierClass(display) {
 //    بس: «بوسطة» (أحمر) لو المندوب بوسطة، و«مناديب» (أزرق) لأي حاجة
 //    تانية — **حتى لو مفيش مندوب مسجل خالص**. نفس تصنيف `rdyCourierClass`
 //    اللي بيلوّن عمود المندوب، بس مجمّع في مجموعتين بدل أربعة.
-const RDY_COURIER_GROUPS = [
-  { key: 'bosta', label: 'بوسطة',  cls: 'qc-bosta'    },
-  { key: 'other', label: 'مناديب', cls: 'qc-courier'  },
-];
+// 🔴 **المجموعتان والقاعدة في `shared/shell.js` §COURIER-GROUP — مش هنا**
+//    (اتنقلوا في v1.13.0). الشاشة الرئيسية في الهب بقت بتعرض **نفس**
+//    المربعين على صف «جاهز للتغليف» من **نفس** رد `get_ready_orders`،
+//    فنسخة تانية من القاعدة هنا معناها الرئيسية تقول ٣٦ والصفحة تفتح على
+//    رقم تاني — بالظبط اللي حصل مع بوابة بوسطة في v1.11.0 (درس R1).
+//    ⛔ ممنوع تعريفهم تاني في أي صفحة: تعريف في صفحة بيغلب الـ shell
+//    (بيتحمّل قبلها) والقاعدتين هيفترقوا في صمت.
+// ⚠️ `wocCourierGroup` بتقبل الخام والمعروض الاتنين، فتمرير
+//    `rdyFormatCourier`-ed value آمن: «غير محدد» بتقع في «مناديب» زي
+//    الفاضي بالظبط.
+const RDY_COURIER_GROUPS = WOC_COURIER_GROUPS;
 function rdyCourierGroupOf(courierDisplay) {
-  return rdyCourierClass(courierDisplay) === 'courier-bosta' ? 'bosta' : 'other';
+  return wocCourierGroup(courierDisplay);
 }
 
 // الضغط عليه = تحديد/إلغاء **كل** قيم المندوب الحقيقية اللي بتقع في المجموعة
