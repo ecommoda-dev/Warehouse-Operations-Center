@@ -331,6 +331,8 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .woc-chip.chip-ch-awb{background:var(--red-light);color:var(--red-dark);border-color:var(--red-border)}
 .woc-chip.chip-ch-showroom{background:var(--green-light);color:var(--green-dark);border-color:var(--green-border)}
 .woc-chip.chip-ch-none{background:var(--amber-light);color:var(--amber-dark);border-color:var(--amber-border)}
+.woc-chip.chip-ch-pending{background:var(--amber-light);color:var(--amber-dark);border-color:var(--amber-border)}
+.woc-chip.chip-ch-hold{background:var(--surface-2);color:var(--text-secondary);border-color:var(--border-strong)}
 
 /* لوحة «آخر تحديث» — **نفس شكل `.rdy-fresh` في `pack.html`** بالحرف:
    صندوق محدّد بسطرين، الأول اللافتة + عدّاد القِدَم والتاني ختم

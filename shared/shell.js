@@ -54,7 +54,7 @@ const WOC_WORKERS = {
   barcode: { url: 'https://order-sku-barcode-printer-worker.ecommoda-dev.workers.dev', min: '1.1.0', label: 'باركود SKU' },
 };
 
-const TOOL_VERSION = 'v1.11.0';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.11.1';                      // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const WOC_APP_ID   = 'warehouse_ops_center';         // قيمة `tool` في D1 — login/logout بس
 const SHOP_HANDLE  = '6c7e1a-53';
@@ -314,6 +314,47 @@ function orderLink(orderNumber, orderId) {
   const label = orderNumber || '—';
   if (!orderId) return `<span class="order-num">${esc(label)}</span>`;
   return `<a class="order-link" target="_blank" rel="noopener" href="${shopifyOrderUrl(orderId)}">${esc(label)}</a>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// 🚚 §BOSTA-GATE — قناة الطباعة ومين بيتعرض فيها
+// ══════════════════════════════════════════════════════════════
+//
+// 🔴 **في الـ shell عن قصد.** الشاشة الرئيسية و`print.html` بيقروا **نفس**
+//    رد `/orders` (ونفس الكاش `WOC_CACHE_PRINT`)، فلازم يعدّوا الأوردرات
+//    بنفس القاعدة بالحرف. نسخة في كل صفحة = الرئيسية تقول ٦٦ والصفحة تفتح
+//    على ٦ — وده بالظبط اللي حصل في v1.11.0 (درس R1).
+
+// تاج «اترفع على داشبورد بوسطة». الرفع **بوابة إلزامية قبل الطباعة**
+// (`ecommoda-order-lifecycle` → `zone-routing.md` §2.2)، والتاج ده أثرها
+// الوحيد على شوبيفاي: غايب = مفيش شحنة = مستحيل تتطبع بوليصة.
+const BOSTA_UPLOADED_TAG = 'Bosta_Uploaded_S1';
+function wocBostaUploaded(o) { return (o.tags || []).includes(BOSTA_UPLOADED_TAG); }
+
+// القناة المعروضة. **الـ Worker هو مصدر قرار الطباعة** (`o.channel` =
+// 'invoice' · 'awb' · null) — وده بيزوّد تفرقة **عرض** واحدة بس: الشو روم
+// بيتفصل عن قاهرة+جيزة عشان العدّ والفلترة، والاتنين بيطبعوا نفس الفاتورة.
+// ⛔ ممنوع أي خريطة زون→قناة تانية في أي صفحة.
+const ZONE_SHOWROOM = 'Show_Room';
+function wocChannelOf(o) {
+  if (o.zone === ZONE_SHOWROOM && o.channel === 'invoice') return 'showroom';
+  if (o.channel === 'awb')     return 'awb';
+  if (o.channel === 'invoice') return 'invoice';
+  return 'none';
+}
+
+// «الصف ده بيتعرض في القناة دي ولا لأ؟» — بترجّع `null` = معروض، أو **سبب
+// الاستبعاد بالاسم**. السبب مش رفاهية: كل مستبعَد بيتعدّ وبيتقال للموظف،
+// عشان الغياب يبقى **معلوم** مش خفي.
+function wocChannelGate(o, chan) {
+  if (wocChannelOf(o) !== chan) return 'other-channel';
+  if (chan === 'awb') {
+    // S2 على بوسطة مخفية مؤقتًا بقرار (أحمد 07-09-2026).
+    if (o.type === 'S2' || o.orderType === 'S2') return 's2';
+    // لسه ما اترفعش على داشبورد بوسطة — مفيش شحنة، فمفيش بوليصة.
+    if (!wocBostaUploaded(o)) return 'not-uploaded';
+  }
+  return null;
 }
 
 // ── حد أدنى رقمي، مش تطابق حرفي ───────────────────────────────

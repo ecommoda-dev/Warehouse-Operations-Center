@@ -710,20 +710,33 @@ const HOME_QUEUES = {
       // التقسيمة بقت **بالقناة** مش S1/S2: طابور الطباعة بقى تلات قنوات
       // بتطبع حاجات مختلفة على ورق مختلف، ودي المعلومة اللي الموظف
       // بيتصرّف عليها. مربع «بلا قناة» بيظهر بس لما يكون فيه فعلاً.
-      const n = { invoice: 0, awb: 0, showroom: 0, none: 0 };
+      // 🔴 العدّ بيعدّي على **نفس بوابة `print.html` بالحرف**
+      //    (`wocChannelOf`/`wocChannelGate` في §BOSTA-GATE بتاع الـ shell).
+      //    الرقم هنا وعد بشغل موجود: لو قال ٦٦ والصفحة تفتح على ٦، الموظف
+      //    بيروح لطابور مش موجود. المستبعَد **بيتعدّ وبيتقال** في مربع
+      //    لوحده — مش بيختفي في صمت.
+      const n = { invoice: 0, awb: 0, showroom: 0, none: 0, pending: 0, s2Hold: 0 };
       for (const o of orders) {
-        if (o.zone === 'Show_Room' && o.channel === 'invoice') n.showroom++;
-        else if (o.channel === 'awb')     n.awb++;
-        else if (o.channel === 'invoice') n.invoice++;
-        else n.none++;
+        const chan = wocChannelOf(o);
+        const gate = wocChannelGate(o, chan);
+        if (gate === 'not-uploaded') { n.pending++; continue; }
+        if (gate === 's2')           { n.s2Hold++;  continue; }
+        n[chan]++;
       }
       const chips = [
         { cls: 'chip-ch-invoice',  label: 'قاهرة+جيزة', n: n.invoice },
         { cls: 'chip-ch-awb',      label: 'بوسطة',      n: n.awb },
         { cls: 'chip-ch-showroom', label: 'شو روم',     n: n.showroom },
       ];
-      if (n.none) chips.push({ cls: 'chip-ch-none', label: '⚠️ بلا قناة', n: n.none });
-      return { total: orders.length, chips };
+      // المربعات دي بتظهر **بس لما يكون فيها فعلاً** — نفس مبدأ «بلا قناة»:
+      // صفر مايتكتبش عشان الشاشة ماتتعوّدش على تحذير دايم فتبطّل تشوفه.
+      if (n.pending) chips.push({ cls: 'chip-ch-pending', label: '⏳ مستنية رفع على بوسطة', n: n.pending });
+      if (n.s2Hold)  chips.push({ cls: 'chip-ch-hold',    label: '⏸️ استبدال بوسطة (مؤجّل)', n: n.s2Hold });
+      if (n.none)    chips.push({ cls: 'chip-ch-none',    label: '⚠️ بلا قناة',              n: n.none });
+      // 🔴 الإجمالي = **اللي ينفع يتطبع دلوقتي**، مش طول المصفوفة. أوردر
+      //    ما اترفعش على بوسطة مالوش بوليصة، فعدّه في «جاهز للطباعة» بيدّي
+      //    رقم الموظف مايقدرش يشتغل عليه.
+      return { total: n.invoice + n.awb + n.showroom + n.none, chips };
     },
   },
   pack: {

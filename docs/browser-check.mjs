@@ -138,7 +138,9 @@ check('allZones:true اتبعت للـ Worker', ordersCall?.body?.allZones === t
 // ② عدّادات القنوات
 const n = async (k) => (await page.textContent(`#chanN-${k}`)).trim();
 check('عدّاد قاهرة+جيزة = 1', await n('invoice')==='1', await n('invoice'));
-check('عدّاد بوسطة = 5',      await n('awb')==='5',     await n('awb'));
+// 🔴 البادج بيعدّ **المعروض فعلاً** مش القناة كلها: ٥ أوردر بوسطة في الرد،
+//    منهم واحد S2 وواحد بلا تاج رفع — فالبادج ٣ زي الجدول بالظبط.
+check('🔴 عدّاد بوسطة = 3 (= الجدول، مش القناة كلها)', await n('awb')==='3', await n('awb'));
 check('عدّاد شو روم = 1',     await n('showroom')==='1',await n('showroom'));
 check('عدّاد بلا قناة = 2',   await n('none')==='2',    await n('none'));
 check('زرار «بلا قناة» ظاهر', await page.isVisible('#chanBtn-none'));
@@ -170,6 +172,11 @@ check('🚚 عدد اللي لسه ما اترفعش معروض', (await page.te
 check('🚚 اسم التاج مكتوب في الملاحظة', (await page.textContent('#chanNote')).includes('Bosta_Uploaded_S1'), '');
 check('🚚 KPI بيوصف المعروض مش القناة كلها', (await page.textContent('#kpiS1')) === '3', await page.textContent('#kpiS1'));
 check('عمود القناة بيقول بوسطة', (await page.textContent('#printTableBody')).includes('بوسطة'));
+// 🔴 البند ده بيمسك رجوع الباج نفسه: بادج ٦٦ فوق جدول فيه ٦.
+check('🔴 البادج == عدد صفوف الجدول', await n('awb') === String((await page.$$('#printTableBody tr')).length),
+      `badge=${await n('awb')} rows=${(await page.$$('#printTableBody tr')).length}`);
+check('🔴 البادج == عدّاد النتائج', await n('awb') === (await page.textContent('#filteredCount-print')).trim(),
+      `badge=${await n('awb')} results=${await page.textContent('#filteredCount-print')}`);
 
 // ⑥ التبديل بيمسح التحديد
 await page.click('#selectAllVisibleBtn'); await page.waitForTimeout(200);
@@ -240,7 +247,7 @@ const afterBody = await page.textContent('#printTableBody');
 check('🔴 #53400 المطبوع اتشال من الطابور', !afterBody.includes('#53400'), afterBody.slice(0,200));
 check('🔴 #53401 المطبوع اتشال من الطابور', !afterBody.includes('#53401'), '');
 check('🔴 #53402 (ما اتطبعش) لسه في الطابور', afterBody.includes('#53402'), '');
-check('🔴 عدّاد بوسطة نزل لـ 3', await n('awb')==='3', await n('awb'));
+check('🔴 عدّاد بوسطة نزل لـ 1', await n('awb')==='1', await n('awb'));
 check('🔴 سبب الاختفاء مكتوب فوق الجدول', (await page.textContent('#chanNote')).includes('اتشالوا من الطابور'),
       await page.textContent('#chanNote'));
 
