@@ -61,11 +61,23 @@ await page.exposeFunction('__hit', (k) => { printHits.push(k); });
 await page.addInitScript(() => {
   localStorage.setItem('warehouse_ops_worker_secret','x'.repeat(40));
   sessionStorage.setItem('woc_session', JSON.stringify({v:1,username:'Ahmed_Ibraheem',displayName:'Ahmed Ibraheem',loginAt:new Date().toISOString()}));
-  // في هيدلس مفيش PDF plugin، فـ iframe الـ blob مش frame قابل للسكربت
-  // و`contentWindow.print()` بترمي — وده بالظبط المسار اللي الـ fallback
-  // اتكتب عشانه. الاختبار بيتأكد إن **واحد** من المسارين اشتغل.
+  // من v1.12.0 البوليصة بتتفتح في **تاب جديد** مش في iframe. الستَب بيرجّع
+  // نافذة وهمية عشان الكود يعدّي على المسار الطبيعي (حجز التاب ← توجيهه)،
+  // والـ hits بتقول أنهي خطوة اتنفّذت.
+  // ⚠️ `window.open` الحقيقية بترجّع `null` لما المتصفح يمنع الـ popup —
+  //    والستَب هنا بيرجّع كائن، يعني الشريط الاحتياطي **مالوش أن يظهر**.
   window.print = () => { window.__hit && window.__hit('print'); };
-  window.open  = () => { window.__hit && window.__hit('open'); return null; };
+  window.__awbNav = [];
+  window.open = (url) => {
+    window.__hit && window.__hit(url ? 'open' : 'preopen');
+    return {
+      closed: false,
+      focus() {},
+      close() { this.closed = true; },
+      document: { write() {}, close() {} },
+      location: { replace: (u) => { window.__hit && window.__hit('nav'); window.__awbNav.push(u); } },
+    };
+  };
 });
 
 const J = (o) => ({ status:200, contentType:'application/json', body: JSON.stringify(o) });
@@ -135,6 +147,15 @@ await page.waitForTimeout(600);
 const ordersCall = calls.find(c => c.path === '/orders');
 check('allZones:true اتبعت للـ Worker', ordersCall?.body?.allZones === true, JSON.stringify(ordersCall?.body));
 
+// 🔴 الفلاتر **مطوية افتراضيًا** من v1.12.0 (قرار أحمد 07-09-2026) —
+//    الطابور هو الشغل، والفلاتر أداة مساعدة. والطي **مش إخفاء**: ضغطة
+//    على الشريط بتفتحه، والفلاتر جوّاه بتفضل شغّالة زي ما هي.
+check('🔴 قسم الفلاتر مطوي افتراضيًا (الطباعة)', await page.isHidden('#fltBody-print'));
+await page.click('.flt-header'); await page.waitForTimeout(150);
+check('🔴 الفلاتر بتتفتح بضغطة على الشريط', await page.isVisible('#fltBody-print'));
+await page.click('.flt-header'); await page.waitForTimeout(150);
+check('🔴 وبترجع تتطوي بضغطة تانية', await page.isHidden('#fltBody-print'));
+
 // ② عدّادات القنوات
 const n = async (k) => (await page.textContent(`#chanN-${k}`)).trim();
 check('عدّاد قاهرة+جيزة = 1', await n('invoice')==='1', await n('invoice'));
@@ -157,21 +178,28 @@ check('صفوف «بلا قناة» ظاهرة ومعلّمة مقفولة', loc
 check('مربعات التحديد متعطّلة', (await page.$$('#printTableBody tr.row-locked input[disabled]')).length === 2);
 check('سبب القفل مكتوب في الصف', (await page.textContent('#printTableBody')).includes('الزون لسه ما اتحددش'));
 check('قيمة الزون غير المعروفة معروضة زي ما هي', (await page.textContent('#printTableBody')).includes('زون غير معروف: Cairo'));
-check('ملاحظة «بلا قناة» ظاهرة', await page.isVisible('#chanNote'));
+// 🔴 الشريط الأصفر اتشال في v1.12.0 — فسبب القفل لازم يفضل **في الصف**،
+//    وإلا الأوردر بيبان مقفول من غير أي تفسير في أي مكان.
+check('🔴 الشريط الأصفر اتشال من الصفحة', (await page.$$('#chanNote')).length === 0);
+check('🔴 سبب القفل لسه ظاهر في الصف نفسه', (await page.textContent('#printTableBody')).includes('⚠️'));
+check('«طباعة الكل» متعطّل في قناة كلها مقفول', await page.isDisabled('#printAllBtn'));
+check('بادج «طباعة الكل» = 0', (await page.textContent('#pbAllCount')).trim() === '0', await page.textContent('#pbAllCount'));
 await page.click('#selectAllVisibleBtn'); await page.waitForTimeout(200);
-check('«تحديد كل النتائج» مابيحددش المقفول', (await page.textContent('#selectedInfo')).includes('لم يتم تحديد'));
+check('«تحديد كل النتائج» مابيحددش المقفول', (await page.textContent('#pbSelCount')).trim() === '0', await page.textContent('#pbSelCount'));
 
 // ⑤ قناة بوسطة — S2 مخفية والعدد معروض
 await page.click('#chanBtn-awb');
 await page.waitForTimeout(200);
 check('صفوف بوسطة = 3 (S2 مخفية)', (await page.$$('#printTableBody tr')).length === 3, String((await page.$$('#printTableBody tr')).length));
-check('عدد S2 المخفية معروض', (await page.textContent('#chanNote')).includes('1 أوردر استبدال'), await page.textContent('#chanNote'));
 // 🚚 §BOSTA-GATE — الأوردر اللي لسه ما اترفعش مستحيل تتطبع بوليصته
 check('🚚 الأوردر بلا تاج الرفع مش في الجدول', !(await page.textContent('#printTableBody')).includes('#53408'), '');
-check('🚚 عدد اللي لسه ما اترفعش معروض', (await page.textContent('#chanNote')).includes('1 أوردر بوسطة'), await page.textContent('#chanNote'));
-check('🚚 اسم التاج مكتوب في الملاحظة', (await page.textContent('#chanNote')).includes('Bosta_Uploaded_S1'), '');
-check('🚚 KPI بيوصف المعروض مش القناة كلها', (await page.textContent('#kpiS1')) === '3', await page.textContent('#kpiS1'));
+check('🚚 أوردر S2 على بوسطة مش في الجدول', !(await page.textContent('#printTableBody')).includes('#53403'), '');
 check('عمود القناة بيقول بوسطة', (await page.textContent('#printTableBody')).includes('بوسطة'));
+// 🔴 الشريط الأصفر اتشال، فالبادج بقى **المصدر الوحيد** اللي بيقول
+//    كام أوردر ينفع يتطبع دلوقتي — والبنود التلاتة تحت بتقفل عليه.
+check('🔴 بادج «طباعة الكل» == عدد صفوف الجدول',
+      (await page.textContent('#pbAllCount')).trim() === String((await page.$$('#printTableBody tr')).length),
+      await page.textContent('#pbAllCount'));
 // 🔴 البند ده بيمسك رجوع الباج نفسه: بادج ٦٦ فوق جدول فيه ٦.
 check('🔴 البادج == عدد صفوف الجدول', await n('awb') === String((await page.$$('#printTableBody tr')).length),
       `badge=${await n('awb')} rows=${(await page.$$('#printTableBody tr')).length}`);
@@ -180,10 +208,12 @@ check('🔴 البادج == عدّاد النتائج', await n('awb') === (awai
 
 // ⑥ التبديل بيمسح التحديد
 await page.click('#selectAllVisibleBtn'); await page.waitForTimeout(200);
-check('اتحدد 3 أوردرات بوسطة', (await page.textContent('#selectedInfo')).includes('3'), await page.textContent('#selectedInfo'));
-check('🚚 «تحديد كل النتائج» مااخدش الأوردر بلا تاج', !(await page.textContent('#selectedInfo')).includes('4'), await page.textContent('#selectedInfo'));
+check('اتحدد 3 أوردرات بوسطة', (await page.textContent('#pbSelCount')).trim() === '3', await page.textContent('#pbSelCount'));
+check('«طباعة المحدد» اتفعّل', !(await page.isDisabled('#printSelectedBtn')));
+check('«إلغاء التحديد» اتفعّل', !(await page.isDisabled('#clearSelBtn')));
 await page.click('#chanBtn-invoice'); await page.waitForTimeout(200);
-check('تبديل القناة مسح التحديد', (await page.textContent('#selectedInfo')).includes('لم يتم تحديد'));
+check('تبديل القناة مسح التحديد', (await page.textContent('#pbSelCount')).trim() === '0', await page.textContent('#pbSelCount'));
+check('«طباعة المحدد» رجع متعطّل بعد المسح', await page.isDisabled('#printSelectedBtn'));
 
 // ⑦ دفعة بوسطة كاملة
 await page.click('#chanBtn-awb'); await page.waitForTimeout(200);
@@ -228,13 +258,18 @@ check('مفيش أي نداء /invoice في مسار بوسطة', !calls.some(c 
 const res = await page.textContent('#trackResultBody');
 check('#53402 اتعرض بسبب «ما اترفعش»', res.includes('#53402') && res.includes('ما اترفعش'), '');
 check('شارة البوليصة ظاهرة', res.includes('بوليصة'));
-check('لوحة معاينة البوليصة ظهرت', await page.isVisible('#awbPanel'));
-// ⚠️ `printAwbPdf` بتنادي `print()` على **نافذة الـ iframe** مش الرئيسية.
-//    و`frame.evaluate()` على frame فيه PDF **بتعلّق للأبد** في هيدلس —
-//    فالتبليغ بيحصل بـ binding من جوّه الصفحة نفسها.
-const printed = printHits.filter(h=>h==='print').length;
-const opened  = printHits.filter(h=>h==='open').length;
-check('الطباعة اتنفّذت (print على الـ iframe أو fallback لتاب)', printed>0 || opened>0, `printed=${printed} opened=${opened} frames=${page.frames().length}`);
+// 🔴 §AWB — البوليصة بتتفتح في تاب جديد من v1.12.0. البنود دي بتقفل
+//    على **ترتيب** الخطوات: التاب بيتحجز فاضي عند الضغطة (`preopen`)
+//    وبيتوجّه للملف بعدين (`nav`). لو الحجز اتأخر لبعد نداءات بوسطة،
+//    كروم بيمنع الـ popup في اليوم العادي.
+check('🔴 لوحة المعاينة القديمة اتشالت', (await page.$$('#awbPanel')).length === 0);
+check('🔴 التاب اتحجز عند الضغطة (قبل نداءات بوسطة)', printHits.includes('preopen'), JSON.stringify(printHits));
+check('🔴 التاب اتوجّه للبوليصة', printHits.includes('nav'), JSON.stringify(printHits));
+check('🔴 التوجيه لملف blob مش لحاجة تانية',
+      await page.evaluate(() => (window.__awbNav||[]).every(u => String(u).startsWith('blob:'))),
+      await page.evaluate(() => JSON.stringify(window.__awbNav)));
+check('🔴 الشريط الاحتياطي ما ظهرش (التاب اتفتح فعلاً)', !(await page.isVisible('#awbFallback')));
+check('🔴 مفيش iframe معاينة للبوليصة', (await page.$$('#awbFrame')).length === 0);
 
 
 // ⑩ 🔴 §JUST-PRINTED — الأوردر المطبوع بيختفي من الطابور **فورًا**، رغم إن
@@ -248,8 +283,8 @@ check('🔴 #53400 المطبوع اتشال من الطابور', !afterBody.in
 check('🔴 #53401 المطبوع اتشال من الطابور', !afterBody.includes('#53401'), '');
 check('🔴 #53402 (ما اتطبعش) لسه في الطابور', afterBody.includes('#53402'), '');
 check('🔴 عدّاد بوسطة نزل لـ 1', await n('awb')==='1', await n('awb'));
-check('🔴 سبب الاختفاء مكتوب فوق الجدول', (await page.textContent('#chanNote')).includes('اتشالوا من الطابور'),
-      await page.textContent('#chanNote'));
+check('🔴 بادج «طباعة الكل» نزل مع الجدول', (await page.textContent('#pbAllCount')).trim() === '1',
+      await page.textContent('#pbAllCount'));
 
 console.log('\n── ② انحدار: مسار الفاتورة (قاهرة+جيزة · شو روم) ──');
 await page.reload();
@@ -260,7 +295,7 @@ calls.length = 0;
 // ── انحدار: مسار الفاتورة (قاهرة+جيزة) لسه شغّال زي ما هو ──
 check('القناة الافتراضية = فاتورة قاهرة+جيزة', (await page.getAttribute('#chanBtn-invoice','class')).includes('active'));
 await page.click('#selectAllVisibleBtn'); await page.waitForTimeout(200);
-check('اتحدد أوردر قاهرة+جيزة واحد', (await page.textContent('#selectedInfo')).includes('1'), await page.textContent('#selectedInfo'));
+check('اتحدد أوردر قاهرة+جيزة واحد', (await page.textContent('#pbSelCount')).trim() === '1', await page.textContent('#pbSelCount'));
 
 await page.click('#printSelectedBtn');
 await page.waitForSelector('#trackResultOverlay.open', { timeout:20000 });

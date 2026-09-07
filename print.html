@@ -343,13 +343,37 @@
 .count-2 { background: var(--amber-light); color: var(--amber-dark); border: 1px solid var(--amber-border); }
 .count-3 { background: var(--red-light);   color: var(--red-dark);   border: 1px solid var(--red-border); }
 
-/* ── Print bar (اختيار وطباعة) ── */
+/* ── Print bar (الطباعة) — اتعاد تصميمه في v1.12.0 (قرار أحمد 07-09-2026)
+   الزراير **في النص** والعدد على بادج جنب كل زرار، وسطر «تم تحديد N أوردر»
+   اتشال: الرقم بقى على الزرار نفسه بدل ما يتقرا من سطر بعيد عنه.
+   ⚠️ التلاتة **بيفضلوا ظاهرين** ويتعطّلوا بدل ما يختفوا. زرار بيظهر ويختفي
+      بيزحلق اللي جنبه تحت إيد الموظف وهو بيدوس — والدوسة الغلط هنا معناها
+      دفعة ورق. */
 .print-bar {
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap;
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-  box-shadow: var(--shadow); padding: 11px 16px; margin-bottom: 14px;
+  box-shadow: var(--shadow); padding: 20px 16px; margin-bottom: 14px;
 }
-.print-bar-info { font-size: 13px; font-weight: 700; color: var(--accent); }
+.pb-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 13px 24px; border-radius: var(--radius-sm); border: none;
+  font-family: var(--font-body); font-size: 15px; font-weight: 800;
+  color: var(--on-accent); cursor: pointer; transition: background .15s, opacity .15s;
+}
+.pb-btn:disabled { opacity: .45; cursor: not-allowed; }
+.pb-all { background: var(--green); }
+.pb-all:hover:not(:disabled) { background: var(--green-dark); }
+.pb-sel { background: var(--accent); }
+.pb-sel:hover:not(:disabled) { background: var(--accent-dark); }
+/* البادج **أكبر** من نص الزرار عن قصد — هو الرقم اللي الموظف بيقرا الزرار
+   عشانه. الخلفية `--surface` مش شفافة: زرار متعطّل بيبهت كله مع البادج. */
+.pb-badge {
+  display: inline-block; min-width: 32px; padding: 3px 11px; border-radius: 20px;
+  background: var(--surface); font-size: 16px; font-weight: 800;
+  font-family: var(--font-mono); direction: ltr; line-height: 1.5;
+}
+.pb-all .pb-badge { color: var(--green-dark); }
+.pb-sel .pb-badge { color: var(--accent-dark); }
 
 /* ══════════════════════════════════════════════════════════════
    §CHANNEL — مبدّل القناة (v1.7.0)
@@ -405,26 +429,18 @@
 .row-locked td { opacity: .82; }
 .lock-note { display: block; font-size: 10.5px; font-weight: 700; color: var(--amber-dark); margin-top: 3px; }
 
-/* سطر ملاحظة تحت شريط القناة — S2 بوسطة المخفية مؤقتًا · القصّ · الفشل */
-.chan-note {
-  display: none; align-items: center; gap: 8px; flex-wrap: wrap;
-  border: 1.5px solid var(--amber-border); background: var(--amber-light);
-  color: var(--amber-dark); border-radius: var(--radius-sm);
-  padding: 8px 12px; font-size: 12px; font-weight: 700; line-height: 1.7;
-  margin-bottom: 12px;
-}
-.chan-note.visible { display: flex; }
-
-/* ── معاينة البوليصة — PDF جاي من بوسطة كما هو ──
+/* ── البوليصة — بتتفتح في **تاب جديد** من v1.12.0 (قرار أحمد 07-09-2026) ──
    ⛔ ممنوع أي إعادة رسم أو scaling: الملف ده بيطلع مظبوط على الملصق
-      الحراري من داشبورد بوسطة، فأي تدخل مننا بيكسر ضمانة قايمة. */
-.awb-panel { display: none; background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius); box-shadow: var(--shadow); padding: 12px; margin-bottom: 14px; }
-.awb-panel.visible { display: block; }
-.awb-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
-.awb-head-t { font-size: 13px; font-weight: 800; }
-.awb-head-m { font-size: 11.5px; font-weight: 700; color: var(--text-muted); font-family: var(--font-mono); }
-.awb-frame { width: 100%; height: 460px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); }
+      الحراري من داشبورد بوسطة، فأي تدخل مننا بيكسر ضمانة قايمة.
+   الشريط ده **احتياطي بس**: بيظهر لما المتصفح يمنع فتح التاب، عشان الفشل
+   يبقى **معلن** بزرار بضغطة الموظف — بوليصة ما خرجتش = شحنة بتخرج من
+   المخزن من غير ملصق. */
+.awb-fallback { display: none; align-items: center; gap: 10px; flex-wrap: wrap;
+  border: 1.5px solid var(--red-border); background: var(--red-light); color: var(--red-dark);
+  border-radius: var(--radius); box-shadow: var(--shadow); padding: 12px 16px;
+  margin-bottom: 14px; font-size: 13px; font-weight: 700; }
+.awb-fallback.visible { display: flex; }
+.awb-fb-m { font-size: 11.5px; font-weight: 700; color: var(--text-muted); font-family: var(--font-mono); }
 
 /* بوابة المراجعة — سؤالين لأوردر بوسطة بدل سؤال واحد (قرار أحمد 07-09-2026).
    نفس نمط التأكيدين الإلزاميين في `remove.html` — مش نمط جديد. */
@@ -572,7 +588,6 @@
 .flag-void   { background:var(--red-light);    color:var(--red-dark);    border:1px solid var(--red-border);    }
 .flag-packed { background:var(--purple-light); color:var(--purple-dark); border:1px solid var(--purple-border); }
 .flag-recent { background:var(--amber-light);  color:var(--amber-dark);  border:1px solid var(--amber-border);  }
-.kpi-sub { font-size:11px; font-weight:800; color:var(--red-dark); margin-top:5px; }
 .cell-sub { display:block; font-size:11px; font-weight:600; color:var(--text-secondary); margin-top:2px; }
 .confirm-question { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-top: 12px; }
 
@@ -693,20 +708,6 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
   <div id="printDashboard" style="display:none;">
 
-    <div class="kpi-grid" style="grid-template-columns:repeat(2,1fr);">
-      <div class="kpi-card">
-        <div class="kpi-value" id="kpiS1">0</div>
-        <div class="kpi-label">عادي</div>
-        <!-- 🔴 سطر التنبيه — بيظهر بس لما يكون فيه فواتير لاغية.
-             مش كارت جديد عن قصد: الصف اتنين كارت وخلاص. -->
-        <div class="kpi-sub" id="kpiS1Void" style="display:none;"></div>
-      </div>
-      <div class="kpi-card amber">
-        <div class="kpi-value" id="kpiS2">0</div>
-        <div class="kpi-label">استبدال/استرجاع</div>
-      </div>
-    </div>
-
     <!-- ══════════════════════════════════════════════════════════
          §CHANNEL — مبدّل القناة (v1.7.0)
          🔴 اختيار **أحادي إلزامي**. `custom.zone` قرار توجيه شحن مش
@@ -731,28 +732,24 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
         ⚠️ بلا قناة <span class="chan-n" id="chanN-none">—</span></button>
     </div>
 
-    <div class="chan-note" id="chanNote"></div>
-
-    <!-- ─── §AWB — معاينة البوليصة الراجعة من بوسطة ─── -->
-    <div class="awb-panel" id="awbPanel">
-      <div class="awb-head">
-        <span class="awb-head-t">🚚 بوليصة بوسطة</span>
-        <span class="awb-head-m" id="awbMeta"></span>
-        <div style="flex:1;"></div>
-        <button class="btn btn-primary btn-sm" onclick="printAwbPdf()">🖨️ اطبع تاني</button>
-        <button class="btn btn-ghost btn-sm"   onclick="openAwbTab()">↗ افتح في تاب</button>
-        <button class="btn btn-ghost btn-sm"   onclick="closeAwbPanel()">✕ إغلاق</button>
-      </div>
-      <iframe class="awb-frame" id="awbFrame" title="معاينة بوليصة بوسطة"></iframe>
+    <!-- ─── §AWB — الشريط الاحتياطي لفتح البوليصة ───
+         بيظهر **بس** لما المتصفح يمنع فتح التاب تلقائيًا. المسار الطبيعي
+         إن البوليصة بتفتح لوحدها في تاب جديد بعارض الـ PDF بتاع المتصفح. -->
+    <div class="awb-fallback" id="awbFallback">
+      <span>🚚 البوليصة جاهزة — المتصفح منع فتح التاب تلقائيًا.</span>
+      <span class="awb-fb-m" id="awbMeta"></span>
+      <div style="flex:1;"></div>
+      <button class="btn btn-primary btn-sm" onclick="openAwbTab()">↗ افتح البوليصة</button>
+      <button class="btn btn-ghost btn-sm"   onclick="closeAwbFallback()">✕ إغلاق</button>
     </div>
 
     <!-- ─── §TOOL::printBar ─── -->
     <div class="print-bar">
-      <span class="print-bar-info" id="selectedInfo">لم يتم تحديد أي أوردر</span>
-      <div style="flex:1;"></div>
-      <button class="btn btn-ghost btn-sm" id="clearSelBtn" onclick="clearSelection()" style="display:none;">إلغاء التحديد</button>
-      <button class="btn btn-ghost" onclick="printAll()">🖨️ طباعة الكل</button>
-      <button class="btn btn-primary" id="printSelectedBtn" onclick="startPrint()" style="display:none;">🖨️ طباعة المحدد</button>
+      <button class="pb-btn pb-all" id="printAllBtn" onclick="printAll()" disabled>
+        🖨️ طباعة الكل <span class="pb-badge" id="pbAllCount">0</span></button>
+      <button class="pb-btn pb-sel" id="printSelectedBtn" onclick="startPrint()" disabled>
+        🖨️ طباعة المحدد <span class="pb-badge" id="pbSelCount">0</span></button>
+      <button class="btn btn-ghost" id="clearSelBtn" onclick="clearSelection()" disabled>إلغاء التحديد</button>
     </div>
 
     <!-- ─── §TOOL::unifiedSection (فلاتر + جدول — كارت واحد) ─── -->
@@ -760,7 +757,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
       <div class="flt-header" onclick="toggleFilters('print')">
         <div class="flt-header-right">
-          <span class="flt-toggle open" id="fltToggleIcon-print">▲</span>
+          <span class="flt-toggle" id="fltToggleIcon-print">▲</span>
           <svg class="flt-icon" id="fltIcon-print" viewBox="0 0 36 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="2 3 13 3 8.3 10.2 8.3 19 6.7 19 6.7 10.2 2 3"></polygon>
             <line x1="18" y1="5" x2="33" y2="5"></line>
@@ -771,7 +768,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
         <button class="clear-btn inactive" id="clearAllBtn-print" onclick="event.stopPropagation(); clearAllFilters('print');">✕ مسح كل الفلاتر</button>
       </div>
 
-      <div class="flt-body" id="fltBody-print">
+      <div class="flt-body collapsed" id="fltBody-print">
 
         <!-- صف 1: فلاتر الاختيار المتعدد -->
         <div class="flt-row">
@@ -969,7 +966,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
       <div class="flt-header" onclick="toggleFilters('log')">
         <div class="flt-header-right">
-          <span class="flt-toggle open" id="fltToggleIcon-log">▲</span>
+          <span class="flt-toggle" id="fltToggleIcon-log">▲</span>
           <svg class="flt-icon" id="fltIcon-log" viewBox="0 0 36 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="2 3 13 3 8.3 10.2 8.3 19 6.7 19 6.7 10.2 2 3"></polygon>
             <line x1="18" y1="5" x2="33" y2="5"></line>
@@ -980,7 +977,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
         <button class="clear-btn inactive" id="clearAllBtn-log" onclick="event.stopPropagation(); clearAllFilters('log');">✕ مسح كل الفلاتر</button>
       </div>
 
-      <div class="flt-body" id="fltBody-log">
+      <div class="flt-body collapsed" id="fltBody-log">
 
         <div class="flt-row">
           <div class="flt-g">
@@ -1360,8 +1357,22 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
       <div class="cl-entry">
         <div class="cl-head">
-          <span class="cl-ver">v1.11.1</span>
+          <span class="cl-ver">v1.12.0</span>
           <span class="cl-badge" id="clLatestBadge">آخر نسخة</span>
+          <span class="cl-date">07-09-2026</span>
+        </div>
+        <div class="cl-list">
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <strong>البوليصة بتتفتح في تاب جديد</strong> بدل معاينة صغيرة جوّه الصفحة. عارض الـ PDF بتاع المتصفح بيدي الملصق بحجمه الكامل وزرار طباعة حقيقي — والموظف كان بيدوس «افتح في تاب» في كل مرة فعليًا.</span></div>
+          <div class="cl-item"><span class="cl-tag new">جديد</span><span>التاب <strong>بيتحجز عند ضغطة الموظف</strong> قبل نداءات بوسطة، عشان المتصفح ما يمنعوش كـ popup. ولو اتمنع برضه، شريط أحمر بزرار مباشر — <strong>مفيش فشل صامت</strong>.</span></div>
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span>شريط الطباعة اتعاد تصميمه: الزراير <strong>في النص</strong> وأكبر، و<strong>بادج بالعدد</strong> جنب «طباعة الكل» و«طباعة المحدد». سطر «تم تحديد N أوردر» اتشال — الرقم بقى على الزرار نفسه.</span></div>
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span><strong>قسم الفلاتر مطوي افتراضيًا</strong> في الطباعة والسجل — الطابور هو الشغل، والفلاتر بضغطة واحدة.</span></div>
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span>اتشال <strong>مربعا «عادي / استبدال-استرجاع»</strong> و<strong>شريط الملاحظات الأصفر</strong> تحت مبدّل القناة (قرار أحمد 07-09-2026). ⚠️ بادج القناة وبادج «طباعة الكل» بقوا المصدر الوحيد للأرقام — والاتنين بيعدّوا <strong>اللي ينفع يتطبع فعلاً</strong>.</span></div>
+        </div>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-head">
+          <span class="cl-ver">v1.11.1</span>
           <span class="cl-date">07-09-2026</span>
         </div>
         <div class="cl-list">
@@ -1987,9 +1998,9 @@ const filterLabels = {
 };
 const sec = {
   print: { keys:["pType","pStatus","pCount","pFlag"], searchTerm:"", dateFrom:null, dateTo:null,
-           dateFilterActive:false, activePreset:"", sortState:{key:null,dir:null}, fltOpen:true, tblOpen:true },
+           dateFilterActive:false, activePreset:"", sortState:{key:null,dir:null}, fltOpen:false, tblOpen:true },
   log:   { keys:["lType","lCount","lEmp"],             searchTerm:"", dateFrom:null, dateTo:null,
-           dateFilterActive:false, activePreset:"", sortState:{key:null,dir:null}, fltOpen:true, tblOpen:true },
+           dateFilterActive:false, activePreset:"", sortState:{key:null,dir:null}, fltOpen:false, tblOpen:true },
 };
 const sortConfig = {
   name:{type:"string"}, customer:{type:"string"}, type:{type:"string"}, status:{type:"string"},
@@ -2510,8 +2521,6 @@ const CHANNELS = {
 // القناة النشطة — **في الذاكرة بس** زي `lastEntryMode` في `pack.html`:
 // موظف جديد على نفس الجهاز بيبدأ من الافتراضي.
 let activeChannel = "invoice";
-let chanHiddenS2  = 0;      // أوردرات S2 بوسطة المخفية مؤقتًا (قرار أحمد)
-let chanHiddenNew = 0;      // أوردرات بوسطة لسه ما اترفعتش (§BOSTA-GATE)
 
 function setChannel(ch) {
   if (!CHANNELS[ch] || ch === activeChannel) return;
@@ -2520,7 +2529,7 @@ function setChannel(ch) {
   //    ورق مختلف وطابعة مختلفة وحارس مختلف؛ دفعة مختلطة معناها نافذتي طباعة
   //    ونافذة نتيجة مالهاش نص مفهوم.
   selectedIds.clear();
-  closeAwbPanel();
+  closeAwbFallback();
   applyPrintFilters();
 }
 
@@ -2546,52 +2555,15 @@ function renderChannelCounts() {
     n.textContent = counts[key].toLocaleString("en-US");
     btn.classList.toggle("active", key === activeChannel);
     // «بلا قناة» بيظهر **بس** لما يكون فيه فعلاً — صفر مايتكتبش عشان الشاشة
-    // ماتتعوّدش على تحذير دايم فتبطّل تشوفه (نفس مبدأ `kpiS1Void`).
+    // ماتتعوّدش على تحذير دايم فتبطّل تشوفه.
     if (key === "none") btn.style.display = (counts.none || key === activeChannel) ? "" : "none";
   }
   return counts;
 }
 
-function renderChannelNote() {
-  const box = document.getElementById("chanNote");
-  if (!box) return;
-  const parts = [];
-  if (recentlyPrinted.size) {
-    // §JUST-PRINTED — الاختفاء متوقّع، بس الرقم بيقوله بدل ما يعدّي بالصمت.
-    parts.push(`🖨️ ${recentlyPrinted.size.toLocaleString("en-US")} أوردر اتطبعوا ` +
-               `دلوقتي و<b>اتشالوا من الطابور</b> — فهرس بحث شوبيفاي لسه ` +
-               `بيلحق، فبيرجعوا في رد الـ Worker لثواني بعد الطباعة.`);
-  }
-  if (activeChannel === "awb" && chanHiddenNew) {
-    // 🔴 الغياب لازم يبقى **معلوم**: الأوردرات دي مش «مش موجودة»، دي
-    //    مستنية خطوة الرفع على بوسطة — والرقم ده بيقول للموظف إن البوابة
-    //    دي واقفة، بدل ما الطابور يبان فاضي بلا سبب.
-    parts.push(`🚚 ${chanHiddenNew.toLocaleString("en-US")} أوردر بوسطة ` +
-               `<b>لسه ما اترفعوش على داشبورد بوسطة</b> (مفيش تاج ` +
-               `<code>${escHtml(BOSTA_UPLOADED_TAG)}</code>) — الرفع خطوة ` +
-               `إلزامية قبل الطباعة، فمش معروضين هنا.`);
-  }
-  if (activeChannel === "awb" && chanHiddenS2) {
-    // قرار أحمد 07-09-2026: S2 على بوسطة **مخفية مؤقتًا**. بنعرض العدد عشان
-    // الغياب يبقى **معلوم** مش خفي — أوردر مختفي بلا سبب = تذكرة دعم.
-    parts.push(`ℹ️ ${chanHiddenS2.toLocaleString("en-US")} أوردر استبدال/استرجاع على بوسطة ` +
-               `<b>مخفيين مؤقتًا</b> — طباعة بوسطة للأوردرات العادية (S1) بس دلوقتي.`);
-  }
-  if (activeChannel === "none") {
-    parts.push("⚠️ الأوردرات دي <b>مالهاش زون</b> (أو زونها مش من القايمة المعتمدة)، " +
-               "فالأداة <b>مش قادرة</b> تعرف تطبع فاتورة ولا بوليصة. " +
-               "القرار ده بيتاخد على شوبيفاي — والطباعة هنا مقفولة لحد ما يتاخد.");
-  }
-  box.innerHTML = parts.join("<br>");
-  box.classList.toggle("visible", parts.length > 0);
-}
-
-function closeAwbPanel() {
-  const panel = document.getElementById("awbPanel");
-  if (panel) panel.classList.remove("visible");
-  const f = document.getElementById("awbFrame");
-  if (f) f.removeAttribute("src");
-  revokeAwbUrl();
+function closeAwbFallback() {
+  const box = document.getElementById("awbFallback");
+  if (box) box.classList.remove("visible");
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2682,36 +2654,18 @@ function decoratePrintRows() {
   });
 }
 
-function updatePrintKPIs() {
-  // ⚠️ الأرقام دي بتوصف **القناة النشطة** — مش الطابور كله. عدّاد كل قناة
-  //    ظاهر في شريط القناة فوق، فمفيش رقم مخفي.
-  const rows = decoratePrintRows().filter(r => wocChannelGate(r, activeChannel) === null);
-  document.getElementById("kpiS1").textContent = rows.filter(o => o.type === "S1").length.toLocaleString("en-US");
-  document.getElementById("kpiS2").textContent = rows.filter(o => o.type === "S2").length.toLocaleString("en-US");
-
-  // 🔴 العدد بيتعرض بس لما يبقى فيه فعلاً فواتير لاغية — صفر مايتكتبش
-  //    عشان الشاشة ماتتعوّدش على تحذير دايم فتبطّل تشوفه.
-  const voidCount = rows.filter(r => r.flag).length;
-  const el = document.getElementById("kpiS1Void");
-  if (!el) return;
-  el.style.display = voidCount ? "" : "none";
-  el.textContent   = voidCount ? `🔴 منها ${voidCount.toLocaleString("en-US")} محتاجة قطع فاتورة` : "";
-}
-
 function applyPrintFilters() {
   updateFilterIconState("print");
   const s = sec.print;
   const q = s.searchTerm.trim().toLowerCase();
-  chanHiddenS2  = 0;
-  chanHiddenNew = 0;
   filteredOrders = decoratePrintRows().filter(o => {
-    // ① بوابة القناة أولاً — مش فلتر، ده وضع الأداة الحالي. والاستبعاد
-    //    بيترصد بسببه: كل اللي بيتشال بيتعدّ وبيتقال فوق الجدول، فالغياب
-    //    **معلوم** مش صامت.
-    const gate = wocChannelGate(o, activeChannel);
-    if (gate === "s2")           { chanHiddenS2++;  return false; }
-    if (gate === "not-uploaded") { chanHiddenNew++; return false; }
-    if (gate)                    { return false; }
+    // ① بوابة القناة أولاً — مش فلتر، ده وضع الأداة الحالي.
+    //    ⚠️ الاستبعاد **مش معروض في شريط ملاحظات** من v1.12.0 (قرار أحمد
+    //       07-09-2026 — الشريط الأصفر اتشال بالكامل). اللي بيمنع الغياب
+    //       من إنه يبقى كذب هو إن **بادج القناة بيعدّ المعروض فعلاً**
+    //       (`renderChannelCounts` بيعدّي على نفس البوابة بالحرف)، وصف
+    //       «بلا قناة» بيفضل ظاهر ومقفول بسببه مكتوب جنبه في الجدول.
+    if (wocChannelGate(o, activeChannel)) return false;
     if (q && !(String(o.name).toLowerCase().includes(q) || String(o.customer).toLowerCase().includes(q))) return false;
     if (msState.pType.selected.size   && !msState.pType.selected.has(o.type))     return false;
     if (msState.pStatus.selected.size && !msState.pStatus.selected.has(o.status)) return false;
@@ -2721,14 +2675,9 @@ function applyPrintFilters() {
     if (s.dateTo   && o.day > s.dateTo)   return false;
     return true;
   });
-  // 🔴 الـ KPIs بتوصف **القناة النشطة**، والقناة بتتغيّر من هنا — فحسابها
-  //    لازم يعدّي من نفس المسار. قبل كده كانت بتتحسب عند الجلب بس، فتبديل
-  //    القناة كان بيسيب أرقام القناة اللي قبلها معروضة تحت ليبل القناة الجديدة.
-  updatePrintKPIs();
   renderPrintTable(applySort("print", filteredOrders));
   document.getElementById("filteredCount-print").textContent = filteredOrders.length.toLocaleString("en-US");
   renderChannelCounts();
-  renderChannelNote();
   updatePrintBar();
 }
 
@@ -2785,10 +2734,17 @@ function selectAllVisible() {
 function clearSelection() { selectedIds.clear(); applyPrintFilters(); }
 
 function updatePrintBar() {
-  const n = selectedIds.size;
-  document.getElementById("selectedInfo").textContent = n ? `تم تحديد ${n.toLocaleString("en-US")} أوردر` : "لم يتم تحديد أي أوردر";
-  document.getElementById("clearSelBtn").style.display      = n ? "" : "none";
-  document.getElementById("printSelectedBtn").style.display = n ? "" : "none";
+  // 🔴 بادج «طباعة الكل» بيعدّ **القابل للطباعة في القناة النشطة** — بنفس
+  //    الفلتر اللي `printAll` بتشتغل بيه بالحرف. رقم على زرار بيتقرا كوعد
+  //    بشغل، فلو عدّ الصفوف المقفولة كمان الموظف يدوس ويلاقي عدد أقل
+  //    (نفس درس بادج القناة في v1.11.1).
+  const n   = selectedIds.size;
+  const all = filteredOrders.filter(o => o.printable).length;
+  document.getElementById("pbAllCount").textContent = all.toLocaleString("en-US");
+  document.getElementById("pbSelCount").textContent = n.toLocaleString("en-US");
+  document.getElementById("printAllBtn").disabled      = all === 0;
+  document.getElementById("printSelectedBtn").disabled = n === 0;
+  document.getElementById("clearSelBtn").disabled      = n === 0;
 }
 
 function printAll() {
@@ -3184,7 +3140,19 @@ function awbBlockedRow(o, res) {
 }
 
 // ─── §AWB-JS::startPrintAWB ───
+// 🔴 حجز تاب البوليصة بيحصل **هنا**، في نفس مهمة ضغطة الموظف وقبل أي
+//    `await`. المسار كله بعد كده بيعدّي على بوسطة (بحث + بوليصة + تسجيل)،
+//    وكروم بيسحب صلاحية فتح النوافذ بعد ثواني من آخر ضغطة — فحجز التاب
+//    متأخرًا كان معناه popup ممنوع في **اليوم العادي** مش في حالة نادرة.
+// ⚠️ `closeAwbWin` في `finally` بتقفل التاب المحجوز لو الدفعة وقعت أو
+//    اتلغت — و**بتبقى بلا أثر** لو التاب اتستهلك فعلاً.
 async function startPrintAWB(selected) {
+  preopenAwbTab();
+  try { await runPrintAWB(selected); }
+  finally { closeAwbWin(); }
+}
+
+async function runPrintAWB(selected) {
   showPrintLoading(`جاري مراجعة ${selected.length.toLocaleString("en-US")} شحنة على بوسطة...`);
 
   let look;
@@ -3326,9 +3294,8 @@ async function executePrintAWB(orders, guards = {}, byId = {}, blockedRows = [])
                actions: [], warnings: [], errors: [r.error?.message || String(r.error)], logged: false };
     });
 
-    showPrintLoading("جاري فتح نافذة الطباعة...");
-    showAwbPdf(res, printed.length);
-    printAwbPdf();
+    showPrintLoading("جاري فتح البوليصة...");
+    openAwbPdf(res, printed.length);
 
     for (const o of printed) {
       const num = String(o.name).replace("#", "");
@@ -3346,50 +3313,107 @@ async function executePrintAWB(orders, guards = {}, byId = {}, blockedRows = [])
   }
 }
 
-// ─── §AWB-JS::showAwbPdf ───
+// ─── §AWB-JS::openAwbPdf ───
 // ⛔ الـ PDF بيتعرض ويتطبع **زي ما جه بايت ببايت**. مفيش إعادة رسم ومفيش
 //    scaling ومفيش `@page` من عندنا: الملف ده بيطلع مظبوط على الملصق
 //    الحراري من داشبورد بوسطة، فأي تدخل مننا بيكسر ضمانة قايمة.
+//
+// 🔴 **من v1.12.0 البوليصة بتتفتح في تاب جديد** بدل معاينة `iframe` جوّه
+//    الصفحة (قرار أحمد 07-09-2026). عارض الـ PDF بتاع المتصفح بيدي معاينة
+//    بحجم كامل وتكبير وزرار طباعة حقيقي، والـ iframe بارتفاع 460px كان
+//    بيوري ربع الملصق — والموظف كان بيدوس «افتح في تاب» في كل الحالات
+//    فعليًا، فالخطوة اتشالت.
+//
+// 🔴 **التاب بيتحجز عند ضغطة الموظف مش بعد ما البوليصة توصل.** كروم
+//    بيسحب صلاحية فتح النوافذ بعد ثواني من آخر ضغطة، والدفعة بتاخد أطول
+//    من كده على بوسطة — يعني `window.open` بعد الـ `await` كان **هيتمنع
+//    كـ popup في اليوم العادي**، مش في حالة نادرة. فبنفتح تاب فاضي فيه
+//    رسالة انتظار فورًا، وبنوجّهه للملف لما يجهز.
+// ⚠️ ولو المنع حصل برضه (المتصفح قافل النوافذ خالص): الشريط الاحتياطي
+//    بيظهر بزرار بضغطة مباشرة. **ممنوع** الفشل يعدّي في صمت — بوليصة ما
+//    خرجتش = شحنة بتخرج من المخزن من غير ملصق.
+// ⚠️ و`window.open` **من غير `noopener`** عن قصد: مع `noopener` الدالة
+//    بترجّع `null` حتى وهي نجحت، فمستحيل نفرّق بين نجاح ومنع. الملف بلوب
+//    من نفس الـ origin فمفيش مكسب أمني من الحجب هنا.
 let currentAwbUrl = null;
+let awbWin = null;
+
 function revokeAwbUrl() {
   if (currentAwbUrl) { URL.revokeObjectURL(currentAwbUrl); currentAwbUrl = null; }
 }
 
-function showAwbPdf(res, count) {
+function preopenAwbTab() {
+  try {
+    awbWin = window.open("", "_blank");
+    if (awbWin && awbWin.document) {
+      awbWin.document.write(
+        '<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">' +
+        '<title>بوليصة بوسطة — جاري التحضير</title></head>' +
+        '<body style="margin:0;height:100vh;display:flex;align-items:center;' +
+        'justify-content:center;font-family:system-ui,sans-serif;color:#374151">' +
+        '<p style="font-size:17px;font-weight:700">🚚 جاري تحضير البوليصة من بوسطة…</p>' +
+        '</body></html>');
+      awbWin.document.close();
+    }
+  } catch { awbWin = null; }
+}
+
+// بتتنادى في `finally` بتاع كل مسار بوسطة — و**بتبقى بلا أثر** لو التاب
+// اتستهلك فعلاً (`awbWin` بيتصفّر وقت التوجيه).
+function closeAwbWin() {
+  try { if (awbWin && !awbWin.closed) awbWin.close(); } catch { /* تاب اتقفل بإيد الموظف */ }
+  awbWin = null;
+}
+
+function openAwbPdf(res, count) {
   revokeAwbUrl();
   try {
     const bin   = atob(res.pdfBase64);
     const bytes = new Uint8Array(bin.length);
     for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
     currentAwbUrl = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
-    document.getElementById("awbFrame").src = currentAwbUrl;
-    document.getElementById("awbMeta").textContent =
-      `${count.toLocaleString("en-US")} بوليصة · ${(res.pages ?? "?")} صفحة · ` +
-      `${(res.pdfBytes || 0).toLocaleString("en-US")} بايت` +
-      // 🔴 للعرض بس — ممنوع يدخل أي حارس: أداتنا نفسها بتحدّث الحقل ده مع
-      //    كل جلب، فهو بيقول «حد جاب البوليصة» مش «ورقة اتطبعت».
-      (res.latestAWBPrintDate ? ` · بوسطة بتقول آخر طباعة ${formatDateTime(res.latestAWBPrintDate)}` : "");
-    document.getElementById("awbPanel").classList.add("visible");
   } catch (e) {
+    closeAwbWin();
     showToast(`تعذّر فتح ملف البوليصة: ${e.message}`, "error", 8000);
+    return;
   }
+
+  document.getElementById("awbMeta").textContent =
+    `${count.toLocaleString("en-US")} بوليصة · ${(res.pages ?? "?")} صفحة · ` +
+    `${(res.pdfBytes || 0).toLocaleString("en-US")} بايت` +
+    // 🔴 للعرض بس — ممنوع يدخل أي حارس: أداتنا نفسها بتحدّث الحقل ده مع
+    //    كل جلب، فهو بيقول «حد جاب البوليصة» مش «ورقة اتطبعت».
+    (res.latestAWBPrintDate ? ` · بوسطة بتقول آخر طباعة ${formatDateTime(res.latestAWBPrintDate)}` : "");
+
+  // ① التاب المحجوز وقت الضغطة — المسار الطبيعي.
+  if (awbWin && !awbWin.closed) {
+    try {
+      awbWin.location.replace(currentAwbUrl);
+      awbWin.focus();
+      awbWin = null;
+      closeAwbFallback();
+      return;
+    } catch { closeAwbWin(); }
+  }
+  // ② محاولة فتح مباشرة — بتنجح لو الضغطة لسه صالحة.
+  if (openAwbTab()) return;
+  // ③ اتمنع: الشريط الاحتياطي بزرار بضغطة الموظف.
+  showAwbFallback();
 }
 
-function printAwbPdf() {
-  if (!currentAwbUrl) return;
-  const f = document.getElementById("awbFrame");
-  try {
-    f.contentWindow.focus();
-    f.contentWindow.print();
-  } catch {
-    // بعض المتصفحات بتمنع الطباعة من جوّه iframe فيه blob — نفتحها في تاب.
-    openAwbTab();
-  }
-}
-
+// بترجّع `true` لو التاب اتفتح فعلاً — الشريط الاحتياطي بيعتمد على ده.
 function openAwbTab() {
-  if (!currentAwbUrl) return;
-  window.open(currentAwbUrl, "_blank", "noopener");
+  if (!currentAwbUrl) return false;
+  const w = window.open(currentAwbUrl, "_blank");
+  if (!w) return false;
+  closeAwbFallback();
+  return true;
+}
+
+function showAwbFallback() {
+  const box = document.getElementById("awbFallback");
+  if (box) box.classList.add("visible");
+  showToast("المتصفح منع فتح تاب البوليصة — اضغط «افتح البوليصة» فوق الجدول", "warn", 12000);
 }
 
 // ─── §TOOL-JS::renderTrackResults ───
