@@ -99,7 +99,7 @@
      Standards #11 (خط واحد لكل الأدوات).
      ⚠️ ممنوع أي عنصر على الشاشة يستخدمه — الاستثناء للطباعة بس.
 
-     🔴 **اتغيّر في v1.14.0 من سيريف لـ grotesque محايد** (قرار أحمد
+     🔴 **اتغيّر في v1.15.0 من سيريف لـ grotesque محايد** (قرار أحمد
         08-09-2026). القيمة القديمة كانت `Georgia, 'Times New Roman', serif`
         عشان تطابق تيمبلت «Retail Force Barcode» الخارجي — والمطابقة دي
         **بطلت تبقى الهدف**: الليبل الجديد سطرين بدل تلاتة (رقم الأوردر
@@ -316,6 +316,16 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .woc-tool:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--focus-ring)}
 .woc-tool .woc-card-ico{width:42px;height:42px;border-radius:11px;font-size:22px}
 .woc-tool .woc-card-name{font-size:13.5px}
+/* ⚠️ مربع بثيم أحمر — **للأدوات الهدّامة بس** (`remove.html` النهاردة).
+   الأداة دي بتحذف بند من أوردر حي وبند متحذف **مالوش رجعة**، فاللون هنا
+   تحذير مش تزويق: الموظف بيدوس على المربعات دي بسرعة، ولازم يفرّق
+   الهدّامة عن القراءة **قبل** ما يقرا الاسم.
+   ⛔ ممنوع يتحط على أي مربع تاني — لون تحذير على كل حاجة = لون بلا معنى. */
+.woc-tool.tool-danger{border-color:var(--red-border);background:var(--red-light)}
+.woc-tool.tool-danger:hover{border-color:var(--red);box-shadow:0 6px 18px rgba(220,38,38,.14)}
+.woc-tool.tool-danger:focus-visible{border-color:var(--red);box-shadow:0 0 0 3px var(--red-border)}
+.woc-tool.tool-danger .woc-card-name{color:var(--red-dark)}
+.woc-tool.tool-danger .woc-card-ico{background:var(--surface);border-color:var(--red-border)}
 
 /* ⚠️ الأيقونة في مربع ملوّن — اللون هو اللي بيفرّق الطباعة عن التغليف
    قبل ما الموظف يقرا الاسم أصلاً. والإيموجي لازم يكون **نفس** إيموجي
@@ -339,12 +349,17 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .woc-chips{display:flex;gap:6px;flex-wrap:wrap;min-height:22px}
 .woc-chip{display:inline-flex;align-items:center;gap:5px;padding:2.5px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface-2);font-size:11.5px;font-weight:800;color:var(--text-secondary)}
 .woc-chip b{font-family:var(--font-mono);font-variant-numeric:tabular-nums;direction:ltr}
-/* مربعا المندوب على صف «جاهز للتغليف» (v1.13.0) — بدّلوا `chip-s1`/`chip-s2`.
-   ⚠️ الألوان **نفس ألوان مربعَي `.zchip` في `pack.html`** بالحرف: بوسطة
-      أحمر (`.qc-bosta`) · مناديب أزرق (`.qc-courier`). ونفس اسم الكلاس
-      كمان — الصفحة اللي الصف بيفتح عليها بتعرض نفس الرقمين بنفس اللونين،
-      فالموظف بيتعلّمهم مرة واحدة (درس R1). */
+/* مربعات المندوب على صف «جاهز للتغليف» (v1.13.0 · بقوا تلاتة في v1.14.0) —
+   بدّلوا `chip-s1`/`chip-s2`.
+   ⚠️ الألوان **نفس ألوان مربعات `.zchip` في `pack.html`** بالحرف: بوسطة
+      أحمر (`.qc-bosta`) · شو روم أخضر (`.qc-showroom`) · مناديب أزرق
+      (`.qc-courier`). ونفس اسم الكلاس كمان — الصفحة اللي الصف بيفتح عليها
+      بتعرض نفس الأرقام بنفس الألوان، فالموظف بيتعلّمهم مرة واحدة (درس R1).
+   ⚠️ وأخضر الشو روم هنا **نفس** أخضر عمود المندوب (`.courier-showroom`)
+      وأخضر مربع القناة (`.chip-ch-showroom`) — تلات أماكن بنفس اللون
+      لنفس المعنى. */
 .woc-chip.qc-bosta{background:var(--red-light);color:var(--red-dark);border-color:var(--red-border)}
+.woc-chip.qc-showroom{background:var(--green-light);color:var(--green-dark);border-color:var(--green-border)}
 .woc-chip.qc-courier{background:var(--accent-light);color:var(--accent-dark);border-color:var(--accent-border)}
 /* مربعات قناة الشحن على الشاشة الرئيسية (v1.7.0) — طابور الطباعة بقى فيه
    تلات قنوات، والتقسيمة S1/S2 مابقتش هي السؤال المهم فيه.

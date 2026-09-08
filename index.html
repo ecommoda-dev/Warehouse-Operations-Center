@@ -203,14 +203,40 @@
       </a>
   </div>
 
+  <!-- ══ «أدوات» = اللي الموظف بيشتغل بيه على أوردر قدامه دلوقتي ══
+       🔴 القسم اتقصر على **أداتين** (قرار أحمد 08-09-2026): حذف منتج
+          وباركود SKU. الأداتين دول بيتنادوا **وسط الشغل** — الموظف واقف
+          على أوردر ومحتاج يتصرّف — بينما «رحلة الأوردر» و«إحصائيات
+          المخزن» بيتقروا في وقت تاني خالص، فنزلوا قسم «أخرى» تحت.
+          السبب مش تنظيم: صف فيه أربع مربعات متشابهة معناه إن الموظف
+          المستعجل بيقرا الأربعة كل مرة عشان يلاقي واحد.
+       ⚠️ والسطر التوضيحي اتشال من المربعين — الاسم لوحده كافي، والسطر
+          كان بيوصف **تفاصيل داخلية** (شرط COD · مقاس الليبل) مش
+          بيساعد في الاختيار. -->
   <div class="woc-home-sec">
     <div class="woc-home-sec-title">أدوات</div>
     <div class="woc-tools-grid">
-      <a class="woc-tool" href="remove.html">
+      <!-- 🔴 ثيم أحمر (`tool-danger`) — الأداة دي **هدّامة**: بتحذف بند من
+           أوردر حي، وبند متحذف **مالوش رجعة**. الاسم بقى بيقول الحالة
+           اللي بتودّي ليها («عطلان؟») مش اسم الفعل المجرّد، عشان الموظف
+           اللي جاي من الجدول يلاقي نفس الكلمة اللي على الزرار هناك. -->
+      <a class="woc-tool tool-danger" href="remove.html">
         <span class="woc-card-ico">🗑️</span>
-        <div class="woc-card-name">حذف منتج</div>
-        <div class="woc-card-desc">أوردر COD غير مسدد — بتأكيدين</div>
+        <div class="woc-card-name">عطلان؟ احذف المنتج من الأوردر</div>
       </a>
+      <a class="woc-tool" href="sku-barcode.html">
+        <span class="woc-card-ico">🏷️</span>
+        <div class="woc-card-name">باركود SKU</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- ══ «أخرى» = مرجع بيتقرا، مش شغل بيتعمل ══
+       ⚠️ نفس `.woc-tools-grid` بالحرف — قسم جديد مش تخطيط جديد
+          (`auto-fit` بيسع الزيادة لوحده). -->
+  <div class="woc-home-sec">
+    <div class="woc-home-sec-title">أخرى</div>
+    <div class="woc-tools-grid">
       <a class="woc-tool" href="journey.html">
         <span class="woc-card-ico">🔎</span>
         <div class="woc-card-name">رحلة الأوردر</div>
@@ -220,11 +246,6 @@
         <span class="woc-card-ico">📊</span>
         <div class="woc-card-name">إحصائيات المخزن</div>
         <div class="woc-card-desc">أرقام اليوم · الموظفين · ساعات الشغل</div>
-      </a>
-      <a class="woc-tool" href="sku-barcode.html">
-        <span class="woc-card-ico">🏷️</span>
-        <div class="woc-card-name">باركود SKU</div>
-        <div class="woc-card-desc">ليبل ٢×١ إنش — بأوردر أو بـ SKU مباشرة</div>
       </a>
     </div>
   </div>
@@ -308,13 +329,26 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.14.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.15.0</span>
           <span class="cl-ver-date">08-09-2026</span>
         </div>
         <ul class="cl-items">
           <li class="cl-item"><span class="cl-tag new">جديد</span><span>صفحة <b>🏷️ باركود SKU</b> بقى ليها <b>تاب «📜 سجل العمليات»</b> — الأداة كانت مالهاش أي أثر لمين طبع إيه وإمتى.</span></li>
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span>ليبل الباركود بقى <b>سطرين</b>: رقم الأوردر تحت الخطوط <b>اتشال</b>، وخط الليبل بقى محايد (Arial) بدل السيريف.</span></li>
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <code>barcode.min</code> بقى <code>1.2.0</code> — <b>Promote مطلوب</b> لـ <code>order-sku-barcode-printer-worker</code> v1.2.0 (السجل + <code>[[d1_databases]]</code>).</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.14.0</span>
+          <span class="cl-ver-date">08-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🔴 مربع <b>«شو روم»</b> تالت على صف «جاهز للتغليف» — كان واقع جوّه «مناديب» رغم إنه أخضر في عمود المندوب في صفحة التغليف. الشو روم <b>محطة تسليم مختلفة</b> (العميل بيستلم من الفرع)، فالموظف بيتصرّف فيه غير ما بيتصرّف في أوردر مندوب.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>قسم <b>«أدوات»</b> بقى <b>أداتين بس</b> — «عطلان؟ احذف المنتج من الأوردر» و«باركود SKU»، دول اللي بيتنادوا وسط الشغل. و«رحلة الأوردر» و«إحصائيات المخزن» نزلوا قسم جديد اسمه <b>«أخرى»</b> لأنهم مرجع بيتقرا في وقت تاني.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>مربع الحذف بقى <b>بثيم أحمر</b> — الأداة دي هدّامة وبند متحذف مالوش رجعة، فاللون تحذير مش تزويق. والسطر التوضيحي اتشال من مربعَي «أدوات»: الاسم لوحده كافي.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>أداة الطباعة بقى اسمها <b>«قسم الطباعة»</b>، وفوق طابورها صندوق فيه العدد ومربعات <b>«نوع الفاتورة»</b> ولوحة <b>«آخر تحديث»</b> بعدّاد بيلوّن نفسه — نفس صندوق قسم التغليف بالحرف.</span></li>
         </ul>
       </div>
 

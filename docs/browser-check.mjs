@@ -189,12 +189,58 @@ check('🔴 الجدول بيعرض كل القنوات (7 صفوف)', (await pa
 check('🔴 «طباعة الكل» مقفول بلا قناة', await page.isDisabled('#printAllBtn'));
 check('🔴 البادج «—» مش رقم بلا قناة', (await page.textContent('#pbAllCount')).trim() === '—',
       await page.textContent('#pbAllCount'));
-check('🔴 سطر «اختر قناة» ظاهر', await page.isVisible('#chanHint'));
+// ⚠️ سطر «اختر قناة» (`#chanHint`) **اتشال في v1.14.0** بقرار أحمد. اللي
+//    بقى بيمنع الزرار الرمادي من إنه يتقري عطل هو البادج `—` فوق ومربعات
+//    كلها مطفية — والبندين دول متغطّيين فوق. البند القديم اتشال من هنا
+//    كمان عشان مايفضلش يفشل على تصميم مقصود.
+check('🔴 سطر «اختر قناة» اتشال بالكامل', (await page.$$('#chanHint')).length === 0);
+
+// ③-ج §COUNT-BOX — صندوق العدّ ولوحة «آخر تحديث» (v1.14.0)
+// 🔴 الرقم الكبير وبادج زرار التحديث لازم يساووا **صفوف الجدول** بلا قناة —
+//    نفس درس بادج ٦٦ فوق جدول فيه ٦ (v1.11.1): رقم على الشاشة وعد بشغل.
+{
+  const rows = (await page.$$('#printTableBody tr')).length;
+  check('🔴 الرقم الكبير == صفوف الجدول', (await page.textContent('#prtCountTotal')).trim() === String(rows),
+        `${await page.textContent('#prtCountTotal')} vs ${rows}`);
+  check('🔴 بادج زرار التحديث == صفوف الجدول',
+        (await page.textContent('#prtRefreshBadge')).trim() === String(rows),
+        await page.textContent('#prtRefreshBadge'));
+}
+check('لوحة «آخر تحديث» ظاهرة', await page.isVisible('#prtUpdatedAgo'));
+check('🔴 عدّاد القِدَم اتملّى بعد الجلب (مش «لسه ما اتحدّثش»)',
+      !(await page.textContent('#prtUpdatedAgo')).includes('لسه ما اتحدّثش'),
+      await page.textContent('#prtUpdatedAgo'));
+check('ختم التاريخ والوقت اتكتب', (await page.$$('#prtUpdatedAt .woc-stamp-chip')).length === 2,
+      String((await page.$$('#prtUpdatedAt .woc-stamp-chip')).length));
+check('زرار التحديث في الصندوق موجود', await page.isVisible('#prtRefreshBtn'));
+// 🔴 مصدر واحد للختم — الهيدر مابقاش فيه نسخة تانية منه ولا زرار تحديث تاني.
+check('🔴 ختم الهيدر القديم اتشال', (await page.$$('#lastUpdated')).length === 0);
+
+// ③-د §COLUMNS — «تاريخ الأوردر» و«نوع الأوردر» زي جدول التغليف (بند ٤)
+{
+  // ⚠️ الاختيار لازم يكون **مقصور على جدول الطابور** — تاب السجل لسه عنده
+  //    عمودا «التاريخ» و«الوقت» منفصلين بقرار، ومحدد عام كان بيلقطهم.
+  const ths = await page.$eval('#printTableBody', b =>
+    [...b.closest('table').querySelectorAll('thead th')].map(e => e.textContent.trim()));
+  check('🔴 عمود «تاريخ الأوردر» موجود', ths.some(t => t.startsWith('تاريخ الأوردر')), ths.join(' | '));
+  check('🔴 عمودا «التاريخ» و«الوقت» اتشالوا من الطابور',
+        !ths.some(t => t === 'التاريخ' || t === 'الوقت'), ths.join(' | '));
+  check('🔴 عمود «نوع الأوردر» موجود', ths.some(t => t.startsWith('نوع الأوردر')), ths.join(' | '));
+  check('🔴 عمود «نوع الفاتورة» بدل «القناة»',
+        ths.some(t => t.startsWith('نوع الفاتورة')) && !ths.some(t => t === 'القناة'), ths.join(' | '));
+  check('🔴 الصف بقى ٨ خلايا مش ١٠',
+        (await page.$$('#printTableBody tr:first-child td')).length === 8,
+        String((await page.$$('#printTableBody tr:first-child td')).length));
+  check('🔴 بادج عمر الأوردر مرسوم في كل صف',
+        (await page.$$('#printTableBody [data-prt-age]')).length === (await page.$$('#printTableBody tr')).length);
+  check('🔴 نوع الأوردر نص مش بادج (صفر .type-badge في الطابور)',
+        (await page.$$('#printTableBody .type-badge')).length === 0
+        && (await page.$$('#printTableBody .type-text')).length > 0);
+}
 
 // ③-ب الاختيار ثم الإطفاء بنفس المربع (زي `.zchip` في التغليف)
 await page.click('#chanBtn-invoice'); await page.waitForTimeout(200);
 check('اختيار قاهرة+جيزة بيفلتر لصف واحد', (await page.$$('#printTableBody tr')).length === 1);
-check('سطر «اختر قناة» بيختفي بعد الاختيار', await page.isHidden('#chanHint'));
 check('«طباعة الكل» اتفعّل بعد اختيار القناة', !(await page.isDisabled('#printAllBtn')));
 await page.click('#chanBtn-invoice'); await page.waitForTimeout(200);
 check('🔴 ضغطة تانية على نفس المربع بترجّع الكل', (await page.$$('#printTableBody tr')).length === 7,

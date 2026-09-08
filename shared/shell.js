@@ -46,7 +46,7 @@ const WOC_WORKERS = {
   remover: { url: 'https://order-item-remover-worker.ecommoda-dev.workers.dev',     min: '1.4.0', label: 'حذف منتج' },
   // 1.2.0 = أول نسخة فيها **سجل العمليات** (`log_print` · `get_logs` ·
   // `get_logs_count` · `get_logs_export`) و`[[d1_databases]]`.
-  // `sku-barcode.html` **معتمدة عليها فعلاً** من هب v1.14.0: تاب «سجل
+  // `sku-barcode.html` **معتمدة عليها فعلاً** من هب v1.15.0: تاب «سجل
   // العمليات» بينادي التلات مسارات دي، وكل ضغطة طباعة بتنادي `log_print`.
   // على Worker 1.1.0 التاب بيرجّع «action غير معروف» على كل تحديث،
   // والطباعة بتشتغل **من غير أي أثر في D1**. الترفيع مشروع (Standards #29).
@@ -58,7 +58,7 @@ const WOC_WORKERS = {
   barcode: { url: 'https://order-sku-barcode-printer-worker.ecommoda-dev.workers.dev', min: '1.2.0', label: 'باركود SKU' },
 };
 
-const TOOL_VERSION = 'v1.14.0';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.15.0';                      // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const WOC_APP_ID   = 'warehouse_ops_center';         // قيمة `tool` في D1 — login/logout بس
 const SHOP_HANDLE  = '6c7e1a-53';
@@ -307,6 +307,40 @@ function agoInfo(at, now) {
   return { cls: 'ago-stale', text: `⏱ منذ ${arHour(Math.floor(mins / 60))} — الرقم قديم، حدّث`, stale: true };
 }
 
+// ── عمر الأوردر — **بفرق الأيام التقويمية بتوقيت القاهرة** ────
+//
+// 🔴 مش `(الآن − الوقت) / 86400000`. أوردر اتعمل ١١ مساءً بيبقى «منذ أمس»
+//    الساعة ١ صباحًا، وده الصح للمخزن: «عدّى اليوم» معناها **التاريخ
+//    اتغيّر**، مش إن ٢٤ ساعة عدّت. أي «تبسيط» للطرح المباشر بيكسر الدلالة.
+//
+// 🔴 **في الـ shell من v1.14.0** — `pack.html` و`print.html` بيعرضوا نفس
+//    البادج بالحرف في عمود «تاريخ الأوردر»، ونسختين معناهم إن نفس الأوردر
+//    يبان «منذ يومين» في صفحة و«منذ ٣ أيام» في التانية (درس R1).
+//    ⛔ ممنوع أي صفحة تعرّفهم تاني — تعريف في صفحة بيغلب الـ shell.
+function wocDayDiff(iso, now) {
+  return cairoDayIndex(now) - cairoDayIndex(iso);
+}
+
+// درجة اللون من فرق الأيام — **مصدر واحد** لكل الأعمدة المحسوبة بالوقت.
+// النص هو اللي بيفرق بين «الوقت منذ الطباعة» و«عمر الأوردر»، مش اللون.
+function wocDayLevel(days) {
+  if (days <= 0) return 'tb-d0';
+  if (days === 1) return 'tb-d1';
+  if (days === 2) return 'tb-d2';
+  if (days <  7)  return 'tb-d3';
+  return 'tb-d7';
+}
+
+// عمر الأوردر — بالأيام **بس** (بادج صغير جوّه عمود تاريخ الأوردر).
+// ⚠️ بترجّع `tb-none` للأوردر اللي مالوش تاريخ — بادج رمادي بشرطة، مش
+//    خانة فاضية: «مش عارفين» معلومة، و«فاضي» بيتقري عطل.
+function wocOrderAge(iso, now = new Date()) {
+  if (!iso) return { cls: 'tb-none', text: '—' };
+  const days = wocDayDiff(iso, now);
+  const text = days <= 0 ? 'اليوم' : days === 1 ? 'منذ أمس' : `منذ ${arDay(days)}`;
+  return { cls: wocDayLevel(days), text };
+}
+
 // ── رابط الأوردر على شوبيفاي (قاعدة #20) ──────────────────────
 function shopifyOrderUrl(orderId) {
   return `https://admin.shopify.com/store/${SHOP_HANDLE}/orders/${orderId}`;
@@ -371,33 +405,44 @@ function wocChannelGate(o, chan) {
 //    والصفحة تفتح على رقم تاني — نفس اللي حصل مع بوابة بوسطة في v1.11.0
 //    (درس R1). ⛔ ممنوع أي صفحة تعرّف القاعدة دي تاني.
 //
-// ⚠️ التجميع **ثنائي بس**: بوسطة / أي حاجة تانية. الشو روم بيقع في
-//    «مناديب» رغم إنه أخضر في عمود المندوب في `pack.html` — ده مقصود
-//    ومكتوب من v2.6.2 هناك (المربعات بوسطة/غير-بوسطة، مش نسخة من
-//    التصنيف الرباعي `rdyCourierClass`).
-// ⚠️ والفاضي بيقع في «مناديب» كمان — «مفيش مندوب مسجل» **مش** بوسطة،
-//    وحطّه في مربع تالت كان هيدّي مربع بصفر في اليوم العادي.
+// ⚠️ التجميع **تلاتي من v1.14.0** (قرار أحمد 08-09-2026): بوسطة · شو روم ·
+//    أي حاجة تانية. الشو روم كان بيقع في «مناديب» لحد v1.13.0، وطلع منها
+//    عشان هو **محطة تسليم مختلفة**: العميل بيستلم من الفرع، فمافيش شحن
+//    ولا ملصق أصلاً — والموظف بيتصرّف فيه غير ما بيتصرّف في أوردر مندوب.
+//    ⚠️ ودي بقت **نفس** تفرقة عمود المندوب (`rdyCourierClass` أخضر لشو
+//    روم) — يعني اللون والمربع بقوا متفقين بدل ما كانوا بيختلفوا.
+// ⚠️ والفاضي بيقع في «مناديب» — «مفيش مندوب مسجل» **مش** بوسطة ولا شو روم،
+//    وحطّه في مربع رابع كان هيدّي مربع بصفر في اليوم العادي.
 //
 // بتقبل القيمة **الخام** من الـ Worker أو النص المعروض بعد
 // `rdyFormatCourier` — التطبيع بيبلع الاتنين، فمافيش مسار تاني للنداء.
+// ⚠️ والتطبيع بيشيل المسافات والشرطات والـ underscore: `Show_Room` و
+//    `Show Room` و`showroom` و«شو روم» كلهم مربع واحد. مطابقة حرفية على
+//    `Showroom` بالظبط كانت هتخلّي صف أخضر في العمود يقع في «مناديب».
 function wocCourierGroup(courier) {
   const k = String(courier || '').trim().toLowerCase().replace(/[\s_-]/g, '');
-  return (k === 'bosta' || k === 'بوسطة') ? 'bosta' : 'other';
+  if (k === 'bosta'    || k === 'بوسطة') return 'bosta';
+  if (k === 'showroom' || k === 'شوروم') return 'showroom';
+  return 'other';
 }
 
-// مربعا «بوسطة/مناديب» — نفس الترتيب ونفس الليبل ونفس الكلاس في
+// مربعات «بوسطة/شو روم/مناديب» — نفس الترتيب ونفس الليبل ونفس الكلاس في
 // الرئيسية وفي `pack.html`. الترتيب **ثابت** (مش بالعدد): الترتيب بالعدد
 // كان هيرقّص المربعات مكانها مع كل تحديث.
 const WOC_COURIER_GROUPS = [
-  { key: 'bosta', label: 'بوسطة',  cls: 'qc-bosta'   },
-  { key: 'other', label: 'مناديب', cls: 'qc-courier' },
+  { key: 'bosta',    label: 'بوسطة',  cls: 'qc-bosta'    },
+  { key: 'showroom', label: 'شو روم', cls: 'qc-showroom' },
+  { key: 'other',    label: 'مناديب', cls: 'qc-courier'  },
 ];
 
-// عدّ الطابور كله على المجموعتين. ⚠️ العدّ من القايمة **الكاملة** مش
-// المفلترة — لو اتحسب على المفلتر، أول ضغطة كانت هتصفّر باقي المربع
+// عدّ الطابور كله على المجموعات. ⚠️ العدّ من القايمة **الكاملة** مش
+// المفلترة — لو اتحسب على المفلتر، أول ضغطة كانت هتصفّر باقي المربعات
 // فما حدش يقدر يرجّع.
+// ⚠️ المفاتيح بتتبني من `WOC_COURIER_GROUPS` نفسها — مجموعة جديدة بتدخل
+//    العدّ من غير أي تعديل هنا، ومستحيل يبقى فيه مربع بلا عدّاد.
 function wocCourierCounts(orders) {
-  const counts = { bosta: 0, other: 0 };
+  const counts = {};
+  for (const g of WOC_COURIER_GROUPS) counts[g.key] = 0;
   for (const o of orders || []) counts[wocCourierGroup(o && o.courier)]++;
   return counts;
 }

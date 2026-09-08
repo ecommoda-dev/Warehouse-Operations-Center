@@ -556,8 +556,6 @@
 .count-breakdown{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:5px}
 .count-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:20px;
   font-size:11px;font-weight:700;border:1px solid var(--border)}
-.count-badge.badge-s1{background:var(--accent-light);color:var(--accent-dark);border-color:var(--accent-border)}
-.count-badge.badge-s2{background:var(--purple-light);color:var(--purple-dark);border-color:var(--purple-border)}
 .count-badge.badge-repeat{background:var(--amber-light);color:var(--amber-dark);border-color:var(--amber-border)}
 .count-sub{font-size:11px;color:var(--text-muted);font-weight:600;margin-top:5px}
 
@@ -604,11 +602,16 @@
 /* عدّاد عمر الأوردر — نفس البادج بمقاس أصغر، جوّه عمود تاريخ الأوردر */
 .time-badge.age-badge{margin-inline-start:6px;padding:2px 8px;font-size:10.5px;font-weight:700}
 
-/* ── مربعات فلتر المندوب — بوسطة/مناديب (بند ٦، v2.6.2) ──
-   ⚠️ الألوان **نفس ألوان عمود المندوب** (`.courier-cell.courier-bosta` أحمر
-   و`.courier-cell.courier-other`/`.courier-showroom` أزرق/أخضر مجمّعين هنا
-   في مربع أزرق واحد) — مفيش نسخة تانية من الألوان. */
+/* ── مربعات فلتر المندوب — بوسطة/شو روم/مناديب (بند ٦، v2.6.2 · بقوا
+   تلاتة في v1.14.0) ──
+   ⚠️ الألوان **نفس ألوان عمود المندوب** بالحرف: `.courier-bosta` أحمر ·
+   `.courier-showroom` أخضر · `.courier-other`/`.courier-none` أزرق مجمّعين
+   في مربع «مناديب» — مفيش نسخة تانية من الألوان.
+   ⚠️ ومن v1.14.0 المربعات بقت **متفقة مع لون العمود**: قبل كده الشو روم كان
+   أخضر في العمود وواقع في المربع الأزرق، وده كان بيخلّي الموظف يدوّر على
+   الصفوف الخضرا في مربع مش بتاعها. */
 .zchip.qc-bosta{background:var(--red-light);color:var(--red-dark);border-color:var(--red-border)}
+.zchip.qc-showroom{background:var(--green-light);color:var(--green-dark);border-color:var(--green-border)}
 .zchip.qc-courier{background:var(--accent-light);color:var(--accent-dark);border-color:var(--accent-border)}
 
 /* ── مربعات فلتر المندوب — فلتر بضغطة على صندوق الأعداد ──
@@ -674,13 +677,24 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.14.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.15.0</span>
           <span class="cl-ver-date">08-09-2026</span>
         </div>
         <ul class="cl-items">
           <li class="cl-item"><span class="cl-tag new">جديد</span><span>صفحة <b>🏷️ باركود SKU</b> بقى ليها <b>تاب «📜 سجل العمليات»</b> — الأداة كانت مالهاش أي أثر لمين طبع إيه وإمتى.</span></li>
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span>ليبل الباركود بقى <b>سطرين</b>: رقم الأوردر تحت الخطوط <b>اتشال</b>، وخط الليبل بقى محايد (Arial) بدل السيريف.</span></li>
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <code>barcode.min</code> بقى <code>1.2.0</code> — <b>Promote مطلوب</b> لـ <code>order-sku-barcode-printer-worker</code> v1.2.0 (السجل + <code>[[d1_databases]]</code>).</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.14.0</span>
+          <span class="cl-ver-date">08-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🔴 مربع <b>«شو روم»</b> تالت جنب «بوسطة» و«مناديب» — كان واقع جوّه «مناديب» رغم إنه <b>أخضر في عمود المندوب</b>، فالموظف كان بيدوّر على الصفوف الخضرا في مربع مش بتاعها. المربع بيشتغل بنفس قاعدة المربعين التانيين بالظبط (بيكتب في فلتر «المندوب»)، والمطابقة بتبلع <code>Showroom</code> و<code>Show_Room</code> و«شو روم».</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>ليبل <b>«أوردرات جاهزة للتغليف»</b> وبادجا <b>«عادي»</b> و<b>«استبدال»</b> اتشالوا من صندوق الأعداد — التقسيمة اللي الموظف بيتصرّف عليها هي مربعات المندوب. <b>«محاولة مكرّرة» فاضلة</b> لأنها إشارة إن الأوردر بيتشحن تاني.</span></li>
         </ul>
       </div>
 
@@ -1204,12 +1218,16 @@
          والأعداد بتبقى «—» مش «0» قبل أول جلب ناجح: «ما اتحدّثش» مش «صفر». -->
     <div class="count-box" id="rdyCountBox">
       <div class="count-icon">📦</div>
+      <!-- ⚠️ ليبل «أوردرات جاهزة للتغليف» وبادجا «عادي/استبدال» اتشالوا
+           (قرار أحمد 08-09-2026). السبب: عنوان الصفحة نفسه بيقول إن دي
+           شاشة التغليف، والتقسيمة اللي الموظف **بيتصرّف عليها** بقت
+           مربعات المندوب في نص الصندوق — «عادي/استبدال» رقم صحيح بس
+           الطابور بيتغلّف بنفس الطريقة في الحالتين.
+           🔴 **«محاولة مكرّرة» فضلت بقرار** — دي مش تقسيمة، دي إشارة إن
+           الأوردر ده بيتشحن تاني، والموظف بيتصرّف فيها فعلاً. -->
       <div>
-        <div class="count-label">أوردرات جاهزة للتغليف</div>
         <div class="count-number" id="rdyCountTotal">—</div>
         <div class="count-breakdown">
-          <span class="count-badge badge-s1">عادي: <span id="rdyCountS1">—</span></span>
-          <span class="count-badge badge-s2">استبدال: <span id="rdyCountS2">—</span></span>
           <span class="count-badge badge-repeat">محاولة مكرّرة: <span id="rdyCountRepeat">—</span></span>
         </div>
       </div>
@@ -2606,8 +2624,11 @@ function rdyCourierGroupValues(group) {
 // ⚠️ العدّ من `rdyAllOrders` (الطابور كله) مش من المفلتر — لو اتحسب على
 //    المفلتر، أول ضغطة كانت هتصفّر باقي المربع فما حدش يقدر يرجّع.
 function rdyCourierChipRows() {
-  const counts = { bosta: 0, other: 0 };
-  for (const o of rdyAllOrders) counts[rdyCourierGroupOf(o.courier)]++;
+  // 🔴 العدّ نفسه من `wocCourierCounts` في الـ shell — **مش خريطة محلية**.
+  //    خريطة بمفاتيح مكتوبة بالإيد هنا معناها إن مجموعة جديدة (زي «شو روم»
+  //    في v1.14.0) بتدخل `WOC_COURIER_GROUPS` وتطلع مربع **عدّاده undefined**
+  //    من غير أي خطأ في الكونسول.
+  const counts = wocCourierCounts(rdyAllOrders);
   return RDY_COURIER_GROUPS.map(g => ({ ...g, n: counts[g.key] }));
 }
 
@@ -2672,12 +2693,12 @@ const RDY_OPT_LINKS = {
 //    بيبقى «متأخر يوم» الساعة ١ صباحًا، مش بعد ٢٤ ساعة. الحساب بيتم على
 //    توقيت القاهرة (toCairo) لأن الـ ISO الجاي من شوبيفاي بتوقيت UTC،
 //    و`iso.slice(0,10)` كان هيقفل اليوم الساعة ٣ صباحًا بتوقيتنا.
-function rdyCairoDayIndex(dateLike) {
-  const d = toCairo(dateLike instanceof Date ? dateLike.toISOString() : dateLike);
-  return Math.floor(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) / 86400000);
-}
+// 🔴 **تفويض للـ shell §HELPERS من v1.14.0** — `print.html` بقت بتعرض نفس
+//    بادج عمر الأوردر، فالقاعدة نزلت مصدر واحد (`wocDayDiff`). نسخة هنا
+//    ونسخة هناك = نفس الأوردر يبان «منذ يومين» في صفحة و«منذ ٣ أيام» في
+//    التانية (درس R1). ⛔ ممنوع الرجوع لتعريف محلي.
 function rdyDayDiff(iso, now) {
-  return rdyCairoDayIndex(now) - rdyCairoDayIndex(iso);
+  return wocDayDiff(iso, now);
 }
 
 // صيغ الجمع العربية — «٢ دقيقة» و«٣ يوم» غلط لغويًا وبتقلّل الثقة في الشاشة
@@ -2712,19 +2733,12 @@ function rdySincePrint(iso, now = new Date()) {
 // «الوقت منذ الطباعة» و«عمر الأوردر» بياخدوا نفس الدرجة؛ النص هو اللي
 // بيفرق بينهم مش اللون.
 function rdyDayLevel(days) {
-  if (days <= 0) return 'tb-d0';
-  if (days === 1) return 'tb-d1';
-  if (days === 2) return 'tb-d2';
-  if (days <  7)  return 'tb-d3';
-  return 'tb-d7';
+  return wocDayLevel(days);          // 🔴 تفويض للـ shell — زي `rdyDayDiff` فوق
 }
 
 // عمر الأوردر — بالأيام **بس** (جوّه عمود تاريخ الأوردر، بدون ساعات)
 function rdyOrderAge(iso, now = new Date()) {
-  if (!iso) return { cls: 'tb-none', text: '—' };
-  const days = rdyDayDiff(iso, now);
-  const text = days <= 0 ? 'اليوم' : days === 1 ? 'منذ أمس' : `منذ ${rdyArDay(days)}`;
-  return { cls: rdyDayLevel(days), text };
+  return wocOrderAge(iso, now);      // 🔴 تفويض للـ shell — زي `rdyDayDiff` فوق
 }
 
 // ─── §READY-JS::msState — كل الفلاتر multi-select (بند ٢١) ───
@@ -3257,13 +3271,15 @@ function rdySetRefreshBadge(n) {
 // ⚠️ قبل أول جلب ناجح الأعداد بتبقى «—» **مش «0»** — صندوق العدّ بقى ظاهر
 //    في كل الحالات (شايل زرار التحديث)، و«0» هنا معناها «مفيش شغل» وهي
 //    كذب: إحنا لسه ما سألناش.
-function rdySetCounts(total, s1, s2, repeat) {
+// ⚠️ الباراميترات بقت اتنين بس (v1.14.0) — بادجا «عادي/استبدال» اتشالوا من
+//    الصندوق، وسيبهم كباراميترات ميّتة كان معناه إن قارئ الكود يفتكر إن
+//    فيه عنصرين بيتكتب فيهم وهما مش موجودين في الـ HTML أصلاً.
+function rdySetCounts(total, repeat) {
   const put = (id, v) => {
     const el = document.getElementById(id);
     if (el) el.textContent = v === null ? '—' : Number(v).toLocaleString('en-US');
   };
-  put('rdyCountTotal', total); put('rdyCountS1', s1);
-  put('rdyCountS2', s2);       put('rdyCountRepeat', repeat);
+  put('rdyCountTotal', total); put('rdyCountRepeat', repeat);
 }
 
 // `silent` = تحديث خلفي بعد تغليف ناجح — مايوريش حالة «جاري الجلب»
@@ -3316,15 +3332,13 @@ function rdyRenderFrom(data, atIso) {
     // ⚠️ المربعات لازم تتصفّر هنا كمان — طابور رجع فاضي ومربعات المندوب
     //    لسه شايلة أعداد الجلبة اللي فاتت = رقم كذّاب على الشاشة.
     if (!rdyAllOrders.length) {
-      rdySetCounts(0, 0, 0, 0); rdyRenderCourierChips(); rdyShowState('rdyStateEmpty'); return;
+      rdySetCounts(0, 0); rdyRenderCourierChips(); rdyShowState('rdyStateEmpty'); return;
     }
 
     rdyRebuildFilterItems();
 
     rdySetCounts(
       rdyAllOrders.length,
-      rdyAllOrders.filter(o => o.orderType === 'S1').length,
-      rdyAllOrders.filter(o => o.orderType === 'S2').length,
       rdyAllOrders.filter(o => o.attempt === 'repeat').length,
     );
 
@@ -3397,7 +3411,7 @@ function rdyResetAll() {
   rdyLastLoadedAt = null;
   rdyDirty = false;
   rdySetRefreshBadge(null);
-  rdySetCounts(null, null, null, null);
+  rdySetCounts(null, null);
   rdyRenderFreshness();
   Object.keys(rdyMsState).forEach(k => { rdyMsState[k].selected.clear(); rdyMsState[k].items = []; });
   const si = document.getElementById('rdySearchInput');
