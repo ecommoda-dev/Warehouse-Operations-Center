@@ -44,17 +44,21 @@ const WOC_WORKERS = {
   // وده بالظبط نوع الفشل اللي الحارس ده اتكتب عشانه.
   pack:    { url: 'https://orders-packing-checker-worker.ecommoda-dev.workers.dev', min: '2.5.0', label: 'التغليف' },
   remover: { url: 'https://order-item-remover-worker.ecommoda-dev.workers.dev',     min: '1.4.0', label: 'حذف منتج' },
-  // 1.1.0 = أول نسخة بتقبل `get_order?id=` (البحث بالـ ID الرقمي).
-  // `sku-barcode.html` **معتمدة عليها فعلاً** من v1.10.0: باركود الأوردر
-  // المطبوع بيشفّر الـ ID الرقمي (١٠ خانات فأكتر) مش اسم الأوردر، فماسح
-  // باركود شوبيفاي على Worker 1.0.0 بيرجّع «رقم الأوردر مطلوب» على كل
-  // مسح. الترفيع مشروع (Standards #29).
-  // الأداة **قراءة بحتة**: مفيش D1 ومفيش endpoints دخول — الدخول بيحصل
-  // في الهب عبر Worker التغليف.
-  barcode: { url: 'https://order-sku-barcode-printer-worker.ecommoda-dev.workers.dev', min: '1.1.0', label: 'باركود SKU' },
+  // 1.2.0 = أول نسخة فيها **سجل العمليات** (`log_print` · `get_logs` ·
+  // `get_logs_count` · `get_logs_export`) و`[[d1_databases]]`.
+  // `sku-barcode.html` **معتمدة عليها فعلاً** من هب v1.15.0: تاب «سجل
+  // العمليات» بينادي التلات مسارات دي، وكل ضغطة طباعة بتنادي `log_print`.
+  // على Worker 1.1.0 التاب بيرجّع «action غير معروف» على كل تحديث،
+  // والطباعة بتشتغل **من غير أي أثر في D1**. الترفيع مشروع (Standards #29).
+  // ⚠️ و1.1.0 كانت أول نسخة بتقبل `get_order?id=` (باركود الأوردر المطبوع
+  //    بيشفّر الـ ID الرقمي مش الاسم) — البند ده لسه ساري تحت الجديد.
+  // ⚠️ الأداة **بقت بتكتب في D1** من 1.2.0 — لكن لسه **صفر كتابة على
+  //    شوبيفاي**، ولسه مفيش endpoints دخول فيها: الدخول بيحصل في الهب
+  //    عبر Worker التغليف، ومنه كمان بييجي `get_employees` لفلتر السجل.
+  barcode: { url: 'https://order-sku-barcode-printer-worker.ecommoda-dev.workers.dev', min: '1.2.0', label: 'باركود SKU' },
 };
 
-const TOOL_VERSION = 'v1.14.0';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.15.0';                      // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const WOC_APP_ID   = 'warehouse_ops_center';         // قيمة `tool` في D1 — login/logout بس
 const SHOP_HANDLE  = '6c7e1a-53';
