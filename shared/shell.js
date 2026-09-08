@@ -55,10 +55,16 @@ const WOC_WORKERS = {
   // ⚠️ الأداة **بقت بتكتب في D1** من 1.2.0 — لكن لسه **صفر كتابة على
   //    شوبيفاي**، ولسه مفيش endpoints دخول فيها: الدخول بيحصل في الهب
   //    عبر Worker التغليف، ومنه كمان بييجي `get_employees` لفلتر السجل.
-  barcode: { url: 'https://order-sku-barcode-printer-worker.ecommoda-dev.workers.dev', min: '1.2.0', label: 'باركود SKU' },
+  // 🔴 `1.2.1` مشروع (هب v1.16.0): `sku-barcode.html` بقى فيها **قايمة
+  //    اقتراحات بتفتح وانت بتكتب**، وهي معتمدة على إن `search_sku`
+  //    يفهم الـ SKU الكامل (`SD1 / Light grey / 45`) والجزئي منه.
+  //    على `1.2.0` الاستعلام بيتقسّم لكلمات بحث عامة وبيرجّع **صفر
+  //    نتايج بلا أي خطأ** — يعني القايمة بتفضل فاضية على صنف موجود
+  //    قدام الموظف. ده بالظبط نوع الفشل الصامت اللي الحارس اتكتب عشانه.
+  barcode: { url: 'https://order-sku-barcode-printer-worker.ecommoda-dev.workers.dev', min: '1.2.1', label: 'باركود SKU' },
 };
 
-const TOOL_VERSION = 'v1.15.0';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.16.0';                      // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const WOC_APP_ID   = 'warehouse_ops_center';         // قيمة `tool` في D1 — login/logout بس
 const SHOP_HANDLE  = '6c7e1a-53';

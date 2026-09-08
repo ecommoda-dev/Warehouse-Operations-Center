@@ -52,6 +52,19 @@ const ORDERS = {
     ],
   },
 };
+// 🔴 **أوردر تالت للتراكينج بس** (v1.16.0). قبل كده كان `BOSTA123` بيرجّع
+//    `#53769` — وكان **صح** وقتها لأن البند ⑥ (الحذف) كان بيشيل المجموعة
+//    دي من الجدول قبل البند ⑦. الاستبعاد بقى **شطب مش حذف** فالمجموعة
+//    بتفضل موجودة، ونداء التراكينج كان هيترفض كتكرار **والاختبار يعدّي**
+//    من غير ما يجرّب التحويل أصلاً.
+ORDERS['#53770'] = {
+  orderId: '5678901234570', orderName: '#53770',
+  financialStatus: 'PENDING', fulfillmentStatus: 'UNFULFILLED',
+  itemsTruncated: false, itemsCap: 100,
+  items: [
+    { title: 'Bosta shipment order', variantTitle: 'Black / 42', sku: 'BS1 / Black / 42', barcode: '77112299', quantity: 2, image: null },
+  ],
+};
 const BY_ID = Object.fromEntries(Object.values(ORDERS).map(o => [o.orderId, o]));
 
 // 🔴 **رد الـ Worker بيتولّد في `route.fulfill` مش في سيرفر تاني.**
@@ -74,7 +87,7 @@ function workerReply(url, body) {
   const a = u.searchParams.get('action');
 
   if (url.includes('order-sku-barcode-printer-worker')) {
-    if (a === 'get_config') return [200, { ok: true, version: '1.2.0' }];
+    if (a === 'get_config') return [200, { ok: true, version: '1.2.1' }];
     if (a === 'get_order') {
       const id  = u.searchParams.get('id');
       const raw = u.searchParams.get('order');
@@ -82,10 +95,19 @@ function workerReply(url, body) {
       if (!o) return [404, { error: `الأوردر ${id || raw} مش موجود` }];
       return [200, { ok: true, ...o }];
     }
+    // 🔴 **المطابقة هنا نسخة من `buildSkuQuery` بتاع الـ Worker** (v1.2.1):
+    //    كل كلمة في المدخل بتبقى شرط **بادئة** لوحدها، والشروط بـ AND.
+    //    `includes()` (اللي كان هنا لحد v1.15.0) كان **بيخفي الباج**:
+    //    بيرجّع نتيجة على `SD1 / Light grey / 45` بينما شوبيفاي الحقيقي
+    //    بيرجّع صفر، فالاختبار كان بيعدّي والأداة مكسورة.
     if (a === 'search_sku') {
-      const term = (u.searchParams.get('term') || '').trim().toLowerCase();
+      const term = (u.searchParams.get('term') || '').trim();
       if (term.length < 3) return [400, { error: 'اكتب ٣ حروف على الأقل' }];
-      const variants = VARIANTS.filter(v => v.sku.toLowerCase().includes(term));
+      const toks = term.toLowerCase().replace(/["\\()*:]/g, ' ').split(/[\s/]+/).filter(Boolean);
+      const variants = VARIANTS.filter(v => {
+        const words = v.sku.toLowerCase().split(/[\s/]+/).filter(Boolean);
+        return toks.every(t => words.some(w => w.startsWith(t)));
+      });
       return [200, { ok: true, term, variants, truncated: false, cap: 50 }];
     }
     // 🔴 نفس شكل الصفوف اللي الـ Worker بيبنيها في `buildPrintLogRows`.
@@ -95,12 +117,12 @@ function workerReply(url, body) {
         const n = o.items.reduce((s, i) => s + i.copies, 0);
         LOG_ROWS.push({ timestamp: ts, tool: 'order_sku_barcode_printer', type: 'print',
                         employee: body.employee, order_id: o.orderId, order_name: o.orderName,
-                        sku: null, delta: n, notes: `${n} ليبل · ${o.items.length} صنف` });
+                        sku: null, delta: n, notes: `${n} باركود-SKU · ${o.items.length} صنف` });
       }
       for (const i of (body?.skuItems || [])) {
         LOG_ROWS.push({ timestamp: ts, tool: 'order_sku_barcode_printer', type: 'print_sku',
                         employee: body.employee, order_id: null, order_name: null,
-                        sku: i.sku, delta: i.copies, notes: `${i.copies} ليبل · بدون أوردر` });
+                        sku: i.sku, delta: i.copies, notes: `${i.copies} باركود-SKU · بدون أوردر` });
       }
       return [200, { ok: true, rows: LOG_ROWS.length }];
     }
@@ -112,7 +134,7 @@ function workerReply(url, body) {
   if (a === 'get_config') return [200, { ok: true, version: '2.5.0' }];
   if (a === 'get_employees') return [200, { ok: true, employees: [{ username: 'Tester', display_name: 'Tester' }] }];
   if (a === 'get_order' && u.searchParams.get('tracking') === 'BOSTA123') {
-    return [200, { ok: true, order: { name: '#53769' } }];
+    return [200, { ok: true, order: { name: '#53770' } }];
   }
   if (a === 'get_order') return [200, { ok: false, error: 'الشحنة غير موجودة' }];
   return [400, { error: 'unknown' }];
@@ -204,6 +226,25 @@ for (const [id, label] of [['bcIdle', 'كارت «اسكن باركود…»'], 
   check(`${label} اتشال`, await page.locator(`#${id}`).count() === 0);
 }
 check('تاب «سجل العمليات» موجود', await page.locator('#mainTabLog').count() === 1);
+// v1.16.0 — اسم التاب بقى «طباعة ملصق الباركود-SKU»، و«ليبل» اتشالت من الواجهة.
+check('اسم التاب بقى «طباعة ملصق الباركود-SKU»',
+  (await page.locator('#mainTabPrint').textContent()).includes('ملصق الباركود-SKU'));
+check('كلمة «ليبل» اتشالت من واجهة تاب الطباعة',
+  !/ليبل/.test(await page.locator('#printTabContent').innerText()));
+// 🔴 مفيش `placeholder` ولا سطر شرح تحت أي مربع — العنوان واللون هما التعريف.
+check('مفيش أي placeholder في المربعات الأربعة',
+  await page.locator('#printTabContent input[placeholder]:not([placeholder=""])').count() === 0);
+check('سطور «Scanner Gun…» اتشالت', await page.locator('.scan-hint').count() === 0);
+// 🔴 المدخل الرابع بياخد صف لوحده بعرض الشبكة — مش عمود رابع.
+const skuWide = await page.evaluate(() => {
+  const g = document.querySelector('.entry-grid').getBoundingClientRect();
+  const c = document.getElementById('entryCard-sku').getBoundingClientRect();
+  const a = document.getElementById('entryCard-shopify').getBoundingClientRect();
+  return { same: Math.abs(g.width - c.width) < 2, below: c.top > a.bottom - 1 };
+});
+check('كارت الـ SKU بعرض الصفحة', skuWide.same);
+check('كارت الـ SKU تحت باقي المربعات', skuWide.below);
+check('`.entry-grid-4` اتشالت', await page.locator('.entry-grid-4').count() === 0);
 
 // ── ② إضافة أوردر بالاسم (الإدخال اليدوي) ─────────────────────
 await page.fill('#orderManualInput', '53768');
@@ -221,7 +262,7 @@ check('الصنف اللي مالوش باركود قيمته صفر',
 check('«مفيش Barcode» لسه معروض بعد ما العمود اتشال',
   await page.locator('.bc-nobar').count() === 1);
 check('عدد النسخ الافتراضي = الكمية (1 + 2 = 3)',
-  /طباعة 3 ليبل/.test(await page.locator('#bcPrintBtn').textContent()));
+  /طباعة 3 باركود-SKU/.test(await page.locator('#bcPrintBtn').textContent()));
 // v1.14.0 — الأعمدة أربعة: صورة · SKU · الكمية · عدد الطباعة.
 check('الجدول أربع أعمدة (المنتج والـ Barcode اتشالوا)',
   await page.locator('.bc-table thead th').count() === 4);
@@ -238,7 +279,7 @@ await page.press('#orderScanInput', 'Enter');
 await page.waitForFunction(() => document.querySelectorAll('tr.bc-grp').length === 2);
 check('الأوردر التاني اتضاف بالـ ID', await page.locator('tr.bc-grp').count() === 2);
 check('عدد النسخ بقى 5 (3 + 2)',
-  /طباعة 5 ليبل/.test(await page.locator('#bcPrintBtn').textContent()));
+  /طباعة 5 باركود-SKU/.test(await page.locator('#bcPrintBtn').textContent()));
 
 // ── ⑤ الأوردر الفاشل بيفضل معروض باسمه (بانر مش شيلة) ─────────
 await page.fill('#orderManualInput', '99999');
@@ -250,52 +291,97 @@ check('الفشل ما زوّدش مجموعات في الجدول', await page.
 await page.locator('#bcFails .bc-fail-x').click();
 check('سطر الفشل بيتقفل', await page.locator('#bcFails .bc-fail-row').count() === 0);
 
-// ── ⑥ حذف صنف واحد — مش الأوردر كله ───────────────────────────
+// ── ⑥ الاستبعاد بيشطب الصنف — مابيشيلوش من الجدول (v1.16.0) ───
+//
+// 🔴 البند ده بيقفل رجوع الحذف من العرض: الاستبعاد لازم يفضل **مرئي**،
+//    وإلا الموظف مايعرفش هو استبعد الصنف ولا الجلب ما رجّعوش أصلاً.
+const beforeRows = await page.locator('tr.bc-item').count();
 await page.locator('tr.bc-item .bc-row-x').first().click();
-await page.waitForFunction(() => document.querySelectorAll('tr.bc-item').length === 3);
-check('حذف صنف بيشيل صف واحد بس', await page.locator('tr.bc-item').count() === 3);
-check('الأوردر لسه في الدفعة بعد حذف صنف منه',
-  await page.locator('tr.bc-grp').count() === 2);
-// آخر صنف في المجموعة بيشيل المجموعة معاه — البادج لازم يوصف المعروض.
-await page.locator('tr.bc-grp').nth(1).evaluate(() => {});
-await page.locator('tr.bc-item .bc-row-x').last().click();
-await page.waitForFunction(() => document.querySelectorAll('tr.bc-grp').length === 1);
-check('آخر صنف بيشيل مجموعته معاه', await page.locator('tr.bc-grp').count() === 1);
-check('بادج الأوردرات بيوصف المعروض فعلاً',
-  await page.locator('#bcStatOrders').textContent() === '1');
+await page.waitForSelector('tr.bc-item.is-off');
+check('الاستبعاد مابيشيلش الصف من الجدول',
+  await page.locator('tr.bc-item').count() === beforeRows);
+check('الصف المستبعَد مشطوب', await page.locator('tr.bc-item.is-off').count() === 1);
+check('خانة عدد الطباعة بقت صفر ومقفولة',
+  await page.locator('tr.bc-item.is-off .bc-qty').inputValue() === '0' &&
+  await page.locator('tr.bc-item.is-off .bc-qty:disabled').count() === 1);
+check('العدد الكلي نقص بعدد نسخ الصنف المستبعَد',
+  /طباعة 4 باركود-SKU/.test(await page.locator('#bcPrintBtn').textContent()),
+  await page.locator('#bcPrintBtn').textContent());
+// 🔴 الضغطة التانية بترجّعه بعدده اللي كان — من غير رجوع، الاستبعاد
+//    بالغلط بيتصلّح بإعادة سكان الأوردر كله.
+await page.locator('tr.bc-item.is-off .bc-row-x').click();
+await page.waitForFunction(() => document.querySelectorAll('tr.bc-item.is-off').length === 0);
+check('الضغطة التانية بترجّع الصنف',
+  /طباعة 5 باركود-SKU/.test(await page.locator('#bcPrintBtn').textContent()),
+  await page.locator('#bcPrintBtn').textContent());
+check('المجموعات ما اتشالتش', await page.locator('tr.bc-grp').count() === 2);
+// نستبعد صنف تاني ونسيبه مستبعَد لباقي الفحص (٥ − ١ = ٤ نسخة).
+await page.locator('tr.bc-item .bc-row-x').first().click();
+await page.waitForSelector('tr.bc-item.is-off');
 
 // ── ⑦ مربع بوسطة: تراكينج → أوردر عن طريق Worker التغليف ──────
 await page.fill('#bostaScanInput', 'BOSTA123');
 await page.press('#bostaScanInput', 'Enter');
-await page.waitForFunction(() => document.querySelectorAll('tr.bc-grp').length === 2);
+await page.waitForFunction(() => document.querySelectorAll('tr.bc-grp').length === 3);
 check('تراكينج بوسطة اتحوّل لأوردر',
-  (await page.locator('tr.bc-grp').nth(1).textContent()).includes('#53769'));
-check('التراكينج معروض في صف المجموعة',
-  (await page.locator('tr.bc-grp').nth(1).textContent()).includes('BOSTA123'));
+  (await page.locator('#bcBody').textContent()).includes('#53770'));
+// 🔴 v1.16.0 — صف المجموعة بقى **رقم الأوردر وبس**.
+check('بادج تراكينج بوسطة اتشال من صف المجموعة',
+  !(await page.locator('#bcBody').textContent()).includes('BOSTA123'));
+check('عدّاد «N صنف» اتشال من صف المجموعة',
+  await page.locator('.bc-grp-n').count() === 0);
 // 🔴 بادجات الحالة اتشالت — لازم تفضل مشيلة.
 check('بادجات PENDING/UNFULFILLED اتشالت',
   !/PENDING|UNFULFILLED/.test(await page.locator('#bcBody').textContent()));
 
-// ── ⑧ مدخل الـ SKU: تطابق تام بيتضاف · جزئي بيطلّع قايمة ───────
-await page.fill('#skuTermInput', 'RN-AD-115');
-await page.press('#skuTermInput', 'Enter');
-await page.waitForSelector('#skuPickOverlay.open');
-check('الجزئي بيطلّع قايمة اختيار', await page.locator('.bc-pick-row').count() === 3);
+// ── ⑧ مدخل الـ SKU: القايمة بتفتح وانت بتكتب (v1.16.0) ────────
+//
+// 🔴 **المودال اتشال** — القايمة بقت منسدلة تحت المربع، وبتفتح من غير
+//    ما حد يدوس «بحث». البند ده بيقفل رجوع المودال وبيتأكد إن الكتابة
+//    لوحدها كافية.
+check('مودال اختيار الصنف اتشال', await page.locator('#skuPickOverlay').count() === 0);
+await page.locator('#skuTermInput').type('RN-AD-115', { delay: 20 });
+await page.waitForSelector('#skuAcBox .bc-pick-row');
+check('الكتابة لوحدها بتفتح القايمة المنسدلة',
+  await page.locator('#skuAcBox:not([hidden])').count() === 1);
+check('الجزئي بيطلّع تلات نتايج', await page.locator('#skuAcBox .bc-pick-row').count() === 3);
 check('الصنف بلا باركود زرّاره مقفول في القايمة',
-  await page.locator('.bc-pick-row button:disabled').count() === 1);
-await page.locator('.bc-pick-row button:not([disabled])').first().click();
+  await page.locator('#skuAcBox .bc-pick-row:disabled').count() === 1);
+check('المربع ما اتفضّاش وانت بتكتب',
+  await page.locator('#skuTermInput').inputValue() === 'RN-AD-115');
+await page.locator('#skuAcBox .bc-pick-row:not([disabled])').first().click();
 await page.waitForFunction(() => document.querySelectorAll('tr.bc-grp.is-sku').length === 1);
 check('الصنف اتضاف لمجموعة «بدون أوردر»',
   await page.locator('tr.bc-grp.is-sku').count() === 1);
+check('القايمة بتتقفل بعد الاختيار', await page.locator('#skuAcBox:not([hidden])').count() === 0);
+check('المربع بيتفضّى بعد ما الصنف يدخل الدفعة',
+  await page.locator('#skuTermInput').inputValue() === '');
 check('مجموعة «بدون أوردر» مش محسوبة في بادج الأوردرات',
-  await page.locator('#bcStatOrders').textContent() === '2',
+  await page.locator('#bcStatOrders').textContent() === '3',
   await page.locator('#bcStatOrders').textContent());
-// التطابق التام بيتضاف من غير قايمة خالص.
+
+// 🔴 **الـ SKU الكامل بمسافات وشرطات مايلة لازم يشتغل** — ده الباج اللي
+//    v1.2.1 من الـ Worker اتكتبت عشانه: الاستعلام القديم كان بيقسّم
+//    `RN-AD-115 / Beige / 43` لكلمات بحث عامة ويرجّع **صفر** على صنف
+//    موجود. الـ Worker الوهمي بيطابق بنفس منطق `buildSkuQuery` بالظبط.
 await page.fill('#skuTermInput', 'RN-AD-115 / Beige / 43');
 await page.press('#skuTermInput', 'Enter');
 await page.waitForFunction(() => document.querySelectorAll('tr.bc-grp.is-sku ~ tr.bc-item').length >= 2);
-check('التطابق التام بيتضاف من غير قايمة',
-  !(await page.locator('#skuPickOverlay').isVisible()));
+check('الـ SKU الكامل (بمسافات) بيلاقي الصنف ويضيفه من غير قايمة',
+  await page.locator('#skuAcBox:not([hidden])').count() === 0);
+check('مفيش سطر فشل على الـ SKU الكامل', await page.locator('#bcFails .bc-fail-row').count() === 0);
+
+// ── ⑧ب الجدول على المعيار الموحّد: كل خلية متوسّطة (v1.16.0) ───
+const tblAlign = await page.evaluate(() => {
+  const cells = [...document.querySelectorAll('.bc-table th, .bc-table tbody tr.bc-item td')];
+  const bad = cells.filter(c => getComputedStyle(c).textAlign !== 'center').length;
+  const line = [...document.querySelectorAll('.bc-table tbody tr.bc-item td:not(:first-child)')]
+    .every(c => parseFloat(getComputedStyle(c).borderInlineStartWidth) > 0);
+  return { n: cells.length, bad, line };
+});
+check('كل خلايا الجدول متوسّطة (هيدر وجسم)', tblAlign.bad === 0,
+  `${tblAlign.bad} من ${tblAlign.n} مش متوسّطة`);
+check('خطوط رأسية خفيفة بين الأعمدة', tblAlign.line);
 
 // ── ⑨ الصورة بتفتح بالحجم الكامل ──────────────────────────────
 await page.evaluate(() => {
