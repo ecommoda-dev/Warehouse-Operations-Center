@@ -38,7 +38,7 @@ const ORDERS = {
     financialStatus: 'PENDING', fulfillmentStatus: 'UNFULFILLED',
     itemsTruncated: false, itemsCap: 100,
     items: [
-      { title: 'U.S. Polo Assn. Shoes', variantTitle: 'Black / 43', sku: 'FL-PO-10 / Black / 43', barcode: '34271298', quantity: 1, image: null },
+      { title: 'U.S. Polo Assn. Shoes', variantTitle: 'Black / 43', sku: 'FL-PO-10 / Black / 43', barcode: '34271298', quantity: 1, image: null, variantId: '801', productId: '901' },
       { title: 'Flat Sneakers Lacoste',  variantTitle: 'White / 43', sku: 'FL-LA-10 / White / 43', barcode: '63804482', quantity: 2, image: null },
       { title: 'Item with no barcode',   variantTitle: null,         sku: 'NOBC-1',               barcode: null,       quantity: 3, image: null },
     ],
@@ -73,10 +73,13 @@ const BY_ID = Object.fromEntries(Object.values(ORDERS).map(o => [o.orderId, o]))
 // متغيّرات لبحث الـ SKU (`search_sku` · v1.2.0 من الـ Worker).
 // ⚠️ `RN-AD-115` جزئي **بيطابق تلاتة** — ده بالظبط اللي بيطلّع قايمة
 //    الاختيار، والتطابق التام بيتضاف على طول من غير قايمة.
+// ⚠️ `available` و`productId` **جداد في Worker 1.3.0** — الكمية بقت المتاح
+//    على شوبيفاي، والـ SKU بقى لينك لصفحة المتغيّر. و`913` **بلا مخزون
+//    معروف** (`available: null`) عشان بند «`—` مش صفر» يتفحص فعلاً.
 const VARIANTS = [
-  { variantId: '911', sku: 'RN-AD-115 / Black / 45', barcode: '41202242', title: 'Adidas Terrex', variantTitle: '45', productStatus: 'ACTIVE', image: null },
-  { variantId: '912', sku: 'RN-AD-115 / Beige / 43', barcode: '39072322', title: 'Adidas Terrex', variantTitle: '43', productStatus: 'ACTIVE', image: null },
-  { variantId: '913', sku: 'RN-AD-115 / Blue / 43',  barcode: null,       title: 'Adidas Terrex', variantTitle: '43', productStatus: 'ACTIVE', image: null },
+  { variantId: '911', productId: '701', sku: 'RN-AD-115 / Black / 45', barcode: '41202242', available: 4,    title: 'Adidas Terrex', variantTitle: '45', productStatus: 'ACTIVE', image: null },
+  { variantId: '912', productId: '701', sku: 'RN-AD-115 / Beige / 43', barcode: '39072322', available: 0,    title: 'Adidas Terrex', variantTitle: '43', productStatus: 'ACTIVE', image: null },
+  { variantId: '913', productId: '701', sku: 'RN-AD-115 / Blue / 43',  barcode: null,       available: null, title: 'Adidas Terrex', variantTitle: '43', productStatus: 'ACTIVE', image: null },
 ];
 
 // صفوف السجل الوهمية — `log_print` بيزوّد عليها، وتاب السجل بيقراها.
@@ -87,7 +90,7 @@ function workerReply(url, body) {
   const a = u.searchParams.get('action');
 
   if (url.includes('order-sku-barcode-printer-worker')) {
-    if (a === 'get_config') return [200, { ok: true, version: '1.2.1' }];
+    if (a === 'get_config') return [200, { ok: true, version: '1.3.0' }];
     if (a === 'get_order') {
       const id  = u.searchParams.get('id');
       const raw = u.searchParams.get('order');
@@ -334,41 +337,94 @@ check('عدّاد «N صنف» اتشال من صف المجموعة',
 check('بادجات PENDING/UNFULFILLED اتشالت',
   !/PENDING|UNFULFILLED/.test(await page.locator('#bcBody').textContent()));
 
-// ── ⑧ مدخل الـ SKU: القايمة بتفتح وانت بتكتب (v1.16.0) ────────
+// ── ⑧ مدخل الـ SKU: القايمة بتفتح بالكتابة + تحديد متعدد (v1.17.0) ──
 //
 // 🔴 **المودال اتشال** — القايمة بقت منسدلة تحت المربع، وبتفتح من غير
-//    ما حد يدوس «بحث». البند ده بيقفل رجوع المودال وبيتأكد إن الكتابة
-//    لوحدها كافية.
+//    ما حد يدوس «بحث». والصفوف بقت **مربعات اختيار** مش زراير بتضيف على
+//    طول: البحث الجزئي بيرجّع كل المقاسات، والموظف بياخد منهم كذا واحد.
 check('مودال اختيار الصنف اتشال', await page.locator('#skuPickOverlay').count() === 0);
 await page.locator('#skuTermInput').type('RN-AD-115', { delay: 20 });
+// نص الانتظار بقى «جاري البحث عن…» (كان «بيدوّر على…») — v1.17.0.
+// ⚠️ **بيتفحص بنداء `bcAcBusy` مباشرةً مش بانتظار الـ DOM** — الـ Worker
+//    الوهمي بيرد في نفس اللحظة، فحالة الانتظار بتظهر وتختفي في إطار
+//    واحد والانتظار عليها **بيعلّق الاختبار** (حصل فعلاً).
+const busyTxt = await page.evaluate(() => { bcAcBusy('اختبار'); return document.querySelector('#skuAcBox .sku-ac-busy').innerText; });
+check('نص الانتظار بقى «جاري البحث عن…»', busyTxt.includes('جاري البحث عن'), busyTxt);
 await page.waitForSelector('#skuAcBox .bc-pick-row');
 check('الكتابة لوحدها بتفتح القايمة المنسدلة',
   await page.locator('#skuAcBox:not([hidden])').count() === 1);
 check('الجزئي بيطلّع تلات نتايج', await page.locator('#skuAcBox .bc-pick-row').count() === 3);
-check('الصنف بلا باركود زرّاره مقفول في القايمة',
-  await page.locator('#skuAcBox .bc-pick-row:disabled').count() === 1);
+check('الصنف بلا باركود مربعه مقفول',
+  await page.locator('#skuAcBox .bc-pick-cb:disabled').count() === 1);
 check('المربع ما اتفضّاش وانت بتكتب',
   await page.locator('#skuTermInput').inputValue() === 'RN-AD-115');
-await page.locator('#skuAcBox .bc-pick-row:not([disabled])').first().click();
+// 🔴 v1.17.0 — الصف بقى الـ SKU وبس: اسم المنتج ورقم الباركود اتشالوا.
+const pickTxt = await page.locator('#skuAcBox .bc-pick-row').first().innerText();
+check('صف النتيجة فيه الـ SKU', pickTxt.includes('RN-AD-115 / Black / 45'), pickTxt);
+check('اسم المنتج اتشال من صف النتيجة', !pickTxt.includes('Adidas Terrex'), pickTxt);
+check('رقم الباركود اتشال من صف النتيجة', !pickTxt.includes('41202242'), pickTxt);
+// «مفيش Barcode» **لازم يفضل** — هو اللي بيقول إن الصنف مش هيتطبع خالص.
+check('«مفيش Barcode» لسه ظاهر في القايمة',
+  (await page.locator('#skuAcBox .bc-pick-row.no-bar').innerText()).includes('مفيش Barcode'));
+
+// ── ⑧أ التحديد المتعدد و«تحديد الكل» ──────────────────────────
+check('زرار «إضافة المحدد» متعطّل قبل أي تحديد',
+  await page.locator('#bcAcAddBtn:disabled').count() === 1);
+await page.locator('#skuAcBox .bc-pick-cb:not([disabled])').first().check();
+check('الزرار بيقول العدد بعد التحديد',
+  /\(1\)/.test(await page.locator('#bcAcAddBtn').textContent()),
+  await page.locator('#bcAcAddBtn').textContent());
+// 🔴 «تحديد الكل» **مابيحددش المقفول** — وإلا «إضافة ٣» بتضيف اتنين بصمت.
+await page.locator('#bcAcAll').check();
+check('«تحديد الكل» بيحدّد الاتنين اللي ليهم باركود بس',
+  /\(2\)/.test(await page.locator('#bcAcAddBtn').textContent()),
+  await page.locator('#bcAcAddBtn').textContent());
+check('الصنف بلا باركود فضل غير محدّد',
+  await page.locator('#skuAcBox .bc-pick-cb:disabled').isChecked() === false);
+await page.locator('#bcAcAddBtn').click();
 await page.waitForFunction(() => document.querySelectorAll('tr.bc-grp.is-sku').length === 1);
-check('الصنف اتضاف لمجموعة «بدون أوردر»',
-  await page.locator('tr.bc-grp.is-sku').count() === 1);
-check('القايمة بتتقفل بعد الاختيار', await page.locator('#skuAcBox:not([hidden])').count() === 0);
-check('المربع بيتفضّى بعد ما الصنف يدخل الدفعة',
-  await page.locator('#skuTermInput').inputValue() === '');
+check('الصنفين اتضافوا لمجموعة «بدون أوردر»',
+  await page.locator('tr.bc-grp.is-sku ~ tr.bc-item').count() === 2);
+check('القايمة بتتقفل بعد الإضافة', await page.locator('#skuAcBox:not([hidden])').count() === 0);
+check('المربع بيتفضّى بعد الإضافة', await page.locator('#skuTermInput').inputValue() === '');
 check('مجموعة «بدون أوردر» مش محسوبة في بادج الأوردرات',
   await page.locator('#bcStatOrders').textContent() === '3',
   await page.locator('#bcStatOrders').textContent());
 
-// 🔴 **الـ SKU الكامل بمسافات وشرطات مايلة لازم يشتغل** — ده الباج اللي
-//    v1.2.1 من الـ Worker اتكتبت عشانه: الاستعلام القديم كان بيقسّم
-//    `RN-AD-115 / Beige / 43` لكلمات بحث عامة ويرجّع **صفر** على صنف
-//    موجود. الـ Worker الوهمي بيطابق بنفس منطق `buildSkuQuery` بالظبط.
-await page.fill('#skuTermInput', 'RN-AD-115 / Beige / 43');
+// ── ⑧ب الكمية = المتاح على شوبيفاي · والـ SKU لينك (v1.17.0) ───
+//
+// 🔴 `available: 4` → الكمية 4 وعدد الطباعة 4 (زي صفوف الأوردر بالظبط).
+//    `available: 0` → الكمية 0 بس عدد الطباعة **1**: صفر في خانة الطباعة
+//    معناه ورق فاضي، والحالة اللي المدخل ده اتعمل عشانها مخزونها صفر غالبًا.
+const skuRows = await page.evaluate(() => {
+  const g = bcOrders.find(o => o.isSku);
+  return g.rows.map(r => ({ sku: r.sku, q: r.quantity, c: r.copies }));
+});
+check('الكمية = المتاح على شوبيفاي',
+  skuRows.find(r => r.sku.includes('Black / 45'))?.q === 4, JSON.stringify(skuRows));
+check('عدد الطباعة بيتبع الكمية', skuRows.find(r => r.sku.includes('Black / 45'))?.c === 4);
+check('المتاح صفر → الكمية صفر وعدد الطباعة 1',
+  skuRows.find(r => r.sku.includes('Beige / 43'))?.q === 0 &&
+  skuRows.find(r => r.sku.includes('Beige / 43'))?.c === 1, JSON.stringify(skuRows));
+const skuLink = await page.evaluate(() => {
+  const a = [...document.querySelectorAll('.bc-sku a.bc-sku-link')];
+  return { n: a.length, href: a[0]?.getAttribute('href') || '', rel: a[0]?.getAttribute('rel') || '' };
+});
+check('الـ SKU بقى لينك لصفحة المتغيّر',
+  /\/products\/\d+\/variants\/\d+$/.test(skuLink.href), skuLink.href);
+check('اللينك على كل الصفوف اللي ليها variant', skuLink.n >= 3, String(skuLink.n));
+check('اللينك عليه rel="noopener"', skuLink.rel.includes('noopener'));
+
+// ── ⑧ج الـ SKU الكامل بمسافات (باج Worker 1.2.1) ──────────────
+//
+// 🔴 الاستعلام القديم كان بيقسّم `RN-AD-115 / Beige / 43` لكلمات بحث
+//    عامة ويرجّع **صفر** على صنف موجود. الـ Worker الوهمي بيطابق بنفس
+//    منطق `buildSkuQuery` بالظبط.
+await page.fill('#skuTermInput', 'RN-AD-115 / Black / 45');
 await page.press('#skuTermInput', 'Enter');
-await page.waitForFunction(() => document.querySelectorAll('tr.bc-grp.is-sku ~ tr.bc-item').length >= 2);
-check('الـ SKU الكامل (بمسافات) بيلاقي الصنف ويضيفه من غير قايمة',
-  await page.locator('#skuAcBox:not([hidden])').count() === 0);
+await page.waitForTimeout(500);
+check('التطابق التام على صنف موجود بالفعل بيقول كده',
+  !(await page.locator('#skuAcBox:not([hidden])').count()));
 check('مفيش سطر فشل على الـ SKU الكامل', await page.locator('#bcFails .bc-fail-row').count() === 0);
 
 // ── ⑧ب الجدول على المعيار الموحّد: كل خلية متوسّطة (v1.16.0) ───

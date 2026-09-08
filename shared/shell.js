@@ -55,16 +55,21 @@ const WOC_WORKERS = {
   // ⚠️ الأداة **بقت بتكتب في D1** من 1.2.0 — لكن لسه **صفر كتابة على
   //    شوبيفاي**، ولسه مفيش endpoints دخول فيها: الدخول بيحصل في الهب
   //    عبر Worker التغليف، ومنه كمان بييجي `get_employees` لفلتر السجل.
-  // 🔴 `1.2.1` مشروع (هب v1.16.0): `sku-barcode.html` بقى فيها **قايمة
+  // 🔴 `1.3.0` مشروع (هب v1.17.0): الصفحة بقت بتعرض **الكمية المتاحة على
+  //    شوبيفاي** لأصناف الـ SKU وبتخلّي الـ SKU **لينك لصفحة المتغيّر** —
+  //    الاتنين معتمدين على حقلين رجعوا أول مرة في Worker `1.3.0`
+  //    (`available` · `productId`). على `1.2.1` الخانة بتقول رقم مش الكمية
+  //    والـ SKU بيفضل نص — يعني **رقم غلط شكله سليم**.
+  // 🔴 وقبلها `1.2.1` (هب v1.16.0): `sku-barcode.html` بقى فيها **قايمة
   //    اقتراحات بتفتح وانت بتكتب**، وهي معتمدة على إن `search_sku`
   //    يفهم الـ SKU الكامل (`SD1 / Light grey / 45`) والجزئي منه.
   //    على `1.2.0` الاستعلام بيتقسّم لكلمات بحث عامة وبيرجّع **صفر
   //    نتايج بلا أي خطأ** — يعني القايمة بتفضل فاضية على صنف موجود
   //    قدام الموظف. ده بالظبط نوع الفشل الصامت اللي الحارس اتكتب عشانه.
-  barcode: { url: 'https://order-sku-barcode-printer-worker.ecommoda-dev.workers.dev', min: '1.2.1', label: 'باركود SKU' },
+  barcode: { url: 'https://order-sku-barcode-printer-worker.ecommoda-dev.workers.dev', min: '1.3.0', label: 'باركود SKU' },
 };
 
-const TOOL_VERSION = 'v1.16.0';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.17.0';                      // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const WOC_APP_ID   = 'warehouse_ops_center';         // قيمة `tool` في D1 — login/logout بس
 const SHOP_HANDLE  = '6c7e1a-53';
@@ -350,6 +355,19 @@ function wocOrderAge(iso, now = new Date()) {
 // ── رابط الأوردر على شوبيفاي (قاعدة #20) ──────────────────────
 function shopifyOrderUrl(orderId) {
   return `https://admin.shopify.com/store/${SHOP_HANDLE}/orders/${orderId}`;
+}
+
+// 🔴 **رابط صفحة المتغيّر في الأدمن مركّب من الاتنين** (v1.17.0):
+//    `/products/<productId>/variants/<variantId>`. `variantId` لوحده
+//    **مايبنيش رابط صالح** — الأدمن بيرد صفحة خطأ، مش بيحوّل للمنتج.
+//    عشان كده الدالة بترجّع `null` لو أي واحد فيهم ناقص، والمستدعي بيعرض
+//    نص عادي — نفس منطق `orderLink` تحت بالحرف.
+// ⚠️ **مكانها الـ shell مش الصفحة** — `sku-barcode.html` بتستخدمها في
+//    الجدول **وفي قايمة الاقتراحات**، وأي صفحة تانية هتعرض SKU هتحتاجها.
+//    نسخة تانية معناها إن شكل الرابط يفترق مع أول تغيير في الأدمن (درس R1).
+function shopifyVariantUrl(productId, variantId) {
+  if (!productId || !variantId) return null;
+  return `https://admin.shopify.com/store/${SHOP_HANDLE}/products/${productId}/variants/${variantId}`;
 }
 // ⚠️ أوردر من غير `id` بيرجع **نص عادي** مش لينك بلا هدف — لينك رايح لـ
 //    `orders/undefined` أسوأ من نص: الموظف بيفتحه ويلاقي صفحة خطأ
