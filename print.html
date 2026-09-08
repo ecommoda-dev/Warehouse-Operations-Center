@@ -789,7 +789,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
       <div class="chan-chips" id="chanBar">
         <span class="chan-bar-lbl">نوع الفاتورة</span>
         <button class="chan-btn ch-invoice"  id="chanBtn-invoice"  onclick="setChannel('invoice')">
-          🧾 قاهرة+جيزة <span class="chan-n" id="chanN-invoice">—</span></button>
+          🧾 مناديب <span class="chan-n" id="chanN-invoice">—</span></button>
         <button class="chan-btn ch-awb"      id="chanBtn-awb"      onclick="setChannel('awb')">
           🚚 بوسطة <span class="chan-n" id="chanN-awb">—</span></button>
         <button class="chan-btn ch-showroom" id="chanBtn-showroom" onclick="setChannel('showroom')">
@@ -1356,7 +1356,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <ol>
             <li>الموظف بيسجّل دخول باسمه + PIN (Universal D1 Auth).</li>
             <li>الأداة بتجيب أوردرات <code>Confirmed</code> و<code>Confirmed + Edit</code> (S1) و<code>Confirmed + RETURN</code> و<code>Confirmed + EXCHANGE</code> (S2) المنشأة من <code>2026-04-01</code>.</li>
-            <li>بتعرض <b>كل القنوات</b> (<code>allZones</code>) — قاهرة+جيزة وشو روم بيطبعوا فاتورة شوبيفاي، و<code>Other_Regions</code> بيطبع <b>بوليصة بوسطة</b>. والأوردر اللي زونه فاضي أو مش من القايمة بيتعرض ومربع تحديده مقفول.</li>
+            <li>بتعرض <b>كل القنوات</b> (<code>allZones</code>) — مناديب وشو روم بيطبعوا فاتورة شوبيفاي، و<code>Other_Regions</code> بيطبع <b>بوليصة بوسطة</b>. والأوردر اللي زونه فاضي أو مش من القايمة بيتعرض ومربع تحديده مقفول.</li>
             <li>الموظف بيحدد الأوردرات ويضغط طباعة؛ لو فيه أوردر سبق طباعته بتظهر نافذة تأكيد.</li>
             <li>الأداة بتجيب بيانات كل فاتورة، بترسمها، وبتفتح نافذة طباعة المتصفح (Save as PDF).</li>
             <li>بعدها بتنادي <code>/track</code> لكل أوردر، وبتفتح نافذة النتيجة: العدد بتلات حالات (تم · تم جزئيًا · فشل)، والتفاصيل بتتعرض بس لو فيه تحذير أو فشل.</li>
@@ -2133,8 +2133,10 @@ const filterLabels = {
   lType:"النوع", lCount:"مرات الطباعة", lEmp:"الموظف",
 };
 const sec = {
+  // ⚠️ الترتيب الافتراضي للطابور: تاريخ الأوردر تصاعديًا (الأقدم أولاً) —
+  //    قرار أحمد. لسه بيتحرّك عادي بضغط الهيدر (٣ ضغطات = بلا ترتيب).
   print: { keys:["pType","pStatus","pCount","pFlag"], searchTerm:"", dateFrom:null, dateTo:null,
-           dateFilterActive:false, activePreset:"", sortState:{key:null,dir:null}, fltOpen:false, tblOpen:true },
+           dateFilterActive:false, activePreset:"", sortState:{key:"date",dir:"asc"}, fltOpen:false, tblOpen:true },
   log:   { keys:["lType","lCount","lEmp"],             searchTerm:"", dateFrom:null, dateTo:null,
            dateFilterActive:false, activePreset:"", sortState:{key:null,dir:null}, fltOpen:false, tblOpen:true },
 };
@@ -2715,7 +2717,7 @@ function rebuildPrintFilterItems() {
 //    الـ shell (بيتحمّل قبلها) والقاعدتين هيفترقوا في صمت (درس R1).
 
 const CHANNELS = {
-  invoice:  { label: "فاتورة — قاهرة+جيزة", short: "قاهرة+جيزة", action: "invoice" },
+  invoice:  { label: "فاتورة — مناديب",     short: "مناديب",     action: "invoice" },
   showroom: { label: "فاتورة — شو روم",     short: "شو روم",     action: "invoice" },
   awb:      { label: "بوليصة بوسطة",         short: "بوسطة",      action: "awb"     },
   none:     { label: "بلا قناة",             short: "بلا قناة",   action: null      },
