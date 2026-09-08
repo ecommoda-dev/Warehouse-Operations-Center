@@ -4,7 +4,7 @@
 <!-- skills: html-builder v6.3.0 · worker-builder v2.0.0 · constants v1.6.0 · order-lifecycle v1.2.0 — 05-09-2026 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>طباعة الفواتير — مركز عمليات المخزن</title>
+  <title>قسم الطباعة — مركز عمليات المخزن</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
@@ -25,7 +25,6 @@
 
 
 /* ── عناصر الهيدر الخاصة بالصفحة (الهيدر نفسه في الـ shell) ── */
-.header-updated { font-size: 11.5px; color: var(--text-muted); white-space: nowrap; }
 
 /* ── Main tabs — full width, equal split ── */
 .main-tabs-bar {
@@ -391,11 +390,28 @@
       أخضر). نفس المعلومة بلونين مختلفين = الموظف بيتعلّمها مرتين (درس R1).
    ⚠️ والشكل بقى **نسخة كاملة من `.zchip`** — بعلامة `✕` كمان، لأن المربع
       بقى بيتقفل بضغطة تانية زي هناك بالظبط. */
-.chan-bar {
-  display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+/* صندوق العدّ — **نسخة من `.count-box` في `pack.html`** بالحرف (v1.14.0).
+   الرقم على اليمين · المربعات في النص · لوحة «آخر تحديث» والزرار على
+   الشمال. الموظف بيتنقّل بين الصفحتين طول اليوم بنفس العين. */
+.count-box {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-  box-shadow: var(--shadow); padding: 10px 14px; margin-bottom: 12px;
+  box-shadow: var(--shadow); padding: 12px 16px; margin-bottom: 12px;
 }
+.count-icon   { font-size: 26px; line-height: 1; }
+.count-number {
+  font-size: 26px; font-weight: 800; line-height: 1.2; color: var(--accent);
+  font-family: var(--font-mono); direction: ltr; font-variant-numeric: tabular-nums;
+}
+/* 🔴 `flex:1` **على المربعات هي** — دي اللي بتتمدّد فتتوسّط في المساحة
+   الفاضية، والأكشن بيتزحلق للطرف من `margin-inline-start:auto`. لو حد حط
+   `flex:1` على منطقة تانية، الأكشن بيقع في نص الصندوق (نفس فخّ
+   `.woc-row-mid` في الشاشة الرئيسية). */
+.chan-chips {
+  display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+  flex: 1; min-width: 0; justify-content: center;
+}
+.prt-actions { display: flex; align-items: stretch; gap: 8px; flex-wrap: wrap; margin-inline-start: auto; }
 .chan-bar-lbl { font-size: 11.5px; font-weight: 800; color: var(--text-secondary); margin-inline-end: 2px; }
 .chan-btn {
   display: inline-flex; align-items: center; gap: 9px; padding: 9px 15px;
@@ -424,16 +440,38 @@
 .chan-btn.active { box-shadow: 0 0 0 2px currentColor inset; }
 .chan-btn.active::after { content: '✕'; font-size: 12px; font-weight: 800; opacity: .75; }
 
-/* 🔴 سطر «اختر قناة» — مش شريط ملاحظات، ده **سبب زرار متعطّل**.
-   من غيره الموظف بيفتح الصفحة ويلاقي «طباعة الكل» رمادي من غير أي تفسير،
-   وزرار متعطّل بلا سبب بيتقري عطل في الأداة. بيختفي أول ما يختار قناة. */
-.chan-hint {
-  flex: 1 1 100%; margin: 0; font-size: 12px; font-weight: 700;
-  color: var(--amber-dark);
-}
-.chan-hint[hidden] { display: none; }
+/* ⚠️ سطر «اختر قناة» (`.chan-hint`) **اتشال بقرار أحمد 08-09-2026**.
+   الثمن لازم يتقال: «طباعة الكل» و«طباعة المحدد» بيفتحوا **رماديين** من
+   غير سطر يقول ليه. اللي فاضل بيمنع ده من إنه يتقري عطل حاجتان:
+   البادج بيقول `—` مش رقم (زرار متعطّل برقم عليه = وعد بشغل)، ومربعات
+   نوع الفاتورة فوقهم مطفية كلها — يعني الحالة ظاهرة، بس **السبب مكتوبش**.
+   ⛔ متضيفش نسخة تانية منه في صفحة تانية لو رجع — سطر واحد مشترك. */
 
-/* عمود القناة في الجدول — نفس ألوان المبدّل */
+/* ── عمود «نوع الأوردر» — نص ملوّن، **نسخة من `.type-text` في
+   `pack.html`** (بند ٤، v1.14.0). البادج اتشال: اللون لوحده هو التصنيف،
+   والخلفية كانت بتزوّد ضجيج في جدول عمدانه تمانية. */
+.type-text { font-weight: 800; white-space: nowrap; }
+.type-text.type-s1 { color: var(--accent-dark); }
+.type-text.type-s2 { color: var(--purple-dark); }
+
+/* ── بادج عمر الأوردر — **نسخة من `.time-badge` في `pack.html`** بالحرف
+   (نفس الدرجات ونفس التوكنز). الدرجة بتيجي من `wocDayLevel` في الـ shell،
+   فمستحيل الصفحتين يفترقوا في **الدرجة**؛ الـ CSS هنا هو اللي بيلوّنها،
+   وأي تعديل عليه يتعمل في الصفحتين في نفس التمريرة (درس R1). */
+.time-badge {
+  display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 800; white-space: nowrap; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text-secondary);
+}
+.time-badge.tb-d0   { background: var(--green-light);  color: var(--green-dark);  border-color: var(--green-border); }
+.time-badge.tb-d1   { background: var(--amber-light);  color: var(--amber-dark);  border-color: var(--amber-border); }
+.time-badge.tb-d2   { background: var(--orange-light); color: var(--orange-dark); border-color: var(--orange-border); }
+.time-badge.tb-d3   { background: var(--red-light);    color: var(--red-dark);    border-color: var(--red-border); }
+.time-badge.tb-d7   { background: var(--crit);         color: var(--on-accent);   border-color: var(--crit); }
+.time-badge.tb-none { background: var(--surface-2);    color: var(--text-muted); }
+.time-badge.age-badge { margin-inline-start: 6px; padding: 2px 8px; font-size: 10.5px; font-weight: 700; }
+
+/* عمود نوع الفاتورة في الجدول — نفس ألوان المربعات فوق */
 .chan-cell { font-weight: 800; white-space: nowrap; font-size: 12px; }
 .chan-cell.ch-invoice  { color: var(--accent); }
 .chan-cell.ch-awb      { color: var(--red); }
@@ -733,24 +771,54 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
             العنوان. عشان كده القناة معروضة صراحةً ومختارة بضغطة، مش
             متروكة لتقديره.
          🔴 **الصفحة بتفتح بلا قناة مختارة** والجدول بيعرض الكل، والطباعة
-            **مقفولة** لحد ما تتختار واحدة — والسطر تحت المربعات
-            (`#chanHint`) بيقول السبب. زرار متعطّل بلا سبب بيتقري عطل.
+            **مقفولة** لحد ما تتختار واحدة. ⚠️ وسطر «اختر قناة» اللي كان
+            بيقول السبب **اتشال في v1.14.0** — اللي فاضل بادج `—` على
+            الزرار المتعطّل ومربعات كلها مطفية.
          ⚠️ تبديل القناة **بيمسح التحديد** — ده اللي بيمنع الدفعة المختلطة
             من أصلها بدل ما نتحقق منها بعد كده. وإطفاء القناة بيمسح برضه.
          ══════════════════════════════════════════════════════════ -->
-    <div class="chan-bar" id="chanBar">
-      <span class="chan-bar-lbl">القناة:</span>
-      <button class="chan-btn ch-invoice"  id="chanBtn-invoice"  onclick="setChannel('invoice')">
-        🧾 فاتورة — قاهرة+جيزة <span class="chan-n" id="chanN-invoice">—</span></button>
-      <button class="chan-btn ch-awb"      id="chanBtn-awb"      onclick="setChannel('awb')">
-        🚚 بوليصة بوسطة <span class="chan-n" id="chanN-awb">—</span></button>
-      <button class="chan-btn ch-showroom" id="chanBtn-showroom" onclick="setChannel('showroom')">
-        🏬 فاتورة — شو روم <span class="chan-n" id="chanN-showroom">—</span></button>
-      <!-- ⚠️ بيظهر **بس** لما يكون فيه أوردرات بلا قناة. صفر مايتعرضش عشان
-           الشاشة ماتتعوّدش على تحذير دايم فتبطّل تشوفه. -->
-      <button class="chan-btn ch-none" id="chanBtn-none" style="display:none;" onclick="setChannel('none')">
-        ⚠️ بلا قناة <span class="chan-n" id="chanN-none">—</span></button>
-      <p class="chan-hint" id="chanHint">⚠️ اختر قناة عشان تقدر تطبع — الورق والطابعة بيختلفوا من قناة لقناة.</p>
+    <!-- ⚠️ الصندوق **نسخة من `.count-box` في `pack.html`** بالحرف: الرقم
+         على اليمين · المربعات في النص · لوحة «آخر تحديث» وزرار التحديث
+         مع بعض على الشمال. الموظف بيتنقّل بين الصفحتين طول اليوم، وشكلين
+         مختلفين لنفس الصندوق معناهم إنه يتعلّمه مرتين (درس R1). -->
+    <div class="count-box" id="prtCountBox">
+      <div class="count-icon" aria-hidden="true">🖨️</div>
+      <!-- «—» قبل أول جلب ناجح مش «0» — «ما اتحدّثش» ≠ «مفيش شغل». -->
+      <div class="count-number" id="prtCountTotal">—</div>
+
+      <div class="chan-chips" id="chanBar">
+        <span class="chan-bar-lbl">نوع الفاتورة</span>
+        <button class="chan-btn ch-invoice"  id="chanBtn-invoice"  onclick="setChannel('invoice')">
+          🧾 قاهرة+جيزة <span class="chan-n" id="chanN-invoice">—</span></button>
+        <button class="chan-btn ch-awb"      id="chanBtn-awb"      onclick="setChannel('awb')">
+          🚚 بوسطة <span class="chan-n" id="chanN-awb">—</span></button>
+        <button class="chan-btn ch-showroom" id="chanBtn-showroom" onclick="setChannel('showroom')">
+          🏬 شو روم <span class="chan-n" id="chanN-showroom">—</span></button>
+        <!-- ⚠️ بيظهر **بس** لما يكون فيه أوردرات بلا قناة. صفر مايتعرضش عشان
+             الشاشة ماتتعوّدش على تحذير دايم فتبطّل تشوفه. -->
+        <button class="chan-btn ch-none" id="chanBtn-none" style="display:none;" onclick="setChannel('none')">
+          ⚠️ بلا قناة <span class="chan-n" id="chanN-none">—</span></button>
+      </div>
+
+      <!-- ── لوحة «آخر تحديث» + زرار التحديث — **وحدة واحدة** ──
+           🔴 الكلاسات (`.woc-fresh` · `.woc-ago` · `.woc-stamp-chip` ·
+              `.woc-rbtn`) من `shared/shell.css` — **مش نسخة هنا**. اللوحة
+              دي موجودة في تلات شاشات دلوقتي (الرئيسية · التغليف · الطباعة)،
+              ونسخة CSS رابعة معناها إن الشكل يفترق مع أول تعديل (درس R1).
+           ⚠️ `align-items:stretch` على `.prt-actions` هو اللي بيخلّي الزرار
+              بنفس ارتفاع اللوحة بالظبط — زي `.rdy-actions` و`.woc-row-act`. -->
+      <div class="prt-actions">
+        <div class="woc-fresh">
+          <div class="woc-fresh-row">
+            <span class="woc-fresh-lbl">آخر تحديث</span>
+            <span class="woc-ago" id="prtUpdatedAgo">لسه ما اتحدّثش</span>
+          </div>
+          <div class="woc-fresh-row" id="prtUpdatedAt"><span class="woc-stamp-chip">—</span></div>
+        </div>
+        <button class="woc-rbtn" id="prtRefreshBtn" onclick="handleRefresh()">
+          <span class="woc-rbtn-ico">↺</span><span>تحديث</span><span class="woc-rbtn-badge" id="prtRefreshBadge">—</span>
+        </button>
+      </div>
     </div>
 
     <!-- ─── §AWB — الشريط الاحتياطي لفتح البوليصة ───
@@ -938,11 +1006,14 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
             <thead><tr>
               <th style="width:44px;"><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this.checked)"></th>
               <th class="sortable-th" data-sort-key="name"     onclick="toggleSort('print','name')">رقم الأوردر<span class="sort-icon" data-sort-key="name"></span></th>
-              <th class="sortable-th" data-sort-key="date"     onclick="toggleSort('print','date')">التاريخ<span class="sort-icon" data-sort-key="date"></span></th>
-              <th class="sortable-th" data-sort-key="time"     onclick="toggleSort('print','time')">الوقت<span class="sort-icon" data-sort-key="time"></span></th>
+              <!-- ⚠️ عمود واحد بدل «التاريخ» و«الوقت» (بند ٤، v1.14.0) —
+                   **نفس عمود `pack.html`** بالحرف: التاريخ + بادج العمر.
+                   الوقت اتشال بقرار: ساعة إنشاء الأوردر مش معلومة المخزن
+                   بيتصرّف عليها، واللي بيفرق فعلاً هو «بقاله قد إيه». -->
+              <th class="sortable-th" data-sort-key="date"     onclick="toggleSort('print','date')">تاريخ الأوردر<span class="sort-icon" data-sort-key="date"></span></th>
               <th class="sortable-th" data-sort-key="customer" onclick="toggleSort('print','customer')">العميل<span class="sort-icon" data-sort-key="customer"></span></th>
-              <th class="sortable-th" data-sort-key="type"     onclick="toggleSort('print','type')">النوع<span class="sort-icon" data-sort-key="type"></span></th>
-              <th class="sortable-th" data-sort-key="chan"     onclick="toggleSort('print','chan')">القناة<span class="sort-icon" data-sort-key="chan"></span></th>
+              <th class="sortable-th" data-sort-key="type"     onclick="toggleSort('print','type')">نوع الأوردر<span class="sort-icon" data-sort-key="type"></span></th>
+              <th class="sortable-th" data-sort-key="chan"     onclick="toggleSort('print','chan')">نوع الفاتورة<span class="sort-icon" data-sort-key="chan"></span></th>
               <th class="sortable-th" data-sort-key="status"   onclick="toggleSort('print','status')">الحالة<span class="sort-icon" data-sort-key="status"></span></th>
               <th class="sortable-th" data-sort-key="count"    onclick="toggleSort('print','count')">مرات الطباعة<span class="sort-icon" data-sort-key="count"></span></th>
             </tr></thead>
@@ -1378,8 +1449,22 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
       <div class="cl-entry">
         <div class="cl-head">
-          <span class="cl-ver">v1.13.0</span>
+          <span class="cl-ver">v1.14.0</span>
           <span class="cl-badge" id="clLatestBadge">آخر نسخة</span>
+          <span class="cl-date">08-09-2026</span>
+        </div>
+        <div class="cl-list">
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span>اسم الأداة بقى <strong>«قسم الطباعة»</strong>، وكلمة «القناة» بقت <strong>«نوع الفاتورة»</strong> فوق المربعات وفي عمود الجدول.</span></div>
+          <div class="cl-item"><span class="cl-tag new">جديد</span><span>🔴 <strong>لوحة «آخر تحديث»</strong> فوق الطابور — بعدّاد بيلوّن نفسه (أخضر → أزرق → كهرماني → أحمر) وزرار تحديث ببادج بالعدد، <strong>نفس لوحة قسم التغليف بالحرف</strong>. الختم القديم في الهيدر وزرار 🔄 اتشالوا: كانوا ختم <strong>بلا عمر</strong> — طابور اتجاب من ٤٠ دقيقة شكله زي واحد اتجاب من دقيقة.</span></div>
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span>المربعات بقت <strong>في نص الصندوق</strong> جنب العدد الكلي، وكلمتَي «فاتورة» و«بوليصة» اتشالوا من عليها: <strong>قاهرة+جيزة · بوسطة · شو روم</strong>.</span></div>
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 عمودا <strong>«التاريخ»</strong> و<strong>«الوقت»</strong> بقوا عمود واحد <strong>«تاريخ الأوردر»</strong> ببادج عمر (<code>اليوم</code> · <code>منذ يومين</code> …)، وعمود <strong>«النوع»</strong> بقى <strong>«نوع الأوردر»</strong> نص ملوّن بلا بادج — <strong>نفس عمودَي جدول التغليف بالحرف</strong>. ساعة إنشاء الأوردر مش معلومة المخزن بيتصرّف عليها؛ اللي بيفرق «بقاله قد إيه».</span></div>
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span>⚠️ سطر «اختر قناة» تحت المربعات <strong>اتشال</strong>. الطباعة لسه مقفولة بلا اختيار، واللي بيقول كده بقى <strong>البادج <code>—</code> على الزرار المتعطّل</strong> ومربعات كلها مطفية — يعني الحالة ظاهرة، بس السبب مابقاش مكتوب.</span></div>
+        </div>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-head">
+          <span class="cl-ver">v1.13.0</span>
           <span class="cl-date">07-09-2026</span>
         </div>
         <div class="cl-list">
@@ -1863,7 +1948,6 @@ const TAB_BTN = { print: "tabPrint", log: "tabLog" };
 const TAB_PANEL = { print: "panelPrint", log: "panelLog" };
 let currentTab = "print";
 let logsLoaded = false;
-let lastUpdatedText = "";
 
 function switchMainTab(tab) {
   currentTab = tab;
@@ -2009,6 +2093,12 @@ const TYPE_LABEL = { S1: "عادي", S2: "استبدال/استرجاع" };
 function typeLabel(t) { return TYPE_LABEL[t] || t; }
 function typeBadge(t) {
   return `<span class="type-badge ${String(t).toLowerCase()}">${escHtml(typeLabel(t))}</span>`;
+}
+// نص ملوّن بدل بادج — **جدول الطابور بس** (بند ٤، v1.14.0). تاب السجل
+// لسه على `typeBadge`: هناك العمود جنب أعمدة نصية قليلة فالبادج بيساعد،
+// وهنا الجدول تمن أعمدة فالخلفية بتزوّد ضجيج.
+function typeText(t) {
+  return `<span class="type-text type-${String(t).toLowerCase()}">${escHtml(typeLabel(t))}</span>`;
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2451,6 +2541,7 @@ function dropRecentlyPrinted(orders) {
 async function loadOrders(forceRefresh = false) {
   if (!isConfigured()) { openSettings(); return; }
   showPrint("printLoadingState");
+  prtSetRefreshing(true);
   try {
     const [ordersData, logsData] = await Promise.all([
       // 🔴 `allZones: true` — الهب بيعرض **كل** القنوات، وكمان الأوردرات
@@ -2489,15 +2580,81 @@ async function loadOrders(forceRefresh = false) {
     showPrint("printDashboard");
     measureSticky();
   } catch (err) {
+    // ⚠️ الختم **مايتغيّرش** في الفشل — `stampUpdated` بتتنادى في مسار
+    //    النجاح بس، فاللوحة بتفضل بتقول عمر آخر رقم صحيح.
     document.getElementById("printErrorMsg").textContent = err.message;
     showPrint("printErrorState");
+  } finally {
+    prtSetRefreshing(false);
+    prtRenderFreshness();
   }
 }
 
+// ══════════════════════════════════════════════════════════════
+// §FRESHNESS — لوحة «آخر تحديث» (v1.14.0 · قرار أحمد 08-09-2026)
+// ══════════════════════════════════════════════════════════════
+//
+// 🔴 بدّلت سطر «آخر تحديث: …» وزرار 🔄 اللي كانوا في الهيدر. السبب مش
+//    شكلي: السطر القديم كان **ختم بلا عمر** — طابور اتجاب من ٤٠ دقيقة
+//    شكله بالظبط زي واحد اتجاب من دقيقة، والموظف بياخد قرار طباعة على
+//    الرقم ده. اللوحة الجديدة بتقول العمر وبتلوّن نفسه، والزرار بيبقى
+//    كهرماني بعد ١٥ دقيقة.
+// 🔴 `agoInfo` من `shared/shell.js` §HELPERS — **ممنوع نسخة هنا**. نفس
+//    السلّم بالحرف في الرئيسية والتغليف والإحصائيات (درس R1).
+// ⚠️ الختم بيتسجّل حتى لو الطابور رجع فاضي، و**مايتغيّرش في الفشل** —
+//    ما نقولش للموظف إن القايمة دي جديدة وهي مش جديدة.
+let prtLastLoadedAt = null;
+
 function stampUpdated(iso) {
-  lastUpdatedText = "آخر تحديث: " + formatDateTime(iso || new Date().toISOString());
-  const el = document.getElementById("lastUpdated");
-  if (el) el.textContent = lastUpdatedText;
+  prtLastLoadedAt = iso ? new Date(iso) : new Date();
+  prtRenderFreshness();
+}
+
+function prtRenderFreshness(now = Date.now()) {
+  const agoEl = document.getElementById("prtUpdatedAgo");
+  const atEl  = document.getElementById("prtUpdatedAt");
+  const btn   = document.getElementById("prtRefreshBtn");
+  if (!agoEl || !atEl) return;
+  const info = agoInfo(prtLastLoadedAt, now);
+  agoEl.className   = `woc-ago ${info.cls}`;
+  agoEl.textContent = info.text;
+  const iso = prtLastLoadedAt ? prtLastLoadedAt.toISOString() : null;
+  atEl.innerHTML = iso
+    ? `<span class="woc-stamp-chip">${escHtml(formatDate(iso))}</span>`
+      + `<span class="woc-stamp-chip">${escHtml(formatTimeOnly(iso))}</span>`
+    : '<span class="woc-stamp-chip">—</span>';
+  if (btn) btn.classList.toggle("is-stale", info.stale);
+}
+
+// قفل الزرار أثناء الجلب — ضغطتين متتاليتين = نداءين متوازيين على
+// أتقل endpoint في الستاك.
+function prtSetRefreshing(on) {
+  const btn = document.getElementById("prtRefreshBtn");
+  if (!btn) return;
+  btn.disabled = on;
+  btn.classList.toggle("loading", on);
+}
+
+// ─── النبضة — عرض بحت، **صفر نداء شبكة** ───
+// ⚠️ بتحدّث عدّاد «منذ كام» وبادجات عمر الأوردر **في مكانها**
+//    (`textContent`/`className`)، مش بإعادة رسم الجدول: إعادة الرسم بتصفّر
+//    تمرير الجدول تحت إيد الموظف كل نص دقيقة (نفس `rdyTick` في التغليف).
+const PRT_TICK_MS = 30 * 1000;
+let prtTickTimer = null;
+
+function prtTick() {
+  const nowMs = Date.now(), now = new Date(nowMs);
+  prtRenderFreshness(nowMs);
+  document.querySelectorAll("#printTableBody [data-prt-age]").forEach(el => {
+    const info = wocOrderAge(el.dataset.prtAge || null, now);
+    el.className   = `time-badge age-badge ${info.cls}`;
+    el.textContent = info.text;
+  });
+}
+
+function prtStartTicker() {
+  if (prtTickTimer) return;
+  prtTickTimer = setInterval(prtTick, PRT_TICK_MS);
 }
 
 // ── الرسم من الكاش — الشاشة الفاضية أسوأ من شاشة قديمة **مختومة بوقتها** ──
@@ -2611,9 +2768,16 @@ function renderChannelCounts() {
     // ماتتعوّدش على تحذير دايم فتبطّل تشوفه.
     if (key === "none") btn.style.display = (counts.none || key === activeChannel) ? "" : "none";
   }
-  // سبب الزرار المتعطّل — بيختفي أول ما يتختار قناة.
-  const hint = document.getElementById("chanHint");
-  if (hint) hint.hidden = activeChannel !== null;
+  // 🔴 الرقم الكبير والبادج = **مجموع القنوات الأربعة**، يعني «اللي ينفع
+  //    يتطبع دلوقتي» بالحرف — نفس الرقم اللي الشاشة الرئيسية بتعرضه على
+  //    صف «جاهز للطباعة» بالظبط (`n.invoice + n.awb + n.showroom + n.none`).
+  //    ⚠️ ومجموعه بيساوي **عدد صفوف الجدول** لما مفيش قناة مختارة، لأن كل
+  //    صف عدّى على بوابة قناته هو في الحالتين. رقمان مختلفان على نفس
+  //    الشاشة أسوأ من رقم واحد ناقص.
+  const total = Object.keys(CHANNELS).reduce((a, k) => a + (counts[k] || 0), 0);
+  const put = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  put("prtCountTotal",   total.toLocaleString("en-US"));
+  put("prtRefreshBadge", total.toLocaleString("en-US"));
   return counts;
 }
 
@@ -2700,8 +2864,10 @@ function decoratePrintRows() {
       //    `isPrinted`)، فمفيش نداء زيادة ومفيش تعديل Worker للبند ده.
       bostaUploaded: wocBostaUploaded(o),
       count: getPrintCount(o),
+      // ⚠️ `time` اتشال من صفوف الطابور (v1.14.0) — عمود «الوقت» بقى جزء من
+      //    عمود «تاريخ الأوردر». `sortConfig.time` **بيفضل** لأن تاب السجل
+      //    لسه عنده العمودين منفصلين.
       date:  o.createdAt,
-      time:  o.createdAt,          // نفس الـ timestamp — عمودان للعرض بس
       day:   cairoDayStr(o.createdAt),
       flag:      vi.level,         // "" | "void" | "packed"
       printedAt: vi.printedAt,
@@ -2744,11 +2910,16 @@ function applyPrintFilters() {
 function renderPrintTable(rows) {
   const tbody = document.getElementById("printTableBody");
   if (!rows.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="9">لا توجد أوردرات تطابق الفلاتر</td></tr>';
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="8">لا توجد أوردرات تطابق الفلاتر</td></tr>';
   } else {
+    const now = new Date();
     tbody.innerHTML = rows.map(o => {
       const isSel = selectedIds.has(o.id);
       const c = o.count;
+      // ⚠️ الـ ISO بيتحط في `data-prt-age` عشان النبضة تحدّث البادج **في
+      //    مكانه** كل ٣٠ ثانية من غير إعادة رسم الجدول — إعادة الرسم
+      //    بتصفّر تمرير الجدول تحت إيد الموظف (نفس `data-rdy-age`).
+      const age = wocOrderAge(o.createdAt, now);
       // ⛔ صف بلا قناة: مربع التحديد **متعطّل** والسبب مكتوب جنبه. الصف
       //    بيظهر عشان الموظف يعرف إن فيه أوردر مستني قرار، مش عشان يطبعه.
       const lock = !o.printable;
@@ -2756,10 +2927,9 @@ function renderPrintTable(rows) {
         <td><input type="checkbox" ${isSel ? "checked" : ""} ${lock ? "disabled" : ""}
              onchange="toggleRow('${o.id}', this.checked)"></td>
         <td>${prtOrderLink(o.name, o.orderId)}</td>
-        <td>${formatDate(o.createdAt)}</td>
-        <td>${formatTimeOnly(o.createdAt)}</td>
+        <td class="col-num">${formatDate(o.createdAt)}<span class="time-badge age-badge ${age.cls}" data-prt-age="${escHtml(o.createdAt || "")}">${escHtml(age.text)}</span></td>
         <td>${escHtml(o.customer)}</td>
-        <td>${typeBadge(o.type)}</td>
+        <td>${typeText(o.type)}</td>
         <td><span class="chan-cell ch-${escHtml(o.chan)}">${escHtml(CHANNELS[o.chan].short)}</span>${
           lock ? `<span class="lock-note">⚠️ ${escHtml(o.lockReason)}</span>` : ""}</td>
         <td>${statusCell(o.status)}${o.flag ? `<br>${flagChips(o)}` : ""}</td>
@@ -4045,7 +4215,7 @@ function renderFooter() {
 window.addEventListener("load", () => {
   renderVersionUI();
   document.getElementById("headerMount").innerHTML = wocHeader({
-    icon: '🖨️', title: 'طباعة الفواتير', subtitle: 'مركز عمليات المخزن',
+    icon: '🖨️', title: 'قسم الطباعة', subtitle: 'مركز عمليات المخزن',
     session,
     // ⚠️ Chip التاب الحالي — بيظهر **بس وقت الـ Sticky** (شريط التابات
     //    بيتقفل وقتها). كان جوّه الهيدر القديم، فبيتحط هنا في `extras`
@@ -4053,9 +4223,11 @@ window.addEventListener("load", () => {
     extras: '<div class="active-tab-chip" id="activeTabChip" onclick="toggleTabChipMenu(event)">'
           +   '<span id="activeTabChipLabel">🖨️ الطباعة</span><span class="chip-arrow">▾</span>'
           +   '<div class="tab-chip-menu" id="tabChipMenu"></div>'
-          + '</div>'
-          + '<span class="header-updated" id="lastUpdated"></span>'
-          + '<button class="hbtn" onclick="handleRefresh()">🔄 تحديث</button>',
+          + '</div>',
+    // ⚠️ ختم «آخر تحديث» وزرار 🔄 اتشالوا من الهيدر (v1.14.0) — بقوا في
+    //    صندوق العدّ فوق الطابور بلوحة بتقول **عمر** الرقم كمان. سيبهم
+    //    في الاتنين كان معناه مصدرين لنفس المعلومة على نفس الشاشة، وأول
+    //    ما واحد يتحدّث من غير التاني بيبقى فيه ختمين مختلفين قدام الموظف.
   });
   renderVersionUI();                 // بعد ما الهيدر يتحقن — زرار النسخة جوّاه
   checkWorkerVersion(PAGE_WORKERS);
@@ -4085,6 +4257,12 @@ window.addEventListener("load", () => {
   //    الطباعة. الأوردر جاي من الرابط، والفشل ده مالوش علاقة بيه (نفس قاعدة
   //    ٧ في الشاشة الرئيسية: الطابور مش شرط للشغل).
   Promise.allSettled([queueReady, logsReady]).then(applyOrderParam);   // ?order=
+
+  // ⚠️ النبضة بتشتغل **من غير ما تستنى الجلب** — لو الجلب فشل، اللوحة
+  //    لازم تفضل بتقول «لسه ما اتحدّثش» وبتكبّر عمر الرقم القديم لو كان
+  //    فيه كاش. وهي **صفر نداء شبكة** فمالهاش تكلفة.
+  prtRenderFreshness();
+  prtStartTicker();
 });
 </script>
 </body>
