@@ -96,11 +96,30 @@
   --font-body:      'Noto Sans Arabic', -apple-system, sans-serif;
   --font-mono:      'Noto Sans Arabic', -apple-system, sans-serif;
   /* خط **الليبل المطبوع** في `sku-barcode.html` بس — استثناء موثّق من
-     Standards #11 (خط واحد لكل الأدوات). الليبل بيطابق تيمبلت خارجي
-     (Retail Force Barcode) موجود فعلاً على أرفف المخزن، ونفس عيلة
-     الاستثناء الموثّق لألوان الفاتورة جوّه الـ iframe.
-     ⚠️ ممنوع أي عنصر على الشاشة يستخدمه — الاستثناء للطباعة بس. */
-  --font-label:     Georgia, 'Times New Roman', 'Noto Serif', serif;
+     Standards #11 (خط واحد لكل الأدوات).
+     ⚠️ ممنوع أي عنصر على الشاشة يستخدمه — الاستثناء للطباعة بس.
+
+     🔴 **اتغيّر في v1.14.0 من سيريف لـ grotesque محايد** (قرار أحمد
+        08-09-2026). القيمة القديمة كانت `Georgia, 'Times New Roman', serif`
+        عشان تطابق تيمبلت «Retail Force Barcode» الخارجي — والمطابقة دي
+        **بطلت تبقى الهدف**: الليبل الجديد سطرين بدل تلاتة (رقم الأوردر
+        اتشال)، فهو مش شبه القديم أصلاً.
+
+     ليه grotesque تحديدًا للسطر ده: السطر نص SKU مضغوط بأرقام وحروف
+     لاتينية على عرض ١.٨ إنش (`FL-PO-10 / Black / 43`) وبيتصغّر تلقائيًا
+     لحد ٨px. السيريف بيحط زوائد رفيعة بتتبلع على الطابعة الحرارية عند
+     المقاسات الصغيرة، والـ grotesque حروفه سميكة بالتساوي فبيفضل واضح
+     لآخر درجة تصغير.
+
+     🔴 **ستاك نظام — مفيش خط من الشبكة هنا بقرار.** خط من Google Fonts
+        كان هيدخل الليبل المطبوع في اعتماد على شبكة: CDN محجوب = المتصفح
+        بيرجع لخط احتياطي **بعرض حروف مختلف**، وقياس `measureText` في
+        `bcFitLabelText` بيكون اتحسب على الخط اللي ما اتحمّلش — يعني نص
+        بيخرج بره الليبل، **من غير أي خطأ**. Arial/Helvetica موجودين على
+        أجهزة المحطة أصلاً.
+     ⚠️ `Liberation Sans` جوّه القايمة عشان لينكس (نفس المقاسات بالظبط)،
+        و`Arimo` بعدها لأي جهاز مالوش الاتنين. */
+  --font-label:     Arial, 'Helvetica Neue', Helvetica, 'Liberation Sans', Arimo, sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary);min-height:100vh;padding:12px;direction:rtl}
