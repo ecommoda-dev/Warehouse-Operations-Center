@@ -378,6 +378,18 @@ function orderLink(orderNumber, orderId) {
   return `<a class="order-link" target="_blank" rel="noopener" href="${shopifyOrderUrl(orderId)}">${esc(label)}</a>`;
 }
 
+// أيقونة أداة «باركود SKU» — SVG لا إيموجي (قرار أحمد). `🏷️` كانت أيقونة
+// «تاج سعر» ومش معبّرة عن باركود. الأشرطة بتوريث اللون (`fill="currentColor"`)
+// وبتتحجّم بـ `1em` عشان تتصرّف زي حرف عادي جوّه أي نص — نفس مقاس `.app-icon`
+// و`.woc-card-ico` بالظبط من غير أي CSS إضافي. **مصدر واحد**: أي صفحة تانية
+// تعرض الأيقونة دي (وليس تعريف محلي) عشان الشكل مايفترقش مع أول تعديل (درس R1).
+const WOC_ICON_BARCODE = '<svg viewBox="0 0 24 24" width="1em" height="1em" '
+  + 'style="vertical-align:-0.14em" fill="currentColor" aria-hidden="true">'
+  + '<rect x="2" y="3" width="2" height="18"/><rect x="6" y="3" width="1" height="18"/>'
+  + '<rect x="9" y="3" width="3" height="18"/><rect x="14" y="3" width="1" height="18"/>'
+  + '<rect x="17" y="3" width="1" height="18"/><rect x="20" y="3" width="2" height="18"/>'
+  + '</svg>';
+
 // ══════════════════════════════════════════════════════════════
 // 🚚 §BOSTA-GATE — قناة الطباعة ومين بيتعرض فيها
 // ══════════════════════════════════════════════════════════════
@@ -450,13 +462,14 @@ function wocCourierGroup(courier) {
   return 'other';
 }
 
-// مربعات «بوسطة/شو روم/مناديب» — نفس الترتيب ونفس الليبل ونفس الكلاس في
-// الرئيسية وفي `pack.html`. الترتيب **ثابت** (مش بالعدد): الترتيب بالعدد
+// مربعات «مناديب/بوسطة/شو روم» — نفس الترتيب ونفس الليبل ونفس الكلاس في
+// الرئيسية وفي `pack.html`، ومطابق لترتيب مربعات «نوع الفاتورة» في
+// `print.html` (قرار أحمد). الترتيب **ثابت** (مش بالعدد): الترتيب بالعدد
 // كان هيرقّص المربعات مكانها مع كل تحديث.
 const WOC_COURIER_GROUPS = [
+  { key: 'other',    label: 'مناديب', cls: 'qc-courier'  },
   { key: 'bosta',    label: 'بوسطة',  cls: 'qc-bosta'    },
   { key: 'showroom', label: 'شو روم', cls: 'qc-showroom' },
-  { key: 'other',    label: 'مناديب', cls: 'qc-courier'  },
 ];
 
 // عدّ الطابور كله على المجموعات. ⚠️ العدّ من القايمة **الكاملة** مش

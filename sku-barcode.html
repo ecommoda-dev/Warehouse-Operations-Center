@@ -456,7 +456,7 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
           من `remove.html` لحد v1.5.1، فالبانل كان موجود بالكامل ومستحيل
           يتفتح، **من غير أي خطأ في الكونسول**. -->
   <div class="main-tabs-bar">
-    <button class="main-tab-btn active" id="mainTabPrint" onclick="switchMainTab('print')">🏷️ طباعة ملصق الباركود-SKU</button>
+    <button class="main-tab-btn active" id="mainTabPrint" onclick="switchMainTab('print')"><svg viewBox="0 0 24 24" width="1em" height="1em" style="vertical-align:-0.14em" fill="currentColor" aria-hidden="true"><rect x="2" y="3" width="2" height="18"/><rect x="6" y="3" width="1" height="18"/><rect x="9" y="3" width="3" height="18"/><rect x="14" y="3" width="1" height="18"/><rect x="17" y="3" width="1" height="18"/><rect x="20" y="3" width="2" height="18"/></svg> طباعة ملصق الباركود-SKU</button>
     <button class="main-tab-btn" id="mainTabLog" onclick="switchMainTab('log')">📜 سجل العمليات</button>
   </div>
 
@@ -476,7 +476,7 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
           وبينادي `search_sku` مش `get_order`. مسار منفصل لأن المدخل
           نفسه منفصل، مش تكرار لمسار قايم. ────────────────────── -->
   <div class="card">
-    <div class="card-title">🏷️ طباعة باركود SKU — دفعة أوردرات</div>
+    <div class="card-title"><svg viewBox="0 0 24 24" width="1em" height="1em" style="vertical-align:-0.14em" fill="currentColor" aria-hidden="true"><rect x="2" y="3" width="2" height="18"/><rect x="6" y="3" width="1" height="18"/><rect x="9" y="3" width="3" height="18"/><rect x="14" y="3" width="1" height="18"/><rect x="17" y="3" width="1" height="18"/><rect x="20" y="3" width="2" height="18"/></svg> طباعة باركود SKU — دفعة أوردرات</div>
 
     <!-- 🔴 **مفيش `placeholder` ولا سطر شرح تحت أي مربع** (v1.16.0 · قرار
          أحمد 08-09-2026). عنوان كل مربع بيقوله بالظبط، ولونه بيميّزه —
@@ -528,7 +528,7 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
       <div class="entry-card entry-sku" id="entryCard-sku"
            onclick="focusEntryInput('sku')">
         <span class="entry-active-tag">النشط الآن</span>
-        <div class="entry-title">🏷️ طباعة بالـ SKU (بدون أوردر)</div>
+        <div class="entry-title"><svg viewBox="0 0 24 24" width="1em" height="1em" style="vertical-align:-0.14em" fill="currentColor" aria-hidden="true"><rect x="2" y="3" width="2" height="18"/><rect x="6" y="3" width="1" height="18"/><rect x="9" y="3" width="3" height="18"/><rect x="14" y="3" width="1" height="18"/><rect x="17" y="3" width="1" height="18"/><rect x="20" y="3" width="2" height="18"/></svg> طباعة بالـ SKU (بدون أوردر)</div>
         <div class="scan-input-wrap sku-ac-wrap">
           <input type="text" class="scan-input si-sku" id="skuTermInput"
                  autocomplete="off" inputmode="text" role="combobox"
@@ -692,7 +692,7 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
             <tr><td>🔫 شوبيفاي</td><td>باركود الأوردر</td><td><code>get_order?id=</code> لو الرقم ID (١٠ خانات فأكتر)، وإلا <code>?order=</code></td></tr>
             <tr><td>🚚 بوسطة</td><td>تراكينج بوسطة</td><td>Worker <b>التغليف</b> بيحوّله لرقم أوردر، وبعدين نفس مسار الباركود</td></tr>
             <tr><td>⌨️ يدوي</td><td>رقم أوردر أو أكتر</td><td><code>get_order?order=</code> لكل رقم، بحد تزامن ٣</td></tr>
-            <tr><td>🏷️ SKU</td><td><b>الـ SKU نفسه</b> (بدون أوردر)</td><td><code>search_sku?term=</code> — التطابق التام بيتضاف على طول، والجزئي بيطلّع قايمة اختيار</td></tr>
+            <tr><td><svg viewBox="0 0 24 24" width="1em" height="1em" style="vertical-align:-0.14em" fill="currentColor" aria-hidden="true"><rect x="2" y="3" width="2" height="18"/><rect x="6" y="3" width="1" height="18"/><rect x="9" y="3" width="3" height="18"/><rect x="14" y="3" width="1" height="18"/><rect x="17" y="3" width="1" height="18"/><rect x="20" y="3" width="2" height="18"/></svg> SKU</td><td><b>الـ SKU نفسه</b> (بدون أوردر)</td><td><code>search_sku?term=</code> — التطابق التام بيتضاف على طول، والجزئي بيطلّع قايمة اختيار</td></tr>
           </table>
 
           <h4>الـ Endpoints</h4>
@@ -1697,7 +1697,7 @@ function bcRenderBody() {
     if (o.isSku) {
       head = `
         <tr class="bc-grp is-sku"><td colspan="${COLS}"><div class="bc-grp-in">
-          <span class="bc-grp-sku-name">🏷️ أصناف بدون أوردر</span>
+          <span class="bc-grp-sku-name">${WOC_ICON_BARCODE} أصناف بدون أوردر</span>
         </div></td></tr>`;
     } else {
       const link = o.orderId
@@ -2280,7 +2280,7 @@ function goPage(dir) {
 //    `print_failed` لأن الفشل الوحيد الممكن (الطابعة) الأداة مش شايفاه.
 function logTypeLabel(t) {
   return t === 'print_sku'
-    ? '<span class="log-type-badge sku">🏷️ بدون أوردر</span>'
+    ? `<span class="log-type-badge sku">${WOC_ICON_BARCODE} بدون أوردر</span>`
     : '<span class="log-type-badge order">📦 باركود-SKU لأوردر</span>';
 }
 
@@ -2344,7 +2344,7 @@ async function exportLogXLSX() {
 // ══════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('headerMount').innerHTML = wocHeader({
-    icon: '🏷️', title: 'باركود SKU', subtitle: 'مركز عمليات المخزن', session,
+    icon: WOC_ICON_BARCODE, title: 'باركود SKU', subtitle: 'مركز عمليات المخزن', session,
   });
   renderVersionUI();
   checkWorkerVersion(PAGE_WORKERS);
