@@ -168,7 +168,16 @@
 /* مجموعة «بدون أوردر» — أصناف اتضافت بالـ SKU مباشرة (v1.15.0). */
 .bc-table tr.bc-grp.is-sku td{background:var(--green-light);border-color:var(--green-border)}
 .bc-grp-sku-name{font-size:14px;font-weight:800;color:var(--green-dark)}
-.bc-sku{font-family:var(--font-mono);direction:ltr;text-align:left;font-weight:700;font-size:13.5px}
+.bc-sku{font-family:var(--font-mono);direction:ltr;text-align:center;font-weight:700;font-size:13.5px}
+/* 🔴 **الـ SKU لينك لصفحة المتغيّر في الأدمن** (v1.17.0) — نفس شكل
+   `.order-link` بتاع الـ shell: أزرق تحته خط عند الهوفر. الموظف بيلاقي
+   صنف الباركود بتاعه ناقص أو غلط، والطريق لصفحته كان **نسخ الـ SKU
+   والبحث في الأدمن بإيده**.
+   ⚠️ صنف من غير `productId`/`variantId` بيفضل **نص عادي** — لينك رايح
+      لـ `products/undefined` بيفتح صفحة خطأ والموظف يفتكر إن الصنف اتمسح
+      (نفس منطق `orderLink` في الـ shell بالحرف). */
+a.bc-sku-link{color:var(--accent);text-decoration:none;border-bottom:1px dashed transparent}
+a.bc-sku-link:hover{border-bottom-color:var(--accent)}
 /* 🔴 **«مفيش Barcode» فضل ظاهر بعد ما عمود الـ Barcode اتشال (v1.15.0).**
    العمود اتشال لأن الرقم نفسه مالوش قيمة على الشاشة (بيتقري من الليبل)،
    **بس غيابه له قيمة**: الصنف ده مش هيتطبع خالص. اتنقل تحت الـ SKU بدل
@@ -239,39 +248,63 @@
 /* ── §STYLES::skupick — قايمة اقتراحات الـ SKU (dropdown · v1.16.0) ──
    🔴 **كانت مودال، وبقت قايمة منسدلة تحت المربع نفسه** (قرار أحمد
       08-09-2026). سببان:
-      ① القايمة دلوقتي بتفتح **وانت بتكتب** (§TOOL-JS::sku)، ومودال بيفتح
-         ويقفل مع كل حرف = شاشة بترفرف تحت إيد الموظف.
+      ① القايمة بتفتح **وانت بتكتب** (§TOOL-JS::sku)، ومودال بيفتح ويقفل
+         مع كل حرف = شاشة بترفرف تحت إيد الموظف.
       ② المودال كان بيغطّي الجدول اللي الموظف بيقارن بيه.
    🔴 **نسخة واحدة للاختيار — مش اتنين.** زرار «بحث» والكتابة المباشرة
       **الاتنين بيفتحوا نفس القايمة دي**؛ المودال اتشال بالكامل ومعاه
       `bcOpenPicker`/`bcClosePicker`. مسارا اختيار = يفترقوا مع أول تعديل
       (درس R1).
+   🔴 **والصف بقى `label` بمربع اختيار من v1.17.0** — مش زرار بيضيف على
+      طول. الحالة الواقعية إن الموظف بيدوّر بجزء من الـ SKU (`RN-AD-35`)
+      وعايز **المقاسات كلها**، فإضافة واحد واحد معناها إعادة البحث بعد كل
+      إضافة. التفاصيل في §SKU-AC.
    ⚠️ **z-index 200** — نفس درجة قوايم الفلاتر في الستاك (محتوى ≤ 200 ·
       Standards #17)، تحت المودالات (600) والتوست (9999). */
 .sku-ac-wrap{position:relative}
 .sku-ac{position:absolute;top:calc(100% + 6px);inset-inline:0;z-index:200;
   background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--radius-sm);
-  box-shadow:var(--shadow);max-height:44vh;overflow-y:auto;padding:6px}
+  box-shadow:var(--shadow);max-height:52vh;overflow-y:auto;padding:6px}
 .sku-ac[hidden]{display:none}
 .sku-ac-note{font-size:11.5px;font-weight:700;color:var(--text-secondary);padding:6px 8px;line-height:1.7}
 .sku-ac-note.is-warn{color:var(--amber-dark)}
 .bc-pick-list{display:flex;flex-direction:column;gap:6px}
-.bc-pick-row{display:flex;align-items:center;gap:10px;padding:7px 9px;border:1px solid var(--border);
+
+/* 🔴 **الصف بقى الـ SKU وبس — بخط كبير** (v1.17.0 · قرار أحمد 08-09-2026).
+   اسم المنتج ورقم الباركود اتشالوا: الاسم سطر طويل بيلفّ ويزوّد ارتفاع
+   الصف فبيقلّ عدد النتايج الظاهرة، والباركود رقم **محدش بيقارنه على
+   الشاشة** (بيتقري من الملصق المطبوع). اللي الموظف بيطابق بيه القطعة
+   اللي في إيده هو **الـ SKU والصورة**.
+   ⚠️ **بس «مفيش Barcode» فضل** — ده مش تفصيلة، ده اللي بيقول إن الصنف ده
+      **مش هيتطبع خالص**، ومربع اختياره مقفول عشان كده. */
+.bc-pick-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);
   border-radius:var(--radius-sm);background:var(--surface-2);text-align:right;width:100%;
-  font-family:var(--font-body);cursor:pointer}
-.bc-pick-row:hover:not(:disabled){border-color:var(--green);background:var(--green-light)}
-.bc-pick-row:disabled{cursor:not-allowed}
-/* ⚠️ **`display:block` على السطرين إلزامي** — الصف بقى `<button>` من
-   v1.16.0 وجوّاه `<span>` (زرار جوّه زرار = HTML باطل)، والـ span الافتراضي
-   `inline` فالسطرين كانوا بيلزقوا في سطر واحد و`text-align` مابيتطبّقش. */
+  font-family:var(--font-body);cursor:pointer;margin:0}
+.bc-pick-row:hover:not(.no-bar){border-color:var(--green);background:var(--green-light)}
+.bc-pick-row.is-on{border-color:var(--green);background:var(--green-light);box-shadow:0 0 0 1px var(--green)}
+.bc-pick-row.no-bar{border-color:var(--red-border);background:var(--red-light);cursor:not-allowed}
+.bc-pick-cb{width:18px;height:18px;flex-shrink:0;accent-color:var(--green);cursor:pointer}
+.bc-pick-cb:disabled{cursor:not-allowed}
 .bc-pick-main{flex:1;min-width:0}
-.bc-pick-sku,.bc-pick-sub{display:block}
-.bc-pick-sku{font-family:var(--font-mono);font-size:13px;font-weight:800;direction:ltr;text-align:left}
-.bc-pick-sub{font-size:11.5px;color:var(--text-secondary);font-weight:600;margin-top:2px;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:left}
-.bc-pick-row.no-bar{border-color:var(--red-border);background:var(--red-light)}
-/* مؤشّر تحميل صغير جوّه المربع وانت بتكتب — من غيره القايمة بتفضل على
-   نتيجة الحرف اللي فات والموظف يفتكرها نتيجة اللي بيكتبه دلوقتي. */
+/* الـ SKU **هو** الصف — ١٥px وسميك ومقروء من على بُعد ذراع على شاشة المحطة. */
+.bc-pick-sku{display:block;font-family:var(--font-mono);font-size:15px;font-weight:800;
+  direction:ltr;text-align:left;color:var(--text-primary);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bc-pick-sub{display:block;font-size:11.5px;color:var(--red);font-weight:700;margin-top:3px;
+  direction:rtl;text-align:right}
+/* عدد المتاح جنب الـ SKU — رقم صغير محايد، مش بادج ملوّن: ده **معلومة
+   مخزون** مش حالة تحتاج تحذير. */
+.bc-pick-qty{flex-shrink:0;font-family:var(--font-mono);font-size:12px;font-weight:700;
+  color:var(--text-secondary);direction:ltr;white-space:nowrap}
+
+/* 🔴 شريط التحديد المتعدد — ثابت تحت القايمة (`sticky`) عشان يفضل ظاهر
+   وانت بتنزّل في ٥٠ نتيجة. من غير `sticky` الموظف بيحدّد تلاتة وينزل
+   يدوّر على زرار الإضافة. */
+.sku-ac-bar{position:sticky;bottom:-6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  margin-top:6px;padding:8px;border-top:1px solid var(--border);background:var(--surface)}
+.sku-ac-bar .btn-green{flex:1;min-width:150px}
+.sku-ac-all{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;
+  color:var(--text-secondary);cursor:pointer;white-space:nowrap}
 .sku-ac-busy{display:flex;align-items:center;gap:8px;padding:8px;font-size:12px;
   font-weight:700;color:var(--text-secondary)}
 
@@ -689,7 +722,7 @@
             <li><code>§TOOL::results</code> — بادجان + زرار الطباعة + جدول مجموعات + المعاينة</li>
             <li><code>§TOOL-JS::bcAddOrder</code> — <b>المسار الوحيد</b> لإضافة أوردر للدفعة</li>
             <li><code>§TOOL-JS::sku</code> — <code>search_sku</code> → مجموعة «بدون أوردر»</li>
-            <li><code>§SKU-AC</code> — القايمة المنسدلة اللي بتفتح وانت بتكتب الـ SKU</li>
+            <li><code>§SKU-AC</code> — القايمة المنسدلة اللي بتفتح وانت بتكتب + التحديد المتعدد</li>
             <li><code>§TOOL-JS::bcResolveTracking</code> — تراكينج بوسطة → اسم أوردر (Worker التغليف)</li>
             <li><code>§SCAN</code> — ربط السكانر بالمربعين الأولانيين + <code>lastEntryMode</code></li>
             <li><code>§LIGHTBOX</code> — صورة المنتج بالحجم الكامل</li>
@@ -782,7 +815,21 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.16.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.17.0</span>
+          <span class="cl-ver-date">08-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🔴 <b>تحديد متعدد في قايمة نتايج البحث</b> — مربع اختيار لكل صنف + «تحديد الكل» + «إضافة المحدد (N)». البحث الجزئي بيرجّع كل الألوان والمقاسات، والإضافة واحد واحد كانت بتقفل القايمة وتخلّي الموظف يعيد نفس البحث لكل مقاس.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🔴 <b>الـ SKU بقى لينك لصفحة المتغيّر على شوبيفاي</b> — في الجدول وفي القايمة. الحالة: صنف مكتوب جنبه «مفيش Barcode» والحل على شوبيفاي مش هنا.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>كمية الصنف بدون أوردر = المتاح على شوبيفاي</b> (كانت ١ ثابتة) — و<b>عدد الطباعة بيتبعها</b> زي صفوف الأوردر بالظبط. ⚠️ الصفر أو غير المعروف بيخلّي عدد الطباعة <b>١</b>: الحالة اللي المدخل ده اتعمل عشانها (قطعة راجعة) مخزونها صفر غالبًا، وصفر في خانة الطباعة معناه ورق فاضي. (Worker <code>1.3.0</code>)</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>صف نتيجة البحث بقى الـ SKU وبس</b> بخط كبير — اسم المنتج ورقم الباركود اتشالوا (الاسم بيلفّ ويقلّل النتايج الظاهرة، والباركود محدش بيقارنه على الشاشة). و<b>«مفيش Barcode» فضل</b> — ده اللي بيقول إن الصنف مش هيتطبع.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>«بيدوّر على…» بقت <b>«جاري البحث عن…»</b> · وكلمة «ليبل» اتشالت من سجل التغييرات كمان.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge">v1.16.0</span>
           <span class="cl-ver-date">08-09-2026</span>
         </div>
         <ul class="cl-items">
@@ -802,17 +849,17 @@
           <span class="cl-ver-date">08-09-2026</span>
         </div>
         <ul class="cl-items">
-          <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>تاب «📜 سجل العمليات»</b> — كل ضغطة طباعة بتتسجّل في D1 بصف لكل أوردر (وصف لكل صنف في اللي بدون أوردر): مين طبع، وإمتى، وكام ليبل. بفلاتر وتصفيح وتصدير XLSX.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>تاب «📜 سجل العمليات»</b> — كل ضغطة طباعة بتتسجّل في D1 بصف لكل أوردر (وصف لكل صنف في اللي بدون أوردر): مين طبع، وإمتى، وكام باركود-SKU. بفلاتر وتصفيح وتصدير XLSX.</span></li>
           <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>مدخل رابع: طباعة بالـ SKU من غير أوردر</b> — تكتب الـ SKU زي ما هو على شوبيفاي (<code>RN-AD-115 / Black / 45</code>). التطابق التام بيتضاف على طول، والجزئي بيطلّع قايمة اختيار.</span></li>
           <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>الضغط على صورة المنتج بيفتحها بالحجم الكامل</b> — ٤٤px مش كفاية للتفرقة بين لونين.</span></li>
-          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>ليبل الباركود بقى سطرين</b>: رقم الأوردر تحت الخطوط <b>اتشال</b>، والميزانية اللي اتفضّت راحت لارتفاع الخطوط (٣٤ → ٤٠px). ⚠️ يعني الرابط الوحيد بين الليبل وأوردره بقى <b>ترتيب الخروج من الطابعة</b>.</span></li>
-          <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>خط الليبل بقى grotesque محايد</b> (Arial/Helvetica) بدل Georgia — أوضح على الطابعة الحرارية عند المقاسات الصغيرة، وستاك نظام مش خط من الشبكة.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>ملصق الباركود-SKU بقى سطرين</b>: رقم الأوردر تحت الخطوط <b>اتشال</b>، والميزانية اللي اتفضّت راحت لارتفاع الخطوط (٣٤ → ٤٠px). ⚠️ يعني الرابط الوحيد بين الملصق وأوردره بقى <b>ترتيب الخروج من الطابعة</b>.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>خط الملصق بقى grotesque محايد</b> (Arial/Helvetica) بدل Georgia — أوضح على الطابعة الحرارية عند المقاسات الصغيرة، وستاك نظام مش خط من الشبكة.</span></li>
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>زرار الطباعة اتنقل فوق</b> مكان «مسح الدفعة»، و<b>الدفعة بتتمسح تلقائيًا بعد الطباعة</b>. ⚠️ المتصفح مابيقولش لو الطباعة اتلغت — الإلغاء بيمسح الدفعة برضه، والتوست بيقول إن المسح حصل.</span></li>
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>«نسخة لكل صنف» و«بالكمية» و«مسح الدفعة» اتشالوا</b> — الافتراضي (كمية البند) هو المستخدم فعليًا، والخانة بتصلّح صف بصف.</span></li>
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>زرار حذف ✕ لكل صنف</b> جنب خانة عدد الطباعة، بدل «شيل من الدفعة» اللي كان بيشيل الأوردر بأصنافه كلها.</span></li>
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>شريط الدفعة بقى بادجين كبار</b> (عدد الأوردرات · عدد الأصناف) بدل سطر نص، وشيلات أرقام الأوردرات اتشالت — الجدول تحتها بيقول نفس الكلام.</span></li>
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>عمود «المنتج» وعمود «Barcode» اتشالوا</b> من الجدول. ⚠️ «مفيش Barcode» فضل معروض تحت الـ SKU — ده بيقول إن الصنف مش هيتطبع خالص.</span></li>
-          <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>بادجات <code>PENDING</code>/<code>UNFULFILLED</code> اتشالت</b> — مالهاش أي أثر على قرار طباعة ليبل. بادج تراكينج بوسطة فضل (ده المدخل اللي الموظف سكنه).</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>بادجات <code>PENDING</code>/<code>UNFULFILLED</code> اتشالت</b> — مالهاش أي أثر على قرار طباعة باركود-SKU. بادج تراكينج بوسطة فضل (ده المدخل اللي الموظف سكنه).</span></li>
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span>كارت «اسكن باركود الأوردر…» اتشال — المداخل فوق بتقول نفس الكلام جنب المربع نفسه.</span></li>
           <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span><b>الأوردر اللي فشل جلبه لسه معروض باسمه</b> — اتنقل من شيلة لبانر أحمر تحته سببه. ⛔ عمره ما هيتحوّل لتوست بيختفي لوحده.</span></li>
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <code>barcode.min</code> بقى <code>1.2.0</code> — <b>Promote مطلوب</b> لـ <code>order-sku-barcode-printer-worker</code> v1.2.0. من غيره تاب السجل بيرجّع «action غير معروف» والطباعة بتشتغل <b>من غير أي أثر في D1</b>.</span></li>
@@ -827,8 +874,8 @@
         <ul class="cl-items">
           <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>دفعة أوردرات في صفحة باركود SKU</b> — تسكن أو تكتب أوردر ورا التاني، وأصناف الدفعة كلها بتتطبع في <b>ملف واحد</b> مرتّبة أوردر ورا أوردر.</span></li>
           <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>تلات مداخل زي قسم التغليف</b>: ماسح باركود شوبيفاي (أزرق) · ماسح باركود بوسطة (أحمر) · إدخال يدوي (بيقبل أكتر من رقم مرة واحدة).</span></li>
-          <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>رقم الأوردر بقى مطبوع على الليبل</b> بخط صغير تحت الباركود — الدفعة بتطلع مكوّمة من الطابعة، ومن غير الرقم الليبل مالوش صاحب.</span></li>
-          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>🔴 <b>الصفحات البيضا في نافذة الطباعة.</b> ٥ ليبل كانوا بيطلعوا ملف <b>٣٧ صفحة</b>، ٣٢ منهم بيضا: <code>visibility:hidden</code> كان بيخفي باقي الصفحة و<b>بيسيبها واخدة مكانها في التخطيط</b>، وعلى ورقة ٢×١ إنش كان بيتقسّم لعشرات الصفحات. بقى <code>display:none</code>.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>رقم الأوردر بقى مطبوع على الملصق</b> بخط صغير تحت الباركود — الدفعة بتطلع مكوّمة من الطابعة، ومن غير الرقم الملصق مالوش صاحب.</span></li>
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>🔴 <b>الصفحات البيضا في نافذة الطباعة.</b> ٥ ملصقات كانوا بيطلعوا ملف <b>٣٧ صفحة</b>، ٣٢ منهم بيضا: <code>visibility:hidden</code> كان بيخفي باقي الصفحة و<b>بيسيبها واخدة مكانها في التخطيط</b>، وعلى ورقة ٢×١ إنش كان بيتقسّم لعشرات الصفحات. بقى <code>display:none</code>.</span></li>
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>مربع البحث بـ SKU/باركود اتشال</b> — الدخول بقى بالأوردر بس. <code>search_sku</code> لسه في الـ Worker بس الصفحة مابتنادّيهوش.</span></li>
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span>الأوردر الفاشل بيفضل <b>معروض باسمه</b> في شريط الدفعة بالأحمر بدل توست بيختفي، والأوردر المكرّر بيترفض.</span></li>
           <li class="cl-item"><span class="cl-tag fix">تنبيه</span><span>محتاج <b>Worker باركود v1.1.0</b> (البحث بالـ <code>id</code> — باركود الأوردر بيشفّر الـ ID الرقمي)، و<b>Worker تغليف v2.5.0</b> لمربع بوسطة.</span></li>
@@ -841,7 +888,7 @@
           <span class="cl-ver-date">06-09-2026</span>
         </div>
         <ul class="cl-items">
-          <li class="cl-item"><span class="cl-tag new">جديد</span><span>صفحة <b>🏷️ باركود SKU</b> — طباعة ليبل ٢×١ إنش لأصناف أوردر، أو بالبحث المباشر بـ SKU/باركود من غير أوردر.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>صفحة <b>🏷️ باركود SKU</b> — طباعة ملصق باركود-SKU ٢×١ إنش لأصناف أوردر، أو بالبحث المباشر بـ SKU/باركود من غير أوردر.</span></li>
           <li class="cl-item"><span class="cl-tag new">جديد</span><span><code>order-sku-barcode-printer-worker</code> انضم لمجموعة السر <code>warehouse_ops</code> — نفس حقل السر في الإعدادات بيخدم الأربعة.</span></li>
         </ul>
       </div>
@@ -1155,6 +1202,10 @@ async function bcAddOrder(raw, opts = {}) {
         sku:          it.sku,
         barcode:      it.barcode,
         image:        it.image,
+        // 🔴 الاتنين مع بعض بيبنوا لينك صفحة المتغيّر في الأدمن (v1.17.0)
+        //    — `shopifyVariantUrl` بترجّع `null` لو أي واحد ناقص.
+        variantId:    it.variantId || null,
+        productId:    it.productId || null,
         quantity:     it.quantity,
         copies:       it.barcode ? it.quantity : 0,
       })),
@@ -1278,20 +1329,41 @@ async function bcAddSkuTerm(term) {
 }
 
 // 🔴 **المسار الوحيد لتحويل نتيجة بحث لصف في الدفعة** — القايمة والتطابق
-//    التام الاتنين بيعدّوا من هنا.
-// ⚠️ عدد النسخ الافتراضي **١ مش الكمية**: مفيش أوردر يقول كمية أصلاً،
-//    والحالة اللي المدخل ده اتعمل عشانها هي باركود-SKU واحد ضاع.
-function bcAddSkuVariant(v) {
+//    التام والإضافة المتعددة التلاتة بيعدّوا من هنا.
+//
+// 🔴 **الكمية = المتاح على شوبيفاي** (v1.17.0 · قرار أحمد 08-09-2026).
+//    كانت `1` ثابتة. عمود «الكمية» في الصف ده بقى بيقول **`available`**
+//    الجاي من `ProductVariant.inventoryQuantity` (Worker `1.3.0`) — نفس
+//    الرقم اللي الموظف شايفه في صفحة المتغيّر تحت Inventory · Available.
+//    ⚠️ **و«عدد الطباعة» بيتبع الكمية** — نفس قاعدة صفوف الأوردر بالحرف
+//       («عدد النسخ الافتراضي = كمية البند»). قاعدة تانية هنا كانت هتخلّي
+//       صف يقول «الكمية ٤ · الطباعة ١» جنب صف أوردر بيقول «٢ · ٢»،
+//       والموظف يقراها **باج مش قرار**.
+//    🔴 **الاستثناء الوحيد: صفر أو غير معروف → عدد الطباعة `1`.** الحالة
+//       اللي المدخل ده اتعمل عشانها أصلاً هي **باركود-SKU ضاع من على قطعة
+//       راجعة**، ومخزونها بيبقى صفر غالبًا. صفر في خانة الطباعة معناه إن
+//       الصف **مش هيتطبع خالص** — يعني الموظف بيدوّر على الصنف، يلاقيه،
+//       ويطلع بورق فاضي. وعمود «الكمية» بيفضل بيقول **الرقم الحقيقي**
+//       (صفر أو `—`)، فمفيش رقم بيكدب.
+// ⚠️ **بترجّع `true/false`** — `bcAcAddSelected` بتعدّ اللي اتضاف فعلاً
+//    عشان التوست يقول رقم صحيح.
+function bcAddSkuVariant(v, opts = {}) {
   if (!v.barcode) {
-    showToast(`${v.sku || 'الصنف'} مالوش رقم Barcode على شوبيفاي — مش هيتطبع`, 'error', 7000);
-    playBeep('error');
-    return;
+    if (!opts.quiet) {
+      showToast(`${v.sku || 'الصنف'} مالوش رقم Barcode على شوبيفاي — مش هيتطبع`, 'error', 7000);
+      playBeep('error');
+    }
+    return false;
   }
   if (bcSkuRowExists(v.sku, v.barcode)) {
-    showToast(`${v.sku || v.barcode} موجود في الدفعة بالفعل`, 'warning');
-    playBeep('error');
-    return;
+    if (!opts.quiet) {
+      showToast(`${v.sku || v.barcode} موجود في الدفعة بالفعل`, 'warning');
+      playBeep('error');
+    }
+    return false;
   }
+  const avail  = (typeof v.available === 'number') ? v.available : null;
+  const copies = (avail && avail > 0) ? avail : 1;
   const g = bcOrders[bcSkuGroup(true)];
   g.rows.push({
     title:        v.title || '',
@@ -1299,15 +1371,19 @@ function bcAddSkuVariant(v) {
     sku:          v.sku || null,
     barcode:      v.barcode,
     image:        v.image || null,
-    quantity:     1,
-    copies:       1,
+    variantId:    v.variantId || null,
+    productId:    v.productId || null,
+    quantity:     avail,          // `null` = مش معروف → الجدول بيعرض `—`
+    copies,
   });
   bcFailed = bcFailed.filter(f => bcSkuNorm(f.label) !== bcSkuNorm(v.sku));
   bcShowFail('');
-  playBeep('success');
-  bcAcClose();
-  skuTermInput.value = '';
-  bcRenderAll();
+  if (!opts.quiet) {
+    playBeep('success');
+    skuTermInput.value = '';
+  }
+  if (!opts.keepOpen) { bcAcClose(); bcRenderAll(); }
+  return true;
 }
 
 // ─── §SKU-AC — القايمة المنسدلة تحت مربع الـ SKU (v1.16.0) ───
@@ -1317,6 +1393,19 @@ function bcAddSkuVariant(v) {
 //    الجدول. الـ SKU عندنا فيه اللون والمقاس، والموظف نادرًا بيعرف
 //    الصيغة الكاملة بالحرف — فالبحث الجزئي هو **الاستخدام العادي** مش
 //    الاستثناء، ولازم يبان وهو بيكتب.
+//
+// 🔴 **والاختيار بقى متعدد من v1.17.0** (قرار أحمد 08-09-2026). الصف بقى
+//    `label` بمربع اختيار بدل زرار بيضيف على طول، ومعاه «تحديد الكل»
+//    وزرار «إضافة المحدد (N)».
+//    **السبب:** البحث الجزئي (`RN-AD-35`) بيرجّع **كل** الألوان والمقاسات،
+//    والحالة الواقعية إن الموظف عايز منهم كذا واحد. الإضافة الفورية كانت
+//    بتقفل القايمة بعد كل صنف، فالموظف بيعيد كتابة نفس الكلمة من الأول
+//    لكل مقاس — وفي دفعة ٦ مقاسات دي ٦ عمليات بحث كاملة على شوبيفاي.
+//    ⚠️ **والتطابق التام لسه بيتضاف على طول من غير قايمة** — الموظف اللي
+//       كاتب الـ SKU كامل مايستناش خطوتين.
+//    ⚠️ **صنف بلا باركود مربعه مقفول** — مش مجرد شكل: `bcAddSkuVariant`
+//       بترفضه أصلاً، والمربع المفتوح كان هيخلّي «إضافة ٣» تضيف اتنين.
+//
 // ⚠️ **مهلة `BC_AC_DEBOUNCE_MS` مش ضبط أداء** — من غيرها كل حرف بيطلّق
 //    نداء GraphQL كامل على شوبيفاي (ونداء OAuth ورا كل واحد). ٣٥٠ms
 //    بتخلّي «RN-AD-115» تسع حروف تطلّق **نداء واحد** بعد ما الكتابة توقف.
@@ -1325,6 +1414,7 @@ function bcAddSkuVariant(v) {
 const BC_AC_DEBOUNCE_MS = 350;
 const BC_SKU_MIN_CHARS  = 3;
 let bcAcList = [];
+let bcAcSel  = new Set();     // مؤشرات الصفوف المحدّدة في القايمة الحالية
 let bcAcTimer = null;
 
 function bcAcBox() { return document.getElementById('skuAcBox'); }
@@ -1334,37 +1424,129 @@ function bcAcSetOpen(on) {
   document.getElementById('skuTermInput').setAttribute('aria-expanded', on ? 'true' : 'false');
 }
 
-function bcAcClose() { bcAcList = []; bcAcBox().innerHTML = ''; bcAcSetOpen(false); }
+function bcAcClose() {
+  bcAcList = []; bcAcSel.clear();
+  bcAcBox().innerHTML = ''; bcAcSetOpen(false);
+}
 
 function bcAcBusy(term) {
   bcAcBox().innerHTML =
     `<div class="sku-ac-busy"><span class="loading-spinner" style="width:16px;height:16px;border-width:2px"></span>
-     بيدوّر على «${esc(term)}»…</div>`;
+     جاري البحث عن «${esc(term)}»…</div>`;
   bcAcSetOpen(true);
 }
+
+// الصنف اللي **ينفع** يتحدّد: عنده باركود. (اللي من غيره `bcAddSkuVariant`
+// بترفضه، فمربع مفتوح عليه كان هيخلّي «إضافة ٣» تضيف اتنين في صمت.)
+function bcAcPickable(v) { return !!v.barcode; }
 
 // ⚠️ **القص بيتقال جوّه القايمة نفسها** — «١٢ نتيجة» على بحث رجّع ٥٠ من
 //    أصل ٢٠٠ بيخلّي الموظف يفتكر إن اللي مش لاقيه مش موجود.
 function bcAcOpen(term, list, res = {}) {
   bcAcList = list;
+  bcAcSel  = new Set();
   const note = res.truncated
     ? `<div class="sku-ac-note is-warn">⚠️ النتايج أكتر من ${Number(res.cap).toLocaleString('en-US')} — ضيّق الـ SKU. ظاهر منها ${list.length.toLocaleString('en-US')}.</div>`
     : `<div class="sku-ac-note">«${esc(term)}» طابق ${list.length.toLocaleString('en-US')} صنف — اختر اللي في إيدك.</div>`;
 
-  bcAcBox().innerHTML = note + `<div class="bc-pick-list">${list.map((v, i) => `
-    <button type="button" class="bc-pick-row${v.barcode ? '' : ' no-bar'}" role="option"
-            onclick="bcPickVariant(${i})" ${v.barcode ? '' : 'disabled'}>
+  // 🔴 **الصف `label` جوّاه `checkbox`** — الضغط على أي مكان في الصف
+  //    بيعلّم المربع من غير أي JS، وقارئ الشاشة بيقرا الـ SKU كاسم للمربع.
+  //    زرار جوّه label = ضغطة بتعمل حاجتين.
+  const rows = list.map((v, i) => {
+    const ok = bcAcPickable(v);
+    return `
+    <label class="bc-pick-row${ok ? '' : ' no-bar'}" id="bcPick_${i}">
+      <input type="checkbox" class="bc-pick-cb" data-i="${i}" onchange="bcAcToggle(${i})"
+             ${ok ? '' : 'disabled'} aria-label="اختر ${esc(v.sku || 'الصنف')}">
       ${v.image ? `<img class="bc-thumb" src="${esc(v.image)}" alt="" loading="lazy">`
                 : '<div class="bc-thumb-ph"></div>'}
       <span class="bc-pick-main">
         <span class="bc-pick-sku">${esc(v.sku || '—')}</span>
-        <span class="bc-pick-sub">${esc(v.title || '')}${v.barcode ? ` · ${esc(v.barcode)}` : ' · ⚠️ مفيش Barcode'}</span>
+        ${ok ? '' : '<span class="bc-pick-sub">⚠️ مفيش Barcode — مش هيتطبع</span>'}
       </span>
-    </button>`).join('')}</div>`;
+      ${bcAvailText(v.available)}
+    </label>`;
+  }).join('');
+
+  const anyPickable = list.some(bcAcPickable);
+  const bar = anyPickable ? `
+    <div class="sku-ac-bar">
+      <label class="sku-ac-all">
+        <input type="checkbox" class="bc-pick-cb" id="bcAcAll" onchange="bcAcToggleAll(this.checked)">
+        تحديد الكل
+      </label>
+      <button type="button" class="btn-green" id="bcAcAddBtn" onclick="bcAcAddSelected()" disabled>
+        ➕ إضافة المحدد
+      </button>
+    </div>` : '';
+
+  bcAcBox().innerHTML = note + `<div class="bc-pick-list">${rows}</div>` + bar;
   bcAcSetOpen(true);
+  bcAcSyncBar();
 }
 
-function bcPickVariant(i) { const v = bcAcList[i]; if (v) bcAddSkuVariant(v); }
+// «المتاح» جنب الـ SKU. ⚠️ **`—` مش `0` لما الرقم مش معروف** — الـ Worker
+// بيرجّع `null` لو `read_inventory` ناقصة أو التتبّع مقفول، و«صفر» ساعتها
+// **كذب**: بيتقري «مفيش في المخزن» بدل «الرقم مش معروف».
+function bcAvailText(n) {
+  return `<span class="bc-pick-qty">المتاح: ${(typeof n === 'number') ? n.toLocaleString('en-US') : '—'}</span>`;
+}
+
+function bcAcToggle(i) {
+  if (bcAcSel.has(i)) bcAcSel.delete(i); else bcAcSel.add(i);
+  document.getElementById(`bcPick_${i}`)?.classList.toggle('is-on', bcAcSel.has(i));
+  bcAcSyncBar();
+}
+
+function bcAcToggleAll(on) {
+  bcAcSel = new Set();
+  bcAcList.forEach((v, i) => {
+    if (!bcAcPickable(v)) return;          // المقفول مايتحددش حتى مع «الكل»
+    if (on) bcAcSel.add(i);
+    const cb = bcAcBox().querySelector(`.bc-pick-cb[data-i="${i}"]`);
+    if (cb) cb.checked = on;
+    document.getElementById(`bcPick_${i}`)?.classList.toggle('is-on', on);
+  });
+  bcAcSyncBar();
+}
+
+// ⚠️ **الزرار بيقول العدد وبيتعطّل على صفر** — «إضافة المحدد» بلا رقم على
+//    قايمة مافيهاش تحديد بتخلّي الموظف يدوس ومايحصلش حاجة.
+function bcAcSyncBar() {
+  const btn = document.getElementById('bcAcAddBtn');
+  const all = document.getElementById('bcAcAll');
+  if (btn) {
+    btn.disabled = bcAcSel.size === 0;
+    btn.textContent = bcAcSel.size
+      ? `➕ إضافة المحدد (${bcAcSel.size.toLocaleString('en-US')})`
+      : '➕ إضافة المحدد';
+  }
+  if (all) {
+    const pickable = bcAcList.filter(bcAcPickable).length;
+    all.checked = pickable > 0 && bcAcSel.size === pickable;
+  }
+}
+
+// 🔴 **الإضافة بتعدّي على `bcAddSkuVariant` صنف صنف** — مش مسار جديد.
+//    هي اللي فيها حارس التكرار وحارس الباركود وعدّاد النسخ، ونسخة تانية
+//    منها للدفعة كانت هتفترق مع أول تعديل (درس R1).
+// ⚠️ **التوست مرة واحدة للدفعة** — ٦ توستات ورا بعض بتغطّي الشاشة.
+function bcAcAddSelected() {
+  const picked = [...bcAcSel].sort((a, b) => a - b).map(i => bcAcList[i]).filter(Boolean);
+  if (!picked.length) return;
+  let added = 0;
+  for (const v of picked) if (bcAddSkuVariant(v, { quiet: true, keepOpen: true })) added++;
+  bcAcClose();
+  skuTermInput.value = '';
+  focusEntryInput('sku');
+  if (added) {
+    showToast(`اتضاف ${added.toLocaleString('en-US')} صنف للدفعة`, 'success');
+    playBeep('success');
+  }
+  const skipped = picked.length - added;
+  if (skipped) showToast(`${skipped.toLocaleString('en-US')} صنف موجود في الدفعة بالفعل`, 'warning');
+  bcRenderAll();
+}
 
 // الاقتراح أثناء الكتابة — نفس `bcSearchSku` بتاعة الزرار بالحرف، والفرق
 // الوحيد إن **الفشل هنا مابيدخلش بانر الفشل**: الموظف لسه بيكتب، وسطر
@@ -1544,9 +1726,9 @@ function bcRenderBody() {
                          aria-label="كبّر صورة ${esc(r.sku || r.title || 'المنتج')}"><img
                          class="bc-thumb" src="${esc(r.image)}" alt="" loading="lazy"></button>`
               : '<div class="bc-thumb-ph"></div>'}</td>
-        <td class="bc-sku">${r.sku ? esc(r.sku) : '—'}${
+        <td class="bc-sku">${bcSkuCell(r)}${
               r.barcode ? '' : '<span class="bc-nobar">⚠️ مفيش Barcode — مش هيتطبع</span>'}</td>
-        <td class="bc-qty-num">${Number(r.quantity).toLocaleString('en-US')}</td>
+        <td class="bc-qty-num">${bcQtyText(r.quantity)}</td>
         <td><span class="bc-qty-cell">
               <input type="number" class="bc-qty" min="0" max="99" value="${r.copies}"
                      id="bcQty_${oi}_${ri}" onchange="bcOnQty(${oi},${ri})"
@@ -1578,6 +1760,33 @@ function bcRenderBody() {
     ? `⚠️ <b>${Number(missing).toLocaleString('en-US')}</b> صنف من غير رقم Barcode مسجّل —
        مش هيتطبع لحد ما يتسجّل على شوبيفاي.`
     : '';
+}
+
+// 🔴 **الـ SKU لينك لصفحة المتغيّر في الأدمن** (v1.17.0 · قرار أحمد
+//    08-09-2026). الحالة اللي اتعمل عشانها: الموظف بيلاقي صنف مكتوب جنبه
+//    «مفيش Barcode»، والحل **على شوبيفاي مش هنا** — وقبل كده كان بينسخ
+//    الـ SKU ويروح يدوّر بيه في الأدمن بإيده.
+// ⚠️ **الرابط محتاج `productId` و`variantId` مع بعض** — `shopifyVariantUrl`
+//    في الـ shell بترجّع `null` لو أي واحد ناقص، وساعتها بنعرض **نص عادي**:
+//    لينك رايح لـ `products/undefined` بيفتح صفحة خطأ والموظف يفتكر إن
+//    الصنف اتمسح (نفس منطق `orderLink` بالحرف).
+// ⚠️ **`rel="noopener"` إلزامي** مع `target="_blank"` — Standards.
+function bcSkuCell(r) {
+  const txt = r.sku ? esc(r.sku) : '—';
+  const url = shopifyVariantUrl(r.productId, r.variantId);
+  return url
+    ? `<a class="bc-sku-link" target="_blank" rel="noopener" href="${url}"
+          title="افتح صفحة المتغيّر على شوبيفاي">${txt}</a>`
+    : txt;
+}
+
+// ⚠️ **`—` مش `0` لما الكمية مش معروفة.** صفوف الأوردر كميتها دايمًا رقم؛
+//    أصناف الـ SKU كميتها **المتاح على شوبيفاي**، واللي بيرجع `null` لو
+//    `read_inventory` ناقصة أو تتبّع المخزون مقفول على المتغيّر. عرض `0`
+//    ساعتها بيتقري «مفيش في المخزن» بدل «الرقم مش معروف» — واحدة منهم
+//    قرار شغل والتانية غياب بيانات.
+function bcQtyText(q) {
+  return (typeof q === 'number') ? q.toLocaleString('en-US') : '—';
 }
 
 // خانة النسخ بتتقري في الحال بدل ما تتقري وقت الطباعة — قيمة غلط
