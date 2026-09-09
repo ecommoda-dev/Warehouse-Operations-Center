@@ -44,10 +44,18 @@ const WOC_WORKERS = {
   // `/orders` و`doc: 'AWB'` في `/track` (قناة بوسطة)، و2.4.0 أول نسخة فيها
   // `POST /lookup` (كارت إعادة الطباعة). الترفيع مشروع (Standards #29).
   printer: { url: 'https://order-printer-worker.ecommoda-dev.workers.dev',          min: '2.7.0', label: 'الطباعة' },
-  // 2.5.0 = أول نسخة بتقبل `appId` في `verify_employee`/`log_logout`.
-  // من غيرها الدخول بيتسجّل `pack_checker` **في صمت** بدل اسم الهب —
-  // وده بالظبط نوع الفشل اللي الحارس ده اتكتب عشانه.
-  pack:    { url: 'https://orders-packing-checker-worker.ecommoda-dev.workers.dev', min: '2.5.0', label: 'التغليف' },
+  // 🔴 2.6.0 = أول نسخة فيها §ELIGIBILITY و§PROFILE — `pack.html` من هب
+  // v1.21.0 **معتمدة عليهم فعلاً** (Standards #29): نافذة التشخيص بتقرا
+  // `profile` و`eligibility.hints`، وبوابة الإقرار بتقرا `eligibility.level`.
+  // على Worker أقدم `eligibility` مش بترجع خالص — يعني:
+  //   · أوردر ملغي أو `New Order` **يفتح شاشة التغليف من غير أي تحذير**
+  //     (بالظبط الفشل اللي النسخة دي اتكتبت عشانه)
+  //   · و«مفيش قطعة تتغلّف» ترجع رسالة **بلا أي سبب** والنافذة تطلع فاضية
+  // ⚠️ ودي **مش** حالة تدهور آمن — الحارس بيختفي بالكامل في صمت، فالترفيع
+  //    هنا مش رفاهية (نفس عيلة `remover.min = 1.4.0`).
+  // و2.5.0 كانت أول نسخة بتقبل `appId` في `verify_employee`/`log_logout` —
+  // من غيرها الدخول بيتسجّل `pack_checker` في صمت بدل اسم الهب.
+  pack:    { url: 'https://orders-packing-checker-worker.ecommoda-dev.workers.dev', min: '2.6.0', label: 'التغليف' },
   remover: { url: 'https://order-item-remover-worker.ecommoda-dev.workers.dev',     min: '1.4.0', label: 'حذف منتج' },
   // 1.2.0 = أول نسخة فيها **سجل العمليات** (`log_print` · `get_logs` ·
   // `get_logs_count` · `get_logs_export`) و`[[d1_databases]]`.
@@ -74,7 +82,7 @@ const WOC_WORKERS = {
   barcode: { url: 'https://order-sku-barcode-printer-worker.ecommoda-dev.workers.dev', min: '1.3.0', label: 'باركود SKU' },
 };
 
-const TOOL_VERSION = 'v1.20.0';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.21.0';                      // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const WOC_APP_ID   = 'warehouse_ops_center';         // قيمة `tool` في D1 — login/logout بس
 const SHOP_HANDLE  = '6c7e1a-53';

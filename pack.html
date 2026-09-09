@@ -481,6 +481,75 @@
 .modal-box{background:var(--surface);border-radius:var(--radius);box-shadow:0 20px 60px rgba(0,0,0,.2);width:100%;max-width:540px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
 .modal-body{padding:20px;display:flex;flex-direction:column;gap:14px;overflow-y:auto}
 .modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+
+/* ── §OUTCOME-MODAL — نافذة نتيجة/تشخيص واحدة (v1.21.0) ────────────────────
+   🔴 **نافذة واحدة بأربع نغمات — مش أربع نوافذ** (قرار أحمد 09-09-2026).
+      الصفحة فيها نافذتَي «اتغلّف قبل كده» أصلاً؛ أربع كتل HTML زيادة كانت
+      هتبقى ستة يفترقوا مع أول تعديل (درس R1).
+   🔴 والحالات اللي بتعرضها **بتسيب الأوردر في وضع محتاج فعل أو مراجعة** —
+      والتوست بيختفي لوحده. رسالة بتختفي لوحدها لحالة محتاجة فعل = الفعل
+      مش هيتعمل. نفس مبرّر §OUTCOME-MODAL في `remove.html` بالحرف.
+   ⚠️ بتستخدم `.modal-overlay`/`.modal-box`/`.modal-body`/`.modal-footer`
+      الموجودين فوق — عشان تطلع **شبه نافذة «اتغلّف قبل كده» بالظبط**، مش
+      شكل تالت على نفس الشاشة. */
+.po-hdr{padding:16px 20px;border-bottom:2px solid var(--border-strong);border-radius:var(--radius) var(--radius) 0 0;display:flex;align-items:flex-start;gap:11px}
+.po-hdr.is-blocked,.po-hdr.is-error{background:var(--red-light);border-bottom-color:var(--red-border)}
+.po-hdr.is-warn,.po-hdr.is-partial{background:var(--amber-light);border-bottom-color:var(--amber-border)}
+.po-hdr.is-info{background:var(--surface-2)}
+.po-ico{font-size:22px;line-height:1;flex-shrink:0}
+.po-title{font-size:15px;font-weight:800;line-height:1.5}
+.po-hdr.is-blocked .po-title,.po-hdr.is-error .po-title{color:var(--red)}
+.po-hdr.is-warn .po-title,.po-hdr.is-partial .po-title{color:var(--amber-dark)}
+.po-hdr.is-info .po-title{color:var(--text-primary)}
+.po-msg{font-size:13px;line-height:1.9;color:var(--text-primary)}
+.po-sec-title{font-size:12.5px;font-weight:800;color:var(--text-secondary);margin-bottom:7px;display:flex;align-items:center;gap:6px}
+
+/* ملف الأوردر — شبكة مفتاح/قيمة */
+.po-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:7px 16px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px}
+.po-row{display:flex;align-items:baseline;gap:8px;font-size:12.5px;min-width:0}
+.po-k{color:var(--text-muted);font-weight:600;flex-shrink:0}
+.po-v{font-weight:700;color:var(--text-primary);overflow-wrap:anywhere}
+.po-v.is-none{color:var(--text-muted);font-weight:600}
+.po-v.is-bad{color:var(--red)}
+.po-v.is-warn{color:var(--amber-dark)}
+.po-v.is-good{color:var(--green)}
+.po-none{color:var(--text-muted);font-weight:600}
+.po-bad{color:var(--red)}
+
+/* جدول البنود بالكميات التلاتة — المعيار الموحّد (§Data Tables): كل خلية
+   متوسّطة + خطوط رأسية خفيفة. */
+.po-items{width:100%;border-collapse:collapse;font-size:12.5px}
+.po-items th,.po-items td{padding:7px 9px;border-bottom:1px solid var(--border);text-align:center;vertical-align:middle}
+.po-items th+th,.po-items td+td{border-inline-start:1px solid var(--border)}
+.po-items thead th{background:var(--surface-2);font-weight:800;color:var(--text-secondary);font-size:11.5px}
+.po-items tbody tr:last-child td{border-bottom:none}
+.po-items .po-sku{text-align:right;font-family:var(--font-mono);direction:ltr;font-weight:700}
+.po-items .po-t{text-align:right;color:var(--text-muted);font-size:11.5px}
+.po-wrap{border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
+/* 🔴 الكميات التلاتة هي اللي بتجاوب «ليه مفيش شغل؟» بصريًا — واللون هو
+   اللي بيخلّي النمط يتقري من بعيد بدل ما الموظف يقارن تلات أرقام. */
+.po-q{font-weight:800;font-variant-numeric:tabular-nums}
+.po-q.q-live{color:var(--green)}
+.po-q.q-zero{color:var(--text-muted)}
+.po-q.q-gone{color:var(--red)}
+
+.po-hints{margin:0;padding-inline-start:19px}
+.po-hints li{font-size:12.5px;line-height:1.85;margin-bottom:3px}
+.po-banner{border-radius:var(--radius-sm);padding:10px 13px;font-size:12.5px;line-height:1.8;font-weight:600}
+.po-banner.b-red{background:var(--red-light);border:1px solid var(--red-border);color:var(--red-dark)}
+.po-banner.b-amber{background:var(--amber-light);border:1px solid var(--amber-border);color:var(--amber-dark)}
+.po-banner.b-green{background:var(--green-light);border:1px solid var(--green-border);color:var(--green-dark)}
+.po-list{margin:0;padding-inline-start:19px}
+.po-list li{font-size:12.5px;line-height:1.8;margin-bottom:4px}
+
+/* بوابة الإقرار — المستوى `warn`. 🔴 الزرار بيفضل **متعطّل** لحد ما المربع
+   يتعلّم: إقرار بضغطة واحدة مش إقرار، وده الفرق بين «شفت التحذير» و«الزرار
+   كان قدامي فدوست». */
+.po-ack{display:flex;align-items:flex-start;gap:9px;background:var(--amber-light);border:1px solid var(--amber-border);border-radius:var(--radius-sm);padding:11px 13px;cursor:pointer}
+.po-ack input{width:17px;height:17px;flex-shrink:0;margin-top:1px;cursor:pointer;accent-color:var(--amber-dark)}
+.po-ack span{font-size:12.5px;font-weight:700;line-height:1.75;color:var(--amber-dark)}
+.po-btn-detail{background:none;border:1px solid var(--border-strong);border-radius:var(--radius-sm);padding:5px 11px;font-family:var(--font-body);font-size:12px;font-weight:700;color:var(--text-secondary);cursor:pointer}
+.po-btn-detail:hover{background:var(--surface-hover)}
 .btn-ghost{padding:9px 18px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--surface);color:var(--text-primary);font-family:var(--font-body);font-size:13px;font-weight:600;cursor:pointer;transition:background .15s}
 .btn-ghost:hover{background:var(--bg)}
 .btn-primary{padding:9px 18px;border-radius:var(--radius-sm);border:none;background:var(--accent);color:var(--on-accent);font-family:var(--font-body);font-size:13px;font-weight:700;cursor:pointer;transition:background .15s}
@@ -677,7 +746,24 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.15.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.21.0</span>
+          <span class="cl-ver-date">09-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🔴 <b>حارس أهلية على مسار السكان</b> — قبل النسخة دي، أوردر <b>ملغي</b> أو <code>New Order</code> أو <code>Confirmed</code> ما اتطبعش كان بيفتح شاشة التغليف <b>عادي وبلا أي تحذير</b>. دلوقتي الأداة بتقول السبب: الحجب لما مفيش شغل ممكن (ملغي · مفيش قطعة تتغلّف)، و<b>تحذير بإقرار</b> لما فيه شغل بس محتاج مراجعة (ما اتطبعش · حالة مش من حالات التغليف · دورة استرجاع).</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🔴 <b>نافذة تشخيص بدل رسالة «لا توجد منتجات نشطة»</b> — الرسالة دي كانت بتسيب الموظف في حيرة. دلوقتي النافذة بتعرض <b>ملف الأوردر</b> (الحالتان · وقت الطباعة والتغليف · حالة الشحن والمالية · الإلغاء وسببه · المندوب والزون) و<b>كل بنود الأوردر بالكميات التلاتة</b> — الأصلي والحالي والمتبقي للشحن. النمط بيقول السبب لوحده: <code>2 → 2 → 0</code> اتشحنت · <code>2 → 0 → 0</code> اترجّعت أو اتلغت.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>تمن رسائل توست بقوا نافذة</b> — فشل فتح الأوردر · التغليف الجزئي · «اتغلّف بالفعل» · «محتاج سبب إعادة» · فشل الحفظ. الحالات دي بتسيب الأوردر محتاج فعل أو مراجعة، والتوست بيختفي لوحده: <b>رسالة بتختفي لوحدها لحالة محتاجة فعل = الفعل مش هيتعمل</b>. النجاح الكامل <b>فضل توست</b> — مالوش أي فعل مطلوب.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>«محتاج سبب إعادة التغليف» بقى فيها زرار <b>🔄 افتح الأوردر من أول</b> — الرسالة كانت بتقول للموظف يعمل كده بإيده، والأداة تقدر تعمله بضغطة.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>زرار <b>📋 تفاصيل الأوردر</b> في شاشة التشييك — نفس ملف الأوردر، <b>بلا أي نداء للـ Worker</b> (البيانات جاية في الرد أصلاً).</span></li>
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>بانر التحذير الأصفر كان بيقول «لم يتم تحديد حالة الأوردر» على أوردر حالته <b>محددة تمامًا</b> (<code>Shipped</code> · <code>Cancelled</code> · <code>New Order</code>) — معلومة غلط كانت بتخلّي الموظف يفتكرها بيانات ناقصة ويكمّل. دلوقتي بيسمّي الحالة الفعلية، وبيغطّي كل حالات التحذير مش <code>unclear</code> بس.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 الحارس <b>سيرفر-سايد كمان</b> في <code>complete_pack</code> — حارس في الواجهة بس مش حارس. تاب مفتوح من ساعة والأوردر اتلغى في الوقت ده كان هيعدّي.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <code>pack.min</code> بقى <code>2.6.0</code> — <b>Promote مطلوب</b> لـ <code>orders-packing-checker-worker</code> v2.6.0 (ومعاه v2.5.0 المعلّق).</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.15.0</span>
           <span class="cl-ver-date">08-09-2026</span>
         </div>
         <ul class="cl-items">
@@ -1147,6 +1233,24 @@
   </div>
 </div>
 
+<!-- ══ §OUTCOME-MODAL — نافذة النتيجة/التشخيص الواحدة (v1.21.0) ══════════
+     🔴 **مفيش `onclick` على الـ overlay هنا عن قصد** — الضغط بره النافذة
+        **مايقفلهاش** (قرار أحمد 09-09-2026). الموظف بيدوس على الشاشة كتير
+        وهو بيغلّف، ونافذة بتقول له إن الأوردر ملغي مالهاش تتقفل بالغلط.
+        ده نفس قرار §OUTCOME-MODAL في `remove.html`.
+     ⚠️ الهيدر والفوتر بيتبنوا من `showPackOutcome` — الأزرار بتفرق من حالة
+        للتانية (إقرار · فتح من أول · إغلاق). -->
+<div class="modal-overlay hidden" id="packOutcomeModal" role="dialog" aria-modal="true" aria-labelledby="poTitle">
+  <div class="modal-box">
+    <div class="po-hdr" id="poHdr">
+      <div class="po-ico" id="poIco" aria-hidden="true">⚠️</div>
+      <div class="po-title" id="poTitle">—</div>
+    </div>
+    <div class="modal-body" style="gap:14px" id="poBody"></div>
+    <div class="modal-footer" id="poFooter"></div>
+  </div>
+</div>
+
 <!-- ══════════════════════════════════════════════════════════════
      §TOOL
      ══════════════════════════════════════════════════════════════ -->
@@ -1476,6 +1580,11 @@
             <div style="display:flex;align-items:center;gap:10px">
               <a class="order-name" id="checkOrderName" target="_blank" rel="noopener"></a>
               <span class="stage-badge-sm" id="checkStageBadge"></span>
+              <!-- ⚠️ البيانات جاية في رد `get_order` أصلاً (§PROFILE) — الزرار
+                   ده **مابينادّيش الـ Worker**، بيعرض اللي معانا. وبيقفل سؤال
+                   «الأوردر ده حكايته إيه؟» من غير ما الموظف يسيب الشاشة
+                   ويفتح شوبيفاي. -->
+              <button class="po-btn-detail" id="btnOrderDetail" onclick="showOrderDetail()">📋 تفاصيل الأوردر</button>
             </div>
             <button class="btn-ghost btn-cancel-pack" onclick="resetToEntry()">❌ إلغاء التغليف</button>
           </div>
@@ -1494,8 +1603,15 @@
           </div>
         </div>
 
+        <!-- 🔴 النص هنا **افتراضي بس** — `renderCheckScreen` بتدهسه بسبب
+             الأهلية الفعلي من الـ Worker (§ELIGIBILITY).
+             ⚠️ النص القديم كان بيقول «لم يتم تحديد حالة الأوردر» على أوردر
+                حالته **محددة تمامًا** (`Shipped` · `New Order` · `Cancelled`) —
+                هي بس مش من قايمة حالات التغليف. الموظف كان بيقراها «بيانات
+                ناقصة» ويكمّل، والحقيقة اللي الأداة **شايفاها** ومابتقولهاش
+                هي اسم الحالة نفسه. -->
         <div class="unclear-warning" id="unclearWarn">
-          ⚠️ لم يتم تحديد حالة الأوردر الأساسي (S1) أو حالة الأوردر الاستبدال (S2) — يُعامَل الأوردر كـ S1 افتراضياً. تأكد من صحة هذا قبل التغليف.
+          ⚠️ حالة الأوردر مش من حالات التغليف — الأداة بتعامله كـ S1 افتراضيًا. راجع الحالة على شوبيفاي قبل ما تغلّف.
         </div>
 
         <div class="conflict-panel" id="conflictPanel" style="display:none">
@@ -1822,6 +1938,15 @@ let currentItems    = [];
 let currentAnalysis = null;
 let currentAlreadyPackedData = null;
 let currentEditReason = null;
+// §ELIGIBILITY (v1.21.0) — الملف والحكم بييجوا من الـ Worker مع كل
+// `get_order`. ⛔ **ممنوع الواجهة تحسب الأهلية عندها**: القاعدة عايشة في
+// `get_ready_orders` أصلاً، ونسخة تانية هنا = درس R1 بالحرف (نفس اللي حصل
+// مع بوابة بوسطة في v1.11.0 — الرئيسية بتقول ٦٦ والصفحة بتفتح على ٦).
+let currentProfile     = null;
+let currentEligibility = null;
+// إقرار الموظف على تحذير `warn`. ⚠️ بيتصفّر مع **كل** استعلام جديد — إقرار
+// أوردر فات بيتسحب على اللي بعده = إقرار ما اتسألش عنه ومكتوب في D1.
+let currentEligibilityAck = false;
 
 // ─── §SCAN::entryMode — الفوكس بيرجع لآخر مدخل اتشتغل منه (v2.5.0) ───
 //
@@ -1980,6 +2105,218 @@ function renderBostaSource(info) {
   bar.classList.add('visible');
 }
 
+// ══════════════════════════════════════════════════════════════
+// §OUTCOME-MODAL — نافذة واحدة لكل حالة محتاجة قراءة (v1.21.0)
+//
+// 🔴 **القاعدة اللي القسم ده بيطبّقها** (نفس §OUTCOME-MODAL في `remove.html`):
+//    الحالة اللي بتسيب الأوردر محتاج فعل أو مراجعة → **نافذة**.
+//    النجاح الكامل → **توست**. رسالة بتختفي لوحدها لحالة محتاجة فعل =
+//    الفعل مش هيتعمل.
+//
+// 🔴 **نافذة واحدة بخمس نغمات — مش نافذة لكل حالة** (قرار أحمد 09-09-2026).
+//    الصفحة فيها نافذتَي «اتغلّف قبل كده» أصلاً؛ خمس كتل زيادة كانت هتبقى
+//    سبعة يفترقوا مع أول تعديل (درس R1).
+//
+// ⚠️ **مفيش توست ونافذة لنفس الحدث.** رسالتان في نفس اللحظة معناهم إن
+//    الموظف يقرا واحدة ويهمل التانية، ومش مضمون أنهي واحدة. التوستات
+//    التمانية اللي كانت هنا **اتشالت** — البيب لوحده هو اللي فضل، لأنه
+//    إشارة إن حاجة حصلت مش رسالة تتقري.
+// ══════════════════════════════════════════════════════════════
+
+// الأكواد اللي عندها **واجهة مخصّصة أقدم وأغنى** — النافذة دي بتسيبها لها.
+//   `already_packed` → نافذتَي «اتغلّف قبل كده» (بجدول البنود المسجّلة)
+//   `conflict`       → لوحة التعارض الحمرا (بمقارنة الميتافيلدين)
+const PO_DEDICATED = new Set(['already_packed', 'conflict']);
+
+const PO_META = {
+  blocked: { ico: '⛔',  cls: 'is-blocked' },
+  warn:    { ico: '⚠️', cls: 'is-warn'    },
+  partial: { ico: '⚠️', cls: 'is-partial' },
+  error:   { ico: '✗',  cls: 'is-error'   },
+  info:    { ico: '📋', cls: 'is-info'    },
+};
+
+function closePackOutcome() {
+  document.getElementById('packOutcomeModal').classList.add('hidden');
+}
+
+function poRow(k, vHTML, cls = '') {
+  return `<div class="po-row"><span class="po-k">${esc(k)}</span>` +
+         `<span class="po-v ${cls}">${vHTML}</span></div>`;
+}
+function poVal(v, cls = '') {
+  return (v === null || v === undefined || v === '')
+    ? '<span class="po-none">—</span>'
+    : `<span class="${cls}">${esc(v)}</span>`;
+}
+
+// ─── §OUTCOME-MODAL::poProfileHTML — «ملف الأوردر» ───
+//
+// ⚠️ صفوف الطباعة والتغليف بتظهر لو **فيها قيمة** أو لو هي بتاعة **المرحلة
+//    الحالية** — «اتطبع: —» على المرحلة اللي بنشتغل عليها معلومة، وعلى
+//    المرحلة التانية ضوضاء.
+function poProfileHTML(pr) {
+  if (!pr) return '';
+  const rows = [];
+  const nameHTML = pr.orderId
+    ? `<a class="order-name" href="${shopifyOrderUrl(pr.orderId)}" target="_blank" rel="noopener">${esc(pr.name)}</a>`
+    : esc(pr.name || '—');
+  rows.push(poRow('الأوردر', nameHTML));
+  rows.push(poRow('تاريخ الأوردر', pr.createdAt
+    ? `${esc(formatDate(pr.createdAt))} · ${esc(wocOrderAge(pr.createdAt).text)}` : poVal(null)));
+  rows.push(poRow('المرحلة المحسوبة', esc(pr.stage === 'S2' ? 'استبدال / استرجاع (S2)' : 'عادي (S1)')));
+  rows.push(poRow('حالة الأوردر (S1)', poVal(pr.s1Status, pr.s1Status === 'Cancelled' ? 'po-bad' : '')));
+  rows.push(poRow('حالة الاستبدال (S2)', poVal(pr.s2Status)));
+  rows.push(poRow('حالة الشحن', poVal(pr.fulfillmentStatus)));
+  rows.push(poRow('الحالة المالية', poVal(pr.financialStatus)));
+  if (pr.cancelledAt) {
+    rows.push(poRow('ملغي على شوبيفاي',
+      `${esc(formatDate(pr.cancelledAt))}${pr.cancelReason ? ' · ' + esc(pr.cancelReason) : ''}`, 'is-bad'));
+  }
+  rows.push(poRow('المندوب', poVal(pr.courier)));
+  rows.push(poRow('الزون', poVal(pr.zone)));
+  if (pr.edited) rows.push(poRow('اتعدّل على شوبيفاي', 'أيوة', 'is-warn'));
+
+  const t = [];
+  const stamp = iso => `${esc(formatDateTime(iso))} · ${esc(sinceText(iso))}`;
+  if (pr.printingTimeS1 || pr.stage === 'S1') t.push(poRow('وقت الطباعة (S1)', pr.printingTimeS1 ? stamp(pr.printingTimeS1) : poVal(null)));
+  if (pr.printingTimeS2 || pr.stage === 'S2') t.push(poRow('وقت الطباعة (S2)', pr.printingTimeS2 ? stamp(pr.printingTimeS2) : poVal(null)));
+  if (pr.packingDateS1 || pr.packedByS1 || pr.stage === 'S1') {
+    t.push(poRow('وقت التغليف (S1)', pr.packingDateS1 ? stamp(pr.packingDateS1) : poVal(null)));
+    if (pr.packedByS1) t.push(poRow('غلّفه (S1)', poVal(pr.packedByS1)));
+  }
+  if (pr.packingDateS2 || pr.packedByS2 || pr.stage === 'S2') {
+    t.push(poRow('وقت التغليف (S2)', pr.packingDateS2 ? stamp(pr.packingDateS2) : poVal(null)));
+    if (pr.packedByS2) t.push(poRow('غلّفه (S2)', poVal(pr.packedByS2)));
+  }
+  // ⚠️ صف D1 بيتعرض **بس** لو اختلف عن الميتافيلد — التطابق هو الوضع
+  //    الطبيعي، والاختلاف معناه إن الكتابة على شوبيفاي نجحت والتسجيل فشل.
+  const ownPackDt = pr.stage === 'S2' ? pr.packingDateS2 : pr.packingDateS1;
+  if (pr.packingDateLog && pr.packingDateLog !== ownPackDt) {
+    t.push(poRow('صف السجل (D1)', stamp(pr.packingDateLog), 'is-warn'));
+  }
+
+  return `<div><div class="po-sec-title">📋 ملف الأوردر</div><div class="po-grid">${rows.join('')}</div></div>` +
+         (t.length ? `<div><div class="po-sec-title">🖨 الطباعة والتغليف</div><div class="po-grid">${t.join('')}</div></div>` : '');
+}
+
+// ─── §OUTCOME-MODAL::poItemsHTML — البنود بالكميات التلاتة ───
+//
+// 🔴 **دي الحاجة اللي بتجاوب «ليه مفيش شغل هنا؟» بصريًا** بدل جملة بتخمّن:
+//      `2 → 2 → 0` = اتشحنت · `2 → 0 → 0` = اترجّعت أو اتلغت · `2 → 2 → 2` = لسه للشحن
+//    والتلات كميات كانت **بتترجع من الـ Worker من قبل النسخة دي** —
+//    بتتحسب ومابتتعرضش.
+// ⚠️ بيعرض **كل** البنود مش النشطة بس — البند المستبعَد هو بالظبط اللي
+//    بيفسّر الغياب، فإخفاؤه بيشيل الإجابة من الشاشة.
+function poItemsHTML(pr) {
+  const li = (pr && pr.lineItems) || [];
+  if (!li.length) return '';
+  const q = (v, cls) => `<span class="po-q ${cls}">${v === null ? '—' : esc(String(v))}</span>`;
+  const rows = li.map(i => `
+    <tr>
+      <td class="po-sku">${esc(i.sku || '—')}<div class="po-t">${esc(i.title || '')}</div></td>
+      <td>${q(i.quantity, 'q-zero')}</td>
+      <td>${q(i.currentQuantity, i.currentQuantity === 0 ? 'q-gone' : 'q-zero')}</td>
+      <td>${q(i.fulfillableQuantity, i.fulfillableQuantity > 0 ? 'q-live' : 'q-zero')}</td>
+    </tr>`).join('');
+  return `<div>
+    <div class="po-sec-title">📦 بنود الأوردر (${li.length.toLocaleString('en-US')})</div>
+    <div class="po-wrap"><table class="po-items">
+      <thead><tr>
+        <th style="text-align:right">المنتج / SKU</th>
+        <th>الأصلي</th><th>الحالي</th><th>المتبقي للشحن</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+    <div class="po-t" style="margin-top:6px;text-align:right">
+      «الحالي» = بعد أي تعديل أو مرتجع · «المتبقي للشحن» = اللي لسه هيخرج فعلاً.
+    </div>
+  </div>`;
+}
+
+// ─── §OUTCOME-MODAL::showPackOutcome — المدخل الوحيد ───
+//
+// ⚠️ الأزرار بتتبني بـ `createElement` + `addEventListener` مش `onclick`
+//    بنص — عشان مفيش أي قيمة (اسم أوردر · سبب) تتسرّب جوّه HTML.
+// ⚠️ والفوكس بيروح للزرار الرئيسي: بيدّي `Enter` للوحة المفاتيح، وبيمنع
+//    الكتابة من تروح لمربع مخفي ورا النافذة.
+function showPackOutcome(o) {
+  const modal = document.getElementById('packOutcomeModal');
+  const meta  = PO_META[o.level] || PO_META.error;
+
+  document.getElementById('poIco').textContent   = o.ico || meta.ico;
+  document.getElementById('poTitle').textContent = o.title || '';
+  document.getElementById('poHdr').className     = 'po-hdr ' + meta.cls;
+
+  const parts = [];
+  if (o.message) parts.push(`<div class="po-msg">${esc(o.message)}</div>`);
+  (o.banners || []).forEach(b => parts.push(`<div class="po-banner b-${b.tone}">${b.html}</div>`));
+  if (o.hints && o.hints.length) {
+    parts.push(`<div><div class="po-sec-title">🔎 ليه مفيش شغل هنا؟</div>
+      <ul class="po-hints">${o.hints.map(h => `<li>${esc(h)}</li>`).join('')}</ul></div>`);
+  }
+  (o.lists || []).forEach(l => {
+    if (!l.items || !l.items.length) return;
+    parts.push(`<div><div class="po-sec-title">${esc(l.title)}</div>
+      <ul class="po-list">${l.items.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`);
+  });
+  if (o.profile) { parts.push(poProfileHTML(o.profile)); parts.push(poItemsHTML(o.profile)); }
+  if (o.ack) {
+    parts.push(`<label class="po-ack">
+      <input type="checkbox" id="poAckCb">
+      <span>${esc(o.ack.label)}</span></label>`);
+  }
+  document.getElementById('poBody').innerHTML = parts.filter(Boolean).join('');
+
+  // ── الفوتر — بيتبني من جديد كل مرة، فمفيش listener قديم فاضل ──
+  const ftr = document.getElementById('poFooter');
+  ftr.innerHTML = '';
+  const close = () => { closePackOutcome(); if (o.onClose) o.onClose(); };
+  const mkBtn = (label, cls, fn, grow) => {
+    const b = document.createElement('button');
+    b.className = cls; b.textContent = label;
+    if (grow) b.style.flex = '1';
+    b.addEventListener('click', fn);
+    ftr.appendChild(b);
+    return b;
+  };
+
+  let primary;
+  if (o.ack) {
+    // 🔴 زرار المتابعة **متعطّل** لحد ما المربع يتعلّم. إقرار بضغطة واحدة
+    //    مش إقرار — ده الفرق بين «شفت التحذير» و«الزرار كان قدامي فدوست».
+    mkBtn('إلغاء', 'btn-ghost', () => { closePackOutcome(); if (o.onCancel) o.onCancel(); });
+    const go = mkBtn(o.ack.confirmLabel || 'كمّل', 'btn-primary', () => {
+      closePackOutcome(); if (o.onConfirm) o.onConfirm();
+    }, true);
+    go.disabled = true;
+    document.getElementById('poAckCb')
+      .addEventListener('change', e => { go.disabled = !e.target.checked; });
+    primary = go;
+  } else {
+    (o.buttons || []).forEach(b => mkBtn(b.label, b.cls || 'btn-ghost', () => {
+      closePackOutcome(); if (b.onClick) b.onClick();
+    }));
+    primary = mkBtn(o.closeLabel || 'تمام، فهمت',
+      o.level === 'blocked' || o.level === 'error' ? 'btn-red' : 'btn-primary', close, true);
+  }
+
+  modal.classList.remove('hidden');
+  setTimeout(() => primary.focus(), 60);
+}
+
+// ─── §OUTCOME-MODAL::showOrderDetail — زرار «📋 تفاصيل الأوردر» ───
+// ⚠️ **مافيش أي نداء للـ Worker هنا** — الملف جاي في رد `get_order` أصلاً.
+function showOrderDetail() {
+  if (!currentProfile) return;
+  showPackOutcome({
+    level:   'info',
+    title:   `تفاصيل الأوردر ${currentProfile.name || ''}`,
+    profile: currentProfile,
+    closeLabel: 'إغلاق',
+  });
+}
+
 // ── Lookup Order ───────────────────────────────────────────────
 // `opts.tracking` = الرقم الجاي رقم **تتبع بوسطة** مش رقم أوردر. الـ
 // Worker هو اللي بيحوّله (بوسطة → businessReference → اسم الأوردر) —
@@ -1990,6 +2327,9 @@ async function lookupOrder(raw, opts = {}) {
   document.getElementById('btnLookup').disabled = true;
   clearPackResult();
   renderBostaSource(null);
+  // ⚠️ الملف والحكم والإقرار بيتصفّروا **قبل** النداء زي شريط بوسطة بالظبط —
+  //    من غير التصفير، أوردر فشل استعلامه بيفضل شايل ملف الأوردر اللي قبله.
+  currentProfile = null; currentEligibility = null; currentEligibilityAck = false;
   try {
     const isId  = /^\d{10,}$/.test(raw);
     const params = opts.tracking ? { tracking: raw } : (isId ? { id: raw } : { name: raw });
@@ -2001,6 +2341,31 @@ async function lookupOrder(raw, opts = {}) {
 
     // القصّ بيترجع من الـ Worker — بانر ثابت، مش صمت
     renderTruncWarn(data.truncated === true);
+
+    currentProfile     = data.profile     || null;
+    currentEligibility = data.eligibility || null;
+
+    // ─── §ELIGIBILITY::البوابة — الترتيب هنا **هو** القرار ───
+    //
+    // ① الحجب الأول: الحقيقة الأهم بتغلب. أوردر ملغي واتغلّف قبل كده بيقول
+    //    «ملغي» — لأن ده اللي بيغيّر تصرّف الموظف، مش «اتغلّف».
+    // ⚠️ `already_packed` و`conflict` عندهم **واجهة مخصّصة أقدم وأغنى**
+    //    (جدول البنود المسجّلة · مقارنة الميتافيلدين)، فبيعدّوا لفروعهم تحت.
+    //    الحجب هنا كان هيستبدل لوحة كاملة بنافذة أقل تفصيلاً.
+    if (currentEligibility
+        && currentEligibility.level === 'blocked'
+        && !PO_DEDICATED.has(currentEligibility.code)) {
+      showPackOutcome({
+        level:   'blocked',
+        title:   currentEligibility.title,
+        message: currentEligibility.reason,
+        hints:   currentEligibility.hints || [],
+        profile: currentProfile,
+        onClose: focusEntryInput,
+      });
+      playBeep('error');
+      return;
+    }
 
     if (data.alreadyPacked) {
       // Shared data object for both modal types
@@ -2027,26 +2392,69 @@ async function lookupOrder(raw, opts = {}) {
       return;
     }
 
+    // ③ فشل مش أهلية — Worker أقدم من 2.6.0، أو حالة برّه الحكم.
+    //    ⚠️ الرسالة بتيجي من الـ Worker كما هي: «الأوردر #X غير موجود» ·
+    //       «رقم التتبع مش موجود على بوسطة» · «متغيرات ناقصة…».
     if (!data.ok) {
-      showToast(data.error || 'خطأ في جلب الأوردر', 'error');
+      showPackOutcome({
+        level:   'error',
+        title:   'تعذّر فتح الأوردر',
+        message: data.error || 'خطأ في جلب الأوردر',
+        profile: currentProfile,
+        onClose: focusEntryInput,
+      });
+      playBeep('error');
       return;
     }
 
-    currentOrder    = { ...data.order, stage: data.stage };
-    currentItems    = data.items.map(i => ({ ...i, scanned: 0 }));
-    currentAnalysis = data.stageAnalysis;
-    currentAlreadyPackedData = null;
-    currentEditReason = null;
+    // ④ تحذير أهلية — الشاشة بتفتح **بإقرار صريح** (قرار أحمد 09-09-2026).
+    //    المنع الكامل هنا كان هيوقّف المخزن في حالة استثنائية مشروعة،
+    //    والسماح الصامت هو بالظبط الفشل اللي القسم ده اتكتب عشانه.
+    const openCheckScreen = () => {
+      currentOrder    = { ...data.order, stage: data.stage };
+      currentItems    = data.items.map(i => ({ ...i, scanned: 0 }));
+      currentAnalysis = data.stageAnalysis;
+      currentAlreadyPackedData = null;
+      currentEditReason = null;
 
-    document.getElementById('subscreenEntry').style.display = 'none';
-    document.getElementById('subscreenCheck').style.display = '';
-    renderCheckScreen();
+      document.getElementById('subscreenEntry').style.display = 'none';
+      document.getElementById('subscreenCheck').style.display = '';
+      renderCheckScreen();
 
-    if (!currentAnalysis?.conflict) {
-      setTimeout(() => document.getElementById('barcodeScanInput').focus(), 100);
+      if (!currentAnalysis?.conflict) {
+        setTimeout(() => document.getElementById('barcodeScanInput').focus(), 100);
+      }
+    };
+
+    if (currentEligibility && currentEligibility.level === 'warn') {
+      showPackOutcome({
+        level:   'warn',
+        title:   currentEligibility.title,
+        message: currentEligibility.reason,
+        profile: currentProfile,
+        ack: {
+          label: 'شفت السبب فوق، وأنا متأكد إني عايز أغلّف الأوردر ده.',
+          confirmLabel: 'كمّل التغليف ←',
+        },
+        // ⚠️ الإقرار بيتسجّل في `extra.eligibilityAck` بتاع صف D1 — «غلّفت
+        //    أوردر ما اتطبعش» معلومة تشغيلية تستاهل تتسجّل (نفس مبدأ
+        //    `extra.guard` في أداة الطباعة).
+        onConfirm: () => { currentEligibilityAck = true; openCheckScreen(); },
+        onCancel:  focusEntryInput,
+      });
+      playBeep('warn');
+      return;
     }
+
+    openCheckScreen();
   } catch (err) {
-    showToast(err.message || 'خطأ في الاتصال', 'error');
+    showPackOutcome({
+      level:   'error',
+      title:   'تعذّر فتح الأوردر',
+      message: err.message || 'خطأ في الاتصال',
+      onClose: focusEntryInput,
+    });
+    playBeep('error');
   } finally {
     document.getElementById('lookupLoading').style.display = 'none';
     document.getElementById('btnLookup').disabled = false;
@@ -2125,6 +2533,8 @@ function showAlreadyPackedNoChangeModal() {
 function resetToEntry() {
   currentOrder = null; currentItems = []; currentAnalysis = null;
   currentAlreadyPackedData = null; currentEditReason = null;
+  // ⚠️ الإقرار بيتصفّر هنا كمان — أوردر جديد يبدأ بلا إقرار سابق.
+  currentProfile = null; currentEligibility = null; currentEligibilityAck = false;
   clearPackResult(); renderTruncWarn(false); renderBostaSource(null);
   const cb = document.getElementById('btnComplete');
   if (cb) { cb.disabled = true; cb.textContent = '✅ تأكيد اكتمال التغليف'; }
@@ -2168,6 +2578,12 @@ function renderCheckScreen() {
   const packingEl  = document.getElementById('packingContent');
   const unclearEl  = document.getElementById('unclearWarn');
 
+  // زرار «📋 تفاصيل الأوردر» بيظهر **بس لما يكون فيه ملف فعلاً** — على
+  // Worker أقدم من 2.6.0 الملف مش بيرجع، وزرار بيفتح نافذة فاضية أسوأ من
+  // زرار مش موجود.
+  const detailBtn = document.getElementById('btnOrderDetail');
+  if (detailBtn) detailBtn.style.display = currentProfile ? '' : 'none';
+
   if (sa?.conflict) {
     conflictEl.style.display = '';
     packingEl.style.display  = 'none';
@@ -2176,7 +2592,16 @@ function renderCheckScreen() {
   } else {
     conflictEl.style.display = 'none';
     packingEl.style.display  = '';
-    unclearEl.classList.toggle('show', !!sa?.unclear);
+    // 🔴 البانر بقى بيغطّي **كل** مستويات `warn` مش `unclear` بس — «الأوردر
+    //    ده ما اتطبعش» و«ده أوردر استرجاع» لازم يفضلوا قدام الموظف وهو
+    //    بيغلّف، مش يظهروا في نافذة ويختفوا. والنص بييجي من الـ Worker
+    //    فبيسمّي الحالة الفعلية بدل جملة عامة.
+    // ⚠️ النص القديم كان بيقول «لم يتم تحديد حالة الأوردر» على أوردر حالته
+    //    محددة تمامًا (`Shipped` · `Cancelled` · `New Order`) — معلومة غلط
+    //    كانت بتخلّي الموظف يفتكرها بيانات ناقصة ويكمّل.
+    const isWarn = !!(currentEligibility && currentEligibility.level === 'warn');
+    if (isWarn) unclearEl.textContent = `⚠️ ${currentEligibility.title} — ${currentEligibility.reason}`;
+    unclearEl.classList.toggle('show', isWarn || !!sa?.unclear);
     renderItemsList();
     updateSummary();
     updateCompleteBtn();
@@ -2459,11 +2884,15 @@ async function completePack() {
       packedBy:   packedByDisplay,
       items:      currentItems.map(i => ({ id: i.id, title: i.title, sku: i.sku, quantity: i.quantity })),
       editReason: currentEditReason || null,
+      // §ELIGIBILITY::ack — بيتبعت **بس لما يحصل فعلاً**. إقرار ما اتسألش
+      // عنه ومكتوب في D1 = كذب في السجل (نفس قاعدة `bostaUpdated` في
+      // بوابة أداة الطباعة لما سؤالها اتشال).
+      ...(currentEligibilityAck ? { eligibilityAck: true } : {}),
     });
 
     if (!data.ok) {
       renderPackResult({ ...data, status: 'error' });
-      showToast(data.error || 'خطأ في الحفظ', 'error', 6000);
+      showSaveFailure(data.error || 'خطأ في الحفظ', data.profile || currentProfile);
       playBeep('error');
       btn.disabled = false; btn.textContent = '✅ تأكيد اكتمال التغليف';
       return;
@@ -2479,7 +2908,22 @@ async function completePack() {
     rdyDirty = true;
 
     if (status === 'warning') {
-      showToast(`⚠ تغليف ${currentOrder.name} تم جزئيًا — راجع التفاصيل تحت${overrideNote}`, 'warning', 8000);
+      // 🔴 نافذة مش توست: الأوردر **اتكتب عليه فعلاً** وفيه حاجة ناقصة —
+      //    ودي حالة محتاجة قراءة، والتوست بيختفي لوحده.
+      // ⚠️ لوحة النتيجة تحت بتفضل زي ما هي (قرار أحمد ④) — النافذة بتجبر
+      //    القراءة **مرة**، واللوحة هي الأثر الثابت بعد ما يقفلها.
+      showPackOutcome({
+        level:   'partial',
+        title:   `تغليف ${currentOrder.name} تم جزئيًا${overrideNote}`,
+        message: 'العملية اتسجّلت بس فيها تحذيرات — راجعها قبل ما تكمّل.',
+        lists: [
+          { title: '✅ ما تم فعليًا',  items: data.actions  || [] },
+          { title: '⚠️ التحذيرات',   items: data.warnings || [] },
+        ],
+        banners: data.logged === false
+          ? [{ tone: 'red', html: '🔴 العملية <b>تمت على شوبيفاي</b> بس ما اتسجلتش في سجل العمليات — بلّغ المسؤول التقني.' }]
+          : [],
+      });
       playBeep('warn');
       btn.textContent = '⚠ تم جزئيًا — راجع التفاصيل';
       return;   // ⚠️ مفيش رجوع تلقائي — الموظف لازم يقرا التحذير
@@ -2506,16 +2950,78 @@ async function completePack() {
         lines.push('لو الشاشة كانت مفتوحة من زمان، اقفل وافتح الأوردر من أول وجديد.');
       }
       renderPackResult({ status: 'error', actions: [], warnings: lines });
-      showToast(p.requiresReason ? '⚠ محتاج سبب إعادة التغليف' : '⛔ الأوردر اتغلّف بالفعل', 'error', 9000);
+
+      // 🔴 البند ١٣ بياخد **زرار فعل** (قرار أحمد 09-09-2026): الرسالة كانت
+      //    بتقول «اقفل وافتح الأوردر من أول» — وده فعل الأداة تقدر تعمله
+      //    بضغطة. الفتح من جديد بيرجّع نافذة «اتغلّف قبل كده وحصل تعديل»
+      //    بمسارها الطبيعي، والموظف بيدخل السبب هناك. من غير الزرار الموظف
+      //    بيدوّر على الطريق بنفسه.
+      // ⚠️ الاسم بيتحفظ **قبل** `resetToEntry` — هي بتصفّر `currentOrder`.
+      const reopenName = String(p.orderName || currentOrder?.name || '').replace('#', '');
+      showPackOutcome({
+        level:   p.requiresReason ? 'warn' : 'blocked',
+        title:   p.requiresReason ? 'محتاج سبب إعادة التغليف' : 'الأوردر اتغلّف بالفعل',
+        message: p.requiresReason
+          ? 'الحارس السيرفر-سايد رفض الحفظ: الأوردر اتغلّف قبل كده والبنود اتغيّرت من ساعتها.'
+          : 'الحارس السيرفر-سايد رفض الحفظ: الأوردر اتغلّف قبل كده والبنود ما اتغيّرتش — يعني مفيش داعي للتغليف تاني.',
+        lists: [{ title: '📦 التغليف السابق', items: lines }],
+        banners: [{ tone: 'green', html: '✅ <b>مفيش أي كتابة حصلت</b> — الأوردر ما اتلمسش خالص.' }],
+        buttons: reopenName ? [{
+          label: '🔄 افتح الأوردر من أول',
+          cls:   'btn-primary',
+          onClick: () => { resetToEntry(); lookupOrder(reopenName); },
+        }] : [],
+        closeLabel: 'إغلاق',
+      });
       playBeep('error');
       btn.disabled = false; btn.textContent = '✅ تأكيد اكتمال التغليف';
       return;
     }
+
+    // §ELIGIBILITY سيرفر-سايد (Worker v2.6.0) — الأوردر اتغيّر بعد ما
+    // الشاشة اتفتحت (اتلغى مثلاً). ⚠️ نافذة تشخيص كاملة مش سطر خطأ:
+    // الحالة دي معناها إن اللي على الشاشة **بقى قديم**.
+    if (err.status === 409 && err.payload?.blocked) {
+      const p = err.payload;
+      renderPackResult({ status: 'error', actions: [], warnings: [p.error || 'العملية اتحجبت'] });
+      showPackOutcome({
+        level:   'blocked',
+        title:   p.eligibility?.title || 'العملية اتحجبت',
+        message: p.eligibility?.reason || p.error || '',
+        hints:   p.eligibility?.hints || [],
+        profile: p.profile || currentProfile,
+        banners: [{ tone: 'green', html: '✅ <b>مفيش أي كتابة حصلت</b> — الأوردر ما اتلمسش خالص.' }],
+        closeLabel: 'إغلاق',
+      });
+      playBeep('error');
+      btn.disabled = false; btn.textContent = '✅ تأكيد اكتمال التغليف';
+      return;
+    }
+
     renderPackResult({ status: 'error', actions: [], warnings: [err.message || 'خطأ في الاتصال'] });
-    showToast(err.message || 'خطأ في الاتصال', 'error', 6000);
+    showSaveFailure(err.message || 'خطأ في الاتصال', currentProfile);
     playBeep('error');
     btn.disabled = false; btn.textContent = '✅ تأكيد اكتمال التغليف';
   }
+}
+
+// ─── §OUTCOME-MODAL::showSaveFailure — فشل حفظ التغليف (البندان ٧ و١٤) ───
+//
+// 🔴 **الفشل هنا مش زي فشل الفحص.** `complete_pack` بيكتب تلات حاجات
+//    (ميتافيلدات + تاج + صف D1)، وفشل في النص معناه إن الأوردر ممكن يكون
+//    **اتكتب عليه جزئيًا**. الرسالة لازم تقول ده صراحةً بدل ما الموظف
+//    يفترض إن مفيش حاجة حصلت ويعيد المحاولة على حالة نص ونص.
+// ⚠️ الحالات اللي **مافيهاش أي كتابة** (409 بأنواعه) ليها فروعها فوق
+//    ببانر أخضر صريح — الدالة دي للفشل الغامض بس.
+function showSaveFailure(message, profile) {
+  showPackOutcome({
+    level:   'error',
+    title:   'فشل حفظ التغليف',
+    message,
+    banners: [{ tone: 'amber', html: '⚠️ <b>افتح الأوردر على شوبيفاي وتأكد من حالته الفعلية</b> قبل أي محاولة تانية — الفشل ممكن يكون حصل قبل أو بعد الكتابة، ولوحة النتيجة تحت بتقول اللي اتأكد منه.' }],
+    profile,
+    closeLabel: 'إغلاق',
+  });
 }
 
 // ══════════════════════════════════════════════════════════════
