@@ -298,6 +298,11 @@ check('سطر الفشل بيتقفل', await page.locator('#bcFails .bc-fail-ro
 //
 // 🔴 البند ده بيقفل رجوع الحذف من العرض: الاستبعاد لازم يفضل **مرئي**،
 //    وإلا الموظف مايعرفش هو استبعد الصنف ولا الجلب ما رجّعوش أصلاً.
+// 🔴 **الأحدث فوق** (v1.19.0) — الأوردر اللي اتضاف دلوقتي لازم يبقى أول
+//    مجموعة في الجدول، مش آخر واحدة. البند ده بيقفل رجوع ترتيب الإضافة.
+check('آخر أوردر اتضاف هو أول مجموعة في الجدول',
+  (await page.locator('tr.bc-grp').first().innerText()).includes('#53769'),
+  await page.locator('tr.bc-grp').first().innerText());
 const beforeRows = await page.locator('tr.bc-item').count();
 await page.locator('tr.bc-item .bc-row-x').first().click();
 await page.waitForSelector('tr.bc-item.is-off');
@@ -308,7 +313,7 @@ check('خانة عدد الطباعة بقت صفر ومقفولة',
   await page.locator('tr.bc-item.is-off .bc-qty').inputValue() === '0' &&
   await page.locator('tr.bc-item.is-off .bc-qty:disabled').count() === 1);
 check('العدد الكلي نقص بعدد نسخ الصنف المستبعَد',
-  /طباعة 4 باركود-SKU/.test(await page.locator('#bcPrintBtn').textContent()),
+  /طباعة 3 باركود-SKU/.test(await page.locator('#bcPrintBtn').textContent()),
   await page.locator('#bcPrintBtn').textContent());
 // 🔴 الضغطة التانية بترجّعه بعدده اللي كان — من غير رجوع، الاستبعاد
 //    بالغلط بيتصلّح بإعادة سكان الأوردر كله.
@@ -370,7 +375,20 @@ check('«مفيش Barcode» لسه ظاهر في القايمة',
 // ── ⑧أ التحديد المتعدد و«تحديد الكل» ──────────────────────────
 check('زرار «إضافة المحدد» متعطّل قبل أي تحديد',
   await page.locator('#bcAcAddBtn:disabled').count() === 1);
-await page.locator('#skuAcBox .bc-pick-cb:not([disabled])').first().check();
+// 🔴 **الشريط فوق النتايج، ملزوق تحت مربع الإدخال** (v1.19.0). كان في آخر
+//    القايمة، فالموظف بيحدّد فوق وينزل يدوّر على الزرار.
+const barPos = await page.evaluate(() => {
+  const bar = document.querySelector('#skuAcBox .sku-ac-bar');
+  const row = document.querySelector('#skuAcBox .bc-pick-row');
+  return { above: bar.getBoundingClientRect().top < row.getBoundingClientRect().top,
+           stick: getComputedStyle(bar).position };
+});
+check('شريط التحديد فوق نتايج البحث', barPos.above);
+check('الشريط ثابت مع التمرير (sticky)', barPos.stick === 'sticky');
+// ⚠️ **المحدِّد بيسمّي صف نتيجة صراحةً** — «تحديد الكل» بياخد نفس كلاس
+//    المربعات، وهو بقى **أول** `.bc-pick-cb` في الـ DOM بعد ما الشريط طلع
+//    فوق (v1.19.0). `.first()` من غير `.bc-pick-row` كان بيعلّم «الكل».
+await page.locator('#skuAcBox .bc-pick-row .bc-pick-cb:not([disabled])').first().check();
 check('الزرار بيقول العدد بعد التحديد',
   /\(1\)/.test(await page.locator('#bcAcAddBtn').textContent()),
   await page.locator('#bcAcAddBtn').textContent());
@@ -383,8 +401,18 @@ check('الصنف بلا باركود فضل غير محدّد',
   await page.locator('#skuAcBox .bc-pick-cb:disabled').isChecked() === false);
 await page.locator('#bcAcAddBtn').click();
 await page.waitForFunction(() => document.querySelectorAll('tr.bc-grp.is-sku').length === 1);
-check('الصنفين اتضافوا لمجموعة «بدون أوردر»',
-  await page.locator('tr.bc-grp.is-sku ~ tr.bc-item').count() === 2);
+// ⚠️ **العدّ بمؤشر المجموعة مش بـ `~`** — مجموعة «بدون أوردر» بقت **أول**
+//    مجموعة (آخر إدخال فوق · v1.19.0)، والمحدِّد الشقيق كان هيعدّ صفوف
+//    الأوردرات اللي بعدها كمان. و`bcQty_0_*` بيثبت **الاتنين**: عدد الصفوف
+//    وإن المجموعة دي هي رقم صفر فعلاً.
+check('الصنفين اتضافوا لمجموعة «بدون أوردر» وهي أول مجموعة',
+  await page.locator('#bcBody .bc-qty[id^="bcQty_0_"]').count() === 2 &&
+  await page.locator('tr.bc-grp').first().evaluate(el => el.classList.contains('is-sku')));
+// 🔴 الدفعة بتتضاف **بترتيب القايمة** — أول محدَّد فوق (مش مقلوبة).
+check('الدفعة اتضافت بنفس ترتيب القايمة',
+  await page.evaluate(() => bcOrders[0].rows.map(r => r.sku).join(' | ')) ===
+    'RN-AD-115 / Black / 45 | RN-AD-115 / Beige / 43',
+  await page.evaluate(() => bcOrders[0].rows.map(r => r.sku).join(' | ')));
 check('القايمة بتتقفل بعد الإضافة', await page.locator('#skuAcBox:not([hidden])').count() === 0);
 check('المربع بيتفضّى بعد الإضافة', await page.locator('#skuTermInput').inputValue() === '');
 check('مجموعة «بدون أوردر» مش محسوبة في بادج الأوردرات',
@@ -470,7 +498,13 @@ check('الليبل سطرين بس — مفيش سطر رقم أوردر',
   JSON.stringify(labels.map(l => l.children)));
 check('كل ليبل فيه باركود مرسوم', labels.every(l => l.bars > 10));
 check('نص الليبل هو الـ SKU مش الباركود',
-  labels[0].sku === 'FL-LA-10 / White / 43', labels[0].sku);
+  labels[0].sku === 'RN-AD-115 / Black / 45', labels[0].sku);
+// 🔴 **ورق الطباعة بنفس ترتيب الشاشة** — أول ليبل من أول مجموعة في الجدول.
+//    ترتيب مختلف بين الاتنين = الموظف مايعرفش يقسّم الكومة على الأوردرات
+//    (مفيش رقم أوردر على الليبل من v1.15.0).
+check('ترتيب الطباعة = ترتيب الشاشة (الأحدث الأول)',
+  labels[0].sku === await page.evaluate(() => bcOrders[0].rows.find(r => r.barcode && r.copies > 0).sku),
+  labels[0].sku);
 check('المعاينة بنفس عدد الليبلات',
   await page.locator('#bcPreviewGrid .print-label').count() === expected);
 
