@@ -56,24 +56,32 @@ const mkPdf = () => {
 // §LAST-DOC — سجل D1 الوهمي. الحالتان دول **هما** اللي البند اتكتب عشانهم:
 // أوردر اتطبعتله فاتورة وبعدين اتحوّل لبوسطة، وأوردر اتطبعتله بوليصة
 // وبعدين رجع لقناة الفاتورة.
+// §LOG-CHAN — `machine` و`chan` بيرجعوا من Worker v2.7.0 (`json_extract` على
+// `extra`). ⚠️ الصف الرابع **من غيرهم عن قصد**: ده شكل الصفوف القديمة اللي
+// اتكتبت قبل v2.7.0، والواجهة لازم تقول `—` عليها **مش تخمّن**.
 const LOGS = [
-  { orderNumber:'53401', type:'S1',  timestamp:'2026-09-05T10:00:00Z', employee:'Ahmed_Ibraheem' },
-  { orderNumber:'53405', type:'AWB', timestamp:'2026-09-05T11:00:00Z', employee:'Ahmed_Ibraheem' },
-  { orderNumber:'53400', type:'AWB', timestamp:'2026-09-05T12:00:00Z', employee:'Ahmed_Ibraheem' },
+  { orderNumber:'53401', type:'S1',  timestamp:'2026-09-05T10:00:00Z', employee:'Ahmed_Ibraheem', machine:null,  chan:'invoice'  },
+  { orderNumber:'53405', type:'AWB', timestamp:'2026-09-05T11:00:00Z', employee:'Ahmed_Ibraheem', machine:'S1',  chan:'awb'      },
+  { orderNumber:'53400', type:'AWB', timestamp:'2026-09-05T12:00:00Z', employee:'Ahmed_Ibraheem', machine:'S1',  chan:'awb'      },
+  // ⚠️ `#53390` **مش في الطابور** عن قصد — صف سجل لأوردر في الجدول بيدخله
+  //    في `logCounts` و`printLastDocMap`، فبوابة المراجعة بتفتح عليه
+  //    و**بتكسر بنود الطباعة في المجموعتين ② و③**. (حصل فعلاً وقت الكتابة.)
+  { orderNumber:'53390', type:'S2',  timestamp:'2026-09-05T13:00:00Z', employee:'Abo_Selim',      machine:null,  chan:'showroom' },
+  { orderNumber:'53399', type:'S1',  timestamp:'2026-09-04T09:00:00Z', employee:'Abo_Selim' },   // ← صف قديم بلا machine/chan
 ];
 
 const ORDERS = [
-  {id:'gid://shopify/Order/1', orderId:'1', name:'#53400', createdAt:'2026-09-06T08:00:00Z', customer:'أحمد', type:'S1', status:'Confirmed',        zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:1200, totalOriginal:1200, printingTimeS1:null, packingTimeS1:null, tags:['Bosta_Uploaded_S1'], isPrinted:false},
-  {id:'gid://shopify/Order/2', orderId:'2', name:'#53401', createdAt:'2026-09-06T09:00:00Z', customer:'منى',  type:'S1', status:'Confirmed + Edit', zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:800,  totalOriginal:800,  printingTimeS1:'2026-09-05T10:00:00Z', packingTimeS1:null, tags:['Bosta_Uploaded_S1'], isPrinted:true},
-  {id:'gid://shopify/Order/3', orderId:'3', name:'#53402', createdAt:'2026-09-06T10:00:00Z', customer:'سيد',  type:'S1', status:'Confirmed',        zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:500,  totalOriginal:500,  printingTimeS1:null, packingTimeS1:null, tags:['Bosta_Uploaded_S1'], isPrinted:false},
-  {id:'gid://shopify/Order/4', orderId:'4', name:'#53403', createdAt:'2026-09-06T11:00:00Z', customer:'هدى',  type:'S2', status:'Confirmed + RETURN',zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:300,  totalOriginal:300,  printingTimeS1:null, packingTimeS1:null, tags:['Bosta_Uploaded_S1'], isPrinted:false},
-  {id:'gid://shopify/Order/5', orderId:'5', name:'#53404', createdAt:'2026-09-06T12:00:00Z', customer:'كريم', type:'S1', status:'Confirmed',        zone:'Cairo+Giza',    zoneKnown:true,  channel:'invoice', total:900,  totalOriginal:900,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false},
-  {id:'gid://shopify/Order/6', orderId:'6', name:'#53405', createdAt:'2026-09-06T13:00:00Z', customer:'ندى',  type:'S1', status:'Confirmed',        zone:'Show_Room',     zoneKnown:true,  channel:'invoice', total:400,  totalOriginal:400,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false},
-  {id:'gid://shopify/Order/7', orderId:'7', name:'#53406', createdAt:'2026-09-06T14:00:00Z', customer:'طارق', type:'S1', status:'Confirmed',        zone:null,            zoneKnown:false, channel:null,      total:700,  totalOriginal:700,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false},
+  {id:'gid://shopify/Order/1', orderId:'1', name:'#53400', createdAt:'2026-09-06T08:00:00Z', customer:'أحمد', type:'S1', status:'Confirmed',        zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:1200, totalOriginal:1200, printingTimeS1:null, packingTimeS1:null, tags:['Bosta_Uploaded_S1'], isPrinted:false, itemsQty:1, printedAny:false},
+  {id:'gid://shopify/Order/2', orderId:'2', name:'#53401', createdAt:'2026-09-06T09:00:00Z', customer:'منى',  type:'S1', status:'Confirmed + Edit', zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:800,  totalOriginal:800,  printingTimeS1:'2026-09-05T10:00:00Z', packingTimeS1:null, tags:['Bosta_Uploaded_S1','Printed(S1)'], isPrinted:true, itemsQty:3, printedAny:true, items:[{qty:2,sku:'AKS35 / Grey / 41',title:'حذاء'},{qty:1,sku:'C50 / Navy / 43',title:'حذاء'}]},
+  {id:'gid://shopify/Order/3', orderId:'3', name:'#53402', createdAt:'2026-09-06T10:00:00Z', customer:'سيد',  type:'S1', status:'Confirmed',        zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:500,  totalOriginal:500,  printingTimeS1:null, packingTimeS1:null, tags:['Bosta_Uploaded_S1'], isPrinted:false, itemsQty:2, printedAny:false},
+  {id:'gid://shopify/Order/4', orderId:'4', name:'#53403', createdAt:'2026-09-06T11:00:00Z', customer:'هدى',  type:'S2', status:'Confirmed + RETURN',zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:300,  totalOriginal:300,  printingTimeS1:null, packingTimeS1:null, tags:['Bosta_Uploaded_S1'], isPrinted:false, itemsQty:1, printedAny:false},
+  {id:'gid://shopify/Order/5', orderId:'5', name:'#53404', createdAt:'2026-09-06T12:00:00Z', customer:'كريم', type:'S1', status:'Confirmed',        zone:'Cairo+Giza',    zoneKnown:true,  channel:'invoice', total:900,  totalOriginal:900,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false, itemsQty:4, printedAny:false},
+  {id:'gid://shopify/Order/6', orderId:'6', name:'#53405', createdAt:'2026-09-06T13:00:00Z', customer:'ندى',  type:'S1', status:'Confirmed',        zone:'Show_Room',     zoneKnown:true,  channel:'invoice', total:400,  totalOriginal:400,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false, itemsQty:1, printedAny:false},
+  {id:'gid://shopify/Order/7', orderId:'7', name:'#53406', createdAt:'2026-09-06T14:00:00Z', customer:'طارق', type:'S1', status:'Confirmed',        zone:null,            zoneKnown:false, channel:null,      total:700,  totalOriginal:700,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false, itemsQty:1, printedAny:false},
   // 🚚 §BOSTA-GATE — أوردر بوسطة **من غير** تاج الرفع: لسه ما اترفعش على
   //    داشبورد بوسطة، فمستحيل تتطبع بوليصته. لازم يتشال من الجدول ويتعدّ.
-  {id:'gid://shopify/Order/9', orderId:'9', name:'#53408', createdAt:'2026-09-06T16:00:00Z', customer:'ياسر', type:'S1', status:'Confirmed',        zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:550,  totalOriginal:550,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false},
-  {id:'gid://shopify/Order/8', orderId:'8', name:'#53407', createdAt:'2026-09-06T15:00:00Z', customer:'سلمى', type:'S1', status:'Confirmed',        zone:'Cairo',         zoneKnown:false, channel:null,      total:650,  totalOriginal:650,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false},
+  {id:'gid://shopify/Order/9', orderId:'9', name:'#53408', createdAt:'2026-09-06T16:00:00Z', customer:'ياسر', type:'S1', status:'Confirmed',        zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:550,  totalOriginal:550,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false, itemsQty:1, printedAny:false},
+  {id:'gid://shopify/Order/8', orderId:'8', name:'#53407', createdAt:'2026-09-06T15:00:00Z', customer:'سلمى', type:'S1', status:'Confirmed',        zone:'Cairo',         zoneKnown:false, channel:null,      total:650,  totalOriginal:650,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false, itemsQty:2, printedAny:false},
 ];
 
 const calls = [];
@@ -121,7 +129,7 @@ await page.route('**order-printer-worker.ecommoda-dev.workers.dev/**', async (ro
   let body = {}; try { body = req.postData() ? JSON.parse(req.postData()) : {}; } catch {}
   calls.push({ path:url.pathname, action, body });
 
-  if (action === 'get_config') return route.fulfill(J({ok:true, version:'2.6.0', tool:'order_printer'}));
+  if (action === 'get_config') return route.fulfill(J({ok:true, version:'2.7.0', tool:'order_printer'}));
   if (url.pathname === '/orders')
     return route.fulfill(J({ok:true, orders:ORDERS, total:ORDERS.length, zoneExcluded:0, allZones:body.allZones===true, fetchedAt:new Date().toISOString()}));
   // مسار الفاتورة بيرجّع خطأ في المجموعة التانية — عشان نختبر **الفشل
@@ -137,7 +145,7 @@ await page.route('**order-printer-worker.ecommoda-dev.workers.dev/**', async (ro
       customer:'ريم', type:'S1', status:'Ready', s1Status:'Ready', s2Status:null,
       printingTimeS1:'2026-09-05T09:00:00Z', packingTimeS1:null, printingTimeS2:null, packingTimeS2:null,
       zone:'Other_Regions', zoneKnown:true, channel:'awb',
-      total:1000, totalOriginal:1000, tags:['Printed(S1)'], isPrinted:true } }));
+      total:1000, totalOriginal:1000, itemsQty:2, tags:['Printed(S1)'], isPrinted:true, printedAny:true } }));
   if (url.pathname === '/logs') return route.fulfill(J({ok:true, entries:LOGS, count:LOGS.length, total:LOGS.length, cap:5000, truncated:false}));
   if (action === 'bosta_lookup') {
     const mk = (o) => {
@@ -257,14 +265,57 @@ check('🔴 ختم الهيدر القديم اتشال', (await page.$$('#lastU
   check('🔴 عمود «نوع الأوردر» موجود', ths.some(t => t.startsWith('نوع الأوردر')), ths.join(' | '));
   check('🔴 عمود «نوع الفاتورة» بدل «القناة»',
         ths.some(t => t.startsWith('نوع الفاتورة')) && !ths.some(t => t === 'القناة'), ths.join(' | '));
-  check('🔴 الصف بقى ٨ خلايا مش ١٠',
-        (await page.$$('#printTableBody tr:first-child td')).length === 8,
-        String((await page.$$('#printTableBody tr:first-child td')).length));
+  // ⚠️ الرقم بقى ١١ في v1.20.0 (٨ + «عدد القطع» + «الإجمالي» + «الأصناف»).
+  //    البند بيقفل **عدد الخلايا مقابل عدد الأعمدة** — صف بخلايا أقل من
+  //    الهيدر بيزحلق كل القيم عمود ورا التاني **من غير أي خطأ**.
+  check('🔴 خلايا الصف = أعمدة الهيدر (١١)',
+        (await page.$$('#printTableBody tr:first-child td')).length === ths.length
+        && ths.length === 11,
+        `td=${(await page.$$('#printTableBody tr:first-child td')).length} th=${ths.length}`);
   check('🔴 بادج عمر الأوردر مرسوم في كل صف',
         (await page.$$('#printTableBody [data-prt-age]')).length === (await page.$$('#printTableBody tr')).length);
   check('🔴 نوع الأوردر نص مش بادج (صفر .type-badge في الطابور)',
         (await page.$$('#printTableBody .type-badge')).length === 0
         && (await page.$$('#printTableBody .type-text')).length > 0);
+
+  // ── §COLS (v1.20.0) — «عدد القطع» · «الإجمالي» · «الأصناف» ──
+  check('🔴 الأعمدة التلاتة الجديدة في الهيدر',
+        ths.some(t => t.startsWith('عدد القطع')) && ths.some(t => t.startsWith('الإجمالي'))
+        && ths.includes('الأصناف'), ths.join(' | '));
+  // ⛔ عمود الأصناف **مش قابل للترتيب** — قيمته قايمة، وضغطة عليه كانت
+  //    هتديّ ترتيب بلا معنى على نص مركّب.
+  check('🔴 عمود «الأصناف» مش قابل للترتيب',
+        await page.$eval('#printTableBody', b =>
+          [...b.closest('table').querySelectorAll('thead th')]
+            .filter(e => e.textContent.trim() === 'الأصناف')
+            .every(e => !e.classList.contains('sortable-th'))));
+  check('🔴 عدد القطع بيتعرض رقم', (await page.$$('#printTableBody .qty-num')).length ===
+        (await page.$$('#printTableBody tr')).length,
+        String((await page.$$('#printTableBody .qty-num')).length));
+  check('🔴 الإجمالي بيتعرض رقم', (await page.$$('#printTableBody .total-num')).length ===
+        (await page.$$('#printTableBody tr')).length);
+
+  // 🔴 **البند الأهم في §ITEMS:** الأوردر اللي سبق طباعته بتتعرض أصنافه
+  //    **تلقائيًا**، وباقي الصفوف بزرار «👁 عرض» — مش خانة فاضية. الفرق
+  //    بين «مفيش أصناف» و«ما سألناش» هو كل قيمة العمود ده.
+  const skuRow2 = await page.$eval('#printTableBody', b => {
+    const tr = [...b.querySelectorAll('tr')].find(r => r.textContent.includes('#53401'));
+    return tr ? [...tr.querySelectorAll('.item-sku')].map(e => e.textContent.trim()) : null;
+  });
+  check('🔴 أصناف الأوردر المطبوع اتعرضت تلقائيًا',
+        Array.isArray(skuRow2) && skuRow2.length === 2 && skuRow2[0].includes('AKS35'),
+        JSON.stringify(skuRow2));
+  check('🔴 والكمية >1 ظاهرة على الصنف', (skuRow2 || []).some(t => t.includes('×2')),
+        JSON.stringify(skuRow2));
+  check('🔴 الصفوف اللي ما اتطبعتش فيها زرار «عرض» مش خانة فاضية',
+        (await page.$$('#printTableBody .items-btn')).length ===
+        (await page.$$('#printTableBody tr')).length - 1,
+        String((await page.$$('#printTableBody .items-btn')).length));
+  // ⚠️ الباراميتر ده هو اللي بيحصر التكلفة — من غيره التمريرة التانية
+  //    بتتنفّذ على الطابور كله، أو مابتتنفّذش خالص.
+  check('🔴 `/orders` اتنادى بـ items:"printed"',
+        calls.filter(c => c.path === '/orders').every(c => c.body.items === 'printed'),
+        JSON.stringify(calls.filter(c => c.path === '/orders').map(c => c.body.items)));
 }
 
 // ③-ب الاختيار ثم الإطفاء بنفس المربع (زي `.zchip` في التغليف)
@@ -527,6 +578,83 @@ const rpTrack = calls.filter(c => c.path === '/track');
 check('/track بعت doc=AWB في إعادة الطباعة', rpTrack.length===1 && rpTrack[0].body.doc==='AWB',
       JSON.stringify(rpTrack.map(t=>({type:t.body.type,doc:t.body.doc}))));
 check('مفيش إقرار متبعت (مفيش فعل مطلوب)', !rpTrack[0]?.body?.guard, JSON.stringify(rpTrack[0]?.body?.guard));
+
+// ══════════════════════════════════════════════════════════════
+// ④ §LOG-CHAN — تاب السجل: عمودان بدل عمود (v1.20.0)
+// ══════════════════════════════════════════════════════════════
+//
+// 🔴 **البند اللي القسم ده اتكتب عشانه:** العمود القديم كان بيخلط
+//    `AWB` (مستند) مع `عادي`/`استبدال-استرجاع` (نوع أوردر) في خانة واحدة.
+//    الفحص بيقفل التلاتة مع بعض: العمودان موجودان · كل صف بياخد القيمة
+//    الصح في العمود الصح · والصف القديم اللي مالوش زون بيقول `—` **مش
+//    قيمة مخمّنة**.
+console.log('\n── ④ §LOG-CHAN — عمودا تاب السجل ──');
+// ⚠️ نافذة نتيجة الطباعة بتاعة المجموعة ③ لسه مفتوحة وبتعترض أي ضغطة —
+//    لازم تتقفل الأول (اتمسك فعلاً وقت الكتابة: الضغطة بتفضل تعيد ٣٠ ثانية).
+await page.evaluate(() => closeTrackResult());
+await page.waitForSelector('#trackResultOverlay.open', { state:'hidden', timeout:5000 });
+await page.click('#tabLog');
+await page.waitForTimeout(400);
+
+const logThs = await page.$eval('#logsTableBody', b =>
+  [...b.closest('table').querySelectorAll('thead th')].map(e => e.textContent.trim()));
+check('🔴 عمودا «نوع الأوردر» و«نوع الفاتورة» في السجل',
+      logThs.some(t => t.startsWith('نوع الأوردر')) && logThs.some(t => t.startsWith('نوع الفاتورة')),
+      logThs.join(' | '));
+check('🔴 خلايا صف السجل = أعمدة الهيدر (٧)',
+      (await page.$$('#logsTableBody tr:first-child td')).length === logThs.length && logThs.length === 7,
+      `td=${(await page.$$('#logsTableBody tr:first-child td')).length} th=${logThs.length}`);
+
+// صف بوسطة: عمود D1 بيقول `AWB` — والعمودان لازم يقولوا «عادي» + «بوسطة».
+// ⛔ لو «عادي» طلعت `—` يبقى `machine` مش بيتقرا، ولو «بوسطة» طلعت `—`
+//    يبقى الـ Worker مابيرجّعش `chan` — والاتنين عمود فاضي على الشاشة.
+const logCells = await page.$eval('#logsTableBody', b =>
+  Object.fromEntries([...b.querySelectorAll('tr')].map(tr => {
+    const td = [...tr.querySelectorAll('td')];
+    return [td[2].textContent.trim().replace('#',''),
+            { otype: td[3].textContent.trim(), chan: td[4].textContent.trim() }];
+  })));
+check('🔴 صف بوسطة: «عادي» + «بوسطة» (مش AWB في خانة النوع)',
+      logCells['53400']?.otype === 'عادي' && logCells['53400']?.chan === 'بوسطة',
+      JSON.stringify(logCells['53400']));
+check('🔴 صف فاتورة مناديب: «عادي» + «مناديب»',
+      logCells['53401']?.otype === 'عادي' && logCells['53401']?.chan === 'مناديب',
+      JSON.stringify(logCells['53401']));
+check('🔴 صف شو روم: «استبدال/استرجاع» + «شو روم»',
+      logCells['53390']?.otype === 'استبدال/استرجاع' && logCells['53390']?.chan === 'شو روم',
+      JSON.stringify(logCells['53390']));
+// 🔴 الصف القديم — «مش معروف» لازم تفضل فاضية. تعويضها بزون الأوردر الحالي
+//    تخمين، والزون بيتغيّر بعد الطباعة.
+check('🔴 الصف القديم بلا زون: «نوع الفاتورة» = —  والنوع لسه شغّال',
+      logCells['53399']?.chan === '—' && logCells['53399']?.otype === 'عادي',
+      JSON.stringify(logCells['53399']));
+// ⛔ صفر ذكر لـ `AWB` في خانات الجدول — القيمة دي عمود D1 مش لغة الموظف.
+check('🔴 صفر «AWB» في خلايا نوع الأوردر/الفاتورة',
+      !Object.values(logCells).some(v => v.otype === 'AWB' || v.chan === 'AWB'),
+      JSON.stringify(logCells));
+// مربعا العدّ بيعدّوا **نوع الأوردر** — طباعة بوسطة طباعة S1 فعلاً.
+check('🔴 مربع «عادي» بيعدّ صفوف بوسطة كمان (٤ مش ٢)',
+      (await page.textContent('#logKpiS1')).trim() === '4',
+      await page.textContent('#logKpiS1'));
+
+// الفلتر الجديد — «نوع الفاتورة» بيفلتر فعلاً.
+// ⚠️ قسم الفلاتر **مطوي افتراضيًا** (§PRINT-BAR)، فلازم يتفتح الأول — من
+//    غير كده المربع موجود في الـ DOM بس `hidden` والضغطة بتفضل تعيد.
+check('🔴 فلاتر السجل مطوية افتراضيًا', await page.isHidden('#fltBody-log'));
+await page.evaluate(() => toggleFilters('log'));
+await page.waitForTimeout(200);
+check('🔴 مربع فلتر «نوع الفاتورة» موجود', await page.isVisible('#msBtn-lChan'));
+await page.click('#msBtn-lChan'); await page.waitForTimeout(150);
+await page.$eval('#msList-lChan', el => {
+  const row = [...el.querySelectorAll('.ms-item, label, div')]
+    .find(e => e.textContent.trim() === 'بوسطة');
+  (row.querySelector('input') || row).click();
+});
+await page.waitForTimeout(300);
+check('🔴 فلتر «نوع الفاتورة» = بوسطة بيسيب صفّين',
+      (await page.$$('#logsTableBody tr')).length === 2,
+      String((await page.$$('#logsTableBody tr')).length));
+await page.click('#msBtn-lChan'); await page.waitForTimeout(150);
 
 check('صفر أخطاء في الكونسول وصفر أخطاء صفحة', errs.length === 0, errs.join(' | '));
 

@@ -321,6 +321,27 @@
 .data-table tbody tr:hover { background: var(--surface-2); }
 .data-table tbody tr.selected { background: var(--accent-light); }
 .col-num { font-family: var(--font-mono); direction: ltr; white-space: nowrap; }
+
+/* ══ §COLS — أعمدة «عدد القطع» · «الإجمالي» · «الأصناف» (v1.20.0) ══ */
+.qty-num   { font-weight: 800; font-size: 13px; }
+.total-num { font-weight: 800; font-size: 13px; }
+/* عمود الأصناف بيتمدّد بعرض محدود — من غير السقف ده SKU طويل
+   (`RN-AD-115 / Black / 45`) بيوسّع العمود ويضغط باقي الجدول. */
+.col-items { max-width: 220px; }
+.item-sku {
+  display: inline-flex; align-items: center; gap: 3px;
+  direction: ltr; font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 999px; padding: 1px 7px; margin: 1px 2px;
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.item-qty  { font-weight: 900; color: var(--accent); }
+.items-btn {
+  background: transparent; border: 1px solid var(--border); border-radius: 999px;
+  padding: 2px 9px; font-size: 11px; font-weight: 700; font-family: inherit;
+  color: var(--text-secondary); cursor: pointer; white-space: nowrap;
+}
+.items-btn:hover { background: var(--surface-2); color: var(--text-primary); }
 .empty-row td { padding: 40px; text-align: center; color: var(--text-muted); font-size: 13px; }
 
 /* ── Order number → hyperlink to Shopify (design-system § Order Number Display) ── */
@@ -644,6 +665,10 @@
 .flag-packed { background:var(--purple-light); color:var(--purple-dark); border:1px solid var(--purple-border); }
 .flag-recent { background:var(--amber-light);  color:var(--amber-dark);  border:1px solid var(--amber-border);  }
 .cell-sub { display:block; font-size:11px; font-weight:600; color:var(--text-secondary); margin-top:2px; }
+/* «مش معروف» — رمادي باهت عن قصد. ⚠️ مش نفس `0` ولا نفس القيمة الفاضية:
+   ده بيقول **إحنا مش عارفين**، والصفوف اللي اتكتبت قبل Worker v2.7.0
+   مافيهاش زون أصلاً. التفاصيل في §LOG-CHAN. */
+.cell-unknown { color:var(--text-muted); font-weight:700; }
 /* §LAST-DOC — «آخر طباعة: فاتورة / بوليصة بوسطة».
    ⚠️ اللون رمادي **افتراضيًا** عن قصد: ده سطر معلومة مش تحذير، وبيظهر على
    كل صف سبق طباعته. `doc-mismatch` (كهرماني) بس هي التحذير — نوع الورقة
@@ -744,7 +769,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
   <div id="printLoadingState" class="state-box" style="display:none;">
     <div class="spinner"></div>
-    <p class="state-msg">جاري جلب الأوردرات...</p>
+    <p class="state-msg">جاري الاستعلام عن الأوردرات...</p>
   </div>
   <div id="printErrorState" class="state-box error" style="display:none;">
     <div style="font-size:40px;">⚠️</div>
@@ -770,6 +795,12 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
   </div>
 
   <div id="printDashboard" style="display:none;">
+
+    <!-- §ITEMS — بانر الأصناف. 🔴 القصّ بيتقال **بأسماء الأوردرات**: «فيه قص»
+         من غير أسماء يعني الموظف مايعرفش يراجع فين (نفس قاعدة `itemsTruncated`
+         في `sku-barcode.html`). والفشل بيتقال كمان — خانة فاضية من غير سبب
+         بتتقري «الأوردر مالوش أصناف». -->
+    <div id="prtItemsWarn" class="export-warn" style="display:none;"></div>
 
     <!-- ══════════════════════════════════════════════════════════
          §CHANNEL — مبدّل القناة (v1.7.0 · اتعاد سلوكه في v1.13.0)
@@ -1022,6 +1053,13 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
               <th class="sortable-th" data-sort-key="customer" onclick="toggleSort('print','customer')">العميل<span class="sort-icon" data-sort-key="customer"></span></th>
               <th class="sortable-th" data-sort-key="type"     onclick="toggleSort('print','type')">نوع الأوردر<span class="sort-icon" data-sort-key="type"></span></th>
               <th class="sortable-th" data-sort-key="chan"     onclick="toggleSort('print','chan')">نوع الفاتورة<span class="sort-icon" data-sort-key="chan"></span></th>
+              <th class="sortable-th" data-sort-key="qty"      onclick="toggleSort('print','qty')">عدد القطع<span class="sort-icon" data-sort-key="qty"></span></th>
+              <th class="sortable-th" data-sort-key="total"    onclick="toggleSort('print','total')">الإجمالي<span class="sort-icon" data-sort-key="total"></span></th>
+              <!-- §ITEMS — الأصناف بتتجاب في **تمريرة تانية** للأوردرات اللي
+                   سبق طباعتها بس (Worker v2.7.0 · `items: 'printed'`). الصفوف
+                   التانية فيها زرار «👁 عرض» بيجيب صفها لوحده عند الضغط.
+                   ⛔ العمود ده **مش قابل للترتيب** — قيمته قايمة أصناف. -->
+              <th>الأصناف</th>
               <th class="sortable-th" data-sort-key="status"   onclick="toggleSort('print','status')">الحالة<span class="sort-icon" data-sort-key="status"></span></th>
               <th class="sortable-th" data-sort-key="count"    onclick="toggleSort('print','count')">مرات الطباعة<span class="sort-icon" data-sort-key="count"></span></th>
             </tr></thead>
@@ -1056,8 +1094,8 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
     <div class="kpi-grid" style="grid-template-columns:repeat(6,1fr);">
       <div class="kpi-card">        <div class="kpi-value" id="logKpiTotal">0</div><div class="kpi-label">إجمالي الطباعات</div></div>
       <div class="kpi-card green">  <div class="kpi-value" id="logKpiToday">0</div><div class="kpi-label">النهارده</div></div>
-      <div class="kpi-card">        <div class="kpi-value" id="logKpiS1">0</div>   <div class="kpi-label">S1</div></div>
-      <div class="kpi-card amber">  <div class="kpi-value" id="logKpiS2">0</div>   <div class="kpi-label">S2</div></div>
+      <div class="kpi-card">        <div class="kpi-value" id="logKpiS1">0</div>   <div class="kpi-label">عادي</div></div>
+      <div class="kpi-card amber">  <div class="kpi-value" id="logKpiS2">0</div>   <div class="kpi-label">استبدال/استرجاع</div></div>
       <div class="kpi-card red">    <div class="kpi-value" id="logKpiDup">0</div>  <div class="kpi-label">أوردرات اتطبعت أكتر من مرة</div></div>
       <div class="kpi-card purple"> <div class="kpi-value" id="logKpiUniq">0</div> <div class="kpi-label">أوردرات فريدة</div></div>
     </div>
@@ -1081,7 +1119,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
         <div class="flt-row">
           <div class="flt-g">
-            <span class="flt-label">النوع</span>
+            <span class="flt-label">نوع الأوردر</span>
             <div class="ms-wrap" id="msWrap-lType">
               <button class="ms-btn" id="msBtn-lType" onclick="msToggle('lType')"><span id="msBtnLabel-lType">الكل</span><span class="ms-arrow">▾</span></button>
               <div class="ms-menu" id="msMenu-lType">
@@ -1091,6 +1129,21 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
                   <span id="msSelectAllLabel-lType">تحديد الكل</span>
                 </div>
                 <div class="ms-list" id="msList-lType"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flt-g">
+            <span class="flt-label">نوع الفاتورة</span>
+            <div class="ms-wrap" id="msWrap-lChan">
+              <button class="ms-btn" id="msBtn-lChan" onclick="msToggle('lChan')"><span id="msBtnLabel-lChan">الكل</span><span class="ms-arrow">▾</span></button>
+              <div class="ms-menu" id="msMenu-lChan">
+                <div class="ms-ftr-top"><button class="ms-ftr-clear" onclick="msClear('lChan')">مسح الاختيار</button><span class="ms-ftr-count" id="msFtrCount-lChan"></span></div>
+                <div class="ms-selectall-row" onclick="msToggleSelectAll('lChan')">
+                  <input type="checkbox" id="msSelectAll-lChan" onclick="event.stopPropagation()" onchange="msToggleSelectAll('lChan', this.checked)">
+                  <span id="msSelectAllLabel-lChan">تحديد الكل</span>
+                </div>
+                <div class="ms-list" id="msList-lChan"></div>
               </div>
             </div>
           </div>
@@ -1178,6 +1231,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
         </div>
 
         <div class="ms-chips-row" id="chipsRow-lType"></div>
+        <div class="ms-chips-row" id="chipsRow-lChan"></div>
         <div class="ms-chips-row" id="chipsRow-lCount"></div>
         <div class="ms-chips-row" id="chipsRow-lEmp"></div>
       </div>
@@ -1205,7 +1259,8 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
               <th class="sortable-th" data-sort-key="date"  onclick="toggleSort('log','date')">التاريخ<span class="sort-icon" data-sort-key="date"></span></th>
               <th class="sortable-th" data-sort-key="time"  onclick="toggleSort('log','time')">الوقت<span class="sort-icon" data-sort-key="time"></span></th>
               <th class="sortable-th" data-sort-key="name"  onclick="toggleSort('log','name')">رقم الأوردر<span class="sort-icon" data-sort-key="name"></span></th>
-              <th class="sortable-th" data-sort-key="type"  onclick="toggleSort('log','type')">نوع الفاتورة<span class="sort-icon" data-sort-key="type"></span></th>
+              <th class="sortable-th" data-sort-key="otype" onclick="toggleSort('log','otype')">نوع الأوردر<span class="sort-icon" data-sort-key="otype"></span></th>
+              <th class="sortable-th" data-sort-key="chan"  onclick="toggleSort('log','chan')">نوع الفاتورة<span class="sort-icon" data-sort-key="chan"></span></th>
               <th class="sortable-th" data-sort-key="emp"   onclick="toggleSort('log','emp')">الموظف<span class="sort-icon" data-sort-key="emp"></span></th>
               <th class="sortable-th" data-sort-key="count" onclick="toggleSort('log','count')">مرات الطباعة<span class="sort-icon" data-sort-key="count"></span></th>
             </tr></thead>
@@ -1457,8 +1512,23 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
       <div class="cl-entry">
         <div class="cl-head">
-          <span class="cl-ver">v1.18.0</span>
+          <span class="cl-ver">v1.20.0</span>
           <span class="cl-badge" id="clLatestBadge">آخر نسخة</span>
+          <span class="cl-date">09-09-2026</span>
+        </div>
+        <div class="cl-list">
+          <div class="cl-item"><span class="cl-tag fix">إصلاح</span><span>🔴 <b>تاب السجل كان بيخلط محورين في عمود واحد.</b> عمود «نوع الفاتورة» كان بيعرض <code>AWB</code> / <code>عادي</code> / <code>استبدال-استرجاع</code> مع بعض — و<code>AWB</code> <b>مستند</b> بينما التانيين <b>نوع أوردر</b>. بقى <b>عمودين</b> بنفس قيم جدول الطابور بالظبط: «نوع الأوردر» (عادي · استبدال/استرجاع) و«نوع الفاتورة» (مناديب · شو روم · بوسطة)، وبفلتر وترتيب وتصدير لكل واحد.</span></div>
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span>مربعا «S1» و«S2» فوق السجل بقوا <b>«عادي»</b> و<b>«استبدال/استرجاع»</b>، وبيعدّوا نوع الأوردر — قبل كده كانوا بيعدّوا عمود <code>type</code>، فطباعة بوسطة (<code>AWB</code>) ما كانتش بتتحسب في «S1» مع إنها <b>طباعة S1 فعلاً</b>.</span></div>
+          <div class="cl-item"><span class="cl-tag new">جديد</span><span>عمودان في جدول الطابور: <b>«عدد القطع»</b> (بيعدّ اللي هيخرج فعلاً — في أوردر الاستبدال بيعدّ <b>البديل</b> مش القطعة الراجعة) و<b>«الإجمالي»</b> (شامل الشحن وبعد أي تعديل — نفس الرقم اللي المندوب بيحصّله وبيتقارن بـ <code>cod</code> بتاع بوسطة).</span></div>
+          <div class="cl-item"><span class="cl-tag new">جديد</span><span>عمود <b>«الأصناف»</b> — بيتملّى تلقائيًا للأوردرات اللي <b>سبق طباعتها</b> (اللي ورقتها القديمة لسه في المخزن)، وباقي الصفوف فيها زرار <b>«👁 عرض»</b> بيجيب صف واحد عند الضغط.</span></div>
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span>«جاري جلب الأوردرات» بقت <b>«جاري الاستعلام عن الأوردرات»</b> — وكل نصوص «جلب» التانية في الطباعة والتغليف معاها.</span></div>
+          <div class="cl-item"><span class="cl-tag change">ملاحظة</span><span>⚠️ صفوف السجل <b>القديمة</b> مافيهاش زون متسجّل، فعمود «نوع الفاتورة» بيقول <code>—</code> عليها. ده <b>مش عطل</b>: «مش معروف» بتفضل فاضية بدل ما تتخمّن من زون الأوردر الحالي — الزون بيتغيّر بعد الطباعة. صفوف <b>بوسطة</b> شغّالة من أول يوم (المستند نفسه بيقولها).</span></div>
+        </div>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-head">
+          <span class="cl-ver">v1.18.0</span>
           <span class="cl-date">09-09-2026</span>
         </div>
         <div class="cl-list">
@@ -1879,7 +1949,7 @@ async function openReprintFor(cleanNum, oid) {
   reprintRow = null;
   acts.style.display = 'none';
   document.getElementById('rpTitle').textContent = `إعادة طباعة الفاتورة — #${cleanNum}`;
-  body.innerHTML = '<span class="rp-f-k">جاري جلب بيانات الأوردر…</span>';
+  body.innerHTML = '<span class="rp-f-k">جاري الاستعلام عن بيانات الأوردر…</span>';
   card.classList.add('open');
 
   let res;
@@ -2137,6 +2207,58 @@ function typeText(t) {
 }
 
 // ══════════════════════════════════════════════════════════════
+// §LOG-CHAN — عمودا تاب السجل (v1.20.0 · قرار أحمد 09-09-2026)
+// ══════════════════════════════════════════════════════════════
+//
+// 🔴 **الباج اللي القسم ده اتكتب عشانه:** تاب السجل كان فيه عمود **واحد**
+//    اسمه «نوع الفاتورة» بيعرض `AWB` / `عادي` / `استبدال-استرجاع` — وده
+//    **خلط بين محورين مختلفين تمامًا**:
+//      · `عادي`/`استبدال-استرجاع` = **نوع الأوردر** (الماكينة S1/S2)
+//      · `AWB`                     = **المستند** اللي خرج من الطابعة
+//    فأوردر بوسطة كان بيختفي من العمود كأنه مالوش نوع، وأوردر فاتورة كان
+//    بيختفي من التقسيمة كأنه مالوش قناة. وجدول الطابور جنبه فيه **العمودين
+//    صح** — فنفس الأوردر بيتقري بطريقتين على شاشتين الموظف بيتنقّل بينهم.
+//
+// الحل: نفس عمودَي الطابور بالحرف ونفس القيم.
+//
+// | صف D1 | نوع الأوردر            | نوع الفاتورة        |
+// |-------|------------------------|---------------------|
+// | `S1`  | من `type`              | من `extra.zone`     |
+// | `S2`  | من `type`              | من `extra.zone`     |
+// | `AWB` | من **`extra.machine`** | **بوسطة** (مؤكَّدة) |
+//
+// ⚠️ الـ Worker (v2.7.0) هو اللي بيرجّع `machine` و`chan` جاهزين — **الواجهة
+//    مالهاش خريطة زون→قناة** وممنوع تعرّف واحدة (القاعدة في `CLAUDE.md`
+//    §قاعدة الأسبقية · درس R1).
+
+// نوع الأوردر لصف سجل. `machine` بتتكتب لصفوف `AWB` بس (Worker v2.5.0+)،
+// وعمود `type` هو الماكينة نفسها في صفوف `S1`/`S2`.
+// 🔴 بترجّع `null` = **مش معروف**، والواجهة بتعرض `—`. صف `AWB` قديم قبل
+//    v2.5.0 مالوش `machine` — و«عادي» مخمّنة هناك تبقى **رقم غلط شكله سليم**.
+function logOrderType(e) {
+  if (e.machine === "S1" || e.machine === "S2") return e.machine;
+  return (e.type === "S1" || e.type === "S2") ? e.type : null;
+}
+
+// ⚠️ الاسم بيتقرا من `CHANNELS` — **نفس مصدر أسماء المربعات فوق الطابور
+//    بالظبط**. جدول تسميات تاني هنا معناه إن الشاشتين يقولوا اسمين مختلفين
+//    لنفس القناة مع أول تعديل (درس R1).
+function chanLabel(c) { return (CHANNELS[c] || {}).short || null; }
+
+// خلية القناة الملوّنة — **مصدر واحد للجدولين** (الطابور وتاب السجل).
+// كانت مكتوبة inline في صف الطابور لحد v1.20.0، ونسخة تانية في السجل كانت
+// هتخلّي نفس القناة بلونين على شاشتين الموظف بيتنقّل بينهم (درس R1).
+function chanText(c) {
+  return `<span class="chan-cell ch-${escHtml(c)}">${escHtml(chanLabel(c) || c)}</span>`;
+}
+
+// خلية العمودين — `—` رمادية لما القيمة مش معروفة.
+// 🔴 «معرفناش» لازم تفضل فاضية: الصفوف اللي اتكتبت قبل Worker v2.7.0 مافيهاش
+//    زون، وتعويضها بزون الأوردر **الحالي** تخمين — الزون بيتغيّر بعد الطباعة
+//    (١٨٪ من عناوين القاهرة بتروح بوسطة والقرار بيتراجع).
+function unknownCell() { return '<span class="cell-unknown">—</span>'; }
+
+// ══════════════════════════════════════════════════════════════
 // §TABLE-JS — المنطق العام للقسمين (data-table-standard.md)
 // ══════════════════════════════════════════════════════════════
 // مفاتيح الفلاتر مسبوقة بـ p (تاب الطباعة) أو l (تاب السجل) — نفس الـ msState
@@ -2147,26 +2269,32 @@ const msState = {
   pCount:  { items: [], selected: new Set(), search: "", mode: "list", rangeFrom: "", rangeTo: "" },
   pFlag:   { items: [], selected: new Set(), search: "", mode: "list" },
   lType:   { items: [], selected: new Set(), search: "", mode: "list" },
+  lChan:   { items: [], selected: new Set(), search: "", mode: "list" },
   lCount:  { items: [], selected: new Set(), search: "", mode: "list", rangeFrom: "", rangeTo: "" },
   lEmp:    { items: [], selected: new Set(), search: "", mode: "list" },
 };
-const keySection  = { pType:"print", pStatus:"print", pCount:"print", pFlag:"print", lType:"log", lCount:"log", lEmp:"log" };
+const keySection  = { pType:"print", pStatus:"print", pCount:"print", pFlag:"print", lType:"log", lChan:"log", lCount:"log", lEmp:"log" };
 const filterLabels = {
-  pType:"النوع", pStatus:"الحالة", pCount:"مرات الطباعة", pFlag:"تنبيهات",
-  lType:"النوع", lCount:"مرات الطباعة", lEmp:"الموظف",
+  pType:"نوع الأوردر", pStatus:"الحالة", pCount:"مرات الطباعة", pFlag:"تنبيهات",
+  lType:"نوع الأوردر", lChan:"نوع الفاتورة", lCount:"مرات الطباعة", lEmp:"الموظف",
 };
 const sec = {
   // ⚠️ الترتيب الافتراضي للطابور: تاريخ الأوردر تصاعديًا (الأقدم أولاً) —
   //    قرار أحمد. لسه بيتحرّك عادي بضغط الهيدر (٣ ضغطات = بلا ترتيب).
   print: { keys:["pType","pStatus","pCount","pFlag"], searchTerm:"", dateFrom:null, dateTo:null,
            dateFilterActive:false, activePreset:"", sortState:{key:"date",dir:"asc"}, fltOpen:false, tblOpen:true },
-  log:   { keys:["lType","lCount","lEmp"],             searchTerm:"", dateFrom:null, dateTo:null,
+  log:   { keys:["lType","lChan","lCount","lEmp"],      searchTerm:"", dateFrom:null, dateTo:null,
            dateFilterActive:false, activePreset:"", sortState:{key:null,dir:null}, fltOpen:false, tblOpen:true },
 };
 const sortConfig = {
   name:{type:"string"}, customer:{type:"string"}, type:{type:"string"}, status:{type:"string"},
   emp:{type:"string"}, count:{type:"number"},
   date:{type:"date"}, time:{type:"date"},
+  // §LOG-CHAN — عمودا تاب السجل الجديدان (v1.20.0). `otype` نوع الأوردر
+  // (S1/S2) و`chan` نوع الفاتورة (مناديب/شو روم/بوسطة) — الاتنين نص.
+  otype:{type:"string"}, chan:{type:"string"},
+  // §COLS — أعمدة الطابور الجديدة (v1.20.0)
+  qty:{type:"number"}, total:{type:"number"},
 };
 
 function applyFilters(section) { section === "log" ? applyLogFilters() : applyPrintFilters(); }
@@ -2598,7 +2726,12 @@ async function loadOrders(forceRefresh = false) {
       // 🔴 `allZones: true` — الهب بيعرض **كل** القنوات، وكمان الأوردرات
       //    اللي زونها فاضي أو غير معروف (قرار أحمد 07-09-2026). الأداة
       //    المستقلة مابتبعتش الباراميتر ده فبتفضل على قاهرة+جيزة زي ما هي.
-      apiPath("/orders", { forceRefresh, allZones: true }),
+      // 🔴 `items: 'printed'` — أصناف الأوردرات اللي **سبق طباعتها بس**
+      //    (§ITEMS). دي التمريرة الوحيدة اللي ليها تكلفة، وهي محصورة في
+      //    الأوردرات اللي راجعة للطابور وورقتها القديمة لسه في المخزن —
+      //    بالظبط اللي الموظف محتاج يشوف أصنافها. ⚠️ `index.html` (عدّاد
+      //    الرئيسية) **مابيبعتش الباراميتر ده** فمابيدفعش تكلفته.
+      apiPath("/orders", { forceRefresh, allZones: true, items: "printed" }),
       apiPath("/logs", {}),
     ]);
     // §JUST-PRINTED — نقطة الاستبعاد **الوحيدة**. كل اللي بعدها (الجدول ·
@@ -2613,6 +2746,8 @@ async function loadOrders(forceRefresh = false) {
     if (allOrders.length && !("printingTimeS1" in allOrders[0])) {
       showToast("⚠️ فحص الفاتورة اللاغية شغّال بالسجل بس — الـ Worker نسخة قديمة (محتاج 2.3.0)", "warn", 9000);
     }
+
+    renderItemsWarning(ordersData);
 
     allLogs = logsData.entries || [];
     logsLoaded = true;
@@ -2909,6 +3044,82 @@ function lastDocChip(o) {
          `آخر طباعة: ${escHtml(DOC_LABEL[kind])}</span>`;
 }
 
+// ══════════════════════════════════════════════════════════════
+// §COLS — أعمدة «عدد القطع» · «الإجمالي» · «الأصناف» (v1.20.0 · قرار أحمد 09-09-2026)
+// ══════════════════════════════════════════════════════════════
+//
+// 🔴 **التلاتة مالهمش نفس التكلفة، والفرق ده هو تصميم القسم:**
+//   · **عدد القطع** — `currentSubtotalLineItemsQuantity`، scalar بصفر نقاط،
+//     راجع على كل صف مع الطابور.
+//   · **الإجمالي** — `total` كان راجع من الـ Worker **من زمان** وما كانش
+//     معروض. صفر تعديل Worker للبند ده.
+//   · **الأصناف** — connection حقيقية، وهي الوحيدة اللي ليها تكلفة. عشان كده
+//     في **تمريرة تانية** وعلى الأوردرات اللي سبق طباعتها بس (`items:'printed'`).
+
+// عدد القطع. 🔴 `—` مش `0` لما القيمة مش معروفة — Worker أقدم من v2.7.0
+// مابيرجّعش الحقل خالص، و`0` هناك بتتقري «الأوردر فاضي».
+function qtyCell(o) {
+  return o.qty === null || o.qty === undefined
+    ? unknownCell()
+    : `<span class="qty-num">${o.qty.toLocaleString("en-US")}</span>`;
+}
+
+// 🔴 **الرقم ده هو اللي المندوب بيحصّله** — `currentTotalPriceSet` من الـ Worker:
+//    شامل الشحن وبعد أي تعديل أو مرتجع، وهو **نفس** الرقم اللي البوابة بتقارنه
+//    بـ `cod` بتاع شحنة بوسطة. ⛔ متبدّلهوش بـ `totalOriginal` (السعر قبل
+//    التعديلات) — الرقمين بيختلفوا على كل أوردر اتعدّل، والموظف بيقارن الورقة
+//    اللي في إيده بالملصق.
+function totalCell(o) {
+  const v = typeof o.total === "number" ? o.total : null;
+  if (v === null) return unknownCell();
+  return `<span class="total-num">${v.toLocaleString("en-US", { maximumFractionDigits: 0 })}</span>`;
+}
+
+// ─── §ITEMS::الخلية ───
+// تلات حالات، وكل واحدة بتقول حاجة مختلفة — ⛔ وممنوع تتجمّع في واحدة:
+//   ① أصناف موجودة    → اعرضها
+//   ② اتجابت ورجعت فاضية → «مفيش أصناف» (حالة حقيقية، مش فشل)
+//   ③ ما اتجابتش أصلاً  → زرار «👁 عرض»
+// 🔴 الفرق بين ② و③ هو الفرق بين «الأوردر ده مالوش بنود» و«إحنا ما سألناش» —
+//    ودي بالظبط عيلة الغموض اللي `—` لوحدها بتنتجها.
+function itemsCell(o) {
+  if (Array.isArray(o.items)) {
+    if (!o.items.length) return '<span class="cell-unknown">مفيش أصناف</span>';
+    return o.items.map(it =>
+      `<span class="item-sku" title="${escHtml(it.title || "")}">`
+      + `${escHtml(it.sku || "بلا SKU")}`
+      + (it.qty > 1 ? `<span class="item-qty">×${it.qty}</span>` : "")
+      + `</span>`
+    ).join("");
+  }
+  if (o.itemsBusy) return '<span class="cell-unknown">…</span>';
+  return `<button class="items-btn" onclick="event.stopPropagation(); showOrderItems('${escHtml(o.id)}');">👁 عرض</button>`;
+}
+
+// جلب أصناف صف واحد عند الضغط. ⚠️ بينادي **نفس** `/lookup` اللي كارت إعادة
+// الطباعة بيستخدمه — قراءة بحتة، صفر كتابة، صفر تغيير حالة.
+// ⚠️ الفشل **توست وخلاص** — الأصناف معلومة مساعدة، والصف بيفضل قابل للطباعة.
+async function showOrderItems(id) {
+  const row = allOrders.find(o => o.id === id);
+  if (!row || Array.isArray(row.items) || row.itemsBusy) return;
+  row.itemsBusy = true;
+  applyPrintFilters();
+  try {
+    const data = await apiPath("/lookup", { orderId: row.orderId, items: true });
+    // 🔴 مطابقة الاسم قبل ما نلزق النتيجة على الصف — `/lookup` بالاسم بحث،
+    //    وأصناف أوردر تاني في صف الموظف أسوأ من خانة فاضية.
+    if (!data.order || String(data.order.name).replace("#", "") !== String(row.name).replace("#", "")) {
+      throw new Error("الرد رجع أوردر مختلف — ما اتعرضش");
+    }
+    row.items = data.order.items || [];
+  } catch (err) {
+    showToast(`⚠️ تعذّر جلب أصناف ${row.name}: ${err.message}`, "warn", 6000);
+  } finally {
+    row.itemsBusy = false;
+    applyPrintFilters();
+  }
+}
+
 // «من ٣ ساعات» — نسخة الطابعة، باسم خاص بيها عشان ماتدهسش أي دالة في الـ shell.
 function prtSinceText(iso) {
   // صيغ الجمع العربية — «من 3 ساعة» بتقرا غلط على شاشة بيتقرا منها قرار.
@@ -2945,6 +3156,10 @@ function decoratePrintRows() {
       //    لسه عنده العمودين منفصلين.
       date:  o.createdAt,
       day:   cairoDayStr(o.createdAt),
+      // §COLS (v1.20.0) — `itemsQty` بيجي من الـ Worker جاهز
+      // (`currentSubtotalLineItemsQuantity`). ⚠️ `null` = Worker أقدم من
+      // v2.7.0 أو الحقل غاب — والخانة بتقول `—` مش `0`: «مش معروف» ≠ «مفيش».
+      qty:   typeof o.itemsQty === "number" ? o.itemsQty : null,
       flag:      vi.level,         // "" | "void" | "packed"
       printedAt: vi.printedAt,
       printedBy: vi.printedBy,
@@ -2988,7 +3203,7 @@ function applyPrintFilters() {
 function renderPrintTable(rows) {
   const tbody = document.getElementById("printTableBody");
   if (!rows.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="8">لا توجد أوردرات تطابق الفلاتر</td></tr>';
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="11">لا توجد أوردرات تطابق الفلاتر</td></tr>';
   } else {
     const now = new Date();
     tbody.innerHTML = rows.map(o => {
@@ -3008,8 +3223,11 @@ function renderPrintTable(rows) {
         <td class="col-num">${formatDate(o.createdAt)}<span class="time-badge age-badge ${age.cls}" data-prt-age="${escHtml(o.createdAt || "")}">${escHtml(age.text)}</span></td>
         <td>${escHtml(o.customer)}</td>
         <td>${typeText(o.type)}</td>
-        <td><span class="chan-cell ch-${escHtml(o.chan)}">${escHtml(CHANNELS[o.chan].short)}</span>${
+        <td>${chanText(o.chan)}${
           lock ? `<span class="lock-note">⚠️ ${escHtml(o.lockReason)}</span>` : ""}</td>
+        <td class="col-num">${qtyCell(o)}</td>
+        <td class="col-num">${totalCell(o)}</td>
+        <td class="col-items">${itemsCell(o)}</td>
         <td>${statusCell(o.status)}${o.flag ? `<br>${flagChips(o)}` : ""}</td>
         <td><span class="count-badge ${countClass(c)}">${c}</span>${
           o.printedAt ? `<span class="cell-sub">آخر طباعة ${escHtml(prtSinceText(o.printedAt))}</span>` : ""
@@ -3600,7 +3818,7 @@ async function fetchAwbBatch(orders, byId) {
 async function executePrintAWB(orders, guards = {}, byId = {}, blockedRows = []) {
   if (!currentEmployee) { showToast("سجّل الدخول أولاً", "error"); return; }
   const total = orders.length;
-  showPrintLoading(`جاري جلب ${total.toLocaleString("en-US")} بوليصة من بوسطة...`);
+  showPrintLoading(`جاري الاستعلام عن ${total.toLocaleString("en-US")} بوليصة من بوسطة...`);
 
   try {
     const { res, printed, failed } = await fetchAwbBatch(orders, byId);
@@ -4024,6 +4242,27 @@ function buildLogPrintCounts() {
   printCountsMap = { ...logCounts };
 }
 
+// ─── §ITEMS::renderItemsWarning ───
+// ⚠️ بتتنادى في **كل** جلب ناجح — بما فيه اللي مافيهوش أي مشكلة، عشان البانر
+//    يتمسح. من غير المسح البانر بيفضل من الجلب اللي فات وبيقول أسماء أوردرات
+//    مابقتش في الطابور أصلاً.
+function renderItemsWarning(data) {
+  const w = document.getElementById("prtItemsWarn");
+  if (!w) return;
+  const parts = [];
+  if (data && data.itemsError) {
+    parts.push(`⚠️ <b>تعذّر جلب الأصناف</b> — ${escHtml(data.itemsError)}. `
+      + `عمود «الأصناف» فاضي، وباقي الطابور شغّال عادي.`);
+  }
+  if (data && Array.isArray(data.itemsTruncated) && data.itemsTruncated.length) {
+    parts.push(`⚠️ <b>أصناف مقطوعة</b> — الأوردرات دي عندها أكتر من ٥٠ بند `
+      + `والمعروض أول ٥٠ بس: ${data.itemsTruncated.map(n => escHtml(`#${String(n).replace("#","")}`)).join(" · ")}`);
+  }
+  if (!parts.length) { w.style.display = "none"; w.innerHTML = ""; return; }
+  w.innerHTML = parts.join("<br>");
+  w.style.display = "";
+}
+
 // ─── §LOG-JS::renderLogTruncationWarning ───
 // السقف بيرجع من الـ Worker (cap) — الواجهة ماتكتبهوش عندها.
 function renderLogTruncationWarning(data, { toast = false } = {}) {
@@ -4046,12 +4285,23 @@ function decorateLogRows() {
     date:  e.timestamp,
     time:  e.timestamp,          // نفس الـ timestamp — عمودان للعرض بس
     day:   cairoDayStr(e.timestamp),
+    // §LOG-CHAN — الاتنين ممكن يبقوا `null` («مش معروف»)، والفلتر والترتيب
+    // والتصدير كلهم بيعدّوا من هنا فمفيش اشتقاق تاني في أي مكان.
+    otype: logOrderType(e),
+    chan:  e.chan || null,
   }));
 }
 
+// ⚠️ `"—"` قيمة فلتر حقيقية في العمودين الجديدين — مش حشو. الصفوف القديمة
+//    بلا زون هي **الأغلبية** دلوقتي، ومن غير خيار يجمّعها الموظف مايقدرش
+//    يفصلها ولا يستبعدها.
+const LOG_UNKNOWN = "—";
 function rebuildLogFilterItems() {
   const rows = decorateLogRows();
-  rebuildMsItems("lType",  [...new Set(rows.map(r => r.type))].sort(), typeLabel);
+  rebuildMsItems("lType",  [...new Set(rows.map(r => r.otype || LOG_UNKNOWN))].sort(),
+                 v => v === LOG_UNKNOWN ? LOG_UNKNOWN : typeLabel(v));
+  rebuildMsItems("lChan",  [...new Set(rows.map(r => r.chan || LOG_UNKNOWN))].sort(),
+                 v => v === LOG_UNKNOWN ? LOG_UNKNOWN : (chanLabel(v) || v));
   rebuildMsItems("lCount", [...new Set(rows.map(r => r.count))].sort((a,b)=>a-b));
   rebuildMsItems("lEmp",   [...new Set(rows.map(r => r.emp))].sort());
 }
@@ -4061,8 +4311,12 @@ function updateLogKPIs() {
   const rows  = decorateLogRows();
   document.getElementById("logKpiTotal").textContent = rows.length.toLocaleString("en-US");
   document.getElementById("logKpiToday").textContent = rows.filter(e => e.day === today).length.toLocaleString("en-US");
-  document.getElementById("logKpiS1").textContent    = rows.filter(e => e.type === "S1").length.toLocaleString("en-US");
-  document.getElementById("logKpiS2").textContent    = rows.filter(e => e.type === "S2").length.toLocaleString("en-US");
+  // 🔴 على `otype` مش `type` (v1.20.0). عمود `type` في D1 بيقول `AWB` لصفوف
+  //    بوسطة، وهي **طباعة S1** فعلاً (نفس التاج ونفس الميتافيلد ونفس الحالة) —
+  //    فالمربع كان بيقول رقم أقل من الحقيقة بعدد أوردرات بوسطة، ومن غير أي
+  //    إشارة. والليبل بقى بنفس مفردات العمود («عادي») مش `S1`.
+  document.getElementById("logKpiS1").textContent    = rows.filter(e => e.otype === "S1").length.toLocaleString("en-US");
+  document.getElementById("logKpiS2").textContent    = rows.filter(e => e.otype === "S2").length.toLocaleString("en-US");
   document.getElementById("logKpiDup").textContent   = Object.values(logCounts).filter(c => c > 1).length.toLocaleString("en-US");
   document.getElementById("logKpiUniq").textContent  = Object.keys(logCounts).length.toLocaleString("en-US");
 }
@@ -4073,7 +4327,8 @@ function applyLogFilters() {
   const q = s.searchTerm.trim().replace("#","").toLowerCase();
   filteredLogs = decorateLogRows().filter(e => {
     if (q && !String(e.orderNumber).toLowerCase().includes(q)) return false;
-    if (msState.lType.selected.size && !msState.lType.selected.has(e.type)) return false;
+    if (msState.lType.selected.size && !msState.lType.selected.has(e.otype || LOG_UNKNOWN)) return false;
+    if (msState.lChan.selected.size && !msState.lChan.selected.has(e.chan  || LOG_UNKNOWN)) return false;
     if (msState.lEmp.selected.size  && !msState.lEmp.selected.has(e.emp))   return false;
     if (!numericPass("lCount", e.count)) return false;
     if (s.dateFrom && e.day < s.dateFrom) return false;
@@ -4087,14 +4342,15 @@ function applyLogFilters() {
 function renderLogsTable(rows) {
   const tbody = document.getElementById("logsTableBody");
   if (!rows.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">لا توجد نتائج</td></tr>';
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="7">لا توجد نتائج</td></tr>';
     return;
   }
   tbody.innerHTML = rows.map(e => `<tr>
     <td>${formatDate(e.timestamp)}</td>
     <td>${formatTimeOnly(e.timestamp)}</td>
     <td>${prtOrderLink(e.orderNumber, e.orderId)}</td>
-    <td>${typeBadge(e.type)}</td>
+    <td>${e.otype ? typeBadge(e.otype) : unknownCell()}</td>
+    <td>${e.chan  ? chanText(e.chan)   : unknownCell()}</td>
     <td>${escHtml(e.emp)}</td>
     <td><span class="count-badge ${countClass(e.count)}">${e.count}</span></td>
   </tr>`).join("");
@@ -4110,7 +4366,8 @@ async function exportLogsXLSX() {
     { header: "التاريخ",         key: "date",  width: 16 },
     { header: "الوقت",           key: "time",  width: 16 },
     { header: "رقم الأوردر",     key: "num",   width: 16 },
-    { header: "نوع الفاتورة",    key: "type",  width: 22 },
+    { header: "نوع الأوردر",     key: "otype", width: 22 },
+    { header: "نوع الفاتورة",    key: "chan",  width: 16 },
     { header: "الموظف",          key: "emp",   width: 20 },
     { header: "مرات الطباعة",    key: "count", width: 16 },
   ];
@@ -4119,7 +4376,10 @@ async function exportLogsXLSX() {
       date:  formatDateForExport(e.timestamp),
       time:  formatTimeForExport(e.timestamp),
       num:   `#${e.orderNumber}`,
-      type:  typeLabel(e.type),
+      // ⚠️ نفس نص الشاشة بالحرف — بما فيه `—`. ملف بيقول «عادي» على صف
+      //    الشاشة بتقول عنه `—` = تصدير بيخالف اللي اتصدّر منه.
+      otype: e.otype ? typeLabel(e.otype) : LOG_UNKNOWN,
+      chan:  e.chan  ? (chanLabel(e.chan) || e.chan) : LOG_UNKNOWN,
       emp:   e.emp,
       count: e.count,
     });
