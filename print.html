@@ -644,6 +644,14 @@
 .flag-packed { background:var(--purple-light); color:var(--purple-dark); border:1px solid var(--purple-border); }
 .flag-recent { background:var(--amber-light);  color:var(--amber-dark);  border:1px solid var(--amber-border);  }
 .cell-sub { display:block; font-size:11px; font-weight:600; color:var(--text-secondary); margin-top:2px; }
+/* §LAST-DOC — «آخر طباعة: فاتورة / بوليصة بوسطة».
+   ⚠️ اللون رمادي **افتراضيًا** عن قصد: ده سطر معلومة مش تحذير، وبيظهر على
+   كل صف سبق طباعته. `doc-mismatch` (كهرماني) بس هي التحذير — نوع الورقة
+   اللي في المخزن مختلف عن اللي هيتطبع دلوقتي. لون تحذير على الاتنين =
+   لون بلا معنى (نفس قاعدة `.tool-danger` في الشاشة الرئيسية). */
+.doc-chip { display:inline-block; margin-top:3px; padding:1px 7px; border-radius:999px; font-size:11px; font-weight:700;
+            white-space:nowrap; background:var(--surface-2); color:var(--text-secondary); border:1px solid var(--border); }
+.doc-mismatch { background:var(--amber-light); color:var(--amber-dark); border-color:var(--amber-border); font-weight:800; }
 .confirm-question { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-top: 12px; }
 
 /* ── Print loading overlay ── */
@@ -1449,8 +1457,21 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
       <div class="cl-entry">
         <div class="cl-head">
-          <span class="cl-ver">v1.15.0</span>
+          <span class="cl-ver">v1.18.0</span>
           <span class="cl-badge" id="clLatestBadge">آخر نسخة</span>
+          <span class="cl-date">09-09-2026</span>
+        </div>
+        <div class="cl-list">
+          <div class="cl-item"><span class="cl-tag fix">إصلاح</span><span>🔴 تاب البوليصة ما بقاش بيتفتح <b>قبل</b> نافذة المراجعة — كانت شاشة «🚚 جاري تحضير البوليصة…» بتقعد في تاب جنبك <b>وانت لسه ما أقررتش بقطع الورقة</b>. دلوقتي التاب بيتقفل قبل النافذة وبيترجع يتحجز من ضغطة «اطبع» جوّاها.</span></div>
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span>بوابة المراجعة بقت <b>سؤال واحد</b> — «قطعت الورقة القديمة». سؤال «عدّلت الشحنة على بوسطة» <b>اتشال</b>، ومعاه إقرار <code>bostaUpdated</code> من السجل (إقرار ما اتسألش عنه ماينفعش يتكتب).</span></div>
+          <div class="cl-item"><span class="cl-tag new">جديد</span><span>🔴 شارة <b>«آخر طباعة: فاتورة / بوليصة بوسطة»</b> في الجدول وفي البوابة وفي كارت إعادة الطباعة — وبتولّع <b>كهرماني</b> لو نوع آخر ورقة مختلف عن اللي هيتطبع دلوقتي (أوردر اتطبعله فاتورة وبعدين اتحوّل لبوسطة أو العكس).</span></div>
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span>اسم تاب/ملف الطباعة بقى <code>09-09-2026 - 11.51 - عدد 3 - بوسطة</code> للفاتورة <b>وللبوليصة</b>. اسم البوليصة اتحط <b>جوّه ملف الـ PDF نفسه</b> (خانة <code>/Title</code> بإلحاق في آخر الملف) — الملف لسه بيتطبع بايت ببايت.</span></div>
+        </div>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-head">
+          <span class="cl-ver">v1.15.0</span>
           <span class="cl-date">08-09-2026</span>
         </div>
         <div class="cl-list">
@@ -1891,6 +1912,8 @@ async function openReprintFor(cleanNum, oid) {
   //    **فاتورة شوبيفاي بدل البوليصة**. الحقل بييجي من `/lookup` (Worker
   //    v2.5.0) بنفس شكل صف `/orders` بالحرف.
   row.chan = wocChannelOf(o);
+  // §LAST-DOC — نفس شارة الطابور: «الورقة اللي في المخزن فاتورة ولا بوليصة؟»
+  row.lastDoc = (printLastDocMap[cleanNum] || {}).doc || null;
   reprintRow = row;
 
   const packAt = o.type === 'S2' ? o.packingTimeS2 : o.packingTimeS1;
@@ -1911,7 +1934,7 @@ async function openReprintFor(cleanNum, oid) {
        ${f('العميل', escHtml(o.customer || '-'))}
        ${f('تاريخ الأوردر', escHtml(formatDate(o.createdAt)))}
        ${f('اتطبع', row.count > 0 ? `${row.count.toLocaleString('en-US')} مرة` : 'مفيش سجل')}
-       ${f('آخر طباعة', row.printedAt ? escHtml(prtSinceText(row.printedAt)) : '—')}
+       ${f('آخر طباعة', (row.printedAt ? escHtml(prtSinceText(row.printedAt)) : '—') + ' ' + lastDocChip(row))}
      </div>
      <div class="rp-note">${notes.map(n => `<div>• ${n}</div>`).join('')}</div>`;
   acts.style.display = '';
@@ -2463,6 +2486,20 @@ let printCountsMap = {};
 // (الطباعة نجحت والميتافيلد فشل → `/track` بيرجّع warning، والورقة موجودة برضه).
 let printLastS1Map = {};
 
+// ─── §LAST-DOC — آخر مستند اتطبع لكل أوردر ───
+// 🔴 «اتطبع قبل كده» **مش كفاية** — لازم يتقال **إيه** اللي اتطبع: فاتورة
+//    ولا بوليصة بوسطة. الحالة الواقعية اللي البند ده اتكتب عشانها: أوردر
+//    بيتطبعله فاتورة مناديب، وبعدين يتكشف إن العنوان هيخرج مع بوسطة
+//    فالزون بيتغيّر (أو العكس) — فالورقة اللي في المخزن **من نوع تاني
+//    خالص** عن اللي هيتطبع دلوقتي. من غير السطر ده الموظف بيقرا «اتطبع
+//    من يومين» ويفتكر إن عنده نفس الورقة.
+// ⚠️ المصدر **سجل D1 لوحده** (`/logs` بيرجّع `type` = S1 · S2 · AWB).
+//    ميتافيلد `printing_time_s1` **مابيقولش نوع المستند** — بوسطة بتكتب
+//    فيه بنفس مفتاح الفاتورة بالظبط (`doc` منفصل عن `type`)، فأوردر أقدم
+//    من السجل أو خارج سقفه بيفضل **«مش معروف»** ومفيش شارة أصلاً.
+//    «معرفناش» هنا لازم تفضل فاضية — شارة غلط أسوأ من مفيش شارة.
+let printLastDocMap = {};
+
 // ─── §TOOL-JS::mapLimit ───
 // تشغيل مهام بحد تزامن ثابت — البديل المعتمد لـ `Promise.all` على المصفوفة كلها.
 // فرقين جوهريين، والاتنين مقصودين (v3.4.0 · R15):
@@ -2847,6 +2884,31 @@ function flagChips(row) {
   return "";
 }
 
+// ─── §LAST-DOC::الشارة ───
+// أنواع الصفوف اللي معناها «ورقة خرجت من الطابعة» — نفس التلاتة اللي
+// `POST /logs` بيفلتر عليها في الـ Worker بالحرف.
+const PRINT_DOC_TYPES = ["S1", "S2", "AWB"];
+
+// «إيه اللي اتطبع؟» — المستند، مش القناة. `S1` و`S2` الاتنين **فاتورة**
+// (اللي بيفرق بينهم بنود الفاتورة مش الورق)، و`AWB` **بوليصة حرارية**.
+const DOC_KIND  = { S1: "invoice", S2: "invoice", AWB: "awb" };
+const DOC_LABEL = { invoice: "فاتورة", awb: "بوليصة بوسطة" };
+
+// 🔴 الشارة بتولّع **بس لما نوع آخر طباعة يخالف قناة الأوردر دلوقتي** —
+//    وده بالظبط الوضع اللي الموظف محتاج يعرفه: في المخزن ورقة من نوع
+//    والطابعة هتطلّع نوع تاني. ⚠️ والمقارنة على **المستند** مش على اسم
+//    القناة: «مناديب» و«شو روم» الاتنين بيطبعوا فاتورة، فالانتقال بينهم
+//    مش تغيير في الورق ومايستاهلش تحذير.
+function lastDocChip(o) {
+  if (!o.lastDoc) return "";
+  const kind = DOC_KIND[o.lastDoc];
+  if (!kind) return "";
+  const cur  = CHANNELS[o.chan] ? CHANNELS[o.chan].action : null;   // "invoice" | "awb" | null
+  const bad  = cur !== null && cur !== kind;
+  return `<span class="doc-chip${bad ? " doc-mismatch" : ""}">${bad ? "⚠️ " : ""}` +
+         `آخر طباعة: ${escHtml(DOC_LABEL[kind])}</span>`;
+}
+
 // «من ٣ ساعات» — نسخة الطابعة، باسم خاص بيها عشان ماتدهسش أي دالة في الـ shell.
 function prtSinceText(iso) {
   // صيغ الجمع العربية — «من 3 ساعة» بتقرا غلط على شاشة بيتقرا منها قرار.
@@ -2886,6 +2948,8 @@ function decoratePrintRows() {
       flag:      vi.level,         // "" | "void" | "packed"
       printedAt: vi.printedAt,
       printedBy: vi.printedBy,
+      // §LAST-DOC — نوع آخر مستند اتطبع من سجل D1، أو `null` = مش معروف.
+      lastDoc:   (printLastDocMap[String(o.name).replace("#", "")] || {}).doc || null,
     };
   });
 }
@@ -2948,7 +3012,8 @@ function renderPrintTable(rows) {
           lock ? `<span class="lock-note">⚠️ ${escHtml(o.lockReason)}</span>` : ""}</td>
         <td>${statusCell(o.status)}${o.flag ? `<br>${flagChips(o)}` : ""}</td>
         <td><span class="count-badge ${countClass(c)}">${c}</span>${
-          o.printedAt ? `<span class="cell-sub">آخر طباعة ${escHtml(prtSinceText(o.printedAt))}</span>` : ""}</td>
+          o.printedAt ? `<span class="cell-sub">آخر طباعة ${escHtml(prtSinceText(o.printedAt))}</span>` : ""
+        }${lastDocChip(o)}</td>
       </tr>`;
     }).join("");
   }
@@ -3070,7 +3135,11 @@ async function fetchTodayPrintMap() {
 // منها بيتقرا **فرق التحصيل**: ده مش حارس تاني، ده **مُشغِّل** لنفس البوابة،
 // وقيمته إنه بيمسك الحالة اللي الحالة نفسها مابتقولش عنها حاجة — أوردر لسه
 // `Confirmed` عادي والرقم على الملصق مختلف عن قيمة الأوردر.
-async function runPreprintGate(selected, lookupById = null) {
+// `hooks` (اختيارية · مسار بوسطة) — §AWB-TAB: `onOpen` بتتنادى **قبل** ما
+// النافذة تظهر، و`onConfirm` **جوّه ضغطة زرار الطباعة نفسها**. السبب كامل
+// عند `preopenAwbTab` تحت: تاب البوليصة لازم يتقفل قبل نافذة المراجعة
+// ويترجع يتحجز من ضغطة الموظف — وإلا شاشة «جاري التحضير» بتقعد وراها.
+async function runPreprintGate(selected, lookupById = null, hooks = {}) {
   let todayMap = {};
   try {
     todayMap = await fetchTodayPrintMap();
@@ -3098,8 +3167,10 @@ async function runPreprintGate(selected, lookupById = null) {
 
   const need = rows.filter(r => GATE_NEED_LEVELS.includes(r.level));
   const rest = rows.filter(r => r.level === "recent" || r.level === "printed");
+  // ⚠️ مفيش بوابة = **مفيش خطّافات**. التاب المحجوز وقت الضغطة بيفضل زي ما
+  //    هو، والدفعة النضيفة بتكمّل من غير أي تغيير — نفس مسار قبل v1.18.0.
   if (!need.length && !rest.length) return { orders: selected, guards: {} };
-  return openGate(rows);
+  return openGate(rows, hooks);
 }
 
 // المستويات اللي بتطلب **إقرار** مش تنبيه. `cod` انضم في v1.7.0 لمسار بوسطة.
@@ -3107,7 +3178,7 @@ const GATE_NEED_LEVELS = ["void", "packed", "cod"];
 
 function closeGate() { document.getElementById("gateOverlay").classList.remove("open"); }
 
-function openGate(rows) {
+function openGate(rows, hooks = {}) {
   return new Promise(resolve => {
     const need    = rows.filter(r => GATE_NEED_LEVELS.includes(r.level));
     const recent  = rows.filter(r => r.level === "recent");
@@ -3119,19 +3190,17 @@ function openGate(rows) {
     //    الموظف مايقدرش يقرر.
     // 🔴 الأوردر بيتحدد **بالاسم** — «٣ فواتير لاغية» من غير أسماء يعني
     //    الموظف مايقدرش يقرر.
-    // 🔴 وأوردر بوسطة بياخد **سؤالين** مش سؤال (قرار أحمد 07-09-2026):
-    //    الورقة اتقطعت، **و**الشحنة اتعدّلت على بوسطة. السبب اللي رجّع
-    //    الأوردر للطابور **مش مهم للمخزن** — المهم الفعلين دول.
-    //    ⚠️ إعادة طباعة البوليصة **مابتصلّحش** بيانات غلط: البوليصة بتتولد
-    //       من بيانات بوسطة مش من شوبيفاي، فالتعديل مكانه داشبورد بوسطة.
-    //    ✅ نفس نمط التأكيدين الإلزاميين في `remove.html` — مش نمط جديد.
-    const gateChecks = (o) => {
-      const items = [{ kind: "cut", text: "قطعت الورقة القديمة" }];
-      if (o.chan === "awb") items.push({ kind: "bosta", text: "عدّلت الشحنة على بوسطة" });
-      return `<span class="pg-checks">${items.map(it =>
-        `<label class="pg-check"><input type="checkbox" data-gate-need="${escHtml(o.id)}"
-           data-gate-kind="${it.kind}" onchange="gateSyncState()"> ${it.text}</label>`).join("")}</span>`;
-    };
+    // 🔴 **سؤال واحد لكل أوردر** — «قطعت الورقة القديمة» (قرار أحمد
+    //    09-09-2026). السؤال التاني لبوسطة («عدّلت الشحنة على بوسطة»)
+    //    **اتشال**: الفعل اللي المخزن مسؤول عنه هو قطع الورق، وتعديل
+    //    الشحنة على داشبورد بوسطة **مش شغل محطة الطباعة**.
+    //    ⚠️ وشيل السؤال معناه إن `bostaUpdated` **مابيتكتبش** في
+    //       `extra.guard` (تحت في `buildGateGuards`) — إقرار ما اتسألش
+    //       عنه ومكتوب في D1 = كذب في السجل، وده أسوأ من غياب المفتاح.
+    const gateChecks = (o) =>
+      `<span class="pg-checks"><label class="pg-check">
+         <input type="checkbox" data-gate-need="${escHtml(o.id)}" data-gate-kind="cut"
+                onchange="gateSyncState()"> قطعت الورقة القديمة</label></span>`;
 
     const rowHTML = (r, withCheck) => {
       const o = r.order;
@@ -3148,6 +3217,7 @@ function openGate(rows) {
         <span class="pg-row-main">
           <span class="pg-row-top">${gateLink(o.name, o.orderId)} ${flagChips(o)}</span>
           <span class="pg-meta">${when} · ${escHtml(o.status || "—")}</span>
+          ${lastDocChip(o)}
           ${codLine}
           ${withCheck ? gateChecks(o) : ""}
         </span>
@@ -3160,7 +3230,7 @@ function openGate(rows) {
       const anyCod    = need.some(r => r.level === "cod");
       const isAwb     = need.some(r => r.order.chan === "awb");
       const headText  = isAwb
-        ? "🔴 ورق لاغي في المخزن — لازم يتقطّع والشحنة تتعدّل قبل الطباعة"
+        ? "🔴 ورق لاغي في المخزن — لازم يتقطّع قبل الطباعة"
         : "🔴 فواتير لاغية — لازم تتقطّع قبل الطباعة";
       sections.push(`<div class="pg-sec red">
         <div class="pg-sec-head"><span>${headText}</span>
@@ -3203,7 +3273,17 @@ function openGate(rows) {
       : `اطبع الـ ${restCount.toLocaleString("en-US")} الباقيين`;
     document.getElementById("pgPrintAllBtn").textContent = `🖨️ اطبع الـ ${total.toLocaleString("en-US")} كلهم`;
 
-    const finish = (val) => { closeGate(); resolve(val); };
+    // 🔴 `onConfirm` بتتنادى **هنا** — جوّه ضغطة الموظف على زرار البوابة
+    //    نفسها وقبل أي `await`. ده اللي بيخلّي حجز تاب البوليصة مسموح:
+    //    صلاحية فتح النوافذ عمرها ثواني من **آخر** ضغطة، وضغطة «طباعة»
+    //    الأصلية بقى عليها نداء بوسطة كامل + وقت قراءة النافذة.
+    // ⚠️ الإلغاء (`val === null`) **مابيحجزش** — تاب اتفتح على إلغاء
+    //    معناه شاشة انتظار كاذبة بتقعد للأبد، وده الباج اللي البند اتكتب
+    //    عشانه.
+    const finish = (val) => {
+      if (val) { try { hooks.onConfirm?.(); } catch { /* منع popup — الشريط الاحتياطي بيمسكها */ } }
+      closeGate(); resolve(val);
+    };
     const handlers = {
       pgPrintAllBtn: () => finish({ orders: rows.map(r => r.order), guards: buildGateGuards(need) }),
       pgSkipBtn:     () => finish({ orders: rows.filter(r => !skipSet.has(r.order.id)).map(r => r.order), guards: {} }),
@@ -3219,6 +3299,11 @@ function openGate(rows) {
     }
 
     window.gateNeedIds = need.map(r => r.order.id);
+    // 🔴 **قبل** ما النافذة تظهر — تاب البوليصة المحجوز بيتقفل هنا. من
+    //    غير السطر ده الموظف بيبص على شاشة «🚚 جاري تحضير البوليصة…» في
+    //    تاب جنبه **وهو لسه ما أقرّش بقطع الورقة**، والشاشة دي بتفضل
+    //    قاعدة طول ما النافذة مفتوحة — يعني كذب معروض على شاشة المحطة.
+    try { hooks.onOpen?.(); } catch { /* لا شيء — التاب ممكن يكون اتقفل بإيد الموظف */ }
     document.getElementById("gateOverlay").classList.add("open");
     gateSyncState();
     playBeep("warn");
@@ -3253,9 +3338,11 @@ function buildGateGuards(need) {
       prevPackAt:   r.order.packingTimeS1 || "",
       statusAtGate: r.order.status || "",
       cutConfirmed: true,
-      // ⚠️ المفتاح ده لازم يكون في `GUARD_KEYS` في الـ Worker وإلا **بيتسقط
-      //    في صمت**: البوابة تشتغل والسجل يقول إن الموظف ما أقرّش بحاجة.
-      ...(r.order.chan === "awb" ? { bostaUpdated: true } : {}),
+      // ⛔ **`bostaUpdated` اتشال في v1.18.0** مع شيل سؤاله من البوابة.
+      //    الـ Worker لسه شايله في `GUARD_KEYS` (قايمة بيضا مقفولة —
+      //    مفتاح مش فيها بيتسقط في صمت)، بس الواجهة **مابتبعتوش خالص**:
+      //    كتابة إقرار الموظف ما اتسألش عنه = صف D1 بيقول إنه راجع حاجة
+      //    محدش عرضها عليه. لو السؤال رجع يومًا، السطر يرجع معاه — مش قبله.
     };
   }
   return guards;
@@ -3345,7 +3432,10 @@ async function executePrint(selectedOrders, guards = {}) {
     });
 
     showPrintLoading("جاري فتح نافذة الطباعة...");
-    await printViaIframe(invoiceHTML, invoices.length);
+    // §JOB-TITLE — القناة من **صف الأوردر** مش من `activeChannel`: الدفعة
+    //    مستحيل تبقى مختلطة (التحديد بيتمسح عند التبديل)، وكارت إعادة
+    //    الطباعة بيشتغل بلا قناة مختارة أصلاً فبيقرا `row.chan`.
+    await printViaIframe(invoiceHTML, printJobTitle(invoices.length, (selectedOrders[0] || {}).chan));
 
     for (const inv of invoices) {
       const num = String(inv.name).replace("#","");
@@ -3402,6 +3492,12 @@ function awbBlockedRow(o, res) {
 //    `await`. المسار كله بعد كده بيعدّي على بوسطة (بحث + بوليصة + تسجيل)،
 //    وكروم بيسحب صلاحية فتح النوافذ بعد ثواني من آخر ضغطة — فحجز التاب
 //    متأخرًا كان معناه popup ممنوع في **اليوم العادي** مش في حالة نادرة.
+// 🔴 **وللحجز ده عمر قصير من v1.18.0:** لو بوابة المراجعة هتتفتح، التاب
+//    بيتقفل قبلها بالظبط (`onOpen`) وبيترجع يتحجز من ضغطة «اطبع» جوّاها
+//    (`onConfirm`) — تحت في `runPrintAWB`. السبب: شاشة «🚚 جاري تحضير
+//    البوليصة…» كانت بتقعد في تاب جنبه **وهو لسه ما أقرّش بقطع الورقة**،
+//    ولو لغى كانت بتفضل قاعدة لحد ما `finally` توصل. وضغطة زرار البوابة
+//    بتجدّد صلاحية فتح النوافذ، فالحجز المتأخر ده **مضمون** مش مخاطرة.
 // ⚠️ `closeAwbWin` في `finally` بتقفل التاب المحجوز لو الدفعة وقعت أو
 //    اتلغت — و**بتبقى بلا أثر** لو التاب اتستهلك فعلاً.
 async function startPrintAWB(selected) {
@@ -3449,7 +3545,12 @@ async function runPrintAWB(selected) {
     return;
   }
 
-  const gate = await runPreprintGate(ready, byId);
+  // §AWB-TAB — التاب المحجوز بيتقفل قبل نافذة المراجعة وبيترجع يتحجز من
+  // ضغطة «اطبع» جوّاها. القاعدة: **مفيش شاشة انتظار قبل ما الموظف يقرّ**.
+  const gate = await runPreprintGate(ready, byId, {
+    onOpen:    closeAwbWin,
+    onConfirm: preopenAwbTab,
+  });
   if (!gate) { showToast("اتلغت الطباعة", "info"); return; }
   if (!gate.orders.length) {
     if (blocked.length) renderTrackResults(blocked);
@@ -3587,6 +3688,11 @@ async function executePrintAWB(orders, guards = {}, byId = {}, blockedRows = [])
 //    من كده على بوسطة — يعني `window.open` بعد الـ `await` كان **هيتمنع
 //    كـ popup في اليوم العادي**، مش في حالة نادرة. فبنفتح تاب فاضي فيه
 //    رسالة انتظار فورًا، وبنوجّهه للملف لما يجهز.
+// 🔴 **والضغطة المقصودة هي آخر ضغطة فعلية، مش أول واحدة** (v1.18.0): لو
+//    بوابة المراجعة اتفتحت، التاب المحجوز بيتقفل قبل ما النافذة تظهر
+//    وبيترجع يتحجز من ضغطة «اطبع» جوّاها. ⛔ ممنوع الرجوع لحجز واحد في
+//    أول المسار: شاشة انتظار قاعدة ورا نافذة بتسأل الموظف «قطعت الورقة؟»
+//    **بتقول له إن الطباعة بدأت** وهو لسه ما وافقش.
 // ⚠️ ولو المنع حصل برضه (المتصفح قافل النوافذ خالص): الشريط الاحتياطي
 //    بيظهر بزرار بضغطة مباشرة. **ممنوع** الفشل يعدّي في صمت — بوليصة ما
 //    خرجتش = شحنة بتخرج من المخزن من غير ملصق.
@@ -3598,6 +3704,129 @@ let awbWin = null;
 
 function revokeAwbUrl() {
   if (currentAwbUrl) { URL.revokeObjectURL(currentAwbUrl); currentAwbUrl = null; }
+}
+
+// ─── §AWB-JS::pdfWithTitle — اسم التاب جوّه الملف نفسه ───
+// كروم بياخد عنوان تاب الـ PDF من خانة **`/Title`** جوّه الملف، ولو مش
+// موجودة بيعرض الـ blob URL (نص زي `blob:https://…/9f3c…`) — وده اللي كان
+// بيبان قبل v1.18.0. الخانة بتتضاف هنا بـ **incremental update**: كائن
+// جديد + xref جديد **بعد** `%%EOF` القديم، وبايتات الملف الأصلية
+// **مابتتلمسش ولا بايت**. ده الشكل اللي مواصفة PDF نفسها بتعدّل بيه أي
+// ملف موقّع، مش إعادة توليد.
+//
+// ⛔ القاعدة «الـ PDF بيتطبع زي ما جه» **ما اتكسرتش**: التاب لسه **ملف
+//    PDF مفتوح مباشرةً** مش صفحة بتاعتنا فيها إطار — يعني `Ctrl+P` وزرار
+//    الطابعة وقايمة المتصفح كلهم لسه بيطبعوا بايتات بوسطة، ومفيش إعادة
+//    رسم ولا scaling ولا `@page` مننا.
+//
+// 🔴 **أي شك = الملف الأصلي.** كل مسار فشل هنا بيرجّع `bytes` زي ما هي
+//    (ملف مشفّر · xref مش مفهوم · أي رمي)، لأن **بوليصة ما خرجتش أسوأ
+//    بمراحل من تاب اسمه blob URL**.
+// ⚠️ وملف عليه `/Info` قديم بيتدهس بالكامل (Producer وCreationDate بتوع
+//    بوسطة بيروحوا من العرض). مقبول بقرار: دي بيانات محدش في المخزن
+//    بيقراها، ونسخها كان معناه بارسر تاني للقاموس القديم.
+// ⚠️ ولو الملف عنده XMP metadata فيها `dc:title`، فيه احتمال العارض
+//    يفضّلها على `/Title` ويعرض اسم تاني — ساعتها الاسم مايتغيّرش وبس،
+//    **ومفيش أي أثر على الطباعة**. البند ده لازم يتأكّد على أول بوليصة
+//    حقيقية بعد النشر.
+function pdfWithTitle(bytes, title) {
+  try {
+    // القراءة latin1 عشان أي index في النص == نفس الـ offset في البايتات.
+    let s = "", CH = 0x8000;
+    for (let i = 0; i < bytes.length; i += CH) s += String.fromCharCode(...bytes.subarray(i, i + CH));
+
+    const sxIdx = s.lastIndexOf("startxref");
+    if (sxIdx === -1) return bytes;
+    const m = s.slice(sxIdx + 9, sxIdx + 40).match(/\d+/);
+    const prevOffset = m ? parseInt(m[0], 10) : NaN;
+    if (!Number.isFinite(prevOffset) || prevOffset <= 0 || prevOffset >= bytes.length) return bytes;
+
+    // 🔴 الشكل بيتحدد من **اللي عند `startxref` فعلاً** مش من `lastIndexOf`
+    //    على كلمة `trailer`: الكلمة دي ممكن تظهر جوّه ستريم مضغوط بالصدفة،
+    //    والقراءة الغلط هنا معناها ملف بايظ.
+    const head = s.slice(prevOffset, prevOffset + 40);
+    const isClassic = /^\s*xref[\r\n]/.test(head);
+    const isStream  = /^\s*\d+\s+\d+\s+obj/.test(head);
+    if (!isClassic && !isStream) return bytes;
+
+    // قاموس الـ trailer — `trailer <<…>>` في الجدول القديم، أو قاموس كائن
+    // الـ xref stream نفسه (نص عادي؛ المضغوط هو الستريم مش القاموس).
+    let dictStart;
+    if (isClassic) {
+      const tIdx = s.indexOf("trailer", prevOffset);
+      if (tIdx === -1) return bytes;
+      dictStart = s.indexOf("<<", tIdx);
+    } else {
+      dictStart = s.indexOf("<<", prevOffset);
+    }
+    if (dictStart === -1) return bytes;
+
+    // ماسح أقواس متوازن — `>>` جوّه سترينج أو قاموس متداخل مايقفلش القاموس.
+    let depth = 0, end = -1;
+    for (let i = dictStart; i < s.length - 1; i++) {
+      if (s[i] === "<" && s[i + 1] === "<") { depth++; i++; continue; }
+      if (s[i] === ">" && s[i + 1] === ">") { depth--; i++; if (!depth) { end = i + 1; break; } }
+    }
+    if (end === -1) return bytes;
+    const dict = s.slice(dictStart, end);
+
+    // ⛔ ملف مشفّر: السترينجات جوّاه متشفّرة، وسترينج عادي مننا بيتقرا
+    //    رموز مالهاش معنى — أو الملف يترفض بالكامل.
+    if (/\/Encrypt\b/.test(dict)) return bytes;
+
+    const size = parseInt((dict.match(/\/Size\s+(\d+)/) || [])[1], 10);
+    const root = dict.match(/\/Root\s+(\d+)\s+(\d+)\s+R/);
+    if (!Number.isFinite(size) || size < 1 || !root) return bytes;
+    const idm  = dict.match(/\/ID\s*\[([^\]]*)\]/);
+    const idPart = idm ? ` /ID [${idm[1]}]` : "";
+
+    // العنوان **هيكس UTF-16BE بـ BOM** — الصيغة الوحيدة اللي بتشيل عربي في
+    // PDF. سترينج عادي `(…)` بيتقرا latin1 وبيطلّع رموز مكسّرة.
+    let hex = "FEFF";
+    for (const ch of String(title)) {
+      let c = ch.codePointAt(0);
+      if (c > 0xFFFF) { c -= 0x10000;
+        hex += (0xD800 + (c >> 10)).toString(16).padStart(4, "0")
+             + (0xDC00 + (c & 0x3FF)).toString(16).padStart(4, "0");
+      } else hex += c.toString(16).padStart(4, "0");
+    }
+    const titleStr = `<${hex.toUpperCase()}>`;
+
+    let out = s;
+    if (!/[\r\n]$/.test(out)) out += "\n";
+
+    const infoNum  = size;                       // أول رقم كائن فاضي
+    const infoOff  = out.length;
+    out += `${infoNum} 0 obj\n<< /Title ${titleStr} >>\nendobj\n`;
+    const xrefOff  = out.length;
+    if (infoOff > 0xFFFFFFFF || xrefOff > 0xFFFFFFFF) return bytes;
+
+    if (isClassic) {
+      // صف الـ xref **٢٠ بايت بالظبط** — أي حرف زيادة أو ناقص بيزحلق
+      //    القراءة كلها.
+      out += `xref\n${infoNum} 1\n${String(infoOff).padStart(10, "0")} 00000 n \n`;
+      out += `trailer\n<< /Size ${infoNum + 1} /Root ${root[1]} ${root[2]} R /Info ${infoNum} 0 R` +
+             ` /Prev ${prevOffset}${idPart} >>\nstartxref\n${xrefOff}\n%%EOF\n`;
+    } else {
+      // الملف الأصلي على xref stream (PDF 1.5+) — بنكمّل **بنفس الشكل**.
+      // جدول قديم بـ `/Prev` على ستريم = ملف هجين، وسلوك القرّاء عليه
+      // مش مضمون. عرض `W = [1 4 2]` وكائنين بس = ١٤ بايت.
+      const xrefNum = infoNum + 1;
+      const b = [];
+      for (const off of [infoOff, xrefOff]) {
+        b.push(1, (off >>> 24) & 255, (off >>> 16) & 255, (off >>> 8) & 255, off & 255, 0, 0);
+      }
+      const data = b.map(v => String.fromCharCode(v)).join("");
+      out += `${xrefNum} 0 obj\n<< /Type /XRef /Size ${xrefNum + 1} /Index [${infoNum} 1 ${xrefNum} 1]` +
+             ` /W [1 4 2] /Root ${root[1]} ${root[2]} R /Info ${infoNum} 0 R /Prev ${prevOffset}${idPart}` +
+             ` /Length ${data.length} >>\nstream\n${data}\nendstream\nendobj\n`;
+      out += `startxref\n${xrefOff}\n%%EOF\n`;
+    }
+
+    const patched = new Uint8Array(out.length);
+    for (let i = 0; i < out.length; i++) patched[i] = out.charCodeAt(i) & 255;
+    return patched;
+  } catch { return bytes; }   // 🔴 أي رمي = الملف الأصلي، والبوليصة بتخرج
 }
 
 function preopenAwbTab() {
@@ -3629,7 +3858,11 @@ function openAwbPdf(res, count) {
     const bin   = atob(res.pdfBase64);
     const bytes = new Uint8Array(bin.length);
     for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    currentAwbUrl = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+    // §JOB-TITLE — نفس صيغة تاب الفاتورة بالحرف، والقناة دايمًا «بوسطة»
+    // هنا. العدد **المطبوع فعلاً** مش المحدَّد: الشحنات المستبعَدة
+    // والفاشلة اتشالت من الدفعة قبل ما نوصل هنا.
+    currentAwbUrl = URL.createObjectURL(
+      new Blob([pdfWithTitle(bytes, printJobTitle(count, "awb"))], { type: "application/pdf" }));
   } catch (e) {
     closeAwbWin();
     showToast(`تعذّر فتح ملف البوليصة: ${e.message}`, "error", 8000);
@@ -3773,11 +4006,19 @@ async function loadLogs() {
 function buildLogPrintCounts() {
   logCounts = {};
   printLastS1Map = {};
+  printLastDocMap = {};
   for (const e of allLogs) {
     logCounts[e.orderNumber] = (logCounts[e.orderNumber] || 0) + 1;
     // الرد مرتّب DESC — أول ظهور هو الأحدث
     if (e.type === "S1" && !printLastS1Map[e.orderNumber]) {
       printLastS1Map[e.orderNumber] = { timestamp: e.timestamp, employee: e.employee };
+    }
+    // §LAST-DOC — **أي** مستند مطبوع (مش S1 بس)، عشان الشارة تقول نوع آخر
+    // ورقة خرجت فعلاً. ⚠️ الفحص على القايمة صراحةً مش على «مش login»:
+    // الـ Worker بيفلتر على التلاتة دول، وأي `type` جديد يتضاف بعدين
+    // (زي `not_found`) **مش** ورقة اتطبعت.
+    if (PRINT_DOC_TYPES.includes(e.type) && !printLastDocMap[e.orderNumber]) {
+      printLastDocMap[e.orderNumber] = { doc: e.type, timestamp: e.timestamp, employee: e.employee };
     }
   }
   printCountsMap = { ...logCounts };
@@ -3909,14 +4150,25 @@ async function exportLogsXLSX() {
 // المستخدم يختار "Save as PDF" من الـ print dialog.
 // الجودة مثالية — الـ browser نفسه بيرسم الـ PDF.
 // اسم الملف المقترح بيتحدد من عنوان الـ iframe document.
-async function printViaIframe(invoiceHTML, orderCount) {
-  return new Promise((resolve) => {
-    const now = new Date(), pad = n => String(n).padStart(2, "0");
-    const suggestedName =
-      `${pad(now.getDate())}-${pad(now.getMonth()+1)}-${now.getFullYear()}` +
-      ` - ${pad(now.getHours())}.${pad(now.getMinutes())}` +
-      ` - ${orderCount}`;
+// ─── §JOB-TITLE — اسم مهمة الطباعة ───
+// صيغة **واحدة** للفاتورة والبوليصة (قرار أحمد 09-09-2026):
+//     `09-09-2026 - 11.51 - عدد 3 - بوسطة`
+// الاسم ده بيبان في اسم التاب وفي خانة اسم الملف لما الموظف يحفظ PDF،
+// والقناة في آخره لأن الموظف بيطبع من التلاتة في نفس الوردية — ومن غيرها
+// ملفين اتحفظوا في نفس الدقيقة بنفس العدد **مايتفرّقوش**.
+// ⚠️ الوقت **بتوقيت القاهرة محسوب** (`toCairo`) مش ساعة الجهاز — لابتوب
+//    بتوقيت غلط كان هيسمّي الملفات غلط في صمت، ودي أسماء بتتراجع بعدين.
+function printJobTitle(count, chan) {
+  const d = toCairo(new Date().toISOString()), pad = n => String(n).padStart(2, "0");
+  const chanName = CHANNELS[chan] ? CHANNELS[chan].short : "";
+  return `${pad(d.getUTCDate())}-${pad(d.getUTCMonth() + 1)}-${d.getUTCFullYear()}` +
+         ` - ${pad(d.getUTCHours())}.${pad(d.getUTCMinutes())}` +
+         ` - عدد ${count.toLocaleString("en-US")}` +
+         (chanName ? ` - ${chanName}` : "");
+}
 
+async function printViaIframe(invoiceHTML, suggestedName) {
+  return new Promise((resolve) => {
     const iframe = document.createElement("iframe");
     iframe.style.cssText = "position:fixed;top:-9999px;left:0;width:800px;height:1px;border:none;";
     document.body.appendChild(iframe);

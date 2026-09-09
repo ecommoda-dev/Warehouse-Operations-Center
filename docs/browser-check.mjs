@@ -11,6 +11,12 @@
 //
 // الفحص ده **مع** `docs/css-check.js` وفحص Step 9، مش بديل عنهم.
 //
+// ⚠️ **١١٦ بند من v1.18.0** (كان ١٠٤). الجداد: سؤال البوابة الواحد ·
+//    غياب `bostaUpdated` من الإقرار · **ترتيب** تاب البوليصة (حجز ← قفل
+//    عند البوابة ← حجز من ضغطة «اطبع» ← توجيه) · شارة «آخر طباعة:
+//    فاتورة/بوليصة» في الجدول وفي البوابة وبتحذيرها المشروط · اسم مهمة
+//    الطباعة جوّه ملف الـ PDF نفسه.
+//
 // ⚠️ فخّان في كتابة الاختبار نفسه، الاتنين كلّفوا وقت:
 //   ① `frame.evaluate()` على frame فيه PDF **بتعلّق للأبد** في هيدلس —
 //      التبليغ من جوّه الصفحة بـ `exposeFunction` بدلها.
@@ -30,8 +36,31 @@ const srv = http.createServer((req,res)=>{
 await new Promise(r=>srv.listen(0, r));
 const PORT = srv.address().port;   // منفذ عشوائي — مفيش تصادم مع تشغيل قديم عالق
 
-// PDF بعدد صفحات محدد — countPdfPages بيدوّر على /Type /Page اللي مش /Pages
-const mkPdf = (n) => Buffer.from('%PDF-1.4\n'+'/Type /Page \n'.repeat(n)+'/Type /Pages \ntrailer\n%%EOF').toString('base64');
+// 🔴 **PDF صالح فعلاً بجدول xref** — مش نص شبيه. `pdfWithTitle` بتلحق
+//    خانة `/Title` في آخر الملف، وأي ملف مش مفهوم بترجّعه **زي ما هو**
+//    (تدهور آمن). يعني ملف وهمي مكسور كان هيخلّي بند العنوان يعدّي
+//    **وهو مش بيتنفّذ أصلاً** — نفس درس `includes()` في فحص الباركود.
+const mkPdf = () => {
+  const objs = ['<< /Type /Catalog /Pages 2 0 R >>',
+                '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+                '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 288 96] >>'];
+  let body = '%PDF-1.4\n'; const offs = [];
+  objs.forEach((o, i) => { offs.push(body.length); body += `${i+1} 0 obj\n${o}\nendobj\n`; });
+  const xref = body.length;
+  body += `xref\n0 ${objs.length+1}\n0000000000 65535 f \n` +
+          offs.map(o => String(o).padStart(10,'0') + ' 00000 n \n').join('');
+  body += `trailer\n<< /Size ${objs.length+1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+  return Buffer.from(body, 'latin1').toString('base64');
+};
+
+// §LAST-DOC — سجل D1 الوهمي. الحالتان دول **هما** اللي البند اتكتب عشانهم:
+// أوردر اتطبعتله فاتورة وبعدين اتحوّل لبوسطة، وأوردر اتطبعتله بوليصة
+// وبعدين رجع لقناة الفاتورة.
+const LOGS = [
+  { orderNumber:'53401', type:'S1',  timestamp:'2026-09-05T10:00:00Z', employee:'Ahmed_Ibraheem' },
+  { orderNumber:'53405', type:'AWB', timestamp:'2026-09-05T11:00:00Z', employee:'Ahmed_Ibraheem' },
+  { orderNumber:'53400', type:'AWB', timestamp:'2026-09-05T12:00:00Z', employee:'Ahmed_Ibraheem' },
+];
 
 const ORDERS = [
   {id:'gid://shopify/Order/1', orderId:'1', name:'#53400', createdAt:'2026-09-06T08:00:00Z', customer:'أحمد', type:'S1', status:'Confirmed',        zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:1200, totalOriginal:1200, printingTimeS1:null, packingTimeS1:null, tags:['Bosta_Uploaded_S1'], isPrinted:false},
@@ -77,7 +106,7 @@ await page.addInitScript(() => {
     return {
       closed: false,
       focus() {},
-      close() { this.closed = true; },
+      close() { this.closed = true; window.__hit && window.__hit('close'); },
       document: { write() {}, close() {} },
       location: { replace: (u) => { window.__hit && window.__hit('nav'); window.__awbNav.push(u); } },
     };
@@ -109,7 +138,7 @@ await page.route('**order-printer-worker.ecommoda-dev.workers.dev/**', async (ro
       printingTimeS1:'2026-09-05T09:00:00Z', packingTimeS1:null, printingTimeS2:null, packingTimeS2:null,
       zone:'Other_Regions', zoneKnown:true, channel:'awb',
       total:1000, totalOriginal:1000, tags:['Printed(S1)'], isPrinted:true } }));
-  if (url.pathname === '/logs') return route.fulfill(J({ok:true, entries:[], count:0, total:0, cap:5000, truncated:false}));
+  if (url.pathname === '/logs') return route.fulfill(J({ok:true, entries:LOGS, count:LOGS.length, total:LOGS.length, cap:5000, truncated:false}));
   if (action === 'bosta_lookup') {
     const mk = (o) => {
       if (!o) return { id:'gid://shopify/Order/10', name:'#53410', found:true, ok:true, reason:null, codMismatch:null,
@@ -124,7 +153,7 @@ await page.route('**order-printer-worker.ecommoda-dev.workers.dev/**', async (ro
   if (action === 'bosta_awb') {
     const n = (body.deliveryIds||[]).length;
     return route.fulfill(J({ ok:true, status:'success', mode:n>1?'mass':'single', requested:n, pages:n,
-      pdfBase64: mkPdf(n), pdfBytes: 1000*n, pdfLooksValid:true, latestAWBPrintDate:null, warnings:[] }));
+      pdfBase64: mkPdf(), pdfBytes: 1000*n, pdfLooksValid:true, latestAWBPrintDate:null, warnings:[] }));
   }
   // ⚠️ الـ Worker الوهمي **بيفضل يرجّع الأوردر المطبوع في `/orders`** —
   //    ده بالظبط سلوك فهرس بحث شوبيفاي بعد الطباعة على طول (مش فوري).
@@ -283,6 +312,24 @@ check('🔴 البادج == عدد صفوف الجدول', await n('awb') === St
 check('🔴 البادج == عدّاد النتائج', await n('awb') === (await page.textContent('#filteredCount-print')).trim(),
       `badge=${await n('awb')} results=${await page.textContent('#filteredCount-print')}`);
 
+// ⑤-ب §LAST-DOC — «آخر طباعة: فاتورة / بوليصة بوسطة» (v1.18.0)
+// 🔴 الشارة **بتحذّر بس لما النوع يخالف** قناة الأوردر دلوقتي: #53401 آخر
+//    طباعة له فاتورة وهو دلوقتي بوسطة (⚠️ كهرماني)، و#53400 آخر طباعة له
+//    بوليصة وهو بوسطة برضه (رمادي بلا تحذير). تحذير على الاتنين = لون بلا
+//    معنى، وغياب التحذير على الأول = الموظف بيفتكر إن الورقة اللي عنده
+//    من نفس النوع.
+{
+  const rowOf = async (name) => await page.evaluate((nm) =>
+    [...document.querySelectorAll('#printTableBody tr')].find(r => r.textContent.includes(nm))?.outerHTML || '', name);
+  const r01 = await rowOf('#53401'), r00 = await rowOf('#53400'), r02 = await rowOf('#53402');
+  check('🔴 #53401 عليه شارة «آخر طباعة: فاتورة» بتحذير',
+        r01.includes('doc-mismatch') && r01.includes('آخر طباعة: فاتورة'), r01.slice(0,300));
+  check('🔴 #53400 عليه «آخر طباعة: بوليصة بوسطة» **بلا** تحذير',
+        r00.includes('آخر طباعة: بوليصة بوسطة') && !r00.includes('doc-mismatch'), r00.slice(0,300));
+  check('🔴 #53402 (مالوش سجل طباعة) مفيهوش شارة خالص',
+        !r02.includes('doc-chip'), r02.slice(0,300));
+}
+
 // ⑥ التبديل بيمسح التحديد
 await page.click('#selectAllVisibleBtn'); await page.waitForTimeout(200);
 check('اتحدد 3 أوردرات بوسطة', (await page.textContent('#pbSelCount')).trim() === '3', await page.textContent('#pbSelCount'));
@@ -303,8 +350,15 @@ check('#53400 في البوابة بفرق تحصيل', gate.includes('#53400') 
 check('#53401 في البوابة كفاتورة لاغية', gate.includes('#53401'));
 check('#53402 (مش على بوسطة) مش في البوابة', !gate.includes('#53402'));
 const boxes = await page.$$('#pgBody [data-gate-need]');
-check('عدد مربعات الإقرار = 4 (أوردرين × سؤالين)', boxes.length === 4, String(boxes.length));
-check('السؤال التاني بتاع بوسطة موجود', gate.includes('عدّلت الشحنة على بوسطة'));
+// 🔴 **سؤال واحد لكل أوردر** من v1.18.0 — «عدّلت الشحنة على بوسطة» اتشال
+//    بقرار. البند بيقفل على العدد **والنص** مع بعض: عدد لوحده كان هيعدّي
+//    لو السؤالين اتبدلوا بواحد تاني.
+check('🔴 عدد مربعات الإقرار = 2 (أوردرين × سؤال واحد)', boxes.length === 2, String(boxes.length));
+check('🔴 سؤال «قطعت الورقة القديمة» موجود', gate.includes('قطعت الورقة القديمة'));
+check('🔴 سؤال «عدّلت الشحنة على بوسطة» اتشال', !gate.includes('عدّلت الشحنة على بوسطة'));
+// §LAST-DOC — الشارة جوّه البوابة: #53401 آخر طباعة له **فاتورة** وهو
+// دلوقتي في قناة بوسطة، يعني الورقة اللي في المخزن من نوع تاني خالص.
+check('🔴 شارة «آخر طباعة: فاتورة» في البوابة', gate.includes('آخر طباعة: فاتورة'), '');
 check('«اطبع الكل» متعطّل قبل الإقرار', await page.isDisabled('#pgPrintAllBtn'));
 check('«إلغاء» شغّال دايمًا', !(await page.isDisabled('#pgCancelBtn')));
 
@@ -327,7 +381,10 @@ check('/track اتنادى مرتين', tracks.length === 2, String(tracks.lengt
 check('/track بعت type=S1 (الماكينة)', tracks.every(t => t.body.type === 'S1'), JSON.stringify(tracks.map(t=>t.body.type)));
 check('/track بعت doc=AWB (المستند)',  tracks.every(t => t.body.doc  === 'AWB'), JSON.stringify(tracks.map(t=>t.body.doc)));
 check('/track بعت بيانات الشحنة',      tracks.every(t => t.body.bosta?.trackingNumber), '');
-check('الإقرار فيه bostaUpdated',      tracks.every(t => t.body.guard?.bostaUpdated === true), JSON.stringify(tracks.map(t=>t.body.guard)));
+// 🔴 السؤال اتشال ⇒ **الإقرار مايتبعتش**. إقرار مكتوب في D1 عن سؤال
+//    محدش عرضه على الموظف = كذب في السجل، وده أسوأ من غياب المفتاح.
+check('🔴 الإقرار مافيهوش bostaUpdated (السؤال اتشال)',
+      tracks.every(t => t.body.guard?.bostaUpdated === undefined), JSON.stringify(tracks.map(t=>t.body.guard)));
 check('الإقرار فيه cutConfirmed',      tracks.every(t => t.body.guard?.cutConfirmed === true), '');
 check('مفيش أي نداء /invoice في مسار بوسطة', !calls.some(c => c.path === '/invoice'));
 
@@ -342,11 +399,47 @@ check('شارة البوليصة ظاهرة', res.includes('بوليصة'));
 check('🔴 لوحة المعاينة القديمة اتشالت', (await page.$$('#awbPanel')).length === 0);
 check('🔴 التاب اتحجز عند الضغطة (قبل نداءات بوسطة)', printHits.includes('preopen'), JSON.stringify(printHits));
 check('🔴 التاب اتوجّه للبوليصة', printHits.includes('nav'), JSON.stringify(printHits));
+// 🔴 §AWB-TAB (v1.18.0) — **الترتيب هو البند**: التاب المحجوز بيتقفل
+//    (`close`) قبل ما البوابة تظهر، وبيترجع يتحجز (`preopen`) من ضغطة
+//    «اطبع» جوّاها، وبعدين بيتوجّه (`nav`). من غير القفل ده، شاشة
+//    «🚚 جاري تحضير البوليصة…» بتقعد في تاب جنب الموظف **وهو لسه ما
+//    أقرّش بقطع الورقة** — وبتفضل قاعدة طول ما النافذة مفتوحة.
+check('🔴 الترتيب: حجز ← قفل عند البوابة ← حجز من ضغطة «اطبع» ← توجيه',
+      JSON.stringify(printHits.filter(h => h !== 'print')) === JSON.stringify(['preopen','close','preopen','nav']),
+      JSON.stringify(printHits));
 check('🔴 التوجيه لملف blob مش لحاجة تانية',
       await page.evaluate(() => (window.__awbNav||[]).every(u => String(u).startsWith('blob:'))),
       await page.evaluate(() => JSON.stringify(window.__awbNav)));
 check('🔴 الشريط الاحتياطي ما ظهرش (التاب اتفتح فعلاً)', !(await page.isVisible('#awbFallback')));
 check('🔴 مفيش iframe معاينة للبوليصة', (await page.$$('#awbFrame')).length === 0);
+
+// 🔴 §JOB-TITLE — اسم التاب جوّه ملف الـ PDF نفسه (`/Title` بإلحاق).
+//    البند بيقرا **البلوب اللي اتوجّه له التاب فعلاً** — مش الدالة لوحدها.
+{
+  const info = await page.evaluate(async () => {
+    const u = (window.__awbNav || []).pop();
+    if (!u) return null;
+    const b = new Uint8Array(await (await fetch(u)).arrayBuffer());
+    let raw = ''; for (const c of b) raw += String.fromCharCode(c);
+    const m = raw.match(/\/Title <([0-9A-F]+)>/);
+    let title = null;
+    if (m) { title = ''; for (let i = 4; i < m[1].length; i += 4) title += String.fromCharCode(parseInt(m[1].slice(i, i+4), 16)); }
+    return { title, startsPdf: raw.startsWith('%PDF-'), eofs: (raw.match(/%%EOF/g) || []).length };
+  });
+  check('🔴 الملف لسه PDF سليم ومحتفظ بـ %%EOF الأصلي',
+        !!info && info.startsPdf && info.eofs === 2, JSON.stringify(info));
+  // الدفعة اتطبع فيها أوردرين (#53402 مش على بوسطة فاتشال قبل الطباعة).
+  check('🔴 عنوان الملف = «يوم-شهر-سنة - ساعة.دقيقة - عدد 2 - بوسطة»',
+        !!info && /^\d{2}-\d{2}-\d{4} - \d{2}\.\d{2} - عدد 2 - بوسطة$/.test(info.title || ''),
+        JSON.stringify(info));
+}
+// نفس الصيغة بالحرف لقنوات الفاتورة — الاسم واحد للاتنين بقرار.
+{
+  const t = await page.evaluate(() => [printJobTitle(21,'invoice'), printJobTitle(4,'showroom'), printJobTitle(3,'awb')]);
+  check('🔴 اسم مهمة الفاتورة بينتهي بـ «عدد 21 - مناديب»', /عدد 21 - مناديب$/.test(t[0]), t[0]);
+  check('🔴 وشو روم بينتهي بـ «عدد 4 - شو روم»',           /عدد 4 - شو روم$/.test(t[1]),  t[1]);
+  check('🔴 وبوسطة بينتهي بـ «عدد 3 - بوسطة»',             /عدد 3 - بوسطة$/.test(t[2]),   t[2]);
+}
 
 
 // ⑩ 🔴 §JUST-PRINTED — الأوردر المطبوع بيختفي من الطابور **فورًا**، رغم إن
@@ -393,6 +486,14 @@ await page.click('#trackResultOverlay .btn-primary'); await page.waitForTimeout(
 await page.click('#chanBtn-showroom'); await page.waitForTimeout(250);
 check('قناة شو روم فيها صف واحد', (await page.$$('#printTableBody tr')).length === 1);
 check('عمود القناة بيقول شو روم', (await page.textContent('#printTableBody')).includes('شو روم'));
+// §LAST-DOC — والاتجاه التاني: #53405 آخر طباعة له **بوليصة** وهو دلوقتي
+// في قناة فاتورة. ⚠️ والمقارنة على **المستند** مش على اسم القناة — «شو
+// روم» و«مناديب» الاتنين بيطبعوا فاتورة، فالانتقال بينهم مش تحذير.
+{
+  const html = await page.innerHTML('#printTableBody');
+  check('🔴 #53405 عليه «آخر طباعة: بوليصة بوسطة» بتحذير',
+        html.includes('doc-mismatch') && html.includes('آخر طباعة: بوليصة بوسطة'), html.slice(0,300));
+}
 
 
 console.log('\n── ③ إعادة طباعة أوردر بوسطة خرج من الطابور ──');
