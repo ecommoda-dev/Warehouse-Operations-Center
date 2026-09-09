@@ -297,11 +297,15 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
 .bc-pick-qty{flex-shrink:0;font-family:var(--font-mono);font-size:12px;font-weight:700;
   color:var(--text-secondary);direction:ltr;white-space:nowrap}
 
-/* 🔴 شريط التحديد المتعدد — ثابت تحت القايمة (`sticky`) عشان يفضل ظاهر
-   وانت بتنزّل في ٥٠ نتيجة. من غير `sticky` الموظف بيحدّد تلاتة وينزل
-   يدوّر على زرار الإضافة. */
-.sku-ac-bar{position:sticky;bottom:-6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
-  margin-top:6px;padding:8px;border-top:1px solid var(--border);background:var(--surface)}
+/* 🔴 شريط التحديد المتعدد — **فوق القايمة، ملزوق تحت مربع الإدخال**
+   (v1.19.0 · قرار أحمد 09-09-2026). كان تحت النتايج، والنتيجة إن «إضافة
+   المحدد» بيبقى في **آخر** قايمة ممكن تبقى ٥٠ صف: الموظف بيحدّد وهو فوق
+   وبيدوّر على الزرار تحت. دلوقتي الزرار ومربع «تحديد الكل» في نفس مستوى
+   عين الموظف اللي لسه كاتب في المربع.
+   ⚠️ **`sticky` لسه شرط** — بس من فوق: من غيرها الشريط بيروح مع التمرير
+      في النتايج، وهو بالظبط اللي القرار اتعمل عشان يمنعه. */
+.sku-ac-bar{position:sticky;top:-6px;z-index:1;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  margin-bottom:6px;padding:8px;border-bottom:1px solid var(--border);background:var(--surface)}
 .sku-ac-bar .btn-green{flex:1;min-width:150px}
 .sku-ac-all{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;
   color:var(--text-secondary);cursor:pointer;white-space:nowrap}
@@ -815,7 +819,19 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.17.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.19.0</span>
+          <span class="cl-ver-date">09-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>ترتيب الجدول بقى الأحدث فوق</b> — الأوردر (أو الصنف) اللي لسه اتضاف بيبقى <b>أول</b> مجموعة، مش آخر واحدة. قبل كده بعد رابع أوردر كان لازم تنزّل عشان تتأكد إن اللي في إيدك اتضاف. ⚠️ و<b>ورق الطباعة بنفس الترتيب</b> — الشاشة والطابعة مصدرهم واحد.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>«تحديد الكل» و«إضافة المحدد» بقوا فوق نتايج البحث</b> — ملزوقين تحت مربع الـ SKU بدل آخر القايمة. كنت بتحدّد فوق وتنزّل تدوّر على الزرار في آخر ٥٠ نتيجة.</span></li>
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>🔴 <b>الضغط على ✕ ما بقاش يرمي الشاشة لفوق.</b> الاستبعاد كان بيرجّع الفوكس لمربع الإدخال، فالصفحة بتتزحلق لفوق والصف اللي لسه استبعدته بيختفي من قدامك — وده كان بيتكرّر مع كل ضغطة.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge">v1.17.0</span>
           <span class="cl-ver-date">08-09-2026</span>
         </div>
         <ul class="cl-items">
@@ -1088,16 +1104,34 @@ function bcTotalCopies()   { return bcOrders.reduce((s, o) => s + o.rows.reduce(
 //    «بادج ٦٦ فوق جدول فيه ٦» في أداة الطباعة (v1.11.1).
 function bcTotalOrders()   { return bcOrders.filter(o => !o.isSku).length; }
 
+// ─── §NEWEST-FIRST — آخر إدخال فوق (v1.19.0 · قرار أحمد 09-09-2026) ───
+//
+// 🔴 **المجموعة اللي وصلها آخر إدخال بتبقى أول واحدة في الجدول.** لحد
+//    v1.18.0 كان الترتيب ترتيب الإضافة (الأقدم فوق)، والأوردر اللي الموظف
+//    **لسه سكنه** بيتحط في آخر الجدول — يعني بعد رابع أوردر لازم ينزّل عشان
+//    يتأكد إن اللي في إيده اتضاف فعلاً. والأصناف اللي بيراجعها ويعدّل عددها
+//    هي **دايمًا** بتاعة آخر سكانة.
+// 🔴 **النقل بيحصل في `bcOrders` نفسه — مش في الرسم.** المصفوفة دي هي
+//    ترتيب العرض **وترتيب الطباعة** مع بعض (§PRINT-JS)، وترتيب الطباعة بقى
+//    **الرابط الوحيد** بين الليبل وأوردره من v1.15.0 (§LABEL-2LINE). ترتيب
+//    عرض مقلوب في الرسم لوحده كان معناه إن الورق يطلع بترتيب **غير** اللي
+//    الموظف شايفه — وده أسوأ من الترتيب القديم بمراحل. ⛔ ممنوع ترتيب تاني
+//    في `bcRenderBody` أو في `bcPrint`.
+// ⚠️ **ومجموعة «بدون أوردر» بقت بتتحرّك زي أي مجموعة** — البند القديم
+//    («مكانها آخر الكومة دايمًا») **اتلغى**: القاعدة بقت «الأحدث فوق»
+//    وواحدة تطبّق على الكل، واستثناء لمجموعة واحدة كان هيخلّي صنف اتضاف
+//    دلوقتي يقع تحت أوردر اتسكن من ٥ دقايق.
+function bcBumpToTop(i) {
+  if (i > 0) bcOrders.unshift(bcOrders.splice(i, 1)[0]);
+  return i < 0 ? -1 : 0;
+}
+
 function bcSkuGroup(create) {
-  let i = bcFindOrder(BC_SKU_KEY);
-  if (i < 0 && create) {
-    // المجموعة بتتحط **في الآخر دايمًا** — الترتيب على الشاشة هو ترتيب
-    // الطباعة بالحرف (§PRINT-JS)، والأصناف السايبة مكانها آخر الكومة.
-    bcOrders.push({ key: BC_SKU_KEY, name: null, orderId: null, isSku: true,
-                    itemsTruncated: false, itemsCap: 0, source: 'sku', tracking: null, rows: [] });
-    i = bcOrders.length - 1;
-  }
-  return i;
+  const i = bcFindOrder(BC_SKU_KEY);
+  if (i >= 0 || !create) return i;
+  bcOrders.unshift({ key: BC_SKU_KEY, name: null, orderId: null, isSku: true,
+                     itemsTruncated: false, itemsCap: 0, source: 'sku', tracking: null, rows: [] });
+  return 0;
 }
 
 function bcSetBusy(on) {
@@ -1178,9 +1212,8 @@ async function bcAddOrder(raw, opts = {}) {
       return false;
     }
 
-    // ⚠️ الأوردر بيتحط **قبل** مجموعة «بدون أوردر» لو هي موجودة — دي
-    //    آخر مجموعة دايمًا (`bcSkuGroup`)، والترتيب على الشاشة هو ترتيب
-    //    الطباعة بالحرف.
+    // 🔴 الأوردر الجديد بيتحط **أول القايمة** — آخر إدخال فوق (§NEWEST-FIRST).
+    //    والترتيب ده هو ترتيب الطباعة بالحرف كمان.
     // ⚠️ `financialStatus`/`fulfillmentStatus` **مش بيتخزّنوا** من v1.15.0
     //    — البادجات بتاعتهم اتشالت، وحقل متخزّن ومحدش بيقراه بيوهم اللي
     //    بعدنا إن فيه عرض بيعتمد عليه.
@@ -1210,9 +1243,7 @@ async function bcAddOrder(raw, opts = {}) {
         copies:       it.barcode ? it.quantity : 0,
       })),
     };
-    const skuAt = bcFindOrder(BC_SKU_KEY);
-    if (skuAt >= 0) bcOrders.splice(skuAt, 0, entry);
-    else            bcOrders.push(entry);
+    bcOrders.unshift(entry);
 
     // الفشل القديم لنفس المدخل بيتشال لما يتصلّح
     bcFailed = bcFailed.filter(f => f.label !== shown);
@@ -1364,8 +1395,9 @@ function bcAddSkuVariant(v, opts = {}) {
   }
   const avail  = (typeof v.available === 'number') ? v.available : null;
   const copies = (avail && avail > 0) ? avail : 1;
-  const g = bcOrders[bcSkuGroup(true)];
-  g.rows.push({
+  // المجموعة بتطلع أول القايمة، والصنف الجديد أول صف فيها — §NEWEST-FIRST.
+  const g = bcOrders[bcBumpToTop(bcSkuGroup(true))];
+  g.rows.unshift({
     title:        v.title || '',
     variantTitle: v.variantTitle || null,
     sku:          v.sku || null,
@@ -1480,7 +1512,9 @@ function bcAcOpen(term, list, res = {}) {
       </button>
     </div>` : '';
 
-  bcAcBox().innerHTML = note + `<div class="bc-pick-list">${rows}</div>` + bar;
+  // 🔴 **الشريط الأول** (v1.19.0) — ملزوق تحت المربع اللي الموظف بيكتب
+  //    فيه، مش في آخر ٥٠ صف. التفاصيل جنب `.sku-ac-bar` في §STYLES.
+  bcAcBox().innerHTML = bar + note + `<div class="bc-pick-list">${rows}</div>`;
   bcAcSetOpen(true);
   bcAcSyncBar();
 }
@@ -1535,7 +1569,12 @@ function bcAcAddSelected() {
   const picked = [...bcAcSel].sort((a, b) => a - b).map(i => bcAcList[i]).filter(Boolean);
   if (!picked.length) return;
   let added = 0;
-  for (const v of picked) if (bcAddSkuVariant(v, { quiet: true, keepOpen: true })) added++;
+  // ⚠️ **الإضافة من آخر واحد للأول** — كل صنف بيتحط فوق (§NEWEST-FIRST)،
+  //    فالعكس هنا هو اللي بيخلّي الدفعة تظهر في الجدول **بنفس ترتيب
+  //    القايمة** اللي الموظف حدّد منها. من غيره الأربعة بيطلعوا مقلوبين.
+  for (const v of [...picked].reverse()) {
+    if (bcAddSkuVariant(v, { quiet: true, keepOpen: true })) added++;
+  }
   bcAcClose();
   skuTermInput.value = '';
   focusEntryInput('sku');
@@ -1587,6 +1626,14 @@ async function bcAcSuggest(term) {
 //    هيدهس التعديل ده في صمت.
 // ⚠️ **المجموعة مابتتشالش أبدًا دلوقتي** — الصفوف بتفضل معروضة، فبادج
 //    «أوردر» و«صنف» بيفضلوا بيوصفوا المعروض في الجدول بالحرف زي ما هما.
+// 🔴 **ممنوع `focusEntryInput()` هنا** (v1.19.0 · قرار أحمد 09-09-2026).
+//    الضغطة دي بتحصل **على صف في الجدول**، والجدول تحت المداخل بمسافة —
+//    فنقل الفوكس لمربع الإدخال كان بيرمي الصفحة **لفوق** تحت إيد الموظف،
+//    والصف اللي لسه مستبعده بيختفي من الشاشة. الموظف بيستبعد كذا صنف ورا
+//    بعض، فده كان بيتكرّر مع كل ضغطة.
+//    ⚠️ **مالوش أثر على السكانر** — الحقل بيفضل فوكسه زي ما هو، والضغطة
+//       اللي بتسحبه هي ضغطة الماوس على الزرار نفسه (سلوك المتصفح الطبيعي)
+//       والموظف اللي بيسكن مش ماسك الماوس أصلاً.
 function bcToggleRow(oi, ri) {
   const r = bcOrders[oi]?.rows[ri];
   if (!r) return;
@@ -1599,7 +1646,6 @@ function bcToggleRow(oi, ri) {
     r.copies       = 0;
   }
   bcRenderAll();
-  focusEntryInput();
 }
 function bcDismissFail(i) { bcFailed.splice(i, 1); bcRenderAll(); }
 function bcClearAll() {
@@ -2108,6 +2154,10 @@ function bcPrint() {
   //    بيطلع من الطابعة مكوّم، والموظف بيقسّمه بإيده على الأوردرات —
   //    وبقى **مفيش رقم أوردر على الليبل نفسه** من v1.15.0، يعني الترتيب
   //    ده بقى **الرابط الوحيد** بين الليبل وأوردره. ⛔ ممنوع يتغيّر.
+  //    ⚠️ **والترتيب ده بقى الأحدث الأول من v1.19.0** (§NEWEST-FIRST) —
+  //       بس الشرط اللي البند اتكتب عشانه ما اتكسرش: الحلقة دي بتقرا من
+  //       `bcOrders` بالحرف زي `bcRenderBody`، فالورق والشاشة **مصدرهم
+  //       واحد**. ⛔ ممنوع ترتيب محلي هنا ولا هناك.
   const labels = [];
   for (const o of bcOrders) {
     for (const r of o.rows) {
