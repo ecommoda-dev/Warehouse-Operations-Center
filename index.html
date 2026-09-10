@@ -229,6 +229,30 @@
         <div class="woc-card-name">باركود SKU</div>
       </a>
     </div>
+
+    <!-- 🔴 **صف تاني جوّه نفس القسم** (قرار أحمد 10-09-2026) — مش `.woc-tools-grid`
+         واحدة بأربع مربعات. قرار 08-09-2026 قصر الصف على مربعين عشان الموظف
+         المستعجل ما يقراش أربع مربعات متشابهة كل مرة عشان يلاقي واحد؛ صف تاني
+         بيحافظ على القرار ده بالحرف والقسم بيفضل واحد.
+         ⚠️ `auto-fit` في الشبكة معناها إن الصف بيتمدّد لوحده على الشاشات
+            العريضة — الفصل هنا **دلالي** (زوج أوردر · زوج شحنة)، والحفاظ
+            عليه بصريًا مسؤولية الشبكة مش HTML. -->
+    <div class="woc-tools-grid" style="margin-top:10px;">
+      <!-- 🔴 ثيم أخضر (`tool-ship`) وأحمر (`tool-danger`) — المربعان بيعملوا
+           **عكس بعض**: واحد بيقفل الشحنة على `Shipped` وبيعمل فلفلمنت،
+           والتاني **بيلغي الأوردر** ويرجّع المخزون. اللون تفرقة قبل القراءة
+           مش تزويق، والموظف بيدوس عليهم في محطتين مختلفتين. -->
+      <a class="woc-tool tool-ship" href="shipped.html">
+        <span class="woc-card-ico">📦</span>
+        <div class="woc-card-name">سكانر الشحن — تسليم لبوسطة</div>
+        <div class="woc-card-desc">سكان تراكينج · S1/S2 → Shipped + فلفلمنت</div>
+      </a>
+      <a class="woc-tool tool-danger" href="returned.html">
+        <span class="woc-card-ico">↩️</span>
+        <div class="woc-card-name">سكانر المرتجعات — استلام راجع</div>
+        <div class="woc-card-desc">سكان تراكينج · إلغاء الأوردر أو استرجاع المخزون</div>
+      </a>
+    </div>
   </div>
 
   <!-- ══ «أخرى» = مرجع بيتقرا، مش شغل بيتعمل ══
@@ -263,8 +287,11 @@
         <summary>الأداة بتعمل إيه</summary>
         <div class="about-sec-body">
           <p><b>هب واحد لمحطة المخزن.</b> الموظف بيدخل مرة واحدة، وبعدين بيتنقّل بين
-             الطباعة والتغليف وحذف المنتج ورحلة الأوردر من غير ما يدخل تاني ومن غير
-             ما يفتح تبويبات متفرقة.</p>
+             الطباعة والتغليف وحذف المنتج وسكانر الشحن وسكانر المرتجعات ورحلة الأوردر
+             من غير ما يدخل تاني ومن غير ما يفتح تبويبات متفرقة.</p>
+          <p>⚠️ <b>الجدول تحت بيعرض الـ Workers اللي الشاشة دي بتناديهم</b> (طوابير
+             الطباعة والتغليف). سكانرا بوسطة ليهم Workers خاصين بيهم — كل صفحة
+             بتفحص نسخة الـ Worker بتاعها لوحدها، وشاشة «عن الأداة» جوّاها بتعرضه.</p>
           <h4>الصفحات والـ Workers</h4>
           <div id="aboutWorkers"></div>
           <h4>الأعداد في الشاشة الرئيسية</h4>
@@ -310,8 +337,8 @@
         <summary>السر والإعدادات</summary>
         <div class="about-sec-body">
           <ul>
-            <li>سر واحد لمجموعة <code>warehouse_ops</code> — نفس القيمة على <b>الأربع Workers</b>
-                (الطباعة · التغليف · حذف منتج · باركود SKU).</li>
+            <li>سر واحد لمجموعة <code>warehouse_ops</code> — نفس القيمة على <b>الست Workers</b>
+                (الطباعة · التغليف · حذف منتج · باركود SKU · سكانر الشحن · سكانر المرتجعات).</li>
             <li>مفتاح التخزين <code>warehouse_ops_worker_secret</code>، وهو <b>الحاجة
                 الوحيدة</b> في التخزين المحلي (<code>warehouse_ops_worker_secret</code>) في الهب كله.</li>
             <li>روابط الـ Workers <b>ثوابت في الكود</b> — مش حقول إعدادات (Standards #28).</li>
@@ -329,7 +356,21 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.19.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.22.0</span>
+          <span class="cl-ver-date">10-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🔴 <b>سكانرا بوسطة دخلوا الهب</b> — <code>shipped.html</code> (تسليم لبوسطة) و<code>returned.html</code> (استلام راجع). الموظف بيدخل <b>مرة واحدة</b> وبيتنقّل بينهم وبين الطباعة والتغليف من غير ما يدخل تاني. مربعاتهم في قسم «أدوات» في <b>صف تاني</b> — أخضر للشحن وأحمر للمرتجعات، لأنهم بيعملوا عكس بعض.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>السر بقى على ست Workers</b> بدل أربعة — نفس مفتاح مجموعة <code>warehouse_ops</code> بالظبط، من غير أي حقل جديد في الإعدادات.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>مهلة ٩٠ ثانية على كل نداء Worker</b> في الـ shell (<code>WOC_API_TIMEOUT_MS</code>). من غيرها الـ Worker الواقف كان بيسيب الزرار معطّل والشاشة بتلف <b>للأبد</b>، والموظف بيعمل refresh وسط عملية كتابة.</span></li>
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>🔴 <b><code>playBeep('scan')</code> كانت بتطلّع نغمة الفشل.</b> الـ shell كان فيه فرعان بس (<code>warn</code> · <code>success</code>) والـ <code>else</code> بيرد على أي قيمة تانية بالنغمة النازلة — يعني الموظف اللي بيسكن ٨٢ ملصق وراه كان بيسمع «فشل» ٨٢ مرة على شغل تمام، <b>وصفر خطأ في الكونسول</b>. بقى فيه فرع صريح لكل نغمة.</span></li>
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span><b>الفحص الذاتي 🩺 بقى بيفهم شكل تالت لـ <code>checks</code></b> — كائن بندوده كائنات جوّاها <code>ok</code> (سكانر المرتجعات). قبل كده الفحص الفاشل كان بيتعرض ℹ️ «معلومة» بجسم JSON خام، يعني صلاحية ناقصة بتبان زي أي سطر عادي. وبقى بيعرض سطر «إزاي تصلّحها» (<code>hint</code>) تحت الفحص الفاشل بس.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.19.0</span>
           <span class="cl-ver-date">09-09-2026</span>
         </div>
         <ul class="cl-items">

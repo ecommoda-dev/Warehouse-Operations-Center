@@ -54,6 +54,12 @@
   --purple:         #7c3aed;
   --purple-light:   #f5f3ff;
   --purple-border:  #c4b5fd;
+  /* أزرق مستقل عن الـ accent — بادجات الحالة في سكانرات بوسطة بتستخدمه
+     كلون **معنى** (S1 · Confirmed · Ready)، مش كلون تفاعل. لو اتربط
+     بـ `--accent` أي تغيير في لون التفاعل كان هيغيّر معنى البادج. */
+  --blue:           #2563eb;
+  --blue-light:     #eff6ff;
+  --blue-border:    #bfdbfe;
   --orange:         #ea580c;
   --orange-light:   #fff7ed;
   --orange-border:  #fed7aa;
@@ -89,6 +95,7 @@
   --radius:         12px;
   --radius-sm:      8px;
   --shadow:         0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:      0 4px 12px rgba(0,0,0,.12),0 2px 4px rgba(0,0,0,.06);
   /* Tier L — الأداة فيها جدول سجل بأعمدة كتير + شاشة فحص بعمودين */
   /* Tier L — الافتراضي للهب (جداول كثيفة في الطباعة والتغليف).
      `remove.html` و`journey.html` بينزّلوا Tier M (1200px) في ستايلهم. */
@@ -205,6 +212,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .diag-box{max-height:200px;overflow-y:auto;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 11px;font-size:12px;line-height:1.7}
 .diag-box:empty{display:none}
 .diag-line .diag-detail{color:var(--text-secondary);word-break:break-word}
+.diag-line .diag-hint{color:var(--amber-dark);font-size:11px;padding-inline-start:4px;margin-top:2px}
 
 /* ── Modal Shell (About / Changelog / أي نافذة طويلة) ── */
 .eco-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}
@@ -326,6 +334,20 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .woc-tool.tool-danger:focus-visible{border-color:var(--red);box-shadow:0 0 0 3px var(--red-border)}
 .woc-tool.tool-danger .woc-card-name{color:var(--red-dark)}
 .woc-tool.tool-danger .woc-card-ico{background:var(--surface);border-color:var(--red-border)}
+
+/* 🔴 `.tool-ship` (أخضر) — مربع **سكانر الشحن** بس (قرار أحمد 10-09-2026).
+   المربعان جنب بعض في نفس الصف وبيعملوا **عكس بعض**: واحد بيقفل الشحنة
+   على `Shipped` وبيعمل فلفلمنت، والتاني **بيلغي الأوردر** ويرجّع المخزون.
+   والموظف بيدوس عليهم بسرعة في محطتين مختلفتين. اللون هنا **تفرقة قبل
+   القراءة** مش تزويق — والأحمر لوحده ما كانش هيكفي، لأن مربع رمادي جنب
+   مربع أحمر بيتقري «العادي» مش «الخروج».
+   ⛔ ممنوع يتحط على أي مربع تاني: الأخضر هنا معناه «الفعل التقدّمي في
+      الزوج ده»، مش «مربع لطيف». مربع تالت أخضر بيلغي المعنى ده. */
+.woc-tool.tool-ship{border-color:var(--green-border);background:var(--green-light)}
+.woc-tool.tool-ship:hover{border-color:var(--green);box-shadow:0 6px 18px rgba(22,163,74,.14)}
+.woc-tool.tool-ship:focus-visible{border-color:var(--green);box-shadow:0 0 0 3px var(--green-border)}
+.woc-tool.tool-ship .woc-card-name{color:var(--green-dark)}
+.woc-tool.tool-ship .woc-card-ico{background:var(--surface);border-color:var(--green-border)}
 
 /* ⚠️ الأيقونة في مربع ملوّن — اللون هو اللي بيفرّق الطباعة عن التغليف
    قبل ما الموظف يقرا الاسم أصلاً. والإيموجي لازم يكون **نفس** إيموجي
