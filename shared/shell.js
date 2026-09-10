@@ -80,9 +80,24 @@ const WOC_WORKERS = {
   //    نتايج بلا أي خطأ** — يعني القايمة بتفضل فاضية على صنف موجود
   //    قدام الموظف. ده بالظبط نوع الفشل الصامت اللي الحارس اتكتب عشانه.
   barcode: { url: 'https://order-sku-barcode-printer-worker.ecommoda-dev.workers.dev', min: '1.3.0', label: 'باركود SKU' },
+  // 🔴 سكانر الشحن وسكانر المرتجعات — انضموا للهب في v1.22.0.
+  // 3.4.0 = أول نسخة في **الاتنين** بترجّع حالة `already` (مش رفض) وبتقبل
+  // `results`/`machines`/`sortBy` في `get_logs*` وبتاخد `rejected[]` في
+  // `update` فبتسجّلها تحت `type = 'rejected'`. الصفحتان **معتمدتان عليهم
+  // فعلاً** (Standards #29):
+  //   · جدول النتايج بيرسم بادج محايد لحالة `already` — على Worker أقدم
+  //     الصف بيرجع **أحمر برسالة تقنية** («S1 ليس Ready (الحالي: Shipped)»)
+  //     وهي ٦ من ٧ صفوف الرفض المسجّلة، يعني أكتر رسالة بتظهر للموظف
+  //     بتبقى أقلها إفادة وبيتعلّم يعدّي على الرفض كله.
+  //   · وفلاتر تاب السجل بتبعت `results`/`machines` — الـ Worker القديم
+  //     **بيتجاهلهم في صمت**، يعني الجدول بيقول إنه مفلتر وهو مش مفلتر.
+  // ⚠️ ودي **مش** حالة تدهور آمن في البندين — الفشل في الاتنين صامت،
+  //    فالحارس هنا مش رفاهية (نفس عيلة `remover.min = 1.4.0`).
+  shipped:  { url: 'https://bosta-orders-shipped-scanner.ecommoda-dev.workers.dev',  min: '3.4.0', label: 'سكانر الشحن' },
+  returned: { url: 'https://bosta-orders-returned-scanner.ecommoda-dev.workers.dev', min: '3.4.0', label: 'سكانر المرتجعات' },
 };
 
-const TOOL_VERSION = 'v1.21.0';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.22.0';                      // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const WOC_APP_ID   = 'warehouse_ops_center';         // قيمة `tool` في D1 — login/logout بس
 const SHOP_HANDLE  = '6c7e1a-53';
@@ -192,6 +207,19 @@ function cacheSet(key, data) {
 //    «الـ Worker رد بخطأ» · «مقدرناش نوصله أصلاً» (CORS/واقع) · «رد مش JSON».
 //    والرسالة بتسمّي **الأداة** — الهب بينادي تلات Workers، ورسالة بلا
 //    اسم بتخلّي الموظف يدوّر في التلاتة.
+//
+// 🔴 **مهلة صريحة على كل نداء** (اتضافت في v1.22.0 مع سكانرات بوسطة).
+//    من غيرها الـ Worker الواقف بيسيب الزرار معطّل والـ spinner بيلف
+//    **للأبد** (المتصفح ممكن يستنى دقايق) — والموظف بيفتكر إن الأداة
+//    اتعلّقت فبيعمل refresh **وسط عملية كتابة**. ودي مش حالة نظرية: هي
+//    بالظبط عيلة الفشل اللي أنتجت ٥٩ صف فشل كذّاب في سجل سكانر المرتجعات
+//    (الشاشة ما اتغيّرتش بعد النجاح فالموظف ضغط تاني).
+//    ⚠️ الرقم طويل عن قصد — دفعة كاملة بتاخد عشرات الثواني، والقطع بدري
+//       أسوأ من الانتظار.
+//    ⚠️ ورسالة الـ timeout **بتقول للموظف يراجع السجل قبل الإعادة** —
+//       «ما ردّش» ≠ «ما اتنفّذش»، والكتابة ممكن تكون تمّت فعلاً.
+const WOC_API_TIMEOUT_MS = 90000;
+
 function wocApi(worker) {
   const base = worker.url.replace(/\/$/, '');
 
@@ -199,9 +227,12 @@ function wocApi(worker) {
     const secret = getSecret();
     if (!secret) { openSettings(); throw new Error('الإعدادات غير مكتملة — أدخل الـ WORKER SECRET'); }
     let resp;
+    const ctrl  = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), WOC_API_TIMEOUT_MS);
     try {
       resp = await fetch(url, {
         ...opts,
+        signal: ctrl.signal,
         headers: {
           'Content-Type':  'application/json',
           'Authorization': `Bearer ${secret}`,
@@ -209,7 +240,11 @@ function wocApi(worker) {
         },
       });
     } catch (e) {
+      if (e.name === 'AbortError')
+        throw new Error(`Worker ${worker.label} ما ردّش خلال ${WOC_API_TIMEOUT_MS / 1000} ثانية — راجع السجل قبل ما تعيد المحاولة، ممكن تكون العملية تمّت`);
       throw new Error(`تعذّر الوصول لـ Worker ${worker.label} — راجع الاتصال أو حالة الـ Worker: ${e.message}`);
+    } finally {
+      clearTimeout(timer);
     }
     const text = await resp.text();
     let data;
@@ -611,24 +646,46 @@ function closeAbout()     { document.getElementById('aboutOverlay')?.classList.r
 // ⚠️ في شكل الكائن مفيش `ok` صريحة، فالحكم من القيمة والاسم:
 //    `'ok'` ✅ · بتبدأ بـ `FAILED` ❌ · الاسم منتهي بـ `Error`/`Warning` ⚠️ ·
 //    غير كده **معلومة** ℹ️ (زي `accessScopes` و`envKeys`) — مش نجاح ولا فشل.
-function diagRows(checks) {
+//
+// ⚠️ `labels` اختيارية — خريطة `{ مفتاح: 'اسم عربي' }` بتيجي من الصفحة
+//    (`PAGE_DIAG_LABELS`). الـ Workers اللي `checks` بتاعتهم **كائن**
+//    مفاتيحه إنجليزية (`env` · `cors` · `d1` · `shopifyAuth` …) كانوا
+//    بيتعرضوا بالمفتاح الخام قدام موظف المخزن. الشكل المصفوفة بيجيب
+//    الاسم من الـ Worker أصلاً، فمابيلمسهاش.
+function diagRows(checks, labels = {}) {
   if (!checks) return [];
-  const line = (icon, label, detail) =>
-    `<div class="diag-line"><span>${icon}</span><span>${esc(label)}${detail ? ' — <span class="diag-detail">' + esc(detail) + '</span>' : ''}</span></div>`;
+  // ⚠️ `hint` بيتعرض **بس لو الفحص فشل** — سطر «إزاي تصلّحها» تحت فحص
+  //    ناجح ضوضاء، وتحت فحص فاشل هو الحاجة الوحيدة المفيدة.
+  const line = (icon, label, detail, hint) =>
+    `<div class="diag-line"><span>${icon}</span><span>${esc(label)}`
+    + (detail ? ' — <span class="diag-detail">' + esc(detail) + '</span>' : '')
+    + (hint ? '<div class="diag-hint">↳ ' + esc(hint) + '</div>' : '')
+    + `</span></div>`;
 
   if (Array.isArray(checks)) {
-    return checks.map(c => line(c.ok ? '✅' : '❌', c.label || c.name || '', c.detail || ''));
+    return checks.map(c => line(c.ok ? '✅' : '❌', c.label || c.name || '', c.detail || '', c.ok ? '' : (c.hint || '')));
   }
-  if (typeof checks !== 'object') return [line('ℹ️', String(checks), '')];
+  if (typeof checks !== 'object') return [line('ℹ️', String(checks), '', '')];
 
   return Object.entries(checks).map(([k, v]) => {
+    // 🔴 **الشكل التالت** (سكانر المرتجعات): كائن بندوده **كائنات** جوّاها
+    //    `ok` صريحة — `{ env: { ok, missing… }, d1: { ok, error }… }`.
+    //    من غير الفرع ده الفحص الفاشل كان بيتعرض ℹ️ **معلومة** بجسم JSON
+    //    خام: يعني `write_returns` ناقصة بتبان زي أي سطر معلومات، وده
+    //    بالظبط العطل اللي فحص `diag` اتعمل عشان يمسكه في ٥ ثواني.
+    if (v && typeof v === 'object' && !Array.isArray(v) && typeof v.ok === 'boolean') {
+      const rest = Object.entries(v).filter(([kk]) => kk !== 'ok' && kk !== 'hint');
+      const detail = rest.map(([kk, vv]) =>
+        `${kk}: ${(vv && typeof vv === 'object') ? JSON.stringify(vv) : String(vv)}`).join(' · ');
+      return line(v.ok ? '✅' : '❌', labels[k] || k, detail, v.ok ? '' : (v.hint || ''));
+    }
     const txt = (v && typeof v === 'object') ? JSON.stringify(v) : String(v);
     let icon = 'ℹ️';
     if (/(Error|Warning)$/.test(k))      icon = '⚠️';
     else if (/^FAILED/i.test(txt))       icon = '❌';
     else if (txt === 'ok' || v === true) icon = '✅';
     else if (v === false)                icon = '❌';
-    return line(icon, k, txt);
+    return line(icon, labels[k] || k, txt, '');
   });
 }
 
@@ -651,7 +708,10 @@ async function wocRunDiag() {
       const ver = d.version || d.WORKER_VERSION || '—';
       const behind = cmpVersion(ver, w.min) < 0;
       out.push(`<div class="diag-line"><span>${behind ? '⚠️' : 'ℹ️'}</span><span><b>${esc(w.label)}</b> — نسخة <code>${esc(ver)}</code> (الحد الأدنى <code>${esc(w.min)}</code>)</span></div>`);
-      out.push(...diagRows(d.checks));
+      // ⚠️ `PAGE_DIAG_LABELS` اختيارية زي `PAGE_WORKERS` بالظبط — الصفحة
+      //    بتعرّفها لو الـ Worker بتاعها بيرجّع مفاتيح إنجليزية.
+      const labels = (typeof PAGE_DIAG_LABELS !== 'undefined') ? PAGE_DIAG_LABELS : {};
+      out.push(...diagRows(d.checks, labels));
     } catch (e) {
       out.push(`<div class="diag-line"><span>❌</span><span><b>${esc(w.label)}</b> — ${esc(e.message)}</span></div>`);
     }
@@ -782,11 +842,11 @@ function wocSharedModals() {
                  الحقل بيختفي أول ما الموظف يكتب حرف.
                  ⚠️ التعليق ده جوّه template literal — ممنوع أي backtick فيه. -->
             <input type="password" class="settings-input" id="cfgSecret" autocomplete="off">
-            <div class="settings-static">السر المشترك لمجموعة <code>warehouse_ops</code> — قيمة واحدة للأربع Workers</div>
+            <div class="settings-static">السر المشترك لمجموعة <code>warehouse_ops</code> — قيمة واحدة للست Workers</div>
           </div>
           <div class="settings-field">
             <label class="settings-label">الـ Workers</label>
-            <div class="settings-static">order-printer-worker · orders-packing-checker-worker · order-item-remover-worker · order-sku-barcode-printer-worker</div>
+            <div class="settings-static">order-printer-worker · orders-packing-checker-worker · order-item-remover-worker · order-sku-barcode-printer-worker · bosta-orders-shipped-scanner · bosta-orders-returned-scanner</div>
           </div>
           <div class="settings-field">
             <label class="settings-label">فحص النظام</label>
