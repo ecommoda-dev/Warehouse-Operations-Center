@@ -122,6 +122,22 @@ async function newPage(rows, diag, { withSession = true } = {}) {
   page.on('pageerror', e => errors.push(e.message));
   page.on('console', m => { if (m.type() === 'error' && !/net::ERR_/.test(m.text())) errors.push(m.text()); });
   await page.addInitScript((sess) => {
+    // 🔴 مسجّل نغمات — `playBeep` مالهاش أي أثر في الـ DOM، فالطريقة الوحيدة
+    //    لقياسها هي اعتراض `AudioContext` **قبل** ما الصفحة تتحمّل.
+    //    البند اللي اتكتب عشانه: `playBeep('scan')` كانت بتقع في الـ `else`
+    //    بتاع الـ shell = **نغمة الفشل النازلة على كل سكانة ناجحة**، وصفر
+    //    خطأ في الكونسول.
+    window.__beeps = [];
+    class FakeOsc {
+      constructor(){ this.frequency = { setValueAtTime: (f) => window.__beeps.push(f) }; }
+      connect(){} start(){} stop(){}
+    }
+    const fakeCtx = {
+      currentTime: 0, destination: {},
+      createOscillator: () => new FakeOsc(),
+      createGain: () => ({ connect(){}, gain: { setValueAtTime(){}, exponentialRampToValueAtTime(){} } }),
+    };
+    window.AudioContext = function () { return fakeCtx; };
     try {
       localStorage.setItem('warehouse_ops_worker_secret', 'test-secret-0123456789');
       if (sess) sessionStorage.setItem('woc_session', JSON.stringify(
@@ -243,7 +259,20 @@ console.log('\n══ مسار السكان — shipped.html ══');
   is(already.alreadyDone, '`alreadyDone` وصل من الـ Worker (الحقل اللي `min=3.4.0` اتحط عشانه)');
   is(!already.selected, 'وصف «خلاص اتعمل» **مش متحدد** — مفيش حاجة تتبعت عنه');
 
-  console.log('⑨ الزرار بيعدّ المتوافق بس');
+  console.log('⑨ 🔴 نغمات `playBeep` — كل نوع له فرع صريح');
+  const tones = await page.evaluate(() => {
+    const out = {};
+    for (const t of ['scan','success','warn','error','__unknown__']) {
+      window.__beeps.length = 0; playBeep(t); out[t] = window.__beeps.join(',');
+    }
+    return out;
+  });
+  is(tones.scan === '1400', '🔴 `scan` نغمة قصيرة عالية — **مش** نغمة الفشل النازلة', JSON.stringify(tones));
+  is(tones.scan !== tones.error, '🔴 و`scan` ≠ `error` — الباج اللي البند ده اتكتب عشانه');
+  is(tones.success !== tones.error && tones.warn !== tones.error, 'و`success` و`warn` كل واحد له نغمته');
+  is(tones.__unknown__ === tones.error, 'والفرع الافتراضي لسه الفشل — أي قيمة مش معروفة بتتقري «فشل»');
+
+  console.log('⑩ الزرار بيعدّ المتوافق بس');
   const btnTxt = (await page.locator('#btnUpdate').innerText()).replace(/\s+/g,' ');
   is(/1/.test(btnTxt), '🔴 زرار التحديث بيقول **١** — صف واحد بس متوافق من الأربعة', btnTxt);
 
@@ -261,13 +290,13 @@ console.log('\n══ التأكيد قبل فعل لا رجعة فيه — retu
   await page.goto(`${BASE}/returned.html`);
   await page.waitForTimeout(700);
 
-  console.log('⑩ الأحمر بقى في اللي بيحذّر — مش في الشاشة كلها');
+  console.log('⑪ الأحمر بقى في اللي بيحذّر — مش في الشاشة كلها');
   const accent = await page.evaluate(() =>
     getComputedStyle(document.documentElement).getPropertyValue('--accent').trim());
   is(accent === '#2563eb', '🔴 `--accent` بقى أزرق الهب — كتلة التوكنز الحمرا اتشالت', accent);
   is(await page.locator('.confirm-modal').count() === 1, 'ونافذة التأكيد لسه موجودة بحدّها الأحمر');
 
-  console.log('⑪ نافذة التأكيد بتقف قدام الإلغاء');
+  console.log('⑫ نافذة التأكيد بتقف قدام الإلغاء');
   for (const tn of ['11111111','22222222']) {   // ⚠️ نفس مهلة §SCAN فوق
     await page.fill('#scanInput', tn);
     await page.waitForTimeout(320);

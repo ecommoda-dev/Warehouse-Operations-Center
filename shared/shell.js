@@ -564,7 +564,21 @@ function playBeep(type) {
       gain.gain.setValueAtTime(0.3, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
       osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.25);
+    } else if (type === 'scan') {
+      // 🔴 **بلبة السكانة — نغمة قصيرة عالية، مختلفة عن النجاح والفشل.**
+      //    الفرع ده كان **ناقص من الـ shell** لحد v1.22.0، و`playBeep('scan')`
+      //    كانت بتقع في الـ `else` تحت — يعني **نغمة الفشل النازلة** (300→200)
+      //    بتطلع على كل رقم تتبع **بيتضاف بنجاح**. ودي أسوأ من السكوت: الموظف
+      //    بيسكن ٨٢ ملصق وراه، وبيسمع «فشل» ٨٢ مرة على شغل تمام.
+      //    ⚠️ **صفر خطأ في الكونسول** — الـ `else` بيرد على أي قيمة.
+      //    القيم كلها منقولة بالحرف من الأداة المستقلة عشان الموظف اللي
+      //    بيتنقّل بين الاتنين يسمع نفس البلبة.
+      osc.frequency.setValueAtTime(1400, ctx.currentTime);
+      gain.gain.setValueAtTime(0.18, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.08);
     } else {
+      // `error` وأي قيمة تانية — نغمة نازلة.
       osc.frequency.setValueAtTime(300, ctx.currentTime);
       osc.frequency.setValueAtTime(200, ctx.currentTime + 0.15);
       gain.gain.setValueAtTime(0.4, ctx.currentTime);
