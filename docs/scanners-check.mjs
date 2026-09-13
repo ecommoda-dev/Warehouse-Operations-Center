@@ -1,5 +1,5 @@
 // ══════════════════════════════════════════════════════════════
-// docs/scanners-check.mjs — فحص متصفح فعلي لـ `shipped.html` و`returned.html`
+// docs/scanners-check.mjs — فحص متصفح فعلي لـ `bosta-shipped.html` و`returned.html`
 //
 // 🔴 **ليه ملف رابع وما اتضافش لملف قايم؟** نفس قرار `browser-check.mjs`
 //    و`sku-barcode-check.mjs` و`pack-check.mjs`: كل ملف بيشغّل Worker وهمي
@@ -81,7 +81,11 @@ const RETURNED_ROWS = [
 // شكل `checks` بيفرق بين الأداتين — ودي **نقطة الفحص** مش تفصيلة:
 //   الشحن  → **مصفوفة** `[{ name, ok, detail, hint }]`
 //   المرتجعات → **كائن** بندوده كائنات جوّاها `ok` (الشكل التالت)
-const DIAG_SHIPPED = { ok:false, version:'3.4.0', checks:[
+// ⚠️ **نسخة الـ Worker الوهمي لكل أداة لوحدها** — `shipped.min` بقى
+//    `3.5.0` في v1.23.0 (طابور `get_ready_to_ship`) و`returned.min` لسه
+//    `3.4.0`. رقم واحد للاتنين كان بيولّع «Worker نسخة قديمة» على واحدة
+//    منهم وبيخلّي البند يفشل لسبب مالوش علاقة بالكود.
+const DIAG_SHIPPED = { ok:false, version:'3.5.0', checks:[
   { name:'متغير WORKER_SECRET', ok:true,  detail:'موجود بطول 40' },
   { name:'صلاحيات تطبيق شوبيفاي', ok:false, detail:'ناقص: read_all_orders', hint:'ضِفها في إعدادات الـ Custom App' },
 ]};
@@ -91,12 +95,46 @@ const DIAG_RETURNED = { ok:false, version:'3.4.0', checks:{
   shopifyAuth: { ok:false, error:'فشل الحصول على توكن', hint:'راجع CLIENT_ID و CLIENT_SECRET ثم Promote' },
 }};
 
-function makeStub(rows, diag) {
+// ── صفوف طابور «جاهز للتسليم لبوسطة» (v1.23.0) ──────────────────────
+// 🔴 **الفلترة كلها في الـ Worker** — الوهمي بيرجّع المؤهّل بس، زي الحقيقي
+//    بالظبط. البند اللي بيتقفل هنا: الصفحة **بتعرض اللي راجع بالحرف**
+//    ومابتفلترش ولا صف. لو حد ضاف فلتر محلي بعدين، العدد هيخالف الراجع.
+// ⚠️ وصف S2 جوّه نفس القايمة **بلا أي علامة مميزة** (قرار أحمد) — البند
+//    تحت بيقفل إن مفيش بادج بيفرّقه عن صفوف S1.
+const READY_ROWS = [
+  { orderId:'7211047715138', orderName:'#54567', machine:'S1',
+    createdAt:'2026-09-13T11:21:54Z', customer:'مرمر جبر', itemsQty:1, total:'2900.0',
+    s1:'Ready', s2:null, zone:'Other_Regions', courier:'Bosta',
+    printedAt:'2026-09-13T12:44:46Z', packedAt:'2026-09-13T12:50:31Z',
+    packedBy:'Mohammed Tarek', tracking:'5562471394', trackingLegacy:true },
+  { orderId:'7210951967042', orderName:'#54555', machine:'S1',
+    createdAt:'2026-09-13T09:22:10Z', customer:'احمد صقر', itemsQty:1, total:'2300.0',
+    s1:'Ready', s2:null, zone:'Cairo+Giza', courier:'Bosta',
+    printedAt:'2026-09-13T11:17:11Z', packedAt:'2026-09-13T12:17:33Z',
+    packedBy:'Mohammed Tarek', tracking:'7461057676', trackingLegacy:true },
+  { orderId:'7195000000000', orderName:'#53099', machine:'S2',
+    // ⚠️ **اسم العميل هنا محايد عن قصد** — البند تحت بيفحص إن مفيش كلمة
+    //    «استبدال» في الجدول، واسم فيه الكلمة كان بيفشّل البند من بيانات
+    //    الاختبار نفسها مش من الكود.
+    createdAt:'2026-09-01T18:39:10Z', customer:'سيد محمود', itemsQty:1, total:'1350.0',
+    s1:'Delivered', s2:'Ready', zone:'Other_Regions', courier:'Bosta',
+    printedAt:'2026-09-13T09:56:24Z', packedAt:'2026-09-13T10:20:00Z',
+    packedBy:'Mohammed Tarek', tracking:'9911223344', trackingLegacy:false },
+];
+
+function makeStub(rows, diag, readyRows = []) {
   return async (route) => {
     const url    = new URL(route.request().url());
     const action = url.searchParams.get('action');
     let body = { ok:true };
-    if (action === 'get_config')      body = { ok:true, version:'3.4.0' };
+    if (action === 'get_config')      body = { ok:true, version:diag.version };
+    else if (action === 'get_ready_to_ship')
+      body = { ok:true, orders:readyRows,
+               counts:{ total:readyRows.length,
+                        s1:readyRows.filter(r => r.machine === 'S1').length,
+                        s2:readyRows.filter(r => r.machine === 'S2').length },
+               skipped:{ cancelled:0, not_printed:4, not_packed:19, reprinted_after_pack:1 },
+               truncated:false, at:new Date().toISOString() };
     else if (action === 'diag')       body = diag;
     else if (action === 'get_employees')
       body = { ok:true, employees:[{ username:'tester', display_name:'الموظف التجريبي' }] };
@@ -115,7 +153,7 @@ function makeStub(rows, diag) {
 // ⚠️ الجلسة بتتزرع بـ `addInitScript` — `requireSession()` بترمي وبتحوّل
 //    لـ `index.html` من غير جلسة في `sessionStorage`، فالاختبار كان هيقيس
 //    **صفحة الدخول** (نفس بند `pack-check.mjs`).
-async function newPage(rows, diag, { withSession = true } = {}) {
+async function newPage(rows, diag, { withSession = true, readyRows = [] } = {}) {
   const ctx  = await browser.newContext();
   const page = await ctx.newPage();
   const errors = [];
@@ -144,7 +182,7 @@ async function newPage(rows, diag, { withSession = true } = {}) {
         { v:1, username:'tester', displayName:'الموظف التجريبي', loginAt:new Date().toISOString() }));
     } catch {}
   }, withSession);
-  await page.route('**/*.workers.dev/**', makeStub(rows, diag));
+  await page.route('**/*.workers.dev/**', makeStub(rows, diag, readyRows));
   return { page, ctx, errors };
 }
 
@@ -152,7 +190,7 @@ async function newPage(rows, diag, { withSession = true } = {}) {
 // المجموعة ① — الهب: الجلسة والهيدر والنسخة (الصفحتين)
 // ══════════════════════════════════════════════════════════════
 for (const [file, title, tabLog, panelLog, rows, diag] of [
-  ['shipped.html',  'سكانر الشحن',      '#tabLog',       '#panelLog', SHIPPED_ROWS,  DIAG_SHIPPED],
+  ['bosta-shipped.html', 'قسم تسليمات بوسطة', '#tabLog',       '#panelLog', SHIPPED_ROWS,  DIAG_SHIPPED],
   ['returned.html', 'سكانر المرتجعات',  '#tabBtnLog',    '#tab-log',  RETURNED_ROWS, DIAG_RETURNED],
 ]) {
   console.log(`\n══ ${file} ══`);
@@ -191,7 +229,7 @@ for (const [file, title, tabLog, panelLog, rows, diag] of [
   await page.click('.hbtn:has-text("عن الأداة")'); await page.waitForTimeout(600);
   const aw = await page.locator('#aboutWorkers').innerHTML();
   is(aw.includes('<table'), 'جدول الـ Workers اتبنى', aw.slice(0,80));
-  is(aw.includes(title) && aw.includes('3.4.0'), 'وفيه اسم الـ Worker ونسخته');
+  is(aw.includes(title) && aw.includes(diag.version), 'وفيه اسم الـ Worker ونسخته');
   is(!aw.includes('تعذّر الوصول'), 'ومفيش فشل وصول');
   await page.click('#aboutOverlay .modal-close-x'); await page.waitForTimeout(150);
 
@@ -213,7 +251,7 @@ for (const [file, title, tabLog, panelLog, rows, diag] of [
 // ══════════════════════════════════════════════════════════════
 console.log('\n══ الحارس ══');
 console.log('⑤ `requireSession()` بيحوّل للرئيسية');
-for (const file of ['shipped.html', 'returned.html']) {
+for (const file of ['bosta-shipped.html', 'returned.html']) {
   const { page, ctx } = await newPage(SHIPPED_ROWS, DIAG_SHIPPED, { withSession:false });
   await page.goto(`${BASE}/${file}`);
   await page.waitForTimeout(700);
@@ -224,17 +262,46 @@ for (const file of ['shipped.html', 'returned.html']) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// المجموعة ③ — مسار السكان الحقيقي (`shipped.html`)
+// المجموعة ③ — مسار السكان الحقيقي (`bosta-shipped.html`)
 // ══════════════════════════════════════════════════════════════
-console.log('\n══ مسار السكان — shipped.html ══');
+console.log('\n══ مسار السكان — bosta-shipped.html ══');
 {
-  const { page, ctx, errors } = await newPage(SHIPPED_ROWS, DIAG_SHIPPED);
-  await page.goto(`${BASE}/shipped.html`);
-  await page.waitForTimeout(700);
+  const { page, ctx, errors } = await newPage(SHIPPED_ROWS, DIAG_SHIPPED, { readyRows: READY_ROWS });
+  await page.goto(`${BASE}/bosta-shipped.html`);
+  await page.waitForTimeout(900);
 
   console.log('⑥ الفوكس بيروح لمربع السكان لوحده');
   is(await page.evaluate(() => document.activeElement?.id) === 'scanInput',
      '🔴 الفوكس على `#scanInput` من أول لحظة — السكانر جاهز من غير ضغطة');
+
+  // ── §READY-QUEUE ────────────────────────────────────────────────────
+  // 🔴 عيلة الفشل هنا **صامتة**: الطابور بيتجاب وبيترسم فاضي، أو الصفحة
+  //    بتفلتر لوحدها فالعدد يخالف الراجع من الـ Worker — والشاشة بتفتح
+  //    والكونسول نضيف في الحالتين.
+  console.log('⑥-ب 🔴 طابور «جاهز للتسليم لبوسطة» — عرض بحت');
+  const rqCount = (await page.locator('#rqCount').innerText()).trim();
+  const rqRows  = await page.locator('#rqTableBody tr').count();
+  is(rqCount === String(READY_ROWS.length),
+     `العدّاد بيقول ${READY_ROWS.length} — نفس اللي الـ Worker رجّعه`, rqCount);
+  is(rqRows === READY_ROWS.length,
+     '🔴 صفوف الجدول == اللي رجع بالحرف — الصفحة مابتفلترش ولا صف', String(rqRows));
+  is((await page.locator('#rqBadge').innerText()).trim() === rqCount,
+     'وبادج زرار التحديث == العدّاد');
+
+  const rqHtml = await page.locator('#rqTableBody').innerHTML();
+  is(rqHtml.includes('#54567') && rqHtml.includes('#53099'),
+     'الأوردرات معروضة بأسمائها — والشحنة الأصلية والاستبدال **في نفس القايمة**');
+  is(!/S2|استبدال|استرجاع/.test(rqHtml),
+     '🔴 وصف الاستبدال **بلا علامة مميزة** (قرار أحمد) — مفيش بادج بيفرّقه');
+  is(rqHtml.includes('5562471394') && rqHtml.includes('9911223344'),
+     'رقم تتبع بوسطة معروض لكل صف');
+  is(rqHtml.includes('Mohammed Tarek'),
+     'واسم اللي غلّف — الطرد ده موجود على الرف فعلاً');
+
+  is(await page.locator('#rqTableBody input[type="checkbox"]').count() === 0,
+     '🔴 **عرض بحت** — مفيش مربعات اختيار في الطابور (قرار أحمد)');
+  is(await page.evaluate(() => document.activeElement?.id) === 'scanInput',
+     'والفوكس لسه على مربع السكان بعد ما الطابور اترسم');
 
   console.log('⑦ إدخال أرقام التتبع + الاستعلام');
   // ⚠️ §SCAN مالوش `Enter` — بيشتغل على `input` بمهلة (١٥٠ms للسكانة ·

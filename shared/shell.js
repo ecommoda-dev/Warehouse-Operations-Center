@@ -93,11 +93,20 @@ const WOC_WORKERS = {
   //     **بيتجاهلهم في صمت**، يعني الجدول بيقول إنه مفلتر وهو مش مفلتر.
   // ⚠️ ودي **مش** حالة تدهور آمن في البندين — الفشل في الاتنين صامت،
   //    فالحارس هنا مش رفاهية (نفس عيلة `remover.min = 1.4.0`).
-  shipped:  { url: 'https://bosta-orders-shipped-scanner.ecommoda-dev.workers.dev',  min: '3.4.0', label: 'سكانر الشحن' },
+  // 🔴 **و`shipped.min` اترفع لـ`3.5.0` في v1.23.0 — سبب تالت مستقل:**
+  //    `?action=get_ready_to_ship` (طابور «جاهز للتسليم لبوسطة»). الصفحة
+  //    **والشاشة الرئيسية** الاتنين بيناديوه؛ على Worker أقدم بيرجّع
+  //    `Unknown action` (404)، يعني **الطابور في الصفحة والصف في الرئيسية
+  //    الاتنين بيقعوا مع بعض** — والموظف شايف قايمة فاضية وصف بيقول
+  //    «تعذّر» من غير ما حد يقول إن السبب Promote ناقص. الفشل هنا معلن
+  //    (بانر أحمر باسم الـ Worker) مش صامت، بس حارس النسخة هو اللي
+  //    **بيسمّي السبب** بدل ما الموظف يدوّر.
+  //    ⚠️ والسكان **ما اتأثرش** — `lookup`/`update` زي ما هم بالحرف.
+  shipped:  { url: 'https://bosta-orders-shipped-scanner.ecommoda-dev.workers.dev',  min: '3.5.0', label: 'قسم تسليمات بوسطة' },
   returned: { url: 'https://bosta-orders-returned-scanner.ecommoda-dev.workers.dev', min: '3.4.0', label: 'سكانر المرتجعات' },
 };
 
-const TOOL_VERSION = 'v1.22.0';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.23.0';                      // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const WOC_APP_ID   = 'warehouse_ops_center';         // قيمة `tool` في D1 — login/logout بس
 const SHOP_HANDLE  = '6c7e1a-53';

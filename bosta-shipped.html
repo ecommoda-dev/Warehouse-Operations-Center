@@ -4,7 +4,7 @@
 <!-- skills: html-builder v6.6.0 · worker-builder v2.1.0 · constants v1.10.0 · order-lifecycle v1.2.0 — 10-09-2026 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>سكانر الشحن — مركز عمليات المخزن</title>
+  <title>قسم تسليمات بوسطة — مركز عمليات المخزن</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 
@@ -179,6 +179,33 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .count-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--accent-light); border: 1.5px solid var(--accent-border); border-radius: var(--radius-sm); padding: 5px 14px; }
 .count-num { font-size: 22px; font-weight: 800; color: var(--accent); font-family: var(--font-mono); line-height: 1; }
 .count-lbl { font-size: 11px; color: var(--text-secondary); font-weight: 500; }
+
+/* ══ §READY-QUEUE — طابور «جاهز للتسليم لبوسطة» (v1.23.0) ══
+   🔴 كلاسات الصفحة، مش الـ shell (قاعدة الأسبقية). اللي جاي من الـ shell
+      هو لوحة «آخر تحديث» بس (`.woc-fresh` · `.woc-ago` · `.woc-stamp-chip`
+      · `.woc-rbtn`) — اللوحة دي في **أربع** شاشات دلوقتي (الرئيسية ·
+      التغليف · الطباعة · هنا)، ونسخة CSS خامسة معناها إن الشكل يفترق مع
+      أول تعديل (درس R1). */
+.rq-box { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); overflow: hidden; }
+.rq-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+.rq-title { font-size: 13.5px; font-weight: 700; color: var(--text-primary); }
+.rq-sub { font-size: 11px; color: var(--text-muted); }
+.rq-act { margin-inline-start: auto; display: flex; align-items: stretch; gap: 10px; }
+.rq-body { padding: 0; }
+.rq-empty { padding: 26px 16px; text-align: center; color: var(--text-muted); font-size: 13px; }
+.rq-empty .ico { font-size: 26px; margin-bottom: 6px; }
+.rq-fail { margin: 12px 16px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--red-light); border: 1px solid var(--red-border); color: var(--red-dark); font-size: 12.5px; }
+.rq-warn { margin: 12px 16px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--amber-light); border: 1px solid var(--amber-border); color: var(--amber-dark); font-size: 12.5px; }
+/* بادج عمر الأوردر — **نسخة طبق الأصل من `pack.html`** بالحرف. الدرجة
+   نفسها بتيجي من `wocDayLevel` في الـ shell فمستحيل تفترق؛ اللون هو
+   اللي مكرّر. ⚠️ أي تعديل يتعمل في الصفحتين في نفس التمريرة. */
+.time-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; white-space: nowrap; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-secondary); }
+.time-badge.tb-d0 { background: var(--green-light);  color: var(--green-dark);  border-color: var(--green-border); }
+.time-badge.tb-d1 { background: var(--amber-light);  color: var(--amber-dark);  border-color: var(--amber-border); }
+.time-badge.tb-d2 { background: var(--orange-light); color: var(--orange-dark); border-color: var(--orange-border); }
+.time-badge.tb-d3 { background: var(--red-light);    color: var(--red-dark);    border-color: var(--red-border); }
+.time-badge.tb-d7 { background: var(--crit);         color: var(--on-accent);   border-color: var(--crit); }
+.time-badge.tb-none { background: var(--surface-2);  color: var(--text-muted); }
 
 .progress-wrap { background: var(--border); border-radius: 4px; height: 6px; overflow: hidden; }
 .progress-bar  { height: 100%; background: var(--accent); border-radius: 4px; transition: width .3s; }
@@ -468,7 +495,21 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
            واحد للنسخة (Standards #24). الرقم هنا **مش** مكتوب بإيد. -->
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.22.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.23.0</span>
+          <span class="cl-ver-date">13-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🔴 <b>طابور «جاهز لتسليم بوسطة»</b> — صف تالت في الشاشة الرئيسية، وقايمة جوّه <code>bosta-shipped.html</code> نفسها بدل الشاشة الفاضية. بيعدّ الأوردرات اللي <b>الطرد بتاعها موجود على الرف فعلاً</b>: مندوبه بوسطة · اتطبع <b>واتغلّف</b> · ووقت التغليف <b>بعد</b> وقت الطباعة.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>الفلترة بقت على المندوب (<code>custom.courier</code>) مش على الزون.</b> فيه <b>١٤٩ أوردر</b> على المتجر زونهم «قاهرة+جيزة» وبيروحوا مع بوسطة عادي — الفلترة بالزون كانت هتسقّطهم من الطابور <b>في صمت</b> والموظف واقف ماسك الطرد.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>وقت التغليف لازم يبقى بعد وقت الطباعة.</b> العكس معناه <b>إعادة طباعة بعد التغليف</b> — يعني الأوردر اتعدّل، والفاتورة اللي جوّه الطرد لاغية، والطرد محتاج يتفتح ويتغلّف من أول. تسليمه لبوسطة كده بيخرّج طرد بمحتوى غلط <b>بلا أي رسالة خطأ</b>.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>«سكانر الشحن» بقى «قسم تسليمات بوسطة»</b>، والصفحة اتنقلت من <code>shipped.html</code> لـ<code>bosta-shipped.html</code>. ⚠️ الرابط القديم <b>ما بقاش شغّال</b> — حدّث أي بوكمارك على أجهزة المخزن.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>السطر التوضيحي اتشال من مربعَي «قسم تسليمات بوسطة» و«سكانر المرتجعات» في قسم «أدوات» — زي مربعَي الصف الأول بالظبط.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge">v1.22.0</span>
           <span class="cl-ver-date">10-09-2026</span>
         </div>
         <ul class="cl-items">
@@ -646,7 +687,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 <div class="eco-overlay" id="aboutOverlay" onclick="if(event.target===this)closeAbout()">
   <div class="eco-modal">
     <div class="eco-modal-hdr">
-      <span>ℹ️ عن الأداة — سكانر الشحن (مركز عمليات المخزن)</span>
+      <span>ℹ️ عن الأداة — قسم تسليمات بوسطة (مركز عمليات المخزن)</span>
       <button class="modal-close-x" onclick="closeAbout()">✕</button>
     </div>
     <div class="eco-modal-body">
@@ -844,8 +885,66 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
             placeholder="امسح الباركود أو اكتب رقم التتبع..." autocomplete="off" autofocus />
           <button class="btn btn-outline" onclick="addManual()">إضافة يدوي</button>
         </div>
-        <div id="scanList">
-          <div class="empty"><div class="ico">🔍</div><div>لم يتم مسح أي أرقام بعد</div></div>
+        <div id="scanList" style="display:none;"></div>
+
+        <!-- ══ §READY-QUEUE — «جاهز للتسليم لبوسطة» ══════════════════════
+             🔴 **عرض بحت** (قرار أحمد 13-09-2026) — مفيش مربعات اختيار
+                ومفيش زرار «أضف للدفعة». الموظف بيسكن الملصق زي ما هو،
+                والقايمة بتقوله **إيه اللي المفروض يتسلّم وكام**.
+             ⛔ **والطابور مش حارس.** أوردر مش في القايمة **لسه بيتسكن
+                عادي** والـ Worker هو اللي بيحكم عليه (`validateTransition`).
+                تحويله لحارس معناه إن لقطة عمرها دقايق تمنع تسليم شحنة
+                موجودة فعلاً — نفس الفخ المكتوب في §ELIGIBILITY بتاع
+                التغليف («الحكم على بيانات الأوردر الحيّة مش على وجوده
+                في جدول الطابور»). -->
+        <div class="rq-box" id="rqBox">
+          <div class="rq-head">
+            <div>
+              <div class="rq-title">🚚 جاهز للتسليم لبوسطة</div>
+              <div class="rq-sub">اتطبع واتغلّف · مندوبه بوسطة</div>
+            </div>
+            <div class="count-badge">
+              <span class="count-num" id="rqCount">—</span>
+              <span class="count-lbl">أوردر</span>
+            </div>
+            <div class="rq-act">
+              <div class="woc-fresh">
+                <div class="woc-fresh-row">
+                  <span class="woc-fresh-lbl">آخر تحديث</span>
+                  <span class="woc-ago" id="rqAgo">لسه ما اتحدّثش</span>
+                </div>
+                <div class="woc-fresh-row" id="rqStamp"><span class="woc-stamp-chip">—</span></div>
+              </div>
+              <button class="woc-rbtn" id="rqBtn" type="button" onclick="rqLoad(false)">
+                <span class="woc-rbtn-ico">↺</span><span>تحديث</span>
+                <span class="woc-rbtn-badge" id="rqBadge">—</span>
+              </button>
+            </div>
+          </div>
+          <div id="rqFail" class="rq-fail" style="display:none;"></div>
+          <div id="rqTrunc" class="rq-warn" style="display:none;"></div>
+          <div class="rq-body">
+            <div id="rqEmpty" class="rq-empty">
+              <div class="ico">⏳</div><div>جاري تحميل الطابور…</div>
+            </div>
+            <div class="table-wrap" id="rqTableWrap" style="display:none;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>رقم الأوردر</th>
+                    <th>العميل</th>
+                    <th>رقم تتبع بوسطة</th>
+                    <th>عدد القطع</th>
+                    <th>الإجمالي</th>
+                    <th>تاريخ الأوردر</th>
+                    <th>وقت التغليف</th>
+                    <th>غلّفه</th>
+                  </tr>
+                </thead>
+                <tbody id="rqTableBody"></tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1459,10 +1558,16 @@ function renderScanList() {
   const el = document.getElementById('scanList');
   document.getElementById('scanCount').textContent = scannedNums.length.toLocaleString('en-US');
 
+  // ⚠️ **اللائحة الفاضية بتتخفي بالكامل من v1.23.0** — الطابور تحتها هو اللي
+  //    بيملا الفراغ دلوقتي، وكتلة «لم يتم مسح أي أرقام بعد» فوقه كانت بتاخد
+  //    نص الشاشة الأولى **قبل** أول صف في الطابور. العدّاد في الهيدر بيقول
+  //    `0` فالحالة ظاهرة — الكتلة كانت بتكرّر معلومة موجودة.
   if (!scannedNums.length) {
-    el.innerHTML = '<div class="empty"><div class="ico">🔍</div><div>لم يتم مسح أي أرقام بعد</div></div>';
+    el.innerHTML  = '';
+    el.style.display = 'none';
     return;
   }
+  el.style.display = '';
 
   el.innerHTML = `<div class="scan-list">${scannedNums.map((n, i) => `
     <div class="scan-chip">
@@ -2999,10 +3104,158 @@ async function exportResultsXLSX() {
   showToast('تم التصدير', 'success');
 }
 // ══════════════════════════════════════════════════════════════
+// §READY-QUEUE-JS — طابور «جاهز للتسليم لبوسطة» (v1.23.0)
+// ══════════════════════════════════════════════════════════════
+// 🔴 **الشروط الأربعة عايشة في الـ Worker — مش هنا** (`get_ready_to_ship`).
+//    الصفحة بتعرض اللي راجع بالحرف ومابتفلترش ولا صف. نسخة تانية من
+//    القاعدة في الواجهة = **درس R1 بالحرف** — نفس اللي حصل مع بوابة بوسطة
+//    في v1.11.0 (الرئيسية بتقول ٦٦ والصفحة بتفتح على ٦). ⛔ ممنوع أي فلترة
+//    محلية هنا، والشاشة الرئيسية بتنادي **نفس** الـ endpoint بالظبط.
+//
+// ⚠️ **التحديث التلقائي بنفس حراس الشاشة الرئيسية التلاتة** — التسليح بعد
+//    كل جلب ناجح (مش من الدخول)، و`document.hidden` = صفر استعلام، والنبضة
+//    بتحدّث «منذ كام» **بلا أي نداء شبكة**. من غيرهم ده بيبقى polling أعمى
+//    على استعلام شوبيفاي × عدد الأجهزة × طول اليوم.
+const RQ_AUTO_REFRESH_MS = 15 * 60 * 1000;   // نفس فترة `pack.html` والرئيسية
+const RQ_TICK_MS         = 30 * 1000;        // نبضة عرض — صفر شبكة
+
+const rqState = { orders: [], at: null, loading: false, dirty: false, timer: null, failed: false };
+
+function rqSetFresh() {
+  const info  = agoInfo(rqState.at, Date.now());
+  const agoEl = document.getElementById('rqAgo');
+  const btn   = document.getElementById('rqBtn');
+  if (agoEl) { agoEl.className = 'woc-ago ' + info.cls; agoEl.textContent = info.text; }
+  if (btn)   btn.classList.toggle('is-stale', info.stale);
+  const stamp = document.getElementById('rqStamp');
+  if (stamp) {
+    stamp.innerHTML = rqState.at
+      ? `<span class="woc-stamp-chip">${esc(formatDate(rqState.at.toISOString()))}</span>` +
+        `<span class="woc-stamp-chip">${esc(formatTimeOnly(rqState.at.toISOString()))}</span>`
+      : '<span class="woc-stamp-chip">—</span>';
+  }
+}
+
+// ⚠️ العدّاد قبل أول جلب ناجح = `—` **مش `0`** — «ما اتحدّثش» ≠ «مفيش شغل»
+//    (قاعدة ٣ في الشاشة الرئيسية بالحرف).
+function rqRender() {
+  const rows   = rqState.orders;
+  const tbody  = document.getElementById('rqTableBody');
+  const wrap   = document.getElementById('rqTableWrap');
+  const empty  = document.getElementById('rqEmpty');
+  const cntEl  = document.getElementById('rqCount');
+  const badge  = document.getElementById('rqBadge');
+  if (!tbody) return;
+
+  const shown = rqState.at ? String(rows.length) : '—';
+  if (cntEl) cntEl.textContent = shown;
+  if (badge) badge.textContent = shown;
+
+  if (!rows.length) {
+    wrap.style.display  = 'none';
+    empty.style.display = '';
+    empty.innerHTML = rqState.at
+      ? '<div class="ico">✅</div><div>مفيش أوردرات مستنية تسليم لبوسطة دلوقتي</div>'
+      : (rqState.failed
+          ? '<div class="ico">⚠️</div><div>تعذّر تحميل الطابور — اضغط «تحديث»</div>'
+          : '<div class="ico">⏳</div><div>جاري تحميل الطابور…</div>');
+    return;
+  }
+
+  empty.style.display = 'none';
+  wrap.style.display  = '';
+  const now = new Date();
+  tbody.innerHTML = rows.map(o => {
+    const age = wocOrderAge(o.createdAt, now);
+    const qty = (o.itemsQty === null || o.itemsQty === undefined) ? '—' : o.itemsQty;
+    const tot = o.total ? Number(o.total).toLocaleString('en-US', { maximumFractionDigits: 2 }) : '—';
+    return `<tr>
+      <td>${orderLink(o.orderName, o.orderId)}</td>
+      <td>${esc(o.customer || '—')}</td>
+      <td class="col-num">${esc(o.tracking || '—')}</td>
+      <td class="col-num">${esc(String(qty))}</td>
+      <td class="col-num">${esc(tot)}</td>
+      <td>${esc(formatDate(o.createdAt))} <span class="time-badge age-badge ${age.cls}">${esc(age.text)}</span></td>
+      <td>${o.packedAt ? esc(formatTimeOnly(o.packedAt)) : '—'}</td>
+      <td>${esc(o.packedBy || '—')}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ⚠️ `loading` بيمنع نداءين متوازيين (ضغطة + نبضة)، و`dirty` مابيتصفّرش
+//    غير بعد جلب ناجح — لو الجلب فشل، أول رجوع تاني للتاب بيحاول.
+async function rqLoad(silent) {
+  if (rqState.loading) return;
+  rqState.loading = true;
+  const btn = document.getElementById('rqBtn');
+  if (btn) btn.disabled = true;
+
+  try {
+    const data = await apiGet('get_ready_to_ship');
+    rqState.orders = Array.isArray(data.orders) ? data.orders : [];
+    rqState.at     = new Date();
+    rqState.dirty  = false;
+    rqState.failed = false;
+    document.getElementById('rqFail').style.display = 'none';
+
+    // ⚠️ الاقتطاع بانر **منفصل** عن بانر الفشل — «الطابور أطول من اللي بيتعرض»
+    //    حاجة تانية خالص عن «الطابور ما اتجابش».
+    const trunc = document.getElementById('rqTrunc');
+    trunc.style.display = data.truncated ? '' : 'none';
+    if (data.truncated) trunc.textContent = '⚠️ الطابور أطول من الحد المعروض — فيه أوردرات مش ظاهرة في القايمة. اسكن عادي، والـ Worker هو اللي بيحكم.';
+  } catch (err) {
+    // 🔴 **الفشل بيتقال، والرقم القديم بيفضل معروض لو كان فيه واحد.**
+    //    «تعذّر» بتتعرض بس لو مافيش أي جلب ناجح قبل كده — نفس قاعدة ٤
+    //    في الشاشة الرئيسية. والفشل هنا **مايمنعش السكان** خالص.
+    rqState.failed = true;
+    const fail = document.getElementById('rqFail');
+    fail.style.display = '';
+    fail.textContent = `⚠️ تعذّر تحميل طابور التسليم — ${err.message}. السكان شغّال عادي.`;
+  } finally {
+    rqState.loading = false;
+    if (btn) btn.disabled = false;
+    rqRender();
+    rqSetFresh();
+    rqArmAuto();
+    if (!silent) document.getElementById('scanInput')?.focus();   // الفوكس يرجع للسكانر
+  }
+}
+
+// التسليح **بعد كل جلب** — «١٥ دقيقة من آخر تحديث فعلي» مش من فتح الصفحة
+function rqArmAuto() {
+  if (rqState.timer) clearTimeout(rqState.timer);
+  rqState.timer = setTimeout(() => {
+    if (document.hidden) { rqState.dirty = true; return; }   // مخفي = صفر استعلام
+    rqLoad(true);
+  }, RQ_AUTO_REFRESH_MS);
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && rqState.dirty) rqLoad(true);
+});
+
+// النبضة عرض بحت — بتحدّث «منذ كام» وبادج العمر **بلا أي نداء شبكة**.
+// ⚠️ إعادة رسم الجدول كل نص دقيقة كانت هتصفّر التمرير تحت إيد الموظف —
+//    فالبادج بيتحدّث في مكانه زي `print.html` بالظبط.
+setInterval(() => {
+  rqSetFresh();
+  if (!rqState.orders.length) return;
+  const now  = new Date();
+  const tds  = document.querySelectorAll('#rqTableBody .age-badge');
+  tds.forEach((el, i) => {
+    const o = rqState.orders[i];
+    if (!o) return;
+    const age = wocOrderAge(o.createdAt, now);
+    el.className   = `time-badge age-badge ${age.cls}`;
+    el.textContent = age.text;
+  });
+}, RQ_TICK_MS);
+
+// ══════════════════════════════════════════════════════════════
 // §INIT — التحميل (الجلسة اتأكدت فوق)
 // ══════════════════════════════════════════════════════════════
 document.getElementById('headerMount').innerHTML = wocHeader({
-  icon: '📦', title: 'سكانر الشحن', subtitle: 'مركز عمليات المخزن',
+  icon: '📦', title: 'قسم تسليمات بوسطة', subtitle: 'مركز عمليات المخزن',
   session,
   // ⚠️ Chip التاب الحالي — بيظهر **بس وقت الـ Sticky** (شريط التابات
   //    بيتقفل وقتها). كان جوّه الهيدر القديم، فبيتحط هنا في `extras`
@@ -3027,6 +3280,7 @@ updateTabChip();
 measureSticky();                         // ← بعد رسم التابات والـ chip، وإلا القياس بيطلع غلط
 
 document.getElementById('scanInput')?.focus();   // السكانر جاهز من أول لحظة
+rqLoad(true);                            // طابور «جاهز للتسليم لبوسطة» — قراءة بحتة
 </script>
 </body>
 </html>

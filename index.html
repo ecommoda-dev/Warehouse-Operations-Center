@@ -201,6 +201,52 @@
           </button>
         </div>
       </a>
+      <!-- ══ صف تالت — «جاهز لتسليم بوسطة» (v1.23.0 · قرار أحمد 13-09-2026) ══
+           ⚠️ **صف زيادة مش تخطيط جديد** — بالظبط زي ما القاعدة مكتوبة فوق.
+           🔴 **الرقم بيعدّ الطرد اللي موجود على الرف دلوقتي**: اتطبع
+              **واتغلّف**، ومندوبه بوسطة. أوردر اتطبع ولسه ما اتغلّفش
+              **لسه في صف «جاهز للتغليف»** اللي فوقه بالظبط — عدّه هنا
+              كمان معناه إن نفس الأوردر متعدود مرتين في عمودين، والموظف
+              بيروح لمحطة التسليم يدوّر على طرد مش موجود.
+           🔴 **وقت التغليف لازم يبقى بعد وقت الطباعة** — العكس معناه
+              إعادة طباعة بعد التغليف، يعني الأوردر اتعدّل والفاتورة
+              اللي جوّه الطرد لاغية والطرد محتاج يتفتح ويتغلّف من أول.
+              الشرطان عايشين في الـ Worker (`get_ready_to_ship`) —
+              **نفس** الـ endpoint اللي الصفحة بتنادیه، فمستحيل الرقم
+              هنا يخالف القايمة هناك (درس R1).
+           ⚠️ **بلا مربعات تقسيمة** بقرار: الشحنة الأصلية ودورة الاستبدال
+              الاتنين في نفس الرقم **بلا علامة مميزة** — الموظف بيسكن
+              الملصق بنفس الطريقة في الحالتين، فالتفرقة مش حاجة بيتصرّف
+              عليها. -->
+      <a class="woc-row" href="bosta-shipped.html">
+        <div class="woc-row-id">
+          <span class="woc-card-ico ico-green">🚚</span>
+          <div>
+            <div class="woc-card-name">جاهز لتسليم بوسطة</div>
+            <div class="woc-card-desc">اتطبع واتغلّف ومستني بوسطة</div>
+          </div>
+        </div>
+        <div class="woc-row-num woc-num">
+          <span class="woc-count pending" id="cntBosta">—</span><span class="woc-unit">أوردر</span>
+        </div>
+        <div class="woc-row-mid">
+          <div class="woc-chips" id="chipsBosta"></div>
+          <div class="woc-fail" id="failBosta" style="display:none"></div>
+        </div>
+        <div class="woc-row-act">
+          <div class="woc-fresh">
+            <div class="woc-fresh-row">
+              <span class="woc-fresh-lbl">آخر تحديث</span>
+              <span class="woc-ago" id="agoBosta">لسه ما اتحدّثش</span>
+            </div>
+            <div class="woc-fresh-row" id="stampBosta"><span class="woc-stamp-chip">—</span></div>
+          </div>
+          <button class="woc-rbtn" id="btnBosta"
+                  onclick="event.preventDefault();event.stopPropagation();loadQueue('bosta', false)">
+            <span class="woc-rbtn-ico">↺</span><span>تحديث</span><span class="woc-rbtn-badge" id="badgeBosta">—</span>
+          </button>
+        </div>
+      </a>
   </div>
 
   <!-- ══ «أدوات» = اللي الموظف بيشتغل بيه على أوردر قدامه دلوقتي ══
@@ -242,15 +288,13 @@
            **عكس بعض**: واحد بيقفل الشحنة على `Shipped` وبيعمل فلفلمنت،
            والتاني **بيلغي الأوردر** ويرجّع المخزون. اللون تفرقة قبل القراءة
            مش تزويق، والموظف بيدوس عليهم في محطتين مختلفتين. -->
-      <a class="woc-tool tool-ship" href="shipped.html">
+      <a class="woc-tool tool-ship" href="bosta-shipped.html">
         <span class="woc-card-ico">📦</span>
-        <div class="woc-card-name">سكانر الشحن — تسليم لبوسطة</div>
-        <div class="woc-card-desc">سكان تراكينج · S1/S2 → Shipped + فلفلمنت</div>
+        <div class="woc-card-name">قسم تسليمات بوسطة</div>
       </a>
       <a class="woc-tool tool-danger" href="returned.html">
         <span class="woc-card-ico">↩️</span>
         <div class="woc-card-name">سكانر المرتجعات — استلام راجع</div>
-        <div class="woc-card-desc">سكان تراكينج · إلغاء الأوردر أو استرجاع المخزون</div>
       </a>
     </div>
   </div>
@@ -356,7 +400,21 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.22.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.23.0</span>
+          <span class="cl-ver-date">13-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🔴 <b>طابور «جاهز لتسليم بوسطة»</b> — صف تالت في الشاشة الرئيسية، وقايمة جوّه <code>bosta-shipped.html</code> نفسها بدل الشاشة الفاضية. بيعدّ الأوردرات اللي <b>الطرد بتاعها موجود على الرف فعلاً</b>: مندوبه بوسطة · اتطبع <b>واتغلّف</b> · ووقت التغليف <b>بعد</b> وقت الطباعة.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>الفلترة بقت على المندوب (<code>custom.courier</code>) مش على الزون.</b> فيه <b>١٤٩ أوردر</b> على المتجر زونهم «قاهرة+جيزة» وبيروحوا مع بوسطة عادي — الفلترة بالزون كانت هتسقّطهم من الطابور <b>في صمت</b> والموظف واقف ماسك الطرد.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>وقت التغليف لازم يبقى بعد وقت الطباعة.</b> العكس معناه <b>إعادة طباعة بعد التغليف</b> — يعني الأوردر اتعدّل، والفاتورة اللي جوّه الطرد لاغية، والطرد محتاج يتفتح ويتغلّف من أول. تسليمه لبوسطة كده بيخرّج طرد بمحتوى غلط <b>بلا أي رسالة خطأ</b>.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>«سكانر الشحن» بقى «قسم تسليمات بوسطة»</b>، والصفحة اتنقلت من <code>shipped.html</code> لـ<code>bosta-shipped.html</code>. ⚠️ الرابط القديم <b>ما بقاش شغّال</b> — حدّث أي بوكمارك على أجهزة المخزن.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>السطر التوضيحي اتشال من مربعَي «قسم تسليمات بوسطة» و«سكانر المرتجعات» في قسم «أدوات» — زي مربعَي الصف الأول بالظبط.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge">v1.22.0</span>
           <span class="cl-ver-date">10-09-2026</span>
         </div>
         <ul class="cl-items">
@@ -884,11 +942,30 @@ const HOME_QUEUES = {
                chips: WOC_COURIER_GROUPS.map(g => ({ cls: g.cls, label: g.label, n: cn[g.key] })) };
     },
   },
+  // ── «جاهز لتسليم بوسطة» (v1.23.0) ──────────────────────────────
+  // 🔴 **الشروط كلها في الـ Worker** (`get_ready_to_ship` · Worker v3.5.0)،
+  //    و`bosta-shipped.html` بتنادي **نفس** الـ endpoint بالحرف. الرقم هنا
+  //    والقايمة هناك من **مصدر واحد**، فمستحيل يفترقوا — وده بالظبط اللي
+  //    v1.11.0 اتكسر فيه (الرئيسية تقول ٦٦ والصفحة تفتح على ٦ · درس R1).
+  //    ⛔ ممنوع أي حساب أهلية هنا: لا `zone` ولا تاج ولا مقارنة وقت.
+  // ⚠️ **بلا مربعات** بقرار أحمد — الرقم المتغلّف بس، من غير أي ذكر
+  //    للمستبعَد. الـ Worker بيرجّع `skipped` للتشخيص والواجهة **مابتعرضهوش**.
+  bosta: {
+    err: 'تعذّر جلب طابور تسليمات بوسطة',
+    ids: { count:'cntBosta', chips:'chipsBosta', fail:'failBosta',
+           ago:'agoBosta', stamp:'stampBosta', btn:'btnBosta', badge:'badgeBosta' },
+    async fetch() {
+      const data = await wocApi(WOC_WORKERS.shipped).apiGet('get_ready_to_ship');
+      const orders = data.orders || [];
+      return { total: data.counts?.total ?? orders.length, chips: [] };
+    },
+  },
 };
 
 const homeQ = {
   print: { at: null, dirty: false, timer: null, loading: false },
   pack:  { at: null, dirty: false, timer: null, loading: false },
+  bosta: { at: null, dirty: false, timer: null, loading: false },
 };
 let homeTickTimer = null;
 
@@ -908,16 +985,17 @@ function showHome() {
   loadCounts();
 }
 
-// الأعداد — الاتنين **بالتوازي**، و`allSettled` مش `all`:
+// الأعداد — التلاتة **بالتوازي**، و`allSettled` مش `all`:
 // Workers مختلفين = isolates مختلفين = توازي حقيقي، وفشل طابور
-// **مايخفيش** التاني.
+// **مايخفيش** التاني. (بقوا تلاتة في v1.23.0 — تسليمات بوسطة على
+// Worker تالت مستقل، فنفس القاعدة بتنطبق عليه بالحرف.)
 function loadCounts() {
   renderFreshness();
   startHomeTicker();
   // ⚠️ التسليح **من الدخول** كمان مش من أول نجاح بس: لو أول جلب فشل،
   //    تفضل فيه محاولة تلقائية بدل ما الكارت يقف على ⚠️ للأبد.
   Object.keys(homeQ).forEach(armAuto);
-  Promise.allSettled([loadQueue('print'), loadQueue('pack')]);
+  Promise.allSettled([loadQueue('print'), loadQueue('pack'), loadQueue('bosta')]);
 }
 
 // المسار الوحيد للجلب — الضغطة اليدوية والنبضة التلقائية الاتنين
