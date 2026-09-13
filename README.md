@@ -2,7 +2,7 @@
 
 # مركز عمليات المخزن — Warehouse Operations Center
 
-![version](https://img.shields.io/badge/version-v1.22.0-blue)
+![version](https://img.shields.io/badge/version-v1.23.0-blue)
 
 **هب واحد لمحطة المخزن.** الموظف بيدخل مرة واحدة، وبعدين بيتنقّل بين الطباعة
 والتغليف وحذف المنتج وسكانر الشحن وسكانر المرتجعات ورحلة الأوردر — من غير ما
@@ -21,7 +21,7 @@
 | 🔎 | `journey.html` | كل اللي حصل لأوردر واحد عبر التلات أدوات |
 | 📊 | `stats.html` | إحصائيات المخزن — أرقام الفترة · الموظفين · ساعات الشغل |
 | 🏷️ | `sku-barcode.html` | طباعة ليبل باركود ٢×١ إنش — دفعة أوردرات أو SKU مباشر · **ومعاها سجل عمليات** |
-| 📦 | `shipped.html` | **سكانر الشحن** — سكان تراكينج بوسطة · S1/S2 → `Shipped` + فلفلمنت |
+| 📦 | `bosta-shipped.html` | **قسم تسليمات بوسطة** — طابور «جاهز للتسليم» + سكان تراكينج · S1/S2 → `Shipped` + فلفلمنت |
 | ↩️ | `returned.html` | **سكانر المرتجعات** — سكان تراكينج راجع · إلغاء الأوردر (RTO) أو استرجاع المخزون |
 
 ## أول مرة على جهاز
@@ -67,7 +67,7 @@
 Warehouse-Operations-Center/
 ├── index.html · print.html · pack.html · remove.html
 ├── journey.html · stats.html · sku-barcode.html
-├── shipped.html · returned.html          سكانرا بوسطة
+├── bosta-shipped.html · returned.html   سكانرا بوسطة
 ├── shared/
 │   ├── shell.css     التوكنز + الهيدر + المودالات + التوست
 │   └── shell.js      الجلسة + مصنع الـ API + الأدوات المشتركة
