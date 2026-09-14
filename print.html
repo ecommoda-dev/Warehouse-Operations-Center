@@ -1512,8 +1512,19 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
       <div class="cl-entry">
         <div class="cl-head">
-          <span class="cl-ver">v1.24.0</span>
+          <span class="cl-ver">v1.24.1</span>
           <span class="cl-badge" id="clLatestBadge">آخر نسخة</span>
+          <span class="cl-date">14-09-2026</span>
+        </div>
+        <div class="cl-list">
+          <div class="cl-item"><span class="cl-tag fix">إصلاح</span><span>🔴 <b>طباعة بوليصة الاستبدال كانت بتطلع من الطابعة من غير ما تتسجّل خالص.</b> الـ Worker كان لسه فيه حارس قديم بيرفض تسجيل بوليصة لأوردر استبدال/استرجاع — والبوليصة بتتجاب وتتفتح <b>قبل</b> التسجيل، فالورق كان بيخرج و<b>مفيش تاج ولا وقت طباعة ولا صف في السجل</b>، والأوردر يفضل في الطابور كأنه ما اتطبعش.</span></div>
+          <div class="cl-item"><span class="cl-tag change">ملاحظة</span><span>⚠️ محتاج <b>Promote للـ Worker v2.8.1</b>. على v2.8.0 البوليصة الصح بتطلع بس التسجيل بيفشل برسالة حمرا — <b>الورق بيبقى خرج خلاص</b>، فالحارس بيوفّر الورقة مش بس الرسالة.</span></div>
+        </div>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-head">
+          <span class="cl-ver">v1.24.0</span>
           <span class="cl-date">14-09-2026</span>
         </div>
         <div class="cl-list">
