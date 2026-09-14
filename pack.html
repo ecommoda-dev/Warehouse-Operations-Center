@@ -674,13 +674,17 @@
 /* ── مربعات فلتر المندوب — بوسطة/شو روم/مناديب (بند ٦، v2.6.2 · بقوا
    تلاتة في v1.14.0) ──
    ⚠️ الألوان **نفس ألوان عمود المندوب** بالحرف: `.courier-bosta` أحمر ·
-   `.courier-showroom` أخضر · `.courier-other`/`.courier-none` أزرق مجمّعين
+   `.courier-showroom` **تركواز** · `.courier-other`/`.courier-none` أزرق مجمّعين
    في مربع «مناديب» — مفيش نسخة تانية من الألوان.
    ⚠️ ومن v1.14.0 المربعات بقت **متفقة مع لون العمود**: قبل كده الشو روم كان
    أخضر في العمود وواقع في المربع الأزرق، وده كان بيخلّي الموظف يدوّر على
-   الصفوف الخضرا في مربع مش بتاعها. */
+   الصفوف الخضرا في مربع مش بتاعها.
+   🔴 والشو روم بقى **تركواز** في v1.25.0 (كان أخضر) — اللون ده في **خمس
+   أماكن** (`.zchip` و`.courier-cell` هنا · `.woc-chip.qc-showroom` و
+   `.woc-chip.chip-ch-showroom` في الـ shell · `.chan-btn`/`.chan-cell` في
+   `print.html`)، وأي تعديل عليه يتعمل في الخمسة في نفس التمريرة (درس R1). */
 .zchip.qc-bosta{background:var(--red-light);color:var(--red-dark);border-color:var(--red-border)}
-.zchip.qc-showroom{background:var(--green-light);color:var(--green-dark);border-color:var(--green-border)}
+.zchip.qc-showroom{background:var(--teal-light);color:var(--teal-dark);border-color:var(--teal-border)}
 .zchip.qc-courier{background:var(--accent-light);color:var(--accent-dark);border-color:var(--accent-border)}
 
 /* ── مربعات فلتر المندوب — فلتر بضغطة على صندوق الأعداد ──
@@ -705,7 +709,7 @@
 /* ── المندوب — القيمة زي ما هي، واللون بيقول أنهي مندوب (بند ٦) ── */
 .courier-cell{font-weight:800;white-space:nowrap}
 .courier-cell.courier-bosta{color:var(--red)}
-.courier-cell.courier-showroom{color:var(--green)}
+.courier-cell.courier-showroom{color:var(--teal)}
 .courier-cell.courier-other{color:var(--accent)}
 .courier-cell.courier-none{color:var(--text-muted);font-weight:700}
 
@@ -746,7 +750,17 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.21.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.25.0</span>
+          <span class="cl-ver-date">14-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🎨 <b>مربع «شو روم» وعمود المندوب بقوا تركواز</b> بدل الأخضر. نفس اللون بالظبط في الشاشة الرئيسية وفي قسم الطباعة — الموظف بيتعلّمه مرة واحدة.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.21.0</span>
           <span class="cl-ver-date">09-09-2026</span>
         </div>
         <ul class="cl-items">

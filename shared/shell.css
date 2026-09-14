@@ -64,6 +64,20 @@
   --orange-light:   #fff7ed;
   --orange-border:  #fed7aa;
   --orange-dark:    #9a3412;
+  /* 🔴 تركواز — لون **شو روم** من v1.25.0 (قرار أحمد 14-09-2026).
+     كان أخضر، والأخضر بقى مزدحم في الهب (لوحة «آخر تحديث» الطازة ·
+     زرار الإعدادات المضبوط · مربع تسليمات بوسطة). واللون ده **بارد**
+     وسط صف كله دافي (أحمر بوسطة · بني المرتجعات · أحمر الحذف)،
+     فبيتميّز من مسافة شاشة المحطة.
+     ⚠️ واتختار على البرتقالي عن قصد: البرتقالي بأي درجة بيقع جنب
+        `--amber` (ثيم المرتجعات) على **نفس الشاشة الرئيسية** —
+        بادج الشو روم في صف التغليف والمربع البني تحته بشوية.
+     ⚠️ وقربه من الأخضر القديم **ميزة مش مصادفة**: الموظف اللي اتعوّد
+        «الشو روم أخضر» بيشوف نفس العيلة بدرجة مميّزة، مش لون من الأول. */
+  --teal:           #0d9488;
+  --teal-light:     #f0fdfa;
+  --teal-border:    #99f6e4;
+  --teal-dark:      #115e59;
   /* سلّم التأخير في «الوقت منذ الطباعة» — أعلى درجة (٧ أيام فأكتر) */
   --crit:           #7f1d1d;
   --crit-light:     #fee2e2;
@@ -324,7 +338,8 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .woc-tool:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--focus-ring)}
 .woc-tool .woc-card-ico{width:42px;height:42px;border-radius:11px;font-size:22px}
 .woc-tool .woc-card-name{font-size:13.5px}
-/* ⚠️ مربع بثيم أحمر — **للأدوات الهدّامة بس** (`remove.html` النهاردة).
+/* ⚠️ مربع بثيم أحمر — **للأدوات الهدّامة بس** (`remove.html` النهاردة.
+   `returned.html` كانت هنا كمان لحد v1.24.1 وبقت `.tool-return` تحت).
    الأداة دي بتحذف بند من أوردر حي وبند متحذف **مالوش رجعة**، فاللون هنا
    تحذير مش تزويق: الموظف بيدوس على المربعات دي بسرعة، ولازم يفرّق
    الهدّامة عن القراءة **قبل** ما يقرا الاسم.
@@ -348,6 +363,22 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .woc-tool.tool-ship:focus-visible{border-color:var(--green);box-shadow:0 0 0 3px var(--green-border)}
 .woc-tool.tool-ship .woc-card-name{color:var(--green-dark)}
 .woc-tool.tool-ship .woc-card-ico{background:var(--surface);border-color:var(--green-border)}
+
+/* 🔴 `.tool-return` (بني) — مربع **قسم مرتجعات بوسطة** بس
+   (قرار أحمد 14-09-2026 · v1.25.0). اللون متاخد حرفيًا من حالة
+   `Returned` في `Order-Status-Updater` (`--amber`) — نفس الحالة اللي
+   الأداة دي بتكتبها على شوبيفاي، فالموظف بيشوف نفس اللون في الأداتين.
+   ⚠️ **الأداة هدّامة برضه** (`orderCancel` بلا رجعة) — البني بياخد
+      الـ chrome، و**الأحمر بيفضل على نافذة التأكيد وزرار التنفيذ
+      وصفوف الرفض**. أحمر على كل الشاشة = لون بلا معنى، ونفس المربع
+      كان `.tool-danger` لحد v1.24.1.
+   ⛔ ممنوع يتحط على أي مربع تاني — نفس قاعدة `.tool-danger`
+      و`.tool-ship` بالحرف. */
+.woc-tool.tool-return{border-color:var(--amber-border);background:var(--amber-light)}
+.woc-tool.tool-return:hover{border-color:var(--amber);box-shadow:0 6px 18px rgba(217,119,6,.16)}
+.woc-tool.tool-return:focus-visible{border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-border)}
+.woc-tool.tool-return .woc-card-name{color:var(--amber-dark)}
+.woc-tool.tool-return .woc-card-ico{background:var(--surface);border-color:var(--amber-border)}
 
 /* ⚠️ الأيقونة في مربع ملوّن — اللون هو اللي بيفرّق الطباعة عن التغليف
    قبل ما الموظف يقرا الاسم أصلاً. والإيموجي لازم يكون **نفس** إيموجي
@@ -374,23 +405,25 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 /* مربعات المندوب على صف «جاهز للتغليف» (v1.13.0 · بقوا تلاتة في v1.14.0) —
    بدّلوا `chip-s1`/`chip-s2`.
    ⚠️ الألوان **نفس ألوان مربعات `.zchip` في `pack.html`** بالحرف: بوسطة
-      أحمر (`.qc-bosta`) · شو روم أخضر (`.qc-showroom`) · مناديب أزرق
+      أحمر (`.qc-bosta`) · شو روم **تركواز** (`.qc-showroom`) · مناديب أزرق
       (`.qc-courier`). ونفس اسم الكلاس كمان — الصفحة اللي الصف بيفتح عليها
       بتعرض نفس الأرقام بنفس الألوان، فالموظف بيتعلّمهم مرة واحدة (درس R1).
-   ⚠️ وأخضر الشو روم هنا **نفس** أخضر عمود المندوب (`.courier-showroom`)
-      وأخضر مربع القناة (`.chip-ch-showroom`) — تلات أماكن بنفس اللون
-      لنفس المعنى. */
+   🔴 وتركواز الشو روم هنا **نفس** تركواز عمود المندوب (`.courier-showroom`
+      في `pack.html`) وتركواز مربع القناة (`.chip-ch-showroom` هنا و
+      `.chan-btn.ch-showroom` في `print.html`) — **خمس أماكن** بنفس اللون
+      لنفس المعنى. كان أخضر لحد v1.24.1 واتغيّر في v1.25.0، وأي تعديل
+      عليه لازم يعدّي على الخمسة في نفس التمريرة (درس R1). */
 .woc-chip.qc-bosta{background:var(--red-light);color:var(--red-dark);border-color:var(--red-border)}
-.woc-chip.qc-showroom{background:var(--green-light);color:var(--green-dark);border-color:var(--green-border)}
+.woc-chip.qc-showroom{background:var(--teal-light);color:var(--teal-dark);border-color:var(--teal-border)}
 .woc-chip.qc-courier{background:var(--accent-light);color:var(--accent-dark);border-color:var(--accent-border)}
 /* مربعات قناة الشحن على الشاشة الرئيسية (v1.7.0) — طابور الطباعة بقى فيه
    تلات قنوات، والتقسيمة S1/S2 مابقتش هي السؤال المهم فيه.
    ⚠️ الألوان **نفس ألوان عمود المندوب في `pack.html`** وعمود القناة في
-      `print.html`: بوسطة أحمر · قاهرة+جيزة أزرق · شو روم أخضر. نفس
+      `print.html`: بوسطة أحمر · قاهرة+جيزة أزرق · شو روم تركواز. نفس
       المعلومة بلونين مختلفين = الموظف بيتعلّمها مرتين (درس R1). */
 .woc-chip.chip-ch-invoice{background:var(--accent-light);color:var(--accent-dark);border-color:var(--accent-border)}
 .woc-chip.chip-ch-awb{background:var(--red-light);color:var(--red-dark);border-color:var(--red-border)}
-.woc-chip.chip-ch-showroom{background:var(--green-light);color:var(--green-dark);border-color:var(--green-border)}
+.woc-chip.chip-ch-showroom{background:var(--teal-light);color:var(--teal-dark);border-color:var(--teal-border)}
 .woc-chip.chip-ch-none{background:var(--amber-light);color:var(--amber-dark);border-color:var(--amber-border)}
 .woc-chip.chip-ch-pending{background:var(--amber-light);color:var(--amber-dark);border-color:var(--amber-border)}
 .woc-chip.chip-ch-hold{background:var(--surface-2);color:var(--text-secondary);border-color:var(--border-strong)}

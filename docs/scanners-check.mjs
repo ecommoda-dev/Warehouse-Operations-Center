@@ -1,5 +1,5 @@
 // ══════════════════════════════════════════════════════════════
-// docs/scanners-check.mjs — فحص متصفح فعلي لـ `bosta-shipped.html` و`returned.html`
+// docs/scanners-check.mjs — فحص متصفح فعلي لـ `bosta-shipped.html` و`bosta-returned.html`
 //
 // 🔴 **ليه ملف رابع وما اتضافش لملف قايم؟** نفس قرار `browser-check.mjs`
 //    و`sku-barcode-check.mjs` و`pack-check.mjs`: كل ملف بيشغّل Worker وهمي
@@ -191,7 +191,7 @@ async function newPage(rows, diag, { withSession = true, readyRows = [] } = {}) 
 // ══════════════════════════════════════════════════════════════
 for (const [file, title, tabLog, panelLog, rows, diag] of [
   ['bosta-shipped.html', 'قسم تسليمات بوسطة', '#tabLog',       '#panelLog', SHIPPED_ROWS,  DIAG_SHIPPED],
-  ['returned.html', 'سكانر المرتجعات',  '#tabBtnLog',    '#tab-log',  RETURNED_ROWS, DIAG_RETURNED],
+  ['bosta-returned.html', 'قسم مرتجعات بوسطة', '#tabBtnLog',  '#tab-log',  RETURNED_ROWS, DIAG_RETURNED],
 ]) {
   console.log(`\n══ ${file} ══`);
   console.log('① الجلسة والهيدر الموحّد');
@@ -251,7 +251,7 @@ for (const [file, title, tabLog, panelLog, rows, diag] of [
 // ══════════════════════════════════════════════════════════════
 console.log('\n══ الحارس ══');
 console.log('⑤ `requireSession()` بيحوّل للرئيسية');
-for (const file of ['bosta-shipped.html', 'returned.html']) {
+for (const file of ['bosta-shipped.html', 'bosta-returned.html']) {
   const { page, ctx } = await newPage(SHIPPED_ROWS, DIAG_SHIPPED, { withSession:false });
   await page.goto(`${BASE}/${file}`);
   await page.waitForTimeout(700);
@@ -349,19 +349,41 @@ console.log('\n══ مسار السكان — bosta-shipped.html ══');
 }
 
 // ══════════════════════════════════════════════════════════════
-// المجموعة ④ — نافذة التأكيد قبل الإلغاء (`returned.html`)
+// المجموعة ④ — نافذة التأكيد قبل الإلغاء (`bosta-returned.html`)
 // ══════════════════════════════════════════════════════════════
-console.log('\n══ التأكيد قبل فعل لا رجعة فيه — returned.html ══');
+console.log('\n══ التأكيد قبل فعل لا رجعة فيه — bosta-returned.html ══');
 {
   const { page, ctx, errors } = await newPage(RETURNED_ROWS, DIAG_RETURNED);
-  await page.goto(`${BASE}/returned.html`);
+  await page.goto(`${BASE}/bosta-returned.html`);
   await page.waitForTimeout(700);
 
-  console.log('⑪ الأحمر بقى في اللي بيحذّر — مش في الشاشة كلها');
+  console.log('⑪ الثيم بني — والأحمر بقى في اللي بيحذّر بس');
+  // 🔴 الثيم متنفَّذ بقاعدة الأسبقية مش بكتلة توكنز — `--accent` لازم تفضل
+  //    أزرق الهب. البند ده هو اللي بيمنع رجوع `:root { --accent: … }`
+  //    في الصفحة (أخطر قاعدة في الريبو)، وهو **مش** بند عن اللون المعروض.
   const accent = await page.evaluate(() =>
     getComputedStyle(document.documentElement).getPropertyValue('--accent').trim());
-  is(accent === '#2563eb', '🔴 `--accent` بقى أزرق الهب — كتلة التوكنز الحمرا اتشالت', accent);
+  is(accent === '#2563eb', '🔴 `--accent` لسه أزرق الهب — مفيش كتلة توكنز في الصفحة', accent);
+  // ⚠️ واللون المعروض بيتقاس **محسوبًا من عنصر حقيقي** مش من قيمة توكن:
+  //    ده اللي بيفرّق بين «الثيم اتطبّق» و«التوكن موجود ومحدش بيستخدمه».
+  const rgb = (s) => s.replace(/\s/g,'');
+  const tabBg = await page.evaluate(() => {
+    const el = document.querySelector('.main-tab-btn.active');
+    return el ? getComputedStyle(el).backgroundColor : '';
+  });
+  is(rgb(tabBg) === 'rgb(217,119,6)', '🔴 التاب النشط بني (`--amber`) — الثيم اتطبّق فعلاً', tabBg);
+  const homeBg = await page.evaluate(() => {
+    const el = document.querySelector('.hbtn-home');
+    return el ? getComputedStyle(el).backgroundColor : '';
+  });
+  is(rgb(homeBg) === 'rgb(217,119,6)', 'وزرار 🏠 الرئيسية بني — الهيدر ما فضلش أزرق', homeBg);
   is(await page.locator('.confirm-modal').count() === 1, 'ونافذة التأكيد لسه موجودة بحدّها الأحمر');
+  // 🔴 الأحمر لازم يفضل على **الفعل**: زرار التنفيذ هو اللي بيلغي أوردرات.
+  const updBg = await page.evaluate(() => {
+    const el = document.querySelector('#updateBtn');
+    return el ? getComputedStyle(el).backgroundColor : '';
+  });
+  is(rgb(updBg) === 'rgb(220,38,38)', '🔴 وزرار التنفيذ لسه أحمر — البني chrome والأحمر فعل', updBg);
 
   console.log('⑫ نافذة التأكيد بتقف قدام الإلغاء');
   for (const tn of ['11111111','22222222']) {   // ⚠️ نفس مهلة §SCAN فوق

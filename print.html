@@ -408,7 +408,8 @@
       (`updatePrintBar`) — مش إن فيه واحدة مولّعة من غير ما حد يدوس.
    ⚠️ الألوان **نفس ألوان عمود المندوب في `pack.html`** بالحرف
       (`.courier-bosta` أحمر · `.courier-other` أزرق · `.courier-showroom`
-      أخضر). نفس المعلومة بلونين مختلفين = الموظف بيتعلّمها مرتين (درس R1).
+      **تركواز** من v1.25.0، كان أخضر). نفس المعلومة بلونين مختلفين =
+      الموظف بيتعلّمها مرتين (درس R1).
    ⚠️ والشكل بقى **نسخة كاملة من `.zchip`** — بعلامة `✕` كمان، لأن المربع
       بقى بيتقفل بضغطة تانية زي هناك بالظبط. */
 /* صندوق العدّ — **نسخة من `.count-box` في `pack.html`** بالحرف (v1.14.0).
@@ -451,7 +452,7 @@
 }
 .chan-btn.ch-invoice  { background: var(--accent-light); color: var(--accent-dark); border-color: var(--accent-border); }
 .chan-btn.ch-awb      { background: var(--red-light);    color: var(--red-dark);    border-color: var(--red-border); }
-.chan-btn.ch-showroom { background: var(--green-light);  color: var(--green-dark);  border-color: var(--green-border); }
+.chan-btn.ch-showroom { background: var(--teal-light);   color: var(--teal-dark);   border-color: var(--teal-border); }
 .chan-btn.ch-none     { background: var(--amber-light);  color: var(--amber-dark);  border-color: var(--amber-border); }
 /* المختار لازم يبان من بعيد — الموظف اللي مش فاهم ليه الجدول شكله كده
    بيدوّر على الزرار المولّع ده.
@@ -496,7 +497,7 @@
 .chan-cell { font-weight: 800; white-space: nowrap; font-size: 12px; }
 .chan-cell.ch-invoice  { color: var(--accent); }
 .chan-cell.ch-awb      { color: var(--red); }
-.chan-cell.ch-showroom { color: var(--green); }
+.chan-cell.ch-showroom { color: var(--teal); }
 .chan-cell.ch-none     { color: var(--amber-dark); }
 
 /* صف مقفول الطباعة — بيظهر ومايتحددش. الإخفاء هو اللي أنتج
@@ -1512,8 +1513,18 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
       <div class="cl-entry">
         <div class="cl-head">
-          <span class="cl-ver">v1.24.1</span>
+          <span class="cl-ver">v1.25.0</span>
           <span class="cl-badge" id="clLatestBadge">آخر نسخة</span>
+          <span class="cl-date">14-09-2026</span>
+        </div>
+        <div class="cl-list">
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span>🎨 <b>مربع «شو روم» وعمود «نوع الفاتورة» بقوا تركواز</b> بدل الأخضر. نفس اللون بالظبط في الشاشة الرئيسية وفي قسم التغليف — الموظف بيتعلّمه مرة واحدة.</span></div>
+        </div>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-head">
+          <span class="cl-ver">v1.24.1</span>
           <span class="cl-date">14-09-2026</span>
         </div>
         <div class="cl-list">
