@@ -327,15 +327,38 @@
 .total-num { font-weight: 800; font-size: 13px; }
 /* عمود الأصناف بيتمدّد بعرض محدود — من غير السقف ده SKU طويل
    (`RN-AD-115 / Black / 45`) بيوسّع العمود ويضغط باقي الجدول. */
-.col-items { max-width: 220px; }
+.col-items { max-width: 240px; }
+/* 🔴 صنف في كل سطر — مش جنب بعض (v1.25.1 · قرار أحمد 14-09-2026).
+   الأصناف كانت بادچات متلاصقة بتلفّ في سطر واحد، فأوردر بتلات أصناف بيتقري
+   كتلة واحدة والموظف لازم يفصلها بعينه وهو واقف على الطابعة. السطر لكل صنف
+   بيخلّي العدّ بالعين، والكمية جنب كل صنف بدل ما تبقى مخفية جوّه الكتلة.
+   ⚠️ `stretch` (الافتراضي في العمود) هو اللي بيخلّي البادچات كلها بعرض واحد،
+      وده اللي بيرصّ **بادچات الكمية في عمود متحاذي** — من غيره كل رقم بيقع
+      في مكان مختلف حسب طول الـ SKU، والعين بتدوّر عليه سطر سطر. */
+.items-list { display: flex; flex-direction: column; gap: 4px; }
 .item-sku {
-  display: inline-flex; align-items: center; gap: 3px;
-  direction: ltr; font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; gap: 6px;
+  direction: ltr;
   background: var(--surface-2); border: 1px solid var(--border);
-  border-radius: 999px; padding: 1px 7px; margin: 1px 2px;
-  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  border-radius: 7px; padding: 3px 6px;
+  max-width: 100%; overflow: hidden;
 }
-.item-qty  { font-weight: 900; color: var(--accent); }
+/* 🔴 الكمية بتتعرض على **كل** صنف — حتى `×1`. إخفاؤها على القطعة الواحدة
+   (السلوك القديم) معناه إن غياب الرقم بيتقري «مش معروف» مش «واحدة»،
+   والعمود بيبقى نصّه بيقول كمية ونصّه ساكت. */
+.item-qty {
+  flex: 0 0 auto; min-width: 28px; text-align: center;
+  font-family: var(--font-mono); font-size: 11px; font-weight: 900;
+  color: var(--accent-dark); background: var(--accent-light);
+  border: 1px solid var(--accent-border); border-radius: 5px; padding: 1px 4px;
+}
+/* ⚠️ `min-width: 0` مش تفصيلة — من غيرها عنصر الفليكس مابيقبلش يصغّر عن
+   محتواه، فـ `text-overflow: ellipsis` مابيشتغلش والـ SKU الطويل بيكسر العمود. */
+.item-name {
+  flex: 1 1 auto; min-width: 0; text-align: left;
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .items-btn {
   background: transparent; border: 1px solid var(--border); border-radius: 999px;
   padding: 2px 9px; font-size: 11px; font-weight: 700; font-family: inherit;
@@ -1513,8 +1536,19 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
       <div class="cl-entry">
         <div class="cl-head">
-          <span class="cl-ver">v1.25.0</span>
+          <span class="cl-ver">v1.25.1</span>
           <span class="cl-badge" id="clLatestBadge">آخر نسخة</span>
+          <span class="cl-date">14-09-2026</span>
+        </div>
+        <div class="cl-list">
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span>📦 <b>عمود «الأصناف» بقى صنف في كل سطر</b> بدل ما الأصناف تتلزق جنب بعض في كتلة واحدة — العدّ بقى بالعين.</span></div>
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span>🔢 <b>الكمية جنب كل صنف في بادچ واضح</b> — وبتتعرض على <b>كل</b> صنف حتى لو قطعة واحدة (<code>×1</code>). قبل كده كانت بتختفي على القطعة الواحدة، فغياب الرقم كان بيتقري «مش معروف» مش «واحدة».</span></div>
+        </div>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-head">
+          <span class="cl-ver">v1.25.0</span>
           <span class="cl-date">14-09-2026</span>
         </div>
         <div class="cl-list">
@@ -3121,12 +3155,14 @@ function totalCell(o) {
 function itemsCell(o) {
   if (Array.isArray(o.items)) {
     if (!o.items.length) return '<span class="cell-unknown">مفيش أصناف</span>';
-    return o.items.map(it =>
+    // صنف في كل سطر، وكميته في بادچ ثابت العرض جنبه — العدّ بالعين بدل
+    // ما الأصناف تتلزق في كتلة واحدة. ⚠️ الكمية بتتعرض حتى لو `1`.
+    return `<div class="items-list">` + o.items.map(it =>
       `<span class="item-sku" title="${escHtml(it.title || "")}">`
-      + `${escHtml(it.sku || "بلا SKU")}`
-      + (it.qty > 1 ? `<span class="item-qty">×${it.qty}</span>` : "")
+      + `<span class="item-qty">×${escHtml(String(it.qty ?? 1))}</span>`
+      + `<span class="item-name">${escHtml(it.sku || "بلا SKU")}</span>`
       + `</span>`
-    ).join("");
+    ).join("") + `</div>`;
   }
   if (o.itemsBusy) return '<span class="cell-unknown">…</span>';
   return `<button class="items-btn" onclick="event.stopPropagation(); showOrderItems('${escHtml(o.id)}');">👁 عرض</button>`;

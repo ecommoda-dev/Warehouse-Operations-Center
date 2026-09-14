@@ -119,7 +119,7 @@ const WOC_WORKERS = {
   returned: { url: 'https://bosta-orders-returned-scanner.ecommoda-dev.workers.dev', min: '3.4.0', label: 'قسم مرتجعات بوسطة' },
 };
 
-const TOOL_VERSION = 'v1.25.0';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.25.1';                      // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const WOC_APP_ID   = 'warehouse_ops_center';         // قيمة `tool` في D1 — login/logout بس
 const SHOP_HANDLE  = '6c7e1a-53';
