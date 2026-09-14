@@ -43,7 +43,14 @@ const WOC_WORKERS = {
   // و2.5.0 كانت أول نسخة فيها `bosta_lookup`/`bosta_awb` و`allZones` في
   // `/orders` و`doc: 'AWB'` في `/track` (قناة بوسطة)، و2.4.0 أول نسخة فيها
   // `POST /lookup` (كارت إعادة الطباعة). الترفيع مشروع (Standards #29).
-  printer: { url: 'https://order-printer-worker.ecommoda-dev.workers.dev',          min: '2.7.0', label: 'الطباعة' },
+  // 🔴 **و2.8.0 (هب v1.24.0) أول نسخة بتصنّف شحنة بوسطة حسب الماكينة** —
+  //    `?action=bosta_lookup` بقى بياخد `machine` وبيفلتر على `type.code`
+  //    (١٠ Send · ٢٥ استرجاع · ٣٠ استبدال) بدل «Send بس». من غيرها صف S2
+  //    في الطابور بياخد **بوليصة شحنة الشحن**: ملصق غلط على كرتونة، بلا أي
+  //    خطأ — وده **مش تدهور آمن**، عشان كده الواجهة مابتكتفيش بالتحذير:
+  //    بترفض طباعة أي صف S2 لو الرد ما فيهوش `machine` (§AWB-MACHINE في
+  //    `print.html`). الحارس هنا **مش رفاهية** — نفس عيلة `remover.min`.
+  printer: { url: 'https://order-printer-worker.ecommoda-dev.workers.dev',          min: '2.8.0', label: 'الطباعة' },
   // 🔴 2.6.0 = أول نسخة فيها §ELIGIBILITY و§PROFILE — `pack.html` من هب
   // v1.21.0 **معتمدة عليهم فعلاً** (Standards #29): نافذة التشخيص بتقرا
   // `profile` و`eligibility.hints`، وبوابة الإقرار بتقرا `eligibility.level`.
@@ -106,7 +113,7 @@ const WOC_WORKERS = {
   returned: { url: 'https://bosta-orders-returned-scanner.ecommoda-dev.workers.dev', min: '3.4.0', label: 'سكانر المرتجعات' },
 };
 
-const TOOL_VERSION = 'v1.23.0';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.24.0';                      // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const WOC_APP_ID   = 'warehouse_ops_center';         // قيمة `tool` في D1 — login/logout بس
 const SHOP_HANDLE  = '6c7e1a-53';
@@ -459,8 +466,21 @@ const WOC_ICON_BARCODE = '<svg viewBox="0 0 24 24" width="1em" height="1em" '
 // تاج «اترفع على داشبورد بوسطة». الرفع **بوابة إلزامية قبل الطباعة**
 // (`ecommoda-order-lifecycle` → `zone-routing.md` §2.2)، والتاج ده أثرها
 // الوحيد على شوبيفاي: غايب = مفيش شحنة = مستحيل تتطبع بوليصة.
-const BOSTA_UPLOADED_TAG = 'Bosta_Uploaded_S1';
-function wocBostaUploaded(o) { return (o.tags || []).includes(BOSTA_UPLOADED_TAG); }
+//
+// 🔴 **تاج لكل ماكينة — مش تاج واحد** (v1.24.0). الأوردر بياخد شحنة على
+//    بوسطة **لكل دورة**: `Bosta_Uploaded_S1` لشحنة الشحن،
+//    و`Bosta_Uploaded_S2` لشحنة الاسترجاع/الاستبدال. متأكَّد حيًا على
+//    `#53822` (13-09-2026): التاجان الاتنين عليه، و
+//    `bosta_tracking_number_s1 ≠ …_s2` — يعني **شحنتين مختلفتين فعلاً**.
+// ⛔ **وممنوع صف S2 يعدّي بتاج S1.** ده بالظبط الفشل اللي الحارس موجود
+//    عشانه: `#54244` عليه `Bosta_Uploaded_S1` بس وحالته
+//    `Confirmed + EXCHANGE` — يعني شحنة الاستبدال **لسه ما اترفعتش**،
+//    والطباعة عليه بترجّع بوليصة الشحنة الأصلية أو لا شيء.
+const BOSTA_UPLOADED_TAGS = { S1: 'Bosta_Uploaded_S1', S2: 'Bosta_Uploaded_S2' };
+function wocMachineOf(o) { return (o.type === 'S2' || o.orderType === 'S2') ? 'S2' : 'S1'; }
+function wocBostaUploaded(o) {
+  return (o.tags || []).includes(BOSTA_UPLOADED_TAGS[wocMachineOf(o)]);
+}
 
 // القناة المعروضة. **الـ Worker هو مصدر قرار الطباعة** (`o.channel` =
 // 'invoice' · 'awb' · null) — وده بيزوّد تفرقة **عرض** واحدة بس: الشو روم
@@ -480,9 +500,16 @@ function wocChannelOf(o) {
 function wocChannelGate(o, chan) {
   if (wocChannelOf(o) !== chan) return 'other-channel';
   if (chan === 'awb') {
-    // S2 على بوسطة مخفية مؤقتًا بقرار (أحمد 07-09-2026).
-    if (o.type === 'S2' || o.orderType === 'S2') return 's2';
+    // 🔴 **بند `s2` اتشال في v1.24.0** (قرار أحمد 14-09-2026). كان: «S2 على
+    //    بوسطة مخفية مؤقتًا» (أحمد 07-09-2026) — والإخفاء ده كان **حارس
+    //    بالنيابة**: الـ Worker وقتها كان بيفلتر شحنات بوسطة على `Send` بس،
+    //    فصف S2 كان هياخد بوليصة شحنة الشحن. الحارس الحقيقي بقى في مكانه
+    //    (`MACHINE_TYPE_CODES` في Worker v2.8.0 — فلترة على نوع الشحنة)،
+    //    فالإخفاء بقى منع لشغل مشروع.
+    //    ⚠️ والدليل إنه كان بيمنع شغل حقيقي: `#53822` اتطبعت بوليصة S2
+    //    بتاعته و`printing_time_s2` اتكتب **بالإيد** يوم 13-09-2026.
     // لسه ما اترفعش على داشبورد بوسطة — مفيش شحنة، فمفيش بوليصة.
+    // ⚠️ والتاج **بتاع ماكينة الصف** مش تاج S1 دايمًا — فوق في §BOSTA-GATE.
     if (!wocBostaUploaded(o)) return 'not-uploaded';
   }
   return null;
