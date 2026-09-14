@@ -1512,8 +1512,22 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
       <div class="cl-entry">
         <div class="cl-head">
-          <span class="cl-ver">v1.20.0</span>
+          <span class="cl-ver">v1.24.0</span>
           <span class="cl-badge" id="clLatestBadge">آخر نسخة</span>
+          <span class="cl-date">14-09-2026</span>
+        </div>
+        <div class="cl-list">
+          <div class="cl-item"><span class="cl-tag new">جديد</span><span>🚚 <b>قناة بوسطة بقت بتطبع دورة الاستبدال/الاسترجاع (S2) زي الشحن (S1) بالظبط.</b> كانت صفوف S2 <b>مخفية</b> من طابور بوسطة بقرار مؤقت من 07-09-2026، والموظف كان بيضطر يكتب <code>printing_time_s2</code> بإيده في الأدمن.</span></div>
+          <div class="cl-item"><span class="cl-tag fix">إصلاح</span><span>🔴 <b>السبب الحقيقي اللي كان وراء الإخفاء اتقفل في الـ Worker.</b> الأوردر بيبقى عليه <b>شحنتين</b> على بوسطة تحت نفس رقم الأوردر — شحنة الشحن وشحنة الاسترجاع/الاستبدال — والأداة كانت بتختار شحنة الشحن <b>دايمًا</b>. يعني صف S2 كان هياخد <b>ملصق الشحنة الغلط</b> من غير أي رسالة خطأ. دلوقتي الاختيار بيتم <b>بنوع الشحنة</b> (Worker v2.8.0).</span></div>
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span>تاج الرفع على بوسطة بقى <b>لكل دورة لوحدها</b>: <code>Bosta_Uploaded_S1</code> لصف الشحن و<code>Bosta_Uploaded_S2</code> لصف الاستبدال/الاسترجاع. أوردر شحنته الأصلية مرفوعة وشحنة الاستبدال لأ <b>مابيدخلش</b> الطابور — ودي مش حالة نادرة.</span></div>
+          <div class="cl-item"><span class="cl-tag new">جديد</span><span>رسالة حجب جديدة تفرّق بين «مفيش شحنة خالص» و<b>«فيه شحنة بس بتاعة الدورة التانية»</b> — التانية معناها إن الرفع لسه ناقص، مش إن الأوردر مش على بوسطة.</span></div>
+          <div class="cl-item"><span class="cl-tag change">ملاحظة</span><span>⚠️ محتاج <b>Promote للـ Worker v2.8.0</b>. من غيره صفوف S2 بتظهر في الطابور بس <b>الطباعة عليها مرفوضة برسالة صريحة</b> — مسموح نوقّفها، مش مسموح نطلّع ملصق ممكن يكون غلط. وصفوف الشحن (S1) شغّالة عادي في الحالتين.</span></div>
+        </div>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-head">
+          <span class="cl-ver">v1.20.0</span>
           <span class="cl-date">09-09-2026</span>
         </div>
         <div class="cl-list">
@@ -2881,7 +2895,7 @@ function rebuildPrintFilterItems() {
 // 🔴 القناة `null` = **مش عارفين**. الصف بيظهر والطباعة مقفولة برسالة.
 //    ممنوع أي تخمين ومنوع أي اشتقاق من العنوان (قاعدة ١٦)، وممنوع الإخفاء —
 //    الإخفاء هو اللي أنتج «الأوردر مش ظاهر» مع `ZONE_FILTER`.
-// 🔴 `ZONE_SHOWROOM` و`BOSTA_UPLOADED_TAG` و`wocChannelOf` و`wocChannelGate`
+// 🔴 `ZONE_SHOWROOM` و`BOSTA_UPLOADED_TAGS` و`wocChannelOf` و`wocChannelGate`
 //    كلهم في `shared/shell.js` §BOSTA-GATE — **مش هنا**. الشاشة الرئيسية
 //    بتعدّ من نفس رد `/orders` بالظبط، ونسخة تانية من أي قاعدة فيهم معناها
 //    إن الرئيسية تقول رقم والصفحة تفتح على رقم تاني (اللي حصل في v1.11.0:
@@ -3690,6 +3704,16 @@ async function executePrint(selectedOrders, guards = {}) {
 const AWB_BLOCK_MSG = {
   not_found:     "مفيش شحنة على بوسطة بالرقم ده — الأوردر ما اترفعش (أو اترفع بمرجع مختلف). " +
                  "الرفع على بوسطة خطوة إلزامية قبل الطباعة.",
+  // 🔴 السبب ده **مختلف فعلاً** عن `not_found` — والفرق هو اللي بيحدد يعمل
+  //    إيه: هناك الأوردر مالوش أي شحنة، وهنا **عليه شحنة بس بتاعة الدورة
+  //    التانية**. رسالة واحدة للاتنين كانت هتخلّي الموظف يروح يرفع الأوردر
+  //    من أول وهو مرفوع.
+  machine_mismatch: "الأوردر ده عليه شحنة على بوسطة، بس **مش** شحنة الدورة دي. " +
+                 "شحنة الاسترجاع/الاستبدال لازم تترفع على داشبورد بوسطة الأول — " +
+                 "البوليصة اللي موجودة دلوقتي بتاعة الشحنة الأصلية ومش بتخص الطرد ده.",
+  no_machine_echo: "الـ Worker نسخة قديمة مابتفرّقش بين شحنة الشحن وشحنة الاسترجاع/الاستبدال، " +
+                 "فالطباعة هنا ممكن تطلّع **بوليصة الشحنة الغلط**. لازم Promote للـ Worker v2.8.0. " +
+                 "أوردرات الشحن الأصلية (S1) شغّالة عادي.",
   ambiguous:     "أكتر من شحنة صادرة حيّة على الأوردر ده — التحديد لازم يتم بإيدك من داشبورد بوسطة. " +
                  "الأداة مابتخمّنش: ملصق غلط على كرتونة أسوأ من صف مستني.",
   blocked_state: "الشحنة على بوسطة مش مؤهلة لطباعة بوليصة.",
@@ -3730,7 +3754,11 @@ async function runPrintAWB(selected) {
   let look;
   try {
     look = await apiPost("bosta_lookup", {
-      orders:   selected.map(o => ({ id: o.id, name: o.name, total: o.total })),
+      // 🔴 `machine` (v1.24.0) — الـ Worker بيختار شحنة بوسطة بيها: `S1`
+      //    شحنة الشحن، و`S2` شحنة الاسترجاع/الاستبدال. الأوردر عليه
+      //    **الاتنين** تحت نفس المرجع، فمن غير السطر ده صف S2 بياخد ملصق
+      //    الشحنة الأصلية.
+      orders:   selected.map(o => ({ id: o.id, name: o.name, total: o.total, machine: o.type })),
       employee: currentEmployee.username,
     });
   } catch (err) {
@@ -3754,8 +3782,21 @@ async function runPrintAWB(selected) {
               (look.logError ? ` — ${look.logError}` : ""), "warn", 8000);
   }
 
-  const ready   = selected.filter(o =>  byId[o.id]?.ok);
-  const blocked = selected.filter(o => !byId[o.id]?.ok).map(o => awbBlockedRow(o, byId[o.id]));
+  // ─── §AWB-MACHINE — حارس «الـ Worker صنّف بالماكينة فعلاً؟» ───
+  // 🔴 **منع طباعة، مش تحذير.** Worker أقدم من v2.8.0 بيصنّف بقاعدة «Send
+  //    بس»، فصف S2 بيرجع منه `ok: true` وهو شايل **بوليصة شحنة الشحن**.
+  //    تحذير الهيدر مابيمنعش الدوسة، والثمن هنا **ملصق غلط على كرتونة** —
+  //    وده أسوأ من صف مستني (نفس قاعدة `ambiguous` بالحرف).
+  // ⚠️ الحارس على صفوف **S2 بس**: S1 سلوكها مطابق في النسختين، وتعطيلها
+  //    كان هيوقّف قناة شغّالة على حاجة مالهاش أثر عليها.
+  const staleMachine = (o) => o.type === "S2" && byId[o.id]?.machine !== "S2";
+
+  const ready   = selected.filter(o =>  byId[o.id]?.ok && !staleMachine(o));
+  const blocked = selected
+    .filter(o => !byId[o.id]?.ok || staleMachine(o))
+    .map(o => staleMachine(o) && byId[o.id]?.ok
+      ? awbBlockedRow(o, { reason: "no_machine_echo" })
+      : awbBlockedRow(o, byId[o.id]));
 
   if (!ready.length) {
     renderTrackResults(blocked);
@@ -3847,7 +3888,15 @@ async function executePrintAWB(orders, guards = {}, byId = {}, blockedRows = [])
       const d = byId[o.id].selected;
       const r = await apiPath("/track", {
         orderId: o.id, orderNumber: o.name,
-        type: "S1", doc: "AWB",
+        // 🔴 `type` = الماكينة — بقت **من الصف** مش ثابتة على `S1`
+        //    (v1.24.0). الـ Worker بيفرّع عليها: تاج `Printed(S2)` ·
+        //    `printing_time_s2` · `status_2_r_e = Ready` لصف S2.
+        //    تثبيتها على `S1` كان معناه إن طباعة بوليصة الاستبدال تكتب على
+        //    **ماكينة الشحن**: `Ready` على `manual_status` بتاع أوردر
+        //    اتشحن خلاص — كتابة صامتة على الماكينة الغلط.
+        // ⚠️ و`doc: 'AWB'` ثابت زي ما هو — ده **المستند** مش الماكينة،
+        //    وهو اللي بيحدد `type` في D1 وبس.
+        type: o.type, doc: "AWB",
         employee: currentEmployee.username,
         bosta: {
           deliveryId:     d.deliveryId,

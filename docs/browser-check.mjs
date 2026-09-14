@@ -74,7 +74,14 @@ const ORDERS = [
   {id:'gid://shopify/Order/1', orderId:'1', name:'#53400', createdAt:'2026-09-06T08:00:00Z', customer:'أحمد', type:'S1', status:'Confirmed',        zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:1200, totalOriginal:1200, printingTimeS1:null, packingTimeS1:null, tags:['Bosta_Uploaded_S1'], isPrinted:false, itemsQty:1, printedAny:false},
   {id:'gid://shopify/Order/2', orderId:'2', name:'#53401', createdAt:'2026-09-06T09:00:00Z', customer:'منى',  type:'S1', status:'Confirmed + Edit', zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:800,  totalOriginal:800,  printingTimeS1:'2026-09-05T10:00:00Z', packingTimeS1:null, tags:['Bosta_Uploaded_S1','Printed(S1)'], isPrinted:true, itemsQty:3, printedAny:true, items:[{qty:2,sku:'AKS35 / Grey / 41',title:'حذاء'},{qty:1,sku:'C50 / Navy / 43',title:'حذاء'}]},
   {id:'gid://shopify/Order/3', orderId:'3', name:'#53402', createdAt:'2026-09-06T10:00:00Z', customer:'سيد',  type:'S1', status:'Confirmed',        zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:500,  totalOriginal:500,  printingTimeS1:null, packingTimeS1:null, tags:['Bosta_Uploaded_S1'], isPrinted:false, itemsQty:2, printedAny:false},
+  // 🚚 §BOSTA-S2 — **الصفّان دول هما بند v1.24.0 بالكامل، والفرق بينهم تاج واحد:**
+  //    · `#53403` عليه تاج رفع **S1 بس** وحالته S2 → شحنة الاستبدال/الاسترجاع
+  //      لسه ما اترفعتش، فمستحيل تتطبع بوليصتها → **بره الجدول**. ودي مش حالة
+  //      نظرية: `#54244` على المتجر الحقيقي بالظبط كده (13-09-2026).
+  //    · `#53409` عليه `Bosta_Uploaded_S2` → **جوّه الجدول وبيتطبع**.
+  //    ⛔ خلّي الأول يعدّي بتاج S1 = رجوع الباج اللي القاعدة اتكتبت ضده.
   {id:'gid://shopify/Order/4', orderId:'4', name:'#53403', createdAt:'2026-09-06T11:00:00Z', customer:'هدى',  type:'S2', status:'Confirmed + RETURN',zone:'Other_Regions', zoneKnown:true,  channel:'awb',     total:300,  totalOriginal:300,  printingTimeS1:null, packingTimeS1:null, tags:['Bosta_Uploaded_S1'], isPrinted:false, itemsQty:1, printedAny:false},
+  {id:'gid://shopify/Order/11',orderId:'11',name:'#53409', createdAt:'2026-09-06T07:00:00Z', customer:'رشا',  type:'S2', status:'Confirmed + EXCHANGE',zone:'Other_Regions',zoneKnown:true, channel:'awb',   total:450,  totalOriginal:450,  printingTimeS1:null, packingTimeS1:null, tags:['Bosta_Uploaded_S1','Bosta_Uploaded_S2'], isPrinted:false, itemsQty:1, printedAny:false},
   {id:'gid://shopify/Order/5', orderId:'5', name:'#53404', createdAt:'2026-09-06T12:00:00Z', customer:'كريم', type:'S1', status:'Confirmed',        zone:'Cairo+Giza',    zoneKnown:true,  channel:'invoice', total:900,  totalOriginal:900,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false, itemsQty:4, printedAny:false},
   {id:'gid://shopify/Order/6', orderId:'6', name:'#53405', createdAt:'2026-09-06T13:00:00Z', customer:'ندى',  type:'S1', status:'Confirmed',        zone:'Show_Room',     zoneKnown:true,  channel:'invoice', total:400,  totalOriginal:400,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false, itemsQty:1, printedAny:false},
   {id:'gid://shopify/Order/7', orderId:'7', name:'#53406', createdAt:'2026-09-06T14:00:00Z', customer:'طارق', type:'S1', status:'Confirmed',        zone:null,            zoneKnown:false, channel:null,      total:700,  totalOriginal:700,  printingTimeS1:null, packingTimeS1:null, tags:[], isPrinted:false, itemsQty:1, printedAny:false},
@@ -85,6 +92,10 @@ const ORDERS = [
 ];
 
 const calls = [];
+// 🔴 بيحوّل الـ Worker الوهمي لنسخة **أقدم من v2.8.0** (مابترجّعش `machine`).
+//    بند §AWB-MACHINE بيتفحص بيه — والقياس الوحيد الممكن، لأن الفشل في
+//    الحقيقة **صامت**: الرد بيقول `ok` والبوليصة بتطلع، بس بتاعة الشحنة الغلط.
+let MOCK_NO_MACHINE = false;
 // ⚠️ `PW_CHROMIUM` بيسمح بتمرير مسار كروميوم مثبّت مسبقًا لو Playwright
 //    ما نزّلش نسخته — نفس اللي في `docs/sku-barcode-check.mjs` بالظبط.
 //    مسار مزروع في الكود بيخلّي الاختبار يقع على أي جهاز تاني.
@@ -148,15 +159,26 @@ await page.route('**order-printer-worker.ecommoda-dev.workers.dev/**', async (ro
       total:1000, totalOriginal:1000, itemsQty:2, tags:['Printed(S1)'], isPrinted:true, printedAny:true } }));
   if (url.pathname === '/logs') return route.fulfill(J({ok:true, entries:LOGS, count:LOGS.length, total:LOGS.length, cap:5000, truncated:false}));
   if (action === 'bosta_lookup') {
-    const mk = (o) => {
-      if (!o) return { id:'gid://shopify/Order/10', name:'#53410', found:true, ok:true, reason:null, codMismatch:null,
-             selected:{ deliveryId:'dl10', trackingNumber:'TR10', stateCode:20, stateName:'Route Assigned', type:'Send', cod:1000 }, deliveries:[] };
-      if (o.name === '#53402') return { id:o.id, name:o.name, found:false, ok:false, reason:'not_found', selected:null, deliveries:[], codMismatch:null };
+    // 🔴 الـ Worker الوهمي بيصنّف **بالماكينة** زي Worker v2.8.0 بالظبط:
+    //    صف S1 بياخد شحنة `Send` وصف S2 بياخد شحنة `Exchange` — **معرّفان
+    //    مختلفان**. من غير الفرق ده البند اللي بيقفل «صف S2 أخد بوليصته هو»
+    //    كان هيعدّي على أي منطق، حتى الغلط (نفس درس `includes()` في فحص
+    //    الباركود).
+    // ⚠️ و`MOCK_NO_MACHINE` بيحاكي Worker **أقدم** — بيرجّع `ok:true` من غير
+    //    `machine` خالص، وده اللي §AWB-MACHINE في الصفحة لازم يمسكه.
+    const mk = (o, b) => {
+      const machine = b?.machine === 'S2' ? 'S2' : 'S1';
+      const stamp   = MOCK_NO_MACHINE ? {} : { machine };
+      if (!o) return { ...stamp, id:'gid://shopify/Order/10', name:'#53410', found:true, ok:true, reason:null, codMismatch:null,
+             selected:{ deliveryId:'dl10', trackingNumber:'TR10', stateCode:20, stateName:'Route Assigned', type:'Send', typeCode:10, cod:1000 }, deliveries:[] };
+      if (o.name === '#53402') return { ...stamp, id:o.id, name:o.name, found:false, ok:false, reason:'not_found', selected:null, deliveries:[], codMismatch:null };
       const cod = o.name === '#53400' ? 1500 : o.total;   // #53400 عنده فرق تحصيل
-      return { id:o.id, name:o.name, found:true, ok:true, reason:null, codMismatch: cod!==o.total?{cod,total:o.total,diff:cod-o.total}:null,
-               selected:{ deliveryId:'dl'+o.orderId, trackingNumber:'TR'+o.orderId, stateCode:20, stateName:'Route Assigned', type:'Send', cod }, deliveries:[] };
+      const ex  = machine === 'S2';
+      return { ...stamp, id:o.id, name:o.name, found:true, ok:true, reason:null, codMismatch: cod!==o.total?{cod,total:o.total,diff:cod-o.total}:null,
+               selected:{ deliveryId:(ex?'dlEX':'dl')+o.orderId, trackingNumber:(ex?'TREX':'TR')+o.orderId, stateCode:20, stateName:'Route Assigned',
+                          type:ex?'Exchange':'Send', typeCode:ex?30:10, cod }, deliveries:[] };
     };
-    return route.fulfill(J({ ok:true, results:(body.orders||[]).map(b => mk(ORDERS.find(o=>o.id===b.id))), truncated:false, searchLimit:50, logged:true }));
+    return route.fulfill(J({ ok:true, results:(body.orders||[]).map(b => mk(ORDERS.find(o=>o.id===b.id), b)), truncated:false, searchLimit:50, logged:true }));
   }
   if (action === 'bosta_awb') {
     const n = (body.deliveryIds||[]).length;
@@ -200,9 +222,9 @@ check('🔴 وبترجع تتطوي بضغطة تانية', await page.isHidden(
 // ② عدّادات القنوات
 const n = async (k) => (await page.textContent(`#chanN-${k}`)).trim();
 check('عدّاد قاهرة+جيزة = 1', await n('invoice')==='1', await n('invoice'));
-// 🔴 البادج بيعدّ **المعروض فعلاً** مش القناة كلها: ٥ أوردر بوسطة في الرد،
-//    منهم واحد S2 وواحد بلا تاج رفع — فالبادج ٣ زي الجدول بالظبط.
-check('🔴 عدّاد بوسطة = 3 (= الجدول، مش القناة كلها)', await n('awb')==='3', await n('awb'));
+// 🔴 البادج بيعدّ **المعروض فعلاً** مش القناة كلها: ٦ أوردر بوسطة في الرد،
+//    منهم واحد بلا تاج رفع وواحد S2 بتاج S1 بس — فالبادج ٤ زي الجدول بالظبط.
+check('🔴 عدّاد بوسطة = 4 (= الجدول، مش القناة كلها)', await n('awb')==='4', await n('awb'));
 check('عدّاد شو روم = 1',     await n('showroom')==='1',await n('showroom'));
 check('عدّاد بلا قناة = 2',   await n('none')==='2',    await n('none'));
 check('زرار «بلا قناة» ظاهر', await page.isVisible('#chanBtn-none'));
@@ -214,7 +236,7 @@ check('🔴 مفيش قناة مولّعة عند الفتح',
       (await page.$$('#chanBar .chan-btn.active')).length === 0,
       String((await page.$$('#chanBar .chan-btn.active')).length));
 // 1 قاهرة+جيزة + 3 بوسطة + 1 شو روم + 2 بلا قناة = 7
-check('🔴 الجدول بيعرض كل القنوات (7 صفوف)', (await page.$$('#printTableBody tr')).length === 7,
+check('🔴 الجدول بيعرض كل القنوات (8 صفوف)', (await page.$$('#printTableBody tr')).length === 8,
       String((await page.$$('#printTableBody tr')).length));
 {
   const sum = Number(await n('invoice')) + Number(await n('awb')) + Number(await n('showroom')) + Number(await n('none'));
@@ -323,7 +345,7 @@ await page.click('#chanBtn-invoice'); await page.waitForTimeout(200);
 check('اختيار قاهرة+جيزة بيفلتر لصف واحد', (await page.$$('#printTableBody tr')).length === 1);
 check('«طباعة الكل» اتفعّل بعد اختيار القناة', !(await page.isDisabled('#printAllBtn')));
 await page.click('#chanBtn-invoice'); await page.waitForTimeout(200);
-check('🔴 ضغطة تانية على نفس المربع بترجّع الكل', (await page.$$('#printTableBody tr')).length === 7,
+check('🔴 ضغطة تانية على نفس المربع بترجّع الكل', (await page.$$('#printTableBody tr')).length === 8,
       String((await page.$$('#printTableBody tr')).length));
 check('🔴 والطباعة رجعت مقفولة', await page.isDisabled('#printAllBtn'));
 
@@ -344,13 +366,19 @@ check('بادج «طباعة الكل» = 0', (await page.textContent('#pbAllCou
 await page.click('#selectAllVisibleBtn'); await page.waitForTimeout(200);
 check('«تحديد كل النتائج» مابيحددش المقفول', (await page.textContent('#pbSelCount')).trim() === '0', await page.textContent('#pbSelCount'));
 
-// ⑤ قناة بوسطة — S2 مخفية والعدد معروض
+// ⑤ قناة بوسطة — S1 و S2 مع بعض، والمستبعَد له سببه
 await page.click('#chanBtn-awb');
 await page.waitForTimeout(200);
-check('صفوف بوسطة = 3 (S2 مخفية)', (await page.$$('#printTableBody tr')).length === 3, String((await page.$$('#printTableBody tr')).length));
+check('صفوف بوسطة = 4 (S1 + S2)', (await page.$$('#printTableBody tr')).length === 4, String((await page.$$('#printTableBody tr')).length));
 // 🚚 §BOSTA-GATE — الأوردر اللي لسه ما اترفعش مستحيل تتطبع بوليصته
 check('🚚 الأوردر بلا تاج الرفع مش في الجدول', !(await page.textContent('#printTableBody')).includes('#53408'), '');
-check('🚚 أوردر S2 على بوسطة مش في الجدول', !(await page.textContent('#printTableBody')).includes('#53403'), '');
+// 🔴 §BOSTA-S2 (v1.24.0) — البندان دول **الاتنين مع بعض** هما القاعدة:
+//    الحضور لوحده بيعدّي لو الحارس اتشال بالكامل، والغياب لوحده بيعدّي لو
+//    S2 رجعت مخفية. التاج هو الفرق الوحيد بين الصفّين.
+check('🔴 صف S2 عليه تاج الرفع بتاعه **في** الجدول',
+      (await page.textContent('#printTableBody')).includes('#53409'), '');
+check('🔴 صف S2 بتاج S1 بس **بره** الجدول (شحنته ما اترفعتش)',
+      !(await page.textContent('#printTableBody')).includes('#53403'), '');
 check('عمود القناة بيقول بوسطة', (await page.textContent('#printTableBody')).includes('بوسطة'));
 // 🔴 الشريط الأصفر اتشال، فالبادج بقى **المصدر الوحيد** اللي بيقول
 //    كام أوردر ينفع يتطبع دلوقتي — والبنود التلاتة تحت بتقفل عليه.
@@ -383,12 +411,52 @@ check('🔴 البادج == عدّاد النتائج', await n('awb') === (awai
 
 // ⑥ التبديل بيمسح التحديد
 await page.click('#selectAllVisibleBtn'); await page.waitForTimeout(200);
-check('اتحدد 3 أوردرات بوسطة', (await page.textContent('#pbSelCount')).trim() === '3', await page.textContent('#pbSelCount'));
+check('اتحدد 4 أوردرات بوسطة', (await page.textContent('#pbSelCount')).trim() === '4', await page.textContent('#pbSelCount'));
 check('«طباعة المحدد» اتفعّل', !(await page.isDisabled('#printSelectedBtn')));
 check('«إلغاء التحديد» اتفعّل', !(await page.isDisabled('#clearSelBtn')));
 await page.click('#chanBtn-invoice'); await page.waitForTimeout(200);
 check('تبديل القناة مسح التحديد', (await page.textContent('#pbSelCount')).trim() === '0', await page.textContent('#pbSelCount'));
 check('«طباعة المحدد» رجع متعطّل بعد المسح', await page.isDisabled('#printSelectedBtn'));
+
+// ⑥-ب 🔴 §AWB-MACHINE — Worker أقدم من v2.8.0 **بيمنع** طباعة S2، مش بيحذّر
+// الفشل اللي البند ده اتكتب عشانه **صامت بالكامل**: Worker قديم بيصنّف
+// بقاعدة «Send بس»، فبيرجّع `ok:true` لصف S2 وهو شايل **بوليصة شحنة الشحن**
+// — والورق بيطلع، والكونسول نضيف. تحذير الهيدر مابيمنعش الدوسة، والثمن
+// ملصق غلط على كرتونة. عشان كده الواجهة بترفض الصف نفسه.
+// ⚠️ وصفوف الشحن (S1) **مش مفروض تتأثر** — تعطيلها كان هيوقّف قناة شغّالة.
+await page.click('#chanBtn-awb'); await page.waitForTimeout(200);
+// ⚠️ **مفيش مسح لـ`calls`** — بنود تانية بعدين مبنية على النداءات من أول
+//    تحميل (زي «التحديث اتنادى تلقائيًا بعد الطباعة»). بناخد علامة ونقيس
+//    **اللي بعدها** بس.
+const callsBeforeStale = calls.length;
+MOCK_NO_MACHINE = true;
+await page.click('#printTableBody tr:has-text("#53409") input[type="checkbox"]');
+await page.waitForTimeout(200);
+check('اتحدد صف S2 لوحده', (await page.textContent('#pbSelCount')).trim() === '1', await page.textContent('#pbSelCount'));
+await page.click('#printSelectedBtn');
+await page.waitForSelector('#trackResultOverlay.open', { timeout:15000 });
+await page.waitForTimeout(300);
+{
+  const body = await page.textContent('#trackResultBody');
+  check('🔴 صف S2 اتمنع على Worker قديم', body.includes('#53409'), body.slice(0,200));
+  check('🔴 والسبب بيسمّي الـ Promote المطلوب', body.includes('v2.8.0'), body.slice(0,300));
+  const since = calls.slice(callsBeforeStale);
+  check('🔴 مفيش أي /track اتبعت (مفيش كتابة على شوبيفاي)',
+        !since.some(c => c.path === '/track'), JSON.stringify(since.map(c=>c.path||c.action)));
+  check('🔴 ومفيش نداء bosta_awb أصلاً (البوليصة ما اتجابتش)',
+        !since.some(c => c.action === 'bosta_awb'), '');
+}
+await page.click('#trackResultOverlay .btn-primary'); await page.waitForTimeout(200);
+MOCK_NO_MACHINE = false;
+// ⚠️ الرجوع لقناة تانية **شرط** مش تنضيف: ⑦ بتضغط `#chanBtn-awb` عشان
+//    تختارها، وضغطة تانية على القناة المختارة أصلاً **بتطفيها** — فالطباعة
+//    بتفضل مقفولة و⑦ بتفشل لسبب مالوش علاقة بالكود. والتبديل بيمسح
+//    التحديد لوحده (§CHANNEL-OFF).
+await page.click('#chanBtn-invoice'); await page.waitForTimeout(200);
+// ⚠️ الحجز والقفل بتوع المحاولة الممنوعة بيتمسحوا — بند الترتيب في ⑧
+//    بيقارن المصفوفة **بالتساوي التام**، فأي أثر من هنا بيفشّله لسبب
+//    مالوش علاقة بالكود.
+printHits.length = 0;
 
 // ⑦ دفعة بوسطة كاملة
 await page.click('#chanBtn-awb'); await page.waitForTimeout(200);
@@ -426,17 +494,39 @@ await page.waitForTimeout(400);
 
 // ⑧ نداءات الـ Worker
 const awbCall = calls.filter(c => c.action === 'bosta_awb').pop();
-check('bosta_awb اتنادى بـ 2 معرّفات', awbCall?.body?.deliveryIds?.length === 2, JSON.stringify(awbCall?.body));
+check('bosta_awb اتنادى بـ 3 معرّفات', awbCall?.body?.deliveryIds?.length === 3, JSON.stringify(awbCall?.body));
+// 🔴 §BOSTA-S2 — صف S2 لازم ياخد **معرّف شحنة الاستبدال** مش شحنة الشحن.
+//    ده البند اللي بيمنع «ملصق غلط على كرتونة»، وهو السبب الوحيد اللي
+//    خلّى S2 مخفية من 07-09-2026 لحد v1.24.0.
+check('🔴 البوليصة المطلوبة لصف S2 هي شحنة الاستبدال',
+      (awbCall?.body?.deliveryIds || []).includes('dlEX11'), JSON.stringify(awbCall?.body?.deliveryIds));
+const look = calls.filter(c => c.action === 'bosta_lookup').pop();
+check('🔴 الماكينة اتبعتت مع كل أوردر في bosta_lookup',
+      (look?.body?.orders || []).every(o => o.machine === 'S1' || o.machine === 'S2') &&
+      (look?.body?.orders || []).some(o => o.machine === 'S2'),
+      JSON.stringify((look?.body?.orders || []).map(o => [o.name, o.machine])));
 const tracks = calls.filter(c => c.path === '/track');
-check('/track اتنادى مرتين', tracks.length === 2, String(tracks.length));
-check('/track بعت type=S1 (الماكينة)', tracks.every(t => t.body.type === 'S1'), JSON.stringify(tracks.map(t=>t.body.type)));
-check('/track بعت doc=AWB (المستند)',  tracks.every(t => t.body.doc  === 'AWB'), JSON.stringify(tracks.map(t=>t.body.doc)));
+check('/track اتنادى 3 مرات', tracks.length === 3, String(tracks.length));
+// 🔴 `type` = **الماكينة**، وبقت من الصف مش ثابتة على S1 (v1.24.0). تثبيتها
+//    كان معناه إن طباعة بوليصة الاستبدال تكتب `Ready` على `manual_status`
+//    بتاع أوردر اتشحن خلاص — كتابة صامتة على الماكينة الغلط.
+check('🔴 /track بعت type=S1 لصفوف الشحن و type=S2 لصف الاستبدال',
+      tracks.filter(t => t.body.type === 'S1').length === 2 &&
+      tracks.filter(t => t.body.type === 'S2').length === 1,
+      JSON.stringify(tracks.map(t => [t.body.orderNumber, t.body.type])));
+check('/track بعت doc=AWB (المستند) على الاتنين',  tracks.every(t => t.body.doc  === 'AWB'), JSON.stringify(tracks.map(t=>t.body.doc)));
 check('/track بعت بيانات الشحنة',      tracks.every(t => t.body.bosta?.trackingNumber), '');
 // 🔴 السؤال اتشال ⇒ **الإقرار مايتبعتش**. إقرار مكتوب في D1 عن سؤال
 //    محدش عرضه على الموظف = كذب في السجل، وده أسوأ من غياب المفتاح.
 check('🔴 الإقرار مافيهوش bostaUpdated (السؤال اتشال)',
       tracks.every(t => t.body.guard?.bostaUpdated === undefined), JSON.stringify(tracks.map(t=>t.body.guard)));
-check('الإقرار فيه cutConfirmed',      tracks.every(t => t.body.guard?.cutConfirmed === true), '');
+// 🔴 الإقرار بيتبعت من **الصفوف اللي البوابة سألتها بس** (٢ من ٣). صف S2
+//    هنا نضيف — ما اتسألش، فمابيبعتش `guard` خالص: إقرار مكتوب في D1 عن
+//    سؤال محدش عرضه = كذب في السجل (نفس قاعدة `bostaUpdated`).
+check('الإقرار فيه cutConfirmed في صفوف البوابة بس',
+      tracks.filter(t => t.body.guard).length === 2 &&
+      tracks.filter(t => t.body.guard).every(t => t.body.guard.cutConfirmed === true),
+      JSON.stringify(tracks.map(t => [t.body.orderNumber, !!t.body.guard])));
 check('مفيش أي نداء /invoice في مسار بوسطة', !calls.some(c => c.path === '/invoice'));
 
 // ⑨ نافذة النتيجة
@@ -479,9 +569,10 @@ check('🔴 مفيش iframe معاينة للبوليصة', (await page.$$('#awb
   });
   check('🔴 الملف لسه PDF سليم ومحتفظ بـ %%EOF الأصلي',
         !!info && info.startsPdf && info.eofs === 2, JSON.stringify(info));
-  // الدفعة اتطبع فيها أوردرين (#53402 مش على بوسطة فاتشال قبل الطباعة).
-  check('🔴 عنوان الملف = «يوم-شهر-سنة - ساعة.دقيقة - عدد 2 - بوسطة»',
-        !!info && /^\d{2}-\d{2}-\d{4} - \d{2}\.\d{2} - عدد 2 - بوسطة$/.test(info.title || ''),
+  // الدفعة اتطبع فيها **٣** أوردرات — أوردرين S1 وصف S2 (#53402 مش على
+  // بوسطة فاتشال قبل الطباعة).
+  check('🔴 عنوان الملف = «يوم-شهر-سنة - ساعة.دقيقة - عدد 3 - بوسطة»',
+        !!info && /^\d{2}-\d{2}-\d{4} - \d{2}\.\d{2} - عدد 3 - بوسطة$/.test(info.title || ''),
         JSON.stringify(info));
 }
 // نفس الصيغة بالحرف لقنوات الفاتورة — الاسم واحد للاتنين بقرار.
