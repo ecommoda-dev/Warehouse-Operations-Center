@@ -50,7 +50,13 @@ const WOC_WORKERS = {
   //    خطأ — وده **مش تدهور آمن**، عشان كده الواجهة مابتكتفيش بالتحذير:
   //    بترفض طباعة أي صف S2 لو الرد ما فيهوش `machine` (§AWB-MACHINE في
   //    `print.html`). الحارس هنا **مش رفاهية** — نفس عيلة `remover.min`.
-  printer: { url: 'https://order-printer-worker.ecommoda-dev.workers.dev',          min: '2.8.0', label: 'الطباعة' },
+  // 🔴 **و2.8.1 هي الحد الأدنى الفعلي** — 2.8.0 لوحدها كانت بتجيب البوليصة
+  //    الصح وتطبعها، وبعدين `/track` يرفضها بـ`400` من حارس S1-only فاضل
+  //    عند مدخله: **ورق بيخرج من الطابعة وصفر تاج وصفر ميتافيلد وصفر صف
+  //    في السجل**، والأوردر بيفضل في الطابور كأنه ما اتطبعش (مقيس حيًا على
+  //    `#53822`). ⚠️ الفشل **معلن** (نافذة نتيجة حمرا) — بس الورق بيبقى خرج
+  //    خلاص، فالحارس هنا بيوفّر الورقة مش بس الرسالة.
+  printer: { url: 'https://order-printer-worker.ecommoda-dev.workers.dev',          min: '2.8.1', label: 'الطباعة' },
   // 🔴 2.6.0 = أول نسخة فيها §ELIGIBILITY و§PROFILE — `pack.html` من هب
   // v1.21.0 **معتمدة عليهم فعلاً** (Standards #29): نافذة التشخيص بتقرا
   // `profile` و`eligibility.hints`، وبوابة الإقرار بتقرا `eligibility.level`.
@@ -113,7 +119,7 @@ const WOC_WORKERS = {
   returned: { url: 'https://bosta-orders-returned-scanner.ecommoda-dev.workers.dev', min: '3.4.0', label: 'سكانر المرتجعات' },
 };
 
-const TOOL_VERSION = 'v1.24.0';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.24.1';                      // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const WOC_APP_ID   = 'warehouse_ops_center';         // قيمة `tool` في D1 — login/logout بس
 const SHOP_HANDLE  = '6c7e1a-53';
