@@ -117,9 +117,17 @@ const WOC_WORKERS = {
   //    ⚠️ والسكان **ما اتأثرش** — `lookup`/`update` زي ما هم بالحرف.
   shipped:  { url: 'https://bosta-orders-shipped-scanner.ecommoda-dev.workers.dev',  min: '3.5.0', label: 'قسم تسليمات بوسطة' },
   returned: { url: 'https://bosta-orders-returned-scanner.ecommoda-dev.workers.dev', min: '3.4.0', label: 'قسم مرتجعات بوسطة' },
+  // 🔴 قسم تسليمات المكتب — Worker جديد بالكامل (هب v1.26.0).
+  // `1.0.0` = أول نسخة، ومفيش أي نسخة أقدم منشورة — فالحارس هنا **مش** بيمنع
+  // rollback، هو بيمسك الحالة الوحيدة الممكنة: الـ Worker ما اتنشرش أصلاً أو
+  // الـ Promote ناقص، فـ`get_config` بيرجّع 404/401 والحارس بيسمّي الأداة.
+  // ⚠️ الأداة دي **مالهاش نسخة مستقلة** — الريبو بتاعها Worker وبس، فمفيش
+  //    مفتاح `localStorage` تاني ومفيش سر قديم: `WORKER_SECRET` بيتحط بقيمة
+  //    مجموعة `warehouse_ops` من أول يوم.
+  office:   { url: 'https://package-transfer-to-office-worker.ecommoda-dev.workers.dev', min: '1.0.0', label: 'قسم تسليمات المكتب' },
 };
 
-const TOOL_VERSION = 'v1.25.1';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.26.0';                      // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const WOC_APP_ID   = 'warehouse_ops_center';         // قيمة `tool` في D1 — login/logout بس
 const SHOP_HANDLE  = '6c7e1a-53';
@@ -572,6 +580,105 @@ function wocCourierCounts(orders) {
   for (const g of WOC_COURIER_GROUPS) counts[g.key] = 0;
   for (const o of orders || []) counts[wocCourierGroup(o && o.courier)]++;
   return counts;
+}
+
+// ══════════════════════════════════════════════════════════════
+// 🏢 §OFFICE-GATE — «الأوردر ده جاهز للتسليم للمكتب؟»
+// ══════════════════════════════════════════════════════════════
+//
+// 🔴 **الفلترة في الواجهة بقرار، والمصدر واحد** (قرار أحمد 15-09-2026).
+//    السبب مش تفضيل معماري — `custom.package_whereabouts_s1` **مش قابل
+//    للفلترة** في بحث شوبيفاي: الفلتر عليه بيتجاهَل **في صمت** ويرجّع المتجر
+//    كله (١٠٬٠٠٠ صف — مقيس 15-09-2026). فالـ Worker بيجيب اللي حالته `Ready`
+//    بس، والأهلية بتتحسب هنا.
+//
+// ⛔ **وعشان كده مكانها الـ shell مش الصفحة.** `office-transfer.html`
+//    و`index.html` بينادوا **نفس الدالة** على **نفس الرد**. نسخة تانية في
+//    صفحة = درس R1 بالحرف (v1.11.0: الرئيسية قالت «بوسطة ٦٦» والصفحة فتحت
+//    على ٦، لأن البوابة كانت في `print.html` لوحدها). ممنوع أي صفحة تعرّفهم
+//    تاني — تعريف في صفحة بيغلب الـ shell (بيتحمّل قبلها) والقاعدتين
+//    هيفترقوا **في صمت**.
+//
+// 🔴 **ودي بوابة عرض — مش حارس كتابة.** الحارس الحقيقي في الـ Worker
+//    (`?action=scan`)، وهو اللي بيقرا الأوردر **حيًّا** وقت الضغطة. الجدول
+//    ده لقطة عمرها لحد ١٥ دقيقة، وحارس في الواجهة بس **مش حارس**
+//    (`ecommoda-order-lifecycle` §1.5 — نفس درس §ELIGIBILITY في التغليف).
+
+// عهدة الطرد — القيم حرفية (`ecommoda-constants` §1)
+const WOC_WHEREABOUTS = { WAREHOUSE: 'Warehouse', OFFICE: 'Office', COURIER: 'Courier' };
+
+// 🔴 نطاق المكتب: قاهرة+جيزة والشو روم بس. `Other_Regions` (بوسطة) **خارج
+//    النطاق بالكامل** — بوسطة بتستلم من المخزن نفسه، وطردها عمره ما بيعدّي
+//    على المكتب، وتتبّعه بييجي من بوسطة (`ecommoda-order-lifecycle` قاعدة ١٧).
+//    ⚠️ من غير الشرط ده الطابور كان هيعرض **٤٠ أوردر بوسطة** (تلت الـ Ready
+//       يوم القياس 15-09-2026)، ونفس الأوردر يتعدّ في صفّين على الشاشة
+//       الرئيسية: «جاهز لتسليم بوسطة» و«جاهز للتسليم للمكتب».
+const WOC_OFFICE_ZONES = ['Cairo+Giza', 'Show_Room'];
+
+// بيرجّع { eligible, machine, code, reason }:
+//   machine: 's1' | 's2' | null — أنهي عهدة هتتكتب (`_s1` ولا `_s2`)
+//   code:    سبب الاستبعاد — للتشخيص، والواجهة مابتعرضهوش في الطابور
+function wocOfficeGate(o) {
+  if (!o) return { eligible: false, machine: null, code: 'none', reason: 'مفيش أوردر' };
+
+  // ① ملغي — **قبل كل حاجة**: أوردر ملغي متغلّف لازم يتقال عنه «ملغي» مش
+  //    «مش في الطابور». ده بالظبط السيناريو اللي الحقل اتعمل عشانه: أوردر
+  //    اتغلّف وبعدين اتلغى، والموظف خده المكتب مع الدفعة وفضل هناك.
+  if (o.cancelledAt || o.s1 === 'Cancelled')
+    return { eligible: false, machine: null, code: 'cancelled', reason: 'الأوردر ملغي' };
+
+  // ② خارج النطاق — بوسطة
+  if (o.courier === 'Bosta' || o.zone === 'Other_Regions')
+    return { eligible: false, machine: null, code: 'bosta', reason: 'الشحنة مع بوسطة' };
+  if (!WOC_OFFICE_ZONES.includes(o.zone || ''))
+    return { eligible: false, machine: null, code: 'zone', reason: `زون «${o.zone || 'فاضي'}» مش من نطاق المكتب` };
+
+  // ③ الماكينة — S1 الأول، و S2 **بشرط** إن S1 وصل Delivered (نفس شرط سكانر
+  //    بوسطة بالحرف). أوردر عليه S2 = Ready و S1 لسه Shipped حالة شاذة —
+  //    بتترفض هنا، والـ Worker بيسمّي السبب وقت السكان.
+  let machine = null;
+  if (o.s1 === 'Ready') machine = 's1';
+  else if (o.s2 === 'Ready' && o.s1 === 'Delivered') machine = 's2';
+  if (!machine)
+    return { eligible: false, machine: null, code: 'status', reason: 'الحالة مش Ready' };
+
+  // ④ متغلّف فعلاً — **بميتافيلد الماكينة بتاعتها**
+  // 🔴 صف S2 بيتفحص بـ`s2_packing_date_time` مش `s1_…`. الفحص بـ`s1_…` على
+  //    صف S2 بيعدّي على طرد **ما اتغلّفش**: مقيس حيًا 15-09-2026 — ٦ من ٦
+  //    صفوف S2 كانت هتعدّي، والصح **٢**.
+  const packedAt = machine === 's1' ? o.packedAtS1 : o.packedAtS2;
+  if (!packedAt)
+    return { eligible: false, machine, code: 'not_packed', reason: 'ما اتغلّفش لسه' };
+
+  // ⑤ العهدة الحالية — `Warehouse` أو فاضية بس
+  // ⚠️ الفاضية مقبولة **عن قصد**: أداة التغليف هي اللي المفروض تكتب
+  //    `Warehouse` وقت التغليف، ولسه ما اتعدّلتش (بند مفتوح). يوم 15-09-2026
+  //    الحقل **فاضي على كل أوردر في المتجر**، فلو الفاضي اترفض الطابور كان
+  //    هيفتح **فاضي**.
+  const cur = machine === 's1' ? o.whereaboutsS1 : o.whereaboutsS2;
+  if (cur === WOC_WHEREABOUTS.OFFICE)
+    return { eligible: false, machine, code: 'already_office', reason: 'في المكتب خلاص' };
+  if (cur === WOC_WHEREABOUTS.COURIER)
+    return { eligible: false, machine, code: 'at_courier', reason: 'مع المندوب' };
+  if (cur && cur !== WOC_WHEREABOUTS.WAREHOUSE)
+    return { eligible: false, machine, code: 'unknown_whereabouts', reason: `عهدة غير معروفة: «${cur}»` };
+
+  return { eligible: true, machine, code: 'ok', reason: '' };
+}
+
+// بيرجّع المؤهلين بس، بترتيب **الأقدم تغليفًا الأول** — الطرد اللي قاعد من
+// الصبح هو اللي المفروض يتنقل الأول، والترتيب بتاريخ الأوردر كان هيحط طرد
+// اتغلّف دلوقتي فوق طرد قاعد من امبارح.
+function wocOfficeQueue(orders) {
+  const out = [];
+  for (const o of orders || []) {
+    const g = wocOfficeGate(o);
+    if (g.eligible) out.push({ ...o, machine: g.machine,
+                               packedAt: g.machine === 's1' ? o.packedAtS1 : o.packedAtS2,
+                               packedBy: g.machine === 's1' ? o.packedByS1 : o.packedByS2 });
+  }
+  out.sort((a, b) => String(a.packedAt || '').localeCompare(String(b.packedAt || '')));
+  return out;
 }
 
 // ── حد أدنى رقمي، مش تطابق حرفي ───────────────────────────────

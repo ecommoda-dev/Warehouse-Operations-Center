@@ -1,0 +1,2313 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<!-- skills: html-builder v6.6.0 · worker-builder v3.3.0 · constants v2.6.0 · order-lifecycle v1.8.0 — 15-09-2026 -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>قسم تسليمات المكتب — مركز عمليات المخزن</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+
+  <!-- 🔴 قاعدة الأسبقية: الـ shell أولاً، وستايل الصفحة بعده وبيغلب -->
+  <link rel="stylesheet" href="shared/shell.css">
+<style>
+/* ⚠️ الاستثناء الوحيد المسموح لكتلة توكنز في صفحة: `--container-max` لوحدها.
+   الصفحة دي Tier M — تاب السجل جدول، فمايجوزش تفضل Tier S. */
+:root { --container-max: 1200px; }
+
+/* ⚠️ الـ chrome (الهيدر · التابات · الإعدادات · شِل المودالات · التوست ·
+   الـ changelog · الـ about · روابط الأوردر · السبينر) اتشال من هنا — كله
+   في `shared/shell.css`. اللي فاضل هنا **خاص بالأداة دي بس**.
+   ⚠️ `.card` و`.btn-*` و`.spinner` معرّفين هنا **بشكل مختلف** عن الـ shell
+      عن قصد — قاعدة الأسبقية بتخلّي نسخة الصفحة تغلب. */
+/* ── Result Modal — ملخّص ما بعد التحديث ─────────────────────── */
+.res-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.45);
+  z-index: 700; display: none; align-items: center; justify-content: center; padding: 20px;
+}
+.res-overlay.open { display: flex; }
+.res-modal {
+  background: var(--surface); border-radius: var(--radius);
+  width: 100%; max-width: 520px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.22); overflow: hidden;
+  animation: modalIn .2s ease;
+}
+.res-modal-hdr {
+  padding: 16px 20px; text-align: center;
+  font-size: 16px; font-weight: 800;
+  background: var(--green-light); color: var(--green-dark);
+  border-bottom: 1px solid var(--green-border);
+}
+.res-modal.warn .res-modal-hdr { background: var(--amber-light); color: var(--amber-dark); border-bottom-color: var(--amber-border); }
+.res-modal.fail .res-modal-hdr { background: var(--red-light);   color: var(--red-dark);   border-bottom-color: var(--red-border); }
+.res-modal-body { padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 14px; }
+.res-sub {
+  display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
+  font-size: 12.5px; font-weight: 600; color: var(--text-secondary);
+}
+.res-sub b { color: var(--text-primary); }
+.res-note {
+  font-size: 12px; font-weight: 700; text-align: center; line-height: 1.6;
+  color: var(--amber-dark); background: var(--amber-light);
+  border: 1px solid var(--amber-border); border-radius: var(--radius-sm); padding: 8px 10px;
+}
+/* ── تفاصيل المرفوض جوّه النافذة (v3.4) ────────────────────────
+   الرقم لوحده مابيقولش "ليه" — والموظف بيقفل النافذة وبعدين يتسأل عن الأوردر
+   ده بالظبط. التفاصيل هنا هي الإجابة، مش في الجدول اللي وراها. */
+.res-rej {
+  border: 1px solid var(--purple-border); border-radius: var(--radius-sm);
+  background: var(--purple-light); overflow: hidden;
+}
+.res-rej-hdr {
+  padding: 8px 12px; font-size: 12.5px; font-weight: 800; color: var(--purple-dark);
+  border-bottom: 1px solid var(--purple-border);
+}
+.res-rej-list { max-height: 190px; overflow-y: auto; background: var(--surface); }
+.res-rej-top  { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-weight: 700; line-height: 1.7; }
+.res-rej-item {
+  padding: 8px 12px; border-bottom: 1px solid var(--border);
+  font-size: 12px; line-height: 1.7;
+}
+.res-rej-item:last-child { border-bottom: none; }
+.res-ftr { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+
+/* ══════════════════════════════════════════════════════════════
+   §TOOL — Scanner tab content
+   ══════════════════════════════════════════════════════════════ */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.card-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.card-header h2 { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.card-body { padding: 20px; }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: background .15s, opacity .15s; white-space: nowrap; font-family: var(--font-body); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn-primary { background: var(--accent); color: var(--on-accent); }
+.btn-primary:not(:disabled):hover { background: var(--accent-dark); }
+.btn-success { background: var(--green);  color: var(--on-accent); }
+.btn-success:not(:disabled):hover { background: var(--green-dark); }
+.btn-outline { background: var(--surface); color: var(--text-primary); border: 1px solid var(--border-strong); }
+.btn-outline:not(:disabled):hover { background: var(--bg); }
+.btn-danger-outline { background: var(--surface); color: var(--red); border: 1px solid var(--red-border); }
+.btn-danger-outline:not(:disabled):hover { background: var(--red-light); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.badge-green   { background: var(--green-light);   color: var(--green);   border: 1px solid var(--green-border); }
+.badge-red     { background: var(--red-light);     color: var(--red);     border: 1px solid var(--red-border);   }
+.badge-amber   { background: var(--amber-light);   color: var(--amber);   border: 1px solid var(--amber-border);             }
+.badge-accent  { background: var(--accent-light);  color: var(--accent);  border: 1px solid var(--accent-border);             }
+.badge-neutral { background: var(--surface-2);     color: var(--text-secondary); border: 1px solid var(--border); }
+.badge-purple  { background: var(--purple-light);  color: var(--purple);  border: 1px solid var(--purple-border);}
+
+/* Order Number Display — mandatory hyperlink to Shopify */
+.order-link { font-family: var(--font-mono); font-weight: 600; font-size: 14px; color: var(--accent); text-decoration: none; }
+.order-link:hover { text-decoration: underline; }
+.order-num  { font-family: var(--font-mono); font-weight: 600; font-size: 14px; color: var(--text-primary); }
+
+.pills-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.pill { display: flex; flex-direction: column; align-items: center; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 18px; min-width: 80px; }
+.pill-val { font-size: 22px; font-weight: 800; color: var(--text-primary); font-family: var(--font-mono); }
+.pill-lbl { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+.pill.green .pill-val { color: var(--green); }
+.pill.red   .pill-val { color: var(--red);   }
+.pill.amber .pill-val { color: var(--amber); }
+
+/* Data Tables — canonical rules: natural width, centered cells, vertical gridlines */
+.table-wrap { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.data-table thead th {
+  padding: 10px 12px; background: var(--surface-2); border-bottom: 1px solid var(--border);
+  font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .4px;
+  white-space: nowrap; text-align: center;
+}
+.data-table tbody tr { border-bottom: 1px solid var(--border); }
+.data-table tbody tr:last-child { border-bottom: none; }
+.data-table tbody tr:hover { background: var(--surface-2); }
+.data-table tbody td { padding: 10px 12px; font-size: 13px; color: var(--text-primary); text-align: center; }
+.data-table thead th, .data-table tbody td { border-inline-start: 1px solid var(--border); }
+.data-table thead th:first-child, .data-table tbody td:first-child { border-inline-start: none; }
+.col-mono { font-family: var(--font-mono); direction: ltr; white-space: nowrap; }
+/* الاسم المعتمد في data-table-standard — كان مستخدَم في الجدول من غير ما يكون
+   معرّف، فالخلايا رجعت rtl في صمت. الاتنين نفس التعريف. */
+.col-num  { font-family: var(--font-mono); direction: ltr; white-space: nowrap; }
+input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent); }
+.reject-reason { font-size: 11px; color: var(--red); white-space: normal; max-width: 220px; direction: rtl; text-align: center; display: inline-block; }
+
+.scan-row { display: flex; gap: 10px; align-items: stretch; }
+.scan-input { flex: 1; padding: 10px 14px; border: 2px solid var(--border-strong); border-radius: var(--radius-sm); font-size: 15px; color: var(--text-primary); background: var(--surface); transition: border-color .15s; font-family: var(--font-mono); direction: ltr; text-align: left; }
+.scan-input:focus { outline: none; border-color: var(--accent); }
+.scan-input::placeholder { color: var(--text-muted); font-family: var(--font-body); font-size: 13px; }
+
+.count-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--accent-light); border: 1.5px solid var(--accent-border); border-radius: var(--radius-sm); padding: 5px 14px; }
+.count-num { font-size: 22px; font-weight: 800; color: var(--accent); font-family: var(--font-mono); line-height: 1; }
+.count-lbl { font-size: 11px; color: var(--text-secondary); font-weight: 500; }
+
+/* ══ §READY-QUEUE — طابور «جاهز للتسليم لبوسطة» (v1.23.0) ══
+   🔴 كلاسات الصفحة، مش الـ shell (قاعدة الأسبقية). اللي جاي من الـ shell
+      هو لوحة «آخر تحديث» بس (`.woc-fresh` · `.woc-ago` · `.woc-stamp-chip`
+      · `.woc-rbtn`) — اللوحة دي في **أربع** شاشات دلوقتي (الرئيسية ·
+      التغليف · الطباعة · هنا)، ونسخة CSS خامسة معناها إن الشكل يفترق مع
+      أول تعديل (درس R1). */
+.rq-box { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); overflow: hidden; }
+.rq-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+.rq-title { font-size: 13.5px; font-weight: 700; color: var(--text-primary); }
+.rq-sub { font-size: 11px; color: var(--text-muted); }
+.rq-act { margin-inline-start: auto; display: flex; align-items: stretch; gap: 10px; }
+.rq-body { padding: 0; }
+.rq-empty { padding: 26px 16px; text-align: center; color: var(--text-muted); font-size: 13px; }
+.rq-empty .ico { font-size: 26px; margin-bottom: 6px; }
+.rq-fail { margin: 12px 16px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--red-light); border: 1px solid var(--red-border); color: var(--red-dark); font-size: 12.5px; }
+.rq-warn { margin: 12px 16px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--amber-light); border: 1px solid var(--amber-border); color: var(--amber-dark); font-size: 12.5px; }
+/* بادج عمر الأوردر — **نسخة طبق الأصل من `pack.html`** بالحرف. الدرجة
+   نفسها بتيجي من `wocDayLevel` في الـ shell فمستحيل تفترق؛ اللون هو
+   اللي مكرّر. ⚠️ أي تعديل يتعمل في الصفحتين في نفس التمريرة. */
+.time-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; white-space: nowrap; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-secondary); }
+.time-badge.tb-d0 { background: var(--green-light);  color: var(--green-dark);  border-color: var(--green-border); }
+.time-badge.tb-d1 { background: var(--amber-light);  color: var(--amber-dark);  border-color: var(--amber-border); }
+.time-badge.tb-d2 { background: var(--orange-light); color: var(--orange-dark); border-color: var(--orange-border); }
+.time-badge.tb-d3 { background: var(--red-light);    color: var(--red-dark);    border-color: var(--red-border); }
+.time-badge.tb-d7 { background: var(--crit);         color: var(--on-accent);   border-color: var(--crit); }
+.time-badge.tb-none { background: var(--surface-2);  color: var(--text-muted); }
+
+
+.spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: var(--on-accent); border-radius: 50%; animation: spin .6s linear infinite; flex-shrink: 0; }
+.spinner-dark { border-color: rgba(0,0,0,.15); border-top-color: var(--accent); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ══════════════════════════════════════════════════════════════
+   §LOG — تاب السجل: الشكل القديم بالبطاقات (.log-entry / .log-toolbar)
+   اتشال بالكامل — الشكل المعتمد جدول في القسم الموحّد تحت.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Responsive ─────────────────────────────────────────────── */
+
+/* ══ Freeze on Scroll — الهيدر + شريط التابات (tabs-and-modals § 1b) ══ */
+.sticky-header-wrap { position: sticky; top: 0; z-index: 300; background: var(--bg); padding-top: 2px; margin: 0 -2px; }
+.sticky-header-wrap.stuck { box-shadow: 0 6px 18px rgba(0,0,0,.10); }
+.sticky-header-wrap.stuck .app-header        { padding: 6px 14px; margin-bottom: 6px; }
+.sticky-header-wrap.stuck .app-icon          { font-size: 16px; }
+.sticky-header-wrap.stuck .app-title-text h1 { font-size: 12.5px; }
+.sticky-header-wrap.stuck .app-title-text span { max-height: 0; opacity: 0; margin-top: 0; }
+.sticky-header-wrap.stuck .hbtn              { padding: 4px 9px; font-size: 11px; }
+
+.app-header        { transition: padding .18s ease; }
+.app-icon          { transition: font-size .18s ease; }
+.app-title-text h1 { transition: font-size .18s ease; }
+.app-title-text span {
+  display: block; overflow: hidden; max-height: 16px; margin-top: 2px;
+  transition: max-height .18s ease, opacity .18s ease, margin-top .18s ease;
+}
+.main-tabs-bar { overflow: hidden;
+  transition: max-height .22s ease, opacity .18s ease, padding .18s ease, margin .18s ease, border-width .18s ease; }
+.sticky-header-wrap.stuck .main-tabs-bar {
+  max-height: 0 !important; opacity: 0; padding: 0; margin-bottom: 0; border-width: 0;
+}
+.active-tab-chip {
+  display: none; align-items: center; gap: 6px; padding: 5px 10px;
+  border: 1.5px solid var(--border-strong); border-radius: 20px;
+  background: var(--surface-2); font-size: 11.5px; font-weight: 700; color: var(--text-primary);
+  cursor: pointer; position: relative; white-space: nowrap; transition: border-color .15s, color .15s;
+}
+.active-tab-chip:hover { border-color: var(--accent); color: var(--accent); }
+.active-tab-chip.open  { border-color: var(--accent); color: var(--accent-dark); background: var(--accent-light); }
+.sticky-header-wrap.stuck .active-tab-chip { display: flex; }
+.chip-arrow { font-size: 9px; color: var(--text-muted); transition: transform .2s; }
+.active-tab-chip.open .chip-arrow { transform: rotate(180deg); }
+.tab-chip-menu {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 310; min-width: 180px;
+  background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  box-shadow: 0 8px 28px rgba(0,0,0,.14); display: none; padding: 4px;
+}
+.tab-chip-menu.open { display: block; }
+.tab-chip-item {
+  display: flex; align-items: center; gap: 6px; padding: 8px 10px; font-size: 12.5px; font-weight: 600;
+  border-radius: 6px; cursor: pointer; color: var(--text-secondary); white-space: nowrap;
+}
+.tab-chip-item:hover  { background: var(--surface-2); }
+.tab-chip-item.active { background: var(--accent-light); color: var(--accent-dark); }
+
+/* ══ القسم الموحّد: فلاتر + جدول في كارت واحد (data-table-standard.md) ══ */
+/* ⚠️ ممنوع overflow:hidden هنا — بيقص أي .ms-menu بيفتح ويطلع بره حدود الكارت */
+.unified-section { background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 16px; }
+.section-divider { border-top: 1px solid var(--border); }
+
+.flt-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px;
+  background: var(--surface-2); cursor: pointer; user-select: none; transition: background .12s;
+  border-radius: var(--radius) var(--radius) 0 0; }
+.flt-header:hover { background: var(--surface-hover); }
+.flt-header-right { display: flex; align-items: center; gap: 10px; }
+.flt-icon { width: 34px; height: 22.5px; color: var(--text-muted); transition: color .2s; flex-shrink: 0; }
+.flt-icon.active { color: var(--accent); }
+.flt-toggle { font-size: 13px; color: var(--text-muted); transition: transform .25s; }
+.flt-toggle.open { transform: rotate(180deg); }
+.flt-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+.flt-body.collapsed { display: none; }
+.flt-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+.flt-g { display: flex; flex-direction: column; gap: 3px; }
+.flt-label { font-size: 10px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .4px; white-space: nowrap; }
+
+.clear-btn { display: flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: var(--radius-sm);
+  font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; transition: all .15s;
+  white-space: nowrap; height: 34px;
+  border: 1px solid var(--red-border); color: var(--red); background: var(--red-light); }
+.clear-btn:hover { background: var(--red); color: var(--on-accent); border-color: var(--red); }
+.clear-btn.inactive { border-color: var(--border); color: var(--text-muted); background: var(--surface-2);
+  cursor: not-allowed; opacity: .6; }
+.clear-btn.inactive:hover { background: var(--surface-2); color: var(--text-muted); border-color: var(--border); }
+
+/* مربع البحث — الأيقونة شمال + padding-left، بدون overlap مع الكتابة العربية */
+.search-wrap { position: relative; max-width: 280px; flex: 1; min-width: 200px; }
+.search-input { width: 100%; border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  padding: 8px 12px 8px 34px; font-family: inherit; font-size: 13px; height: 36px; box-sizing: border-box;
+  outline: none; background: var(--surface); transition: border-color .15s, background .15s; }
+.search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(37,99,235,.08); }
+.search-input.has-value { border-color: var(--accent); background: var(--accent-light); }
+.search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  font-size: 14px; color: var(--text-muted); pointer-events: none; }
+
+/* multi-select */
+.ms-wrap { position: relative; }
+.ms-btn { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 170px;
+  height: 34px; padding: 6px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  background: var(--surface); font-family: inherit; font-size: 12px; font-weight: 600;
+  color: var(--text-primary); cursor: pointer; transition: all .15s; white-space: nowrap; }
+.ms-btn:hover { border-color: var(--accent); }
+.ms-btn.has-selection { border-color: var(--accent); color: var(--accent-dark); background: var(--accent-light); }
+.ms-btn.open { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(37,99,235,.08); }
+.ms-btn .ms-count { font-family: var(--font-mono); font-size: 10.5px; font-weight: 700;
+  color: var(--on-accent); background: var(--accent); border-radius: 20px; padding: 1px 7px;
+  min-width: 18px; text-align: center; }
+.ms-btn .ms-arrow { font-size: 9px; color: var(--text-muted); transition: transform .2s; flex-shrink: 0; }
+.ms-btn.open .ms-arrow { transform: rotate(180deg); }
+.ms-menu { position: absolute; top: calc(100% + 4px); right: 0; z-index: 200; width: 250px; max-width: 85vw;
+  background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  box-shadow: 0 8px 28px rgba(0,0,0,.14); display: none; flex-direction: column; overflow: hidden; }
+.ms-menu.open { display: flex; }
+.ms-ftr-top { display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  padding: 7px 10px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+.ms-ftr-clear { font-size: 11.5px; font-weight: 700; color: var(--red); background: none; border: none;
+  cursor: pointer; padding: 4px 6px; border-radius: 5px; }
+.ms-ftr-clear:hover { background: var(--red-light); }
+.ms-ftr-count { font-size: 11px; color: var(--text-muted); }
+.ms-search-wrap { padding: 8px; border-bottom: 1px solid var(--border); }
+.ms-search { width: 100%; height: 32px; border: 1px solid var(--border-strong); border-radius: 6px;
+  padding: 0 10px; font-family: inherit; font-size: 12px; outline: none; background: var(--surface-2); }
+.ms-search:focus { border-color: var(--accent); background: var(--surface); }
+.ms-selectall-row { display: flex; align-items: center; gap: 8px; padding: 7px 12px;
+  border-bottom: 1px solid var(--border); background: var(--surface-2); font-size: 12px; font-weight: 700;
+  cursor: pointer; user-select: none; }
+.ms-selectall-row:hover { background: var(--surface-hover); }
+.ms-list { max-height: 200px; overflow-y: auto; padding: 4px; }
+.ms-item { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 6px;
+  font-size: 12.5px; cursor: pointer; user-select: none; transition: background .1s; }
+.ms-item:hover { background: var(--surface-2); }
+.ms-item.checked { background: var(--accent-light); }
+.ms-item input[type=checkbox], .ms-selectall-row input[type=checkbox] {
+  width: 15px; height: 15px; cursor: pointer; accent-color: var(--accent); flex-shrink: 0; }
+.ms-item .ms-item-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ms-item .ms-item-mono { font-family: var(--font-mono); direction: ltr; }
+.ms-empty { padding: 16px; text-align: center; font-size: 12px; color: var(--text-muted); }
+
+.ms-chips-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ms-chips-row:empty { display: none; }
+.chips-label { font-size: 11.5px; font-weight: 700; color: var(--text-secondary); white-space: nowrap; }
+.ms-chip { display: flex; align-items: center; gap: 5px; background: var(--accent-light);
+  color: var(--accent-dark); border: 1px solid var(--accent-border); border-radius: 20px;
+  padding: 3px 6px 3px 10px; font-size: 11.5px; font-weight: 600; }
+.ms-chip button { border: none; background: rgba(37,99,235,.15); color: var(--accent-dark);
+  width: 16px; height: 16px; border-radius: 50%; font-size: 11px; cursor: pointer; line-height: 1; }
+.ms-chip button:hover { background: var(--accent); color: var(--on-accent); }
+
+/* فلتر الفترة السريعة */
+.range-preset-wrap { position: relative; }
+.range-preset-btn { display: flex; align-items: center; gap: 6px; height: 34px; padding: 6px 10px;
+  border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface);
+  font-family: inherit; font-size: 12px; font-weight: 600; color: var(--text-secondary);
+  cursor: pointer; white-space: nowrap; }
+.range-preset-btn.has-preset { border-color: var(--accent); color: var(--accent-dark); background: var(--accent-light); }
+.range-preset-menu { position: absolute; top: calc(100% + 4px); right: 0; z-index: 200; width: 190px;
+  background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  box-shadow: 0 8px 28px rgba(0,0,0,.14); display: none; padding: 4px; }
+.range-preset-menu.open { display: block; }
+.range-preset-clear-row { padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.range-preset-clear-row button { font-size: 11.5px; font-weight: 700; color: var(--red); background: none;
+  border: none; cursor: pointer; padding: 4px 6px; border-radius: 5px; }
+.range-preset-clear-row button:hover { background: var(--red-light); }
+.range-preset-item { display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  padding: 7px 10px; font-size: 12px; border-radius: 6px; cursor: pointer; color: var(--text-primary); }
+.range-preset-item:hover { background: var(--surface-2); }
+.range-preset-item.active { background: var(--accent-light); color: var(--accent-dark); font-weight: 700; }
+.range-preset-item .pr-check { display: none; color: var(--accent); font-size: 11px; }
+.range-preset-item.active .pr-check { display: inline; }
+.range-preset-sep { height: 1px; background: var(--border); margin: 4px 2px; }
+.range-preset-item.has-sub { position: relative; }
+.range-preset-item.has-sub .pr-sub-arrow { font-size: 11px; color: var(--text-muted); transition: color .15s; }
+.range-preset-item.has-sub:hover .pr-sub-arrow,
+.range-preset-item.has-sub.open .pr-sub-arrow { color: var(--accent); }
+.month-submenu { position: absolute; top: -4px; right: calc(100% + 6px); width: 220px;
+  background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  box-shadow: 0 8px 28px rgba(0,0,0,.14); display: none; padding: 12px; z-index: 210; }
+.month-submenu.open { display: block; }
+.month-select-row { display: flex; gap: 8px; }
+.month-select { flex: 1; height: 34px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  padding: 0 6px; font-family: inherit; font-size: 12.5px; color: var(--text-primary);
+  background: var(--surface); outline: none; cursor: pointer; }
+.month-select.filled { border-color: var(--accent); background: var(--accent-light); color: var(--accent-dark); }
+.month-select-hint { font-size: 10.5px; color: var(--text-muted); line-height: 1.5; margin-top: 8px; }
+.range-date-wrap input[type=date] { width: 150px; height: 34px; border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm); padding: 6px 10px; font-family: var(--font-mono); font-size: 12px;
+  color: var(--text-primary); background: var(--surface); outline: none; cursor: pointer; }
+
+/* صف الجدول + الأكشنز */
+.tbl-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px;
+  background: var(--surface-2); cursor: pointer; user-select: none; transition: background .12s; flex-wrap: wrap; }
+.tbl-bar:hover { background: var(--surface-hover); }
+.tbl-bar-right, .tbl-bar-left { display: flex; align-items: center; gap: 8px; }
+.tbl-toggle { font-size: 13px; color: var(--text-muted); transition: transform .25s; }
+.tbl-toggle.open { transform: rotate(180deg); }
+.results-wrap { display: flex; align-items: center; gap: 8px; }
+.results-label { font-size: 14px; font-weight: 800; color: var(--text-primary); white-space: nowrap; }
+.results-count { display: inline-flex; align-items: center; justify-content: center;
+  min-width: 44px; height: 34px; padding: 0 10px; font-family: var(--font-mono);
+  font-size: 17px; font-weight: 800; color: var(--purple); background: var(--purple-light);
+  border: 1.5px solid var(--purple-border); border-radius: var(--radius-sm); }
+.act-btn { display: flex; align-items: center; gap: 5px; padding: 7px 13px; border-radius: var(--radius-sm);
+  font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; transition: all .15s;
+  white-space: nowrap; border: none; }
+.act-btn.refresh { background: var(--surface); border: 1px solid var(--border-strong); color: var(--text-primary); }
+.act-btn.refresh:hover { border-color: var(--accent); color: var(--accent); }
+.act-btn.export { background: var(--green-light); border: 1px solid var(--green-border); color: var(--green); }
+.act-btn.export:hover { background: var(--green); color: var(--on-accent); }
+.tbl-body-wrap { max-height: 4000px; overflow: hidden; transition: max-height .3s ease;
+  border-radius: 0 0 var(--radius) var(--radius); }
+.tbl-body-wrap.collapsed { max-height: 0; }
+.tbl-scroll { overflow-x: auto; border-radius: 0 0 var(--radius) var(--radius); }
+
+.sortable-th { cursor: pointer; user-select: none; transition: background .12s, color .12s; }
+.sortable-th:hover  { background: var(--accent-light); color: var(--accent-dark); }
+.sortable-th.sorted { background: var(--accent-light); color: var(--accent-dark); }
+.sort-icon { display: inline-block; font-size: 10px; color: var(--accent); font-weight: 900; }
+.sort-icon.active { margin-inline-start: 4px; }
+
+/* بانر التصدير المقصوص — ثابت فوق الجدول، مش توست بيختفي (Standards #30) */
+.empty-row td { padding: 40px; text-align: center; color: var(--text-muted); font-size: 13px; }
+
+.export-warn { margin: 0 0 12px; padding: 10px 14px; border-radius: 9px;
+  background: var(--amber-light); border: 1px solid var(--amber); color: var(--amber);
+  font-size: 13px; font-weight: 600; line-height: 1.7; }
+
+.pagination-row { display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 14px 16px; flex-wrap: wrap; }
+.page-info { font-size: 13px; color: var(--text-secondary); font-family: var(--font-mono); padding: 0 8px; }
+.page-btn { padding: 6px 14px; border-radius: 7px; border: 1px solid var(--border);
+  background: var(--surface); font-size: 13px; font-weight: 600; cursor: pointer;
+  font-family: var(--font-body); color: var(--text-primary); transition: background .15s, border-color .15s; }
+.page-btn:hover:not(:disabled) { background: var(--accent-light); border-color: var(--accent-border); color: var(--accent); }
+.page-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+@media (max-width: 600px) {
+  .app-title-text span { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- ══════════════════════════════════════════════════════════════
+     §SHELL — الهيدر الموحّد + شريط التابات جوّه wrap واحد
+     (Freeze on Scroll — tabs-and-modals § 1b)
+     ══════════════════════════════════════════════════════════════ -->
+<div class="sticky-header-wrap" id="stickyWrap">
+
+  <div id="headerMount"></div>
+
+  <div class="main-tabs-bar" id="mainTabsBar">
+    <button class="main-tab-btn active" id="tabScanner" onclick="switchMainTab('scanner')">📷 السكانر</button>
+    <button class="main-tab-btn"        id="tabLog"     onclick="switchMainTab('log')">📋 السجل</button>
+  </div>
+
+</div><!-- /.sticky-header-wrap -->
+
+<!-- Changelog Modal -->
+<div class="eco-overlay" id="changelogOverlay" onclick="if(event.target===this)closeChangelog()">
+  <div class="eco-modal">
+    <div class="eco-modal-hdr">
+      <span>📋 سجل التحديثات</span>
+      <button class="modal-close-x" onclick="closeChangelog()">✕</button>
+    </div>
+    <div class="eco-modal-body">
+
+      <!-- 🔴 `#clLatestVerBadge` هو اللي `renderVersionUI()` بتحدّثه — مصدر
+           واحد للنسخة (Standards #24). الرقم هنا **مش** مكتوب بإيد. -->
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.26.0</span>
+          <span class="cl-ver-date">15-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🔴 <b>قسم تسليمات المكتب</b> — أداة جديدة بالكامل. بتسجّل انتقال الطرد من <b>المخزن للمكتب</b> على <code>custom.package_whereabouts_s1</code>/<code>_s2</code>، والسكان <b>فوري</b>: كل باركود بيتسجّل لوحده من غير دفعة ومن غير زرار تنفيذ.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>طابور «جاهز للتسليم للمكتب»</b> — في الصفحة وفي صف رابع على الشاشة الرئيسية. الشروط: الزون قاهرة+جيزة أو شو روم · الحالة <code>Ready</code> (S1 أو S2) · <b>اتغلّف فعلاً</b> · وعهدة الطرد لسه <code>Warehouse</code> أو فاضية · <b>ومش ملغي</b>.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>بوسطة خارج النطاق بالكامل.</b> بوسطة بتستلم من المخزن نفسه والطرد عمره ما بيعدّي على المكتب — من غير الشرط ده كان <b>٤٠ أوردر</b> (تلت الـ<code>Ready</code> يوم القياس) هيظهروا هنا، ونفس الأوردر يتعدّ في صف «جاهز لتسليم بوسطة» <b>وفي الصف ده</b>.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>صف الاستبدال/الاسترجاع بيتفحص بوقت تغليف S2</b> (<code>s2_packing_date_time</code>) مش S1. الفحص بـS1 كان بيعدّي على طرد <b>ما اتغلّفش</b> — مقيس حيًا: ٦ من ٦ صفوف S2 كانت هتعدّي والصح <b>٢</b>.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>شاشة تفاصيل قبل التسجيل</b> للحالات الشاذة (الشحنة الأصلية ودورة الاستبدال الاتنين <code>Ready</code> · حالة بره القايمة المعتمدة) — بتكمّل <b>بإقرار</b> مش بتتمنع.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>شاشة رفض بالسبب</b> للأوردر الملغي («قطع الشحنة ورجّع المنتجات على الرف») · اللي مع بوسطة · اللي ما اتغلّفش · واللي مع المندوب خلاص.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>تاب <b>سجل العمليات</b> — فلاتر server-side (نوع العملية · النتيجة · الماكينة · الموظف · فترة · بحث) وصفحات وترتيب وتصدير XLSX.</span></li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="eco-overlay" id="aboutOverlay" onclick="if(event.target===this)closeAbout()">
+  <div class="eco-modal">
+    <div class="eco-modal-hdr">
+      <span>ℹ️ عن الأداة — قسم تسليمات المكتب (مركز عمليات المخزن)</span>
+      <button class="modal-close-x" onclick="closeAbout()">✕</button>
+    </div>
+    <div class="eco-modal-body">
+
+      <details class="about-sec" open>
+        <summary>📋 وصف الأداة</summary>
+        <div class="about-sec-body">
+          <p><strong>الهدف:</strong> تسجيل انتقال الطرد من <b>المخزن للمكتب</b> —
+            الموظف بيسكن باركود الأوردر، والأداة بتكتب
+            <code>custom.package_whereabouts_s1</code> (أو <code>_s2</code> لدورة
+            الاستبدال/الاسترجاع) بقيمة <code>Office</code>.</p>
+          <p><strong>ليه الأداة موجودة:</strong> أوردرات قاهرة+جيزة والشو روم
+            <b>مابتتشحنش من المخزن على طول</b> — بتعدّي على <b>المكتب</b>، اللي فيه
+            منسّق الشحن والمناديب بيتقابلوا. ولما تسليم الدفعة مايكونش كامل، بيفضل
+            طرد في المكتب <b>ومفيش نظام بيسجّل إنه هناك</b>. الحقل ده بيقفل
+            الفجوة دي.</p>
+          <p><strong>المستخدمون المستهدفون:</strong> فريق المخزن — لحظة تجهيز دفعة
+            الانتقال للمكتب.</p>
+
+          <h4>شروط الأهلية</h4>
+          <ol>
+            <li><b>مش ملغي</b> — الأوردر الملغي بيترفض برسالة «قطع الشحنة ورجّع
+              المنتجات على الرف»، مش بيتخفي في صمت.</li>
+            <li><b>الزون قاهرة+جيزة أو شو روم</b>، والمندوب مش <code>Bosta</code> —
+              🔴 بوسطة <b>خارج النطاق بالكامل</b>: بتستلم من المخزن نفسه وتتبّع
+              طردها بييجي من بوسطة، مش من الحقل ده.</li>
+            <li><b>الحالة <code>Ready</code></b> — <code>S1 = Ready</code> فالعهدة
+              بتتكتب على <code>_s1</code>، أو <code>S1 = Delivered</code> و
+              <code>S2 = Ready</code> فبتتكتب على <code>_s2</code>.</li>
+            <li><b>اتغلّف فعلاً</b> — وقت تغليف مسجّل على <b>ميتافيلد الماكينة
+              بتاعتها</b>: <code>s1_packing_date_time</code> لصف S1 و
+              <code>s2_packing_date_time</code> لصف S2.</li>
+            <li><b>عهدة الطرد لسه <code>Warehouse</code> أو فاضية</b> —
+              <code>Office</code> بترجّع «خلاص متعمل» و<code>Courier</code> بترفض.</li>
+          </ol>
+
+          <h4>كيف تعمل — Workflow</h4>
+          <ol>
+            <li>الدخول بيحصل <b>مرة واحدة</b> في الشاشة الرئيسية للهب — الصفحة دي
+              مالهاش شاشة دخول.</li>
+            <li>الطابور بيتحمّل تلقائيًا ويقول إيه اللي المفروض ينتقل النهاردة.</li>
+            <li>الموظف بيسكن باركود الأوردر — <b>والتسجيل فوري</b>: مفيش دفعة
+              ومفيش زرار تنفيذ.</li>
+            <li>النتيجة: نجاح = توست + الصف بيختفي من الطابور · خلاص متعمل / مرفوض
+              = <b>نافذة بالسبب</b> · حالة شاذة = <b>نافذة تفاصيل وإقرار</b> قبل
+              التسجيل.</li>
+            <li>كل سكانة بتسيب <b>صف واحد بالظبط</b> في D1 — يا <code>transfer</code>
+              يا <code>rejected</code>.</li>
+          </ol>
+
+          <h4>الـ Endpoints الرئيسية</h4>
+          <table>
+            <tr><th>action</th><th>الوصف</th></tr>
+            <tr><td><code>get_ready_to_office</code></td><td>أوردرات <code>Ready</code> (الماكينتين) بحقولها الخام — <b>قراءة بحتة</b></td></tr>
+            <tr><td><code>scan</code></td><td>قراءة الأوردر حيًّا + الحكم + <code>metafieldsSet</code> + صف D1</td></tr>
+            <tr><td><code>get_logs</code> / <code>get_logs_count</code> / <code>get_logs_export</code></td><td>سجل العمليات — فلاتر server-side (<code>employees</code> · <code>types</code> · <code>results</code> · <code>machines</code> · <code>search</code> · <code>dateFrom</code>/<code>dateTo</code>) + صفحات + ترتيب، والتصدير بيرجّع <code>cap</code>/<code>total</code>/<code>truncated</code></td></tr>
+            <tr><td><code>get_employees</code></td><td>تعبئة فلتر الموظف في تاب السجل</td></tr>
+            <tr><td><code>diag</code></td><td>فحص ذاتي بدون كتابة — المتغيرات (اسم وطول فقط) · OAuth · صلاحية <code>write_orders</code> · <b>تعريف الميتافيلد الحيّ</b> · D1 · تكلفة الاستعلام · الـ Origin</td></tr>
+            <tr><td><code>get_config</code></td><td>بيرجّع <code>WORKER_VERSION</code> — الواجهة بتقارنه بـ <code>min</code></td></tr>
+          </table>
+
+          <h4>⚙️ نتيجة كل سكانة — أربع حالات</h4>
+          <table>
+            <tr><th>الحالة</th><th>معناها</th></tr>
+            <tr><td><span class="badge badge-green">✓ تم</span></td><td>العهدة اتكتبت <b>واتأكدت من رد شوبيفاي</b> (<code>Office</code>)</td></tr>
+            <tr><td><span class="badge badge-amber">⚠ تم بتحذير</span></td><td>اتكتبت، بس كان فيه حاجة محتاجة مراجعة والموظف أقرّ بيها</td></tr>
+            <tr><td><span class="badge badge-red">✗ فشل</span></td><td>النداء وصل لشوبيفاي واترفض — العهدة <b>ما اتكتبتش</b></td></tr>
+            <tr><td><span class="badge badge-neutral">⏭ خلاص متعمل</span></td><td>العهدة <b>هي المستهدفة أصلاً</b> (<code>Office</code>) — لا نجاح ولا فشل ولا رفض: <b>مفيش حاجة كانت مطلوبة</b>. عدّاد مستقل ولون محايد</td></tr>
+            <tr><td><span class="badge badge-purple">⛔ مرفوض</span></td><td>اتوقف <b>قبل</b> أي محاولة كتابة (ملغي · بوسطة · ما اتغلّفش · مع المندوب · حالة مش <code>Ready</code>) — الصف بيتسجّل بالسبب</td></tr>
+          </table>
+        </div>
+      </details>
+
+      <details class="about-sec">
+        <summary>🔧 تشريح الكود</summary>
+        <div class="about-sec-body">
+          <h4>FEATURE MAP</h4>
+          <ul>
+            <li><code>shared/shell.js</code> — الهوية والهيدر والإعدادات والتوست وحارس النسخة (نسخة واحدة مضمّنة للهب كله)</li>
+            <li><code>shared/shell.js §OFFICE-GATE</code> — 🔴 <b>مصدر الأهلية الوحيد في الواجهة</b> (<code>wocOfficeGate</code> · <code>wocOfficeQueue</code>). الصفحة دي <b>والشاشة الرئيسية</b> بينادوا نفس الدالة على نفس الرد</li>
+            <li><code>§SCAN</code> — سكانر بمهلة (١٥٠ms للسكانة · ٤٠٠ms للكتابة)، نفس قيم <code>pack.html</code> بالحرف</li>
+            <li><code>§TOOL-JS::scanOrder</code> — نداء <code>scan</code> فوري لكل باركود، ومعالجة الخمس نتايج</li>
+            <li><code>§TOOL-JS::outcomeModal</code> — نافذة واحدة بأربع نغمات (مرفوض · خلاص متعمل · إقرار · فشل)، ومدخل واحد <code>showOutcome</code></li>
+            <li><code>§TOOL-JS::session</code> — جدول سكانات الجلسة + العدّادات</li>
+            <li><code>§OFFICE-QUEUE-JS</code> — الطابور بالتحديث التلقائي وحراسه التلاتة</li>
+            <li><code>§LOG-JS</code> — القسم الموحّد: فلاتر multi-select + فترة سريعة + جدول + صفحات + تصدير</li>
+            <li><code>§LOG-JS::logParams</code> — المصدر الوحيد لفلاتر التلات نداءات</li>
+            <li><code>§SHELL-JS::freezeOnScroll</code> — قفل الهيدر وشريط التابات بعتبة <b>مقيسة</b> مش رقم ثابت</li>
+            <li><code>§SCAN::evaluate</code> (Worker) — 🔴 <b>الحارس الحقيقي</b>: بيقرا الأوردر حيًّا وقت الضغطة</li>
+            <li><code>§SCAN::resolveOrder</code> (Worker) — الرقم الطويل قراءة بمفتاح، والقصير <b>بحث بمطابقة تامة</b> على الاسم الراجع</li>
+            <li><code>checkWorkerVersion(PAGE_WORKERS)</code> + <code>wocRunDiag()</code> (shell) — حارس النسخة وزرار 🩺 الفحص الذاتي</li>
+          </ul>
+
+          <h4>KEY VARIABLES</h4>
+          <ul>
+            <li><code>currentEmployee</code> — { username, displayName } جاي من <code>sessionStorage</code> عبر <code>requireSession()</code></li>
+            <li><code>TOOL_VERSION</code> (shell) — نسخة <b>الهب كله</b></li>
+            <li><code>WOC_WORKERS.office.min</code> (shell) — أقل نسخة Worker مقبولة. <b>مالهاش أي علاقة بـ <code>TOOL_VERSION</code></b></li>
+            <li><code>LS_SECRET = 'warehouse_ops_worker_secret'</code> (shell) — 🔴 الأداة دي <b>عضو في مجموعة <code>warehouse_ops</code> من أول يوم</b>: مفيش سر قديم خاص بيها لأنها مالهاش نسخة مستقلة</li>
+            <li><code>WOC_API_TIMEOUT_MS</code> (shell) — مهلة ٩٠ ثانية على كل نداء</li>
+            <li>D1: <code>tool = "package_transfer_to_office"</code> · <code>type = "transfer"</code> أو <code>"rejected"</code>. أحداث الدخول/الخروج تحت <code>warehouse_ops_center</code> (الهب)</li>
+            <li><code>extra.result</code> — <code>success</code>/<code>warning</code>/<code>error</code>/<code>rejected</code>/<code>already</code></li>
+            <li><code>extra.machine</code> — <code>S1</code> أو <code>S2</code>: <b>أنهي طرد</b> اتسجّل، مش حالة الأوردر</li>
+            <li><code>doneThisSession</code> — الأوردر اللي اتسجّل في الجلسة دي بيتشال من الطابور فورًا؛ الشاشة <b>لازم تتغيّر</b> بعد النجاح</li>
+          </ul>
+
+          <h4>الـ Workers اللي الصفحة دي بتناديهم</h4>
+          <div id="aboutWorkers">—</div>
+
+          <h4>NOTES</h4>
+          <ul>
+            <li>🔴 <b>الأداة دي مالهاش نسخة مستقلة بقرار</b> — ريبو
+              <code>Package-Transfer-To-Office</code> فيه Worker وبس، والواجهة
+              الوحيدة هي الصفحة دي.</li>
+            <li>🔴 <b>الفلترة في الواجهة بقرار</b> — <code>package_whereabouts_s1</code>
+              <b>مش قابل للفلترة</b> في بحث شوبيفاي: الفلتر عليه بيتجاهَل في صمت
+              ويرجّع <b>المتجر كله</b> (١٠٬٠٠٠ صف — مقيس 15-09-2026). فالـ Worker
+              بيجيب <code>Ready</code> بس، والأهلية بتتحسب في <code>§OFFICE-GATE</code>
+              بتاع الـ shell — <b>مصدر واحد</b> للصفحة وللشاشة الرئيسية.</li>
+            <li>🔴 <b>الطابور مش حارس.</b> الحارس الحقيقي في الـ Worker، وبيقرا الأوردر
+              <b>حيًّا</b> وقت السكان — الجدول لقطة عمرها لحد ١٥ دقيقة، وحارس في
+              الواجهة بس <b>مش حارس</b>.</li>
+            <li>⚠️ <b>الحقل لسه فاضي على كل الأوردرات</b> (15-09-2026) — أداة التغليف
+              هي اللي المفروض تكتب <code>Warehouse</code> وقت التغليف ولسه ما
+              اتعدّلتش. عشان كده العهدة الفاضية <b>مقبولة</b> في الطابور؛ لو اترفضت
+              الطابور كان هيفتح فاضي.</li>
+            <li>⚠️ <b>أول أسبوع = تنضيف.</b> الطابور هيفتح بأوردرات متغلّفة من أسابيع،
+              وبعضها راح المكتب فعلاً من غير ما يتسجّل. ده متوقّع — القايمة بتنضّف
+              نفسها مع أول دورة.</li>
+            <li>مفيش دفعة ومفيش زرار تنفيذ — <b>السكان فوري</b>. عشان كده مفيش
+              <code>CHUNK</code> ولا <code>MAX_BATCH</code> في الأداة دي.</li>
+            <li>الأوردر اللي اتسجّل بيتشال من الطابور فورًا — <b>الشاشة لازم تتغيّر
+              بعد النجاح</b>، وده الدرس اللي أنتج ٥٩ صف فشل كذّاب في أداة المرتجعات.</li>
+            <li><code>dateFrom</code>/<code>dateTo</code> بيتقارنوا بالـ <code>timestamp</code>
+              المخزّن (<b>UTC</b>) بينما العرض بتوقيت القاهرة — فرق الساعات ممكن يحط
+              عملية بعد ٩ مساءً في يوم UTC اللي بعده. مقبول لفلتر بالأيام، ومكتوب
+              هنا عشان مايتكتشفش كباج بعدين.</li>
+            <li>الـ Worker بيرجّع أسماء وأطوال المتغيرات في <code>diag</code> بس —
+              <b>مفيش قيمة أي سر بتتعرض</b>.</li>
+          </ul>
+        </div>
+      </details>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ §TOOL-JS::outcomeModal — نافذة واحدة بأربع نغمات ══════════
+     🔴 القاعدة: الحالة اللي بتسيب الأوردر محتاج فعل أو مراجعة → **نافذة**.
+        النجاح الكامل → **توست**. «رسالة بتختفي لوحدها لحالة محتاجة فعل =
+        الفعل مش هيتعمل» (نفس §OUTCOME-MODAL في `remove.html` و`pack.html`).
+     🔴 **ومفيش توست ونافذة لنفس الحدث** — رسالتين في نفس اللحظة معناهم إن
+        الموظف يقرا واحدة ويهمل التانية، ومش مضمون أنهي واحدة.
+     🔴 **الضغط برّه مايقفلهاش** (مفيش `onclick` على الـ overlay) — الموظف
+        بيدوس على الشاشة كتير وهو بيشيل طرود.
+     ⚠️ والفوتر بيتبني من جديد كل مرة بـ`createElement` + `addEventListener` —
+        مفيش listener قديم فاضل، ومفيش اسم أوردر بيتسرّب جوّه HTML. -->
+<div class="res-overlay" id="outcomeOverlay">
+  <div class="res-modal" id="outcomeModal">
+    <div class="res-modal-hdr" id="outcomeHdr">—</div>
+    <div class="res-modal-body">
+      <div class="res-sub" id="outcomeSub"></div>
+      <div class="res-rej" id="outcomeDetails" style="display:none;"></div>
+      <div class="res-note" id="outcomeNote" style="display:none;"></div>
+      <div class="res-ftr" id="outcomeFtr"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     §TOOL — محتوى الأداة
+     ══════════════════════════════════════════════════════════════ -->
+<main id="appContent">
+
+  <!-- ══ PANEL: SCANNER ══════════════════════════════════════════ -->
+  <div id="panelScanner" class="tab-panel active">
+
+    <!-- ══ مربع السكان ══════════════════════════════════════════════
+         🔴 **السكان فوري** (قرار أحمد 15-09-2026) — مفيش دفعة، مفيش
+            «تحديد الكل»، ومفيش زرار تنفيذ. كل باركود بيتسجّل لوحده.
+         🔴 **ومفيش مربع إدخال يدوي** بقرار — المدخل الوحيد هو السكانر.
+            ⚠️ الثمن لازم يتقال: باركود متقطّع أو مطموس مالوش طريق تاني من
+            الشاشة دي، والموظف بيحتاج يسجّل الأوردر من الأدمن. -->
+    <div class="card" id="scanCard" style="margin-bottom:16px;">
+      <div class="card-header">
+        <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+          <h2>📷 امسح باركود الأوردر</h2>
+          <div class="count-badge">
+            <span class="count-num" id="doneCount">0</span>
+            <span class="count-lbl">اتسجّل في الجلسة دي</span>
+          </div>
+        </div>
+        <div class="pills-row" id="sessionPills"></div>
+      </div>
+
+      <div class="card-body" style="display:flex; flex-direction:column; gap:14px;">
+        <div class="scan-row">
+          <input id="scanInput" class="scan-input" type="text"
+            placeholder="امسح باركود الأوردر هنا..." autocomplete="off" autofocus
+            aria-label="باركود الأوردر" />
+        </div>
+
+        <!-- جدول سكانات الجلسة — بيظهر بعد أول سكانة بس -->
+        <div id="sessionWrap" style="display:none;">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>الوقت</th>
+                  <th>رقم الأوردر</th>
+                  <th>الطرد</th>
+                  <th>النتيجة</th>
+                  <th>ملاحظة</th>
+                </tr>
+              </thead>
+              <tbody id="sessionBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ══ §OFFICE-QUEUE — «جاهز للتسليم للمكتب» ══════════════════
+             🔴 **عرض بحت** — مفيش مربعات اختيار ومفيش «أضف للدفعة».
+             🔴 **والحكم مش هنا:** الأهلية بتتحسب من `wocOfficeGate` في
+                `shared/shell.js` §OFFICE-GATE — **نفس** الدالة اللي
+                الشاشة الرئيسية بتعدّ بيها، على **نفس** رد الـ endpoint.
+                ⛔ ممنوع أي قاعدة أهلية مكتوبة في الصفحة دي (درس R1).
+             ⚠️ والطابور **لقطة** عمرها لحد ١٥ دقيقة — الحارس الحقيقي في
+                الـ Worker وقت السكان، وهو اللي بيقرا الأوردر حيًّا. -->
+        <div class="rq-box" id="rqBox">
+          <div class="rq-head">
+            <div>
+              <div class="rq-title">🏢 جاهز للتسليم للمكتب</div>
+              <div class="rq-sub">اتغلّف ولسه في المخزن · قاهرة+جيزة وشو روم</div>
+            </div>
+            <div class="count-badge">
+              <span class="count-num" id="rqCount">—</span>
+              <span class="count-lbl">أوردر</span>
+            </div>
+            <div class="rq-act">
+              <div class="woc-fresh">
+                <div class="woc-fresh-row">
+                  <span class="woc-fresh-lbl">آخر تحديث</span>
+                  <span class="woc-ago" id="rqAgo">لسه ما اتحدّثش</span>
+                </div>
+                <div class="woc-fresh-row" id="rqStamp"><span class="woc-stamp-chip">—</span></div>
+              </div>
+              <button class="woc-rbtn" id="rqBtn" type="button" onclick="rqLoad(false)">
+                <span class="woc-rbtn-ico">↺</span><span>تحديث</span>
+                <span class="woc-rbtn-badge" id="rqBadge">—</span>
+              </button>
+            </div>
+          </div>
+          <div id="rqFail" class="rq-fail" style="display:none;"></div>
+          <div id="rqTrunc" class="rq-warn" style="display:none;"></div>
+          <div class="rq-body">
+            <div id="rqEmpty" class="rq-empty">
+              <div class="ico">⏳</div><div>جاري تحميل الطابور…</div>
+            </div>
+            <div class="table-wrap" id="rqTableWrap" style="display:none;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>رقم الأوردر</th>
+                    <th>العميل</th>
+                    <th>الطرد</th>
+                    <th>الزون</th>
+                    <th>عدد القطع</th>
+                    <th>الإجمالي</th>
+                    <th>تاريخ الأوردر</th>
+                    <th>وقت التغليف</th>
+                    <th>غلّفه</th>
+                  </tr>
+                </thead>
+                <tbody id="rqTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /panelScanner -->
+  </div><!-- /panelScanner -->
+
+  <!-- ══════════════════════════════════════════════════════════════
+       §LOG — القسم الموحّد: فلاتر + جدول في كارت واحد
+       (data-table-standard.md — الشكل القديم بالبطاقات مهجور)
+       ══════════════════════════════════════════════════════════════ -->
+  <div id="panelLog" class="tab-panel">
+    <div class="unified-section">
+
+      <!-- ─── هيدر الفلاتر: سهم الطي أقصى اليمين + أيقونة funnel بدون كلمة "الفلاتر" ─── -->
+      <div class="flt-header" onclick="toggleFilters()">
+        <div class="flt-header-right">
+          <span class="flt-toggle open" id="fltToggleIcon">▲</span>
+          <svg class="flt-icon" id="fltIcon" viewBox="0 0 36 24" fill="none"
+               stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="2 3 13 3 8.3 10.2 8.3 19 6.7 19 6.7 10.2 2 3"></polygon>
+            <line x1="18" y1="5"  x2="33" y2="5"></line>
+            <line x1="18" y1="11" x2="29" y2="11"></line>
+            <line x1="18" y1="17" x2="25" y2="17"></line>
+          </svg>
+        </div>
+        <button class="clear-btn inactive" id="clearAllBtn"
+          onclick="event.stopPropagation(); clearAllFilters();">✕ مسح كل الفلاتر</button>
+      </div>
+
+      <div class="flt-body" id="fltBody">
+
+        <!-- صف 1: فلاتر الاختيار المتعدد -->
+        <div class="flt-row">
+          <div class="flt-g">
+            <span class="flt-label">نوع العملية</span>
+            <div class="ms-wrap" id="msWrap-type">
+              <button class="ms-btn" id="msBtn-type" onclick="msToggle('type')">
+                <span id="msBtnLabel-type">الكل</span><span class="ms-arrow">▾</span>
+              </button>
+              <div class="ms-menu" id="msMenu-type">
+                <div class="ms-ftr-top">
+                  <button class="ms-ftr-clear" onclick="msClear('type')">مسح الاختيار</button>
+                  <span class="ms-ftr-count" id="msFtrCount-type"></span>
+                </div>
+                <div class="ms-selectall-row" onclick="msToggleSelectAll('type')">
+                  <input type="checkbox" id="msSelectAll-type" onclick="event.stopPropagation()"
+                    onchange="msToggleSelectAll('type', this.checked)">
+                  <span id="msSelectAllLabel-type">تحديد الكل</span>
+                </div>
+                <div class="ms-list" id="msList-type"></div>
+              </div>
+            </div>
+          </div>
+          <div class="flt-g">
+            <span class="flt-label">النتيجة</span>
+            <div class="ms-wrap" id="msWrap-result">
+              <button class="ms-btn" id="msBtn-result" onclick="msToggle('result')">
+                <span id="msBtnLabel-result">الكل</span><span class="ms-arrow">▾</span>
+              </button>
+              <div class="ms-menu" id="msMenu-result">
+                <div class="ms-ftr-top">
+                  <button class="ms-ftr-clear" onclick="msClear('result')">مسح الاختيار</button>
+                  <span class="ms-ftr-count" id="msFtrCount-result"></span>
+                </div>
+                <div class="ms-selectall-row" onclick="msToggleSelectAll('result')">
+                  <input type="checkbox" id="msSelectAll-result" onclick="event.stopPropagation()"
+                    onchange="msToggleSelectAll('result', this.checked)">
+                  <span id="msSelectAllLabel-result">تحديد الكل</span>
+                </div>
+                <div class="ms-list" id="msList-result"></div>
+              </div>
+            </div>
+          </div>
+          <div class="flt-g">
+            <span class="flt-label">الطرد</span>
+            <div class="ms-wrap" id="msWrap-machine">
+              <button class="ms-btn" id="msBtn-machine" onclick="msToggle('machine')">
+                <span id="msBtnLabel-machine">الكل</span><span class="ms-arrow">▾</span>
+              </button>
+              <div class="ms-menu" id="msMenu-machine">
+                <div class="ms-ftr-top">
+                  <button class="ms-ftr-clear" onclick="msClear('machine')">مسح الاختيار</button>
+                  <span class="ms-ftr-count" id="msFtrCount-machine"></span>
+                </div>
+                <div class="ms-selectall-row" onclick="msToggleSelectAll('machine')">
+                  <input type="checkbox" id="msSelectAll-machine" onclick="event.stopPropagation()"
+                    onchange="msToggleSelectAll('machine', this.checked)">
+                  <span id="msSelectAllLabel-machine">تحديد الكل</span>
+                </div>
+                <div class="ms-list" id="msList-machine"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- صف 2 (الترتيب الإلزامي): بحث ← فترة سريعة ← من ← إلى ← الموظف -->
+        <div class="flt-row">
+          <div class="flt-g" style="min-width:240px;">
+            <span class="flt-label">بحث برقم أوردر أو ملاحظة</span>
+            <div class="search-wrap">
+              <input type="text" class="search-input" id="logSearch" oninput="onLogSearchInput(this)" />
+              <span class="search-icon">🔍</span>
+            </div>
+          </div>
+
+          <div class="flt-g">
+            <span class="flt-label">فترة سريعة</span>
+            <div class="range-preset-wrap" id="rangePresetWrap">
+              <button class="range-preset-btn" id="rangePresetBtn" onclick="toggleRangePresetMenu(event)">
+                <span id="rangePresetLabel">⚡ اختار فترة</span><span class="pr-arrow">▾</span>
+              </button>
+              <div class="range-preset-menu" id="rangePresetMenu">
+                <!-- ✕ مسح الاختيار إلزامي — بيرجّع لحالة "بلا فلتر" (مش لأي افتراضي) -->
+                <div class="range-preset-clear-row">
+                  <button onclick="clearRangePreset()">✕ مسح الاختيار</button>
+                </div>
+                <div class="range-preset-item" data-preset="today"      onclick="applyRangePreset('today')"><span>اليوم</span><span class="pr-check">✓</span></div>
+                <div class="range-preset-item" data-preset="yesterday"  onclick="applyRangePreset('yesterday')"><span>أمس</span><span class="pr-check">✓</span></div>
+                <div class="range-preset-sep"></div>
+                <div class="range-preset-item" data-preset="last3"      onclick="applyRangePreset('last3')"><span>آخر 3 أيام</span><span class="pr-check">✓</span></div>
+                <div class="range-preset-item" data-preset="last7"      onclick="applyRangePreset('last7')"><span>آخر 7 أيام</span><span class="pr-check">✓</span></div>
+                <div class="range-preset-item" data-preset="last30"     onclick="applyRangePreset('last30')"><span>آخر 30 يوم</span><span class="pr-check">✓</span></div>
+                <div class="range-preset-item" data-preset="last90"     onclick="applyRangePreset('last90')"><span>آخر 90 يوم</span><span class="pr-check">✓</span></div>
+                <div class="range-preset-sep"></div>
+                <!-- 📅 شهر محدد — مكانه ثابت فوق "الشهر الحالي" مباشرة -->
+                <div class="range-preset-item has-sub" id="monthSpecificItem" onclick="toggleMonthSubmenu(event)">
+                  <span>📅 شهر محدد</span><span class="pr-sub-arrow">‹</span>
+                  <div class="month-submenu" id="monthSubmenu" onclick="event.stopPropagation();">
+                    <div class="month-select-row">
+                      <select class="month-select" id="monthSelectMonth" onchange="onMonthYearChange()">
+                        <option value="">الشهر</option>
+                        <option value="1">يناير</option><option value="2">فبراير</option><option value="3">مارس</option>
+                        <option value="4">أبريل</option><option value="5">مايو</option><option value="6">يونيو</option>
+                        <option value="7">يوليو</option><option value="8">أغسطس</option><option value="9">سبتمبر</option>
+                        <option value="10">أكتوبر</option><option value="11">نوفمبر</option><option value="12">ديسمبر</option>
+                      </select>
+                      <select class="month-select" id="monthSelectYear" onchange="onYearSelectChange()"></select>
+                    </div>
+                    <input type="number" class="month-select" id="monthSelectYearManual" style="display:none;margin-top:8px;"
+                      placeholder="مثال: 2019" oninput="onMonthYearManualInput()">
+                    <div class="month-select-hint">اختَر الشهر والسنة — يتطبّق الفلتر تلقائيًا بمجرد اختيار الاتنين. لسنة أقدم اختَر "سنة تانية..." واكتبها يدويًا.</div>
+                  </div>
+                </div>
+                <div class="range-preset-item" data-preset="thisMonth"   onclick="applyRangePreset('thisMonth')"><span>الشهر الحالي</span><span class="pr-check">✓</span></div>
+                <div class="range-preset-item" data-preset="lastMonth"   onclick="applyRangePreset('lastMonth')"><span>الشهر السابق</span><span class="pr-check">✓</span></div>
+                <div class="range-preset-item" data-preset="thisQuarter" onclick="applyRangePreset('thisQuarter')"><span>الربع الحالي</span><span class="pr-check">✓</span></div>
+                <div class="range-preset-sep"></div>
+                <div class="range-preset-item" data-preset="thisYear"    onclick="applyRangePreset('thisYear')"><span>العام الحالي</span><span class="pr-check">✓</span></div>
+                <div class="range-preset-item" data-preset="lastYear"    onclick="applyRangePreset('lastYear')"><span>العام السابق</span><span class="pr-check">✓</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flt-g">
+            <span class="flt-label">من تاريخ</span>
+            <div class="range-date-wrap">
+              <input type="date" id="rangeDateFrom" onclick="this.showPicker&&this.showPicker();" onchange="onRangeDateChange()">
+            </div>
+          </div>
+          <div class="flt-g">
+            <span class="flt-label">إلى تاريخ</span>
+            <div class="range-date-wrap">
+              <input type="date" id="rangeDateTo" onclick="this.showPicker&&this.showPicker();" onchange="onRangeDateChange()">
+            </div>
+          </div>
+
+          <div class="flt-g">
+            <span class="flt-label">الموظف</span>
+            <div class="ms-wrap" id="msWrap-emp">
+              <button class="ms-btn" id="msBtn-emp" onclick="msToggle('emp')">
+                <span id="msBtnLabel-emp">كل الموظفين</span><span class="ms-arrow">▾</span>
+              </button>
+              <div class="ms-menu" id="msMenu-emp">
+                <div class="ms-ftr-top">
+                  <button class="ms-ftr-clear" onclick="msClear('emp')">مسح الاختيار</button>
+                  <span class="ms-ftr-count" id="msFtrCount-emp"></span>
+                </div>
+                <div class="ms-selectall-row" onclick="msToggleSelectAll('emp')">
+                  <input type="checkbox" id="msSelectAll-emp" onclick="event.stopPropagation()"
+                    onchange="msToggleSelectAll('emp', this.checked)">
+                  <span id="msSelectAllLabel-emp">تحديد الكل</span>
+                </div>
+                <div class="ms-list" id="msList-emp"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chips — سطر منفصل لكل فلتر، واسم الفلتر مرة واحدة في أول السطر -->
+        <div class="ms-chips-row" id="chipsRow-type"></div>
+        <div class="ms-chips-row" id="chipsRow-emp"></div>
+
+      </div>
+
+      <div class="section-divider"></div>
+
+      <!-- ─── صف الجدول: سهم الطي أقصى اليمين + "النتائج" + الأكشنز ─── -->
+      <div class="tbl-bar" onclick="toggleTable()">
+        <div class="tbl-bar-right">
+          <span class="tbl-toggle open" id="tblToggleIcon">▲</span>
+          <div class="results-wrap">
+            <span class="results-label">النتائج:</span>
+            <span class="results-count" id="filteredCount">—</span>
+          </div>
+        </div>
+        <div class="tbl-bar-left">
+          <button class="act-btn refresh" onclick="event.stopPropagation(); loadLog();">↺ تحديث</button>
+          <button class="act-btn export"  onclick="event.stopPropagation(); exportLogXLSX();">⬇ تصدير XLSX</button>
+        </div>
+      </div>
+
+      <div class="tbl-body-wrap" id="tblBodyWrap">
+        <div style="padding:0 16px;">
+          <!-- بانر التصدير المقصوص — ثابت، مش توست (Standards #30) -->
+          <div id="logExportWarn" class="export-warn" style="display:none;"></div>
+        </div>
+        <div class="tbl-scroll">
+          <table class="data-table">
+            <thead><tr>
+              <th class="sortable-th" data-sort-key="date"      onclick="toggleSort('date')">التاريخ<span class="sort-icon" data-sort-key="date"></span></th>
+              <th class="sortable-th" data-sort-key="time"      onclick="toggleSort('time')">الوقت<span class="sort-icon" data-sort-key="time"></span></th>
+              <th class="sortable-th" data-sort-key="employee"  onclick="toggleSort('employee')">الموظف<span class="sort-icon" data-sort-key="employee"></span></th>
+              <th class="sortable-th" data-sort-key="orderName" onclick="toggleSort('orderName')">رقم الأوردر<span class="sort-icon" data-sort-key="orderName"></span></th>
+              <th class="sortable-th" data-sort-key="machine"   onclick="toggleSort('machine')">الطرد<span class="sort-icon" data-sort-key="machine"></span></th>
+              <th>من → إلى</th>
+              <th class="sortable-th" data-sort-key="result"    onclick="toggleSort('result')">النتيجة<span class="sort-icon" data-sort-key="result"></span></th>
+              <th>السبب / ملاحظة</th>
+            </tr></thead>
+            <tbody id="logTableBody">
+              <tr class="empty-row"><td colspan="8">لا يوجد سجل بعد — اضغط تحديث</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination-row" id="paginationRow" style="display:none;">
+          <button class="page-btn" id="btnPrevPage" onclick="goPage(-1)">→ السابق</button>
+          <span class="page-info" id="pageInfo"></span>
+          <button class="page-btn" id="btnNextPage" onclick="goPage(1)">التالي ←</button>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /panelLog -->
+
+</main>
+</div><!-- /.container -->
+
+<div id="sharedMount"></div>
+
+<!-- 🔴 نسخة واحدة مضمّنة — ممنوع محتوى الملف ده يتنسخ هنا -->
+<script src="shared/shell.js"></script>
+<script>document.getElementById('sharedMount').innerHTML = wocSharedModals();</script>
+<script>
+
+// ══════════════════════════════════════════════════════════════
+// §INIT — الجلسة أولاً، قبل أي حاجة تانية
+// ══════════════════════════════════════════════════════════════
+//
+// 🔴 `requireSession()` **بترمي** لو مفيش جلسة — بتوقف باقي السكربت
+//    أثناء التحويل لشاشة الدخول، وإلا الصفحة بتنادي الـ Worker وترسم
+//    جدول **أثناء** ما التحويل شغّال.
+const session = requireSession();
+
+// ⚠️ الشكل ده (`{ username, displayName }`) هو اللي §TOOL-JS بيقراه —
+//    `currentEmployee.username` بيتبعت في جسم كل `update`. الاسم بيوصل
+//    من `sessionStorage` عبر الهب، مش من شاشة دخول في الصفحة دي.
+const currentEmployee = { username: session.username, displayName: session.displayName };
+
+const { apiGet, apiPost } = wocApi(WOC_WORKERS.office);
+const PAGE_WORKERS = ['office'];
+
+// ⚠️ الحلقة دي مكرّرة في كل صفحة **عن قصد**: `WOC_WORKERS` و`cmpVersion`
+//    في الـ shell، بس فحص Step 9 بيطلب وجودهم في كل صفحة، والقايمة نفسها
+//    بتفرق من صفحة للتانية.
+async function renderAboutWorkers() {
+  const box = document.getElementById('aboutWorkers');
+  if (!box) return;
+  const rows = await Promise.all(PAGE_WORKERS.map(async k => {
+    const w = WOC_WORKERS[k];
+    let got = '—', mark = '❌';
+    try {
+      const cfg = await wocApi(w).apiGet('get_config');
+      got = cfg.version || cfg.WORKER_VERSION || '—';
+      mark = cmpVersion(got, w.min) < 0 ? '⚠️' : '✅';
+    } catch { got = 'تعذّر الوصول'; }
+    return `<tr><td>${mark} ${esc(w.label)}</td><td><code>${esc(got)}</code></td><td><code>${esc(w.min)}</code></td></tr>`;
+  }));
+  box.innerHTML = `<table><tr><th>الأداة</th><th>نسخة الـ Worker</th><th>الحد الأدنى</th></tr>${rows.join('')}</table>
+     <p>نسخة الواجهة (الهب كله): <code>${esc(TOOL_VERSION)}</code></p>`;
+}
+
+// ⚠️ بعد حفظ السر: حارس النسخة **وفلتر الموظف في السجل**. الفلتر كان
+//    بيتملّى كأثر جانبي لشاشة الدخول (`loadEmployeesList`) — والشاشة دي
+//    اتشالت، فالتعبئة بقت من `populateLogEmployeeFilter` لوحدها.
+function onSettingsSaved() {
+  checkWorkerVersion(PAGE_WORKERS);
+  if (currentTab === 'log') populateLogEmployeeFilter();
+}
+
+// ══════════════════════════════════════════════════════════════
+// §AUTH-JS — **اتشال**: الدخول في `index.html` بس
+// ══════════════════════════════════════════════════════════════
+// ── Active-state coloring for text search inputs ────────────────────────────────
+function toggleSearchActiveState(el) {
+  el.classList.toggle('has-value', el.value.trim().length > 0);
+}
+
+// ── Order status badge color (per ecommoda-order-lifecycle suggested palette) ──
+function statusBadgeClass(value) {
+  const map = {
+    'New Order':             'badge-neutral',
+    'Confirmed':              'badge-accent',
+    'WhatsApp-Confirmed':     'badge-amber',
+    'WhatsApp-CANCELLED':     'badge-amber',
+    'Pending Edit':           'badge-amber',
+    'Confirmed + Edit':       'badge-amber',
+    'Ready':                  'badge-accent',
+    'Shipped':                 'badge-purple',
+    'In-Return':                'badge-amber',
+    'Delivered':                 'badge-green',
+    'Returned':                   'badge-red',
+    'Cancelled':                   'badge-red',
+    'Confirmed + RETURN':          'badge-accent',
+    'Confirmed + EXCHANGE':        'badge-accent',
+  };
+  return map[value] || 'badge-neutral';
+}
+
+// ══════════════════════════════════════════════════════════════
+// Main Tabs
+// ══════════════════════════════════════════════════════════════
+const TAB_IDS = ['scanner', 'log'];
+let currentTab = 'scanner';
+
+function switchMainTab(tab) {
+  currentTab = tab;
+  document.getElementById('tabScanner').classList.toggle('active', tab === 'scanner');
+  document.getElementById('tabLog')    .classList.toggle('active', tab === 'log');
+  document.getElementById('panelScanner').classList.toggle('active', tab === 'scanner');
+  document.getElementById('panelLog')    .classList.toggle('active', tab === 'log');
+  if (tab === 'log') loadLog();
+  updateTabChip();
+  closeTabChipMenu();
+}
+
+// ─── §SHELL-JS::freezeOnScroll (tabs-and-modals § 1b) ───
+// ⚠️ STICK_ON بتتقاس مش بتتكتب: قفل الهيدر بيقلّل ارتفاعه فوق منطقة العرض،
+// والمتصفح بيطرح الفرق ده من scrollY نفسه (scroll anchoring) — يعني الفعل
+// بيحرّك شرطه. الباند لازم يكون أوسع من الارتداد، والارتداد بيختلف من أداة
+// لأداة، فأي رقم ثابت = فليكر راجع.
+const stickyWrap = document.getElementById('stickyWrap');
+const STICK_OFF = 12;
+let STICK_ON = 140;                 // قيمة مبدئية آمنة — measureSticky() بتظبطها
+let stickyDelta = 0, stickyW = 0, stickyRafPending = false;
+
+function measureSticky() {
+  const wasStuck = stickyWrap.classList.contains('stuck');
+  const nodes = [stickyWrap, ...stickyWrap.querySelectorAll('*')];
+  const prev  = nodes.map(n => n.style.transition);
+  nodes.forEach(n => n.style.transition = 'none');
+  stickyWrap.classList.remove('stuck');  const open = stickyWrap.offsetHeight;
+  stickyWrap.classList.add('stuck');     const shut = stickyWrap.offsetHeight;
+  stickyWrap.classList.toggle('stuck', wasStuck);
+  stickyWrap.offsetHeight;                                   // reflow قبل رجوع الترانزيشن
+  nodes.forEach((n, i) => n.style.transition = prev[i]);
+  stickyDelta = Math.max(0, open - shut);
+  STICK_ON = Math.max(40, stickyDelta + STICK_OFF + 24);     // الباند أوسع من الارتداد
+  stickyW = window.innerWidth;
+}
+
+function onPageScroll() {
+  if (stickyRafPending) return;
+  stickyRafPending = true;
+  requestAnimationFrame(() => {
+    stickyRafPending = false;
+    const y = window.scrollY;
+    const isStuck = stickyWrap.classList.contains('stuck');
+    if (!isStuck && y > STICK_ON)      stickyWrap.classList.add('stuck');
+    else if (isStuck && y < STICK_OFF) stickyWrap.classList.remove('stuck');
+  });
+}
+window.addEventListener('scroll', onPageScroll, { passive: true });
+
+// إعادة القياس على تغيّر **العرض** بس — ارتفاع الشاشة بيتغيّر عشرات المرات على
+// الموبايل (شريط عنوان المتصفح)، والقياس بيلمس الكلاس فبيعمل رفرفة بنفسه.
+let stickyResizeTimer;
+window.addEventListener('resize', () => {
+  if (window.innerWidth === stickyW) return;
+  clearTimeout(stickyResizeTimer);
+  stickyResizeTimer = setTimeout(measureSticky, 150);
+});
+
+// ─── §SHELL-JS::tabChip — بديل شريط التابات المقفول وقت الـ Sticky ───
+const TAB_BTN_ID = { scanner: 'tabScanner', log: 'tabLog' };
+
+function updateTabChip() {
+  const label = document.getElementById(TAB_BTN_ID[currentTab]).textContent.trim();
+  document.getElementById('activeTabChipLabel').textContent = label;
+  document.querySelectorAll('#tabChipMenu .tab-chip-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.tab === currentTab);
+  });
+}
+function buildTabChipMenu() {
+  document.getElementById('tabChipMenu').innerHTML = TAB_IDS.map(id => {
+    const btn = document.getElementById(TAB_BTN_ID[id]);
+    return `<div class="tab-chip-item ${id === currentTab ? 'active' : ''}" data-tab="${id}"
+      onclick="event.stopPropagation(); switchMainTab('${id}');">${btn.textContent.trim()}</div>`;
+  }).join('');
+}
+// مفيش scrollTo — تبديل التاب في مكانه (قرار مُتعمَّد § 1b)
+function toggleTabChipMenu(e) {
+  e.stopPropagation();
+  const chip = document.getElementById('activeTabChip'), menu = document.getElementById('tabChipMenu');
+  const willOpen = !menu.classList.contains('open');
+  menu.classList.toggle('open', willOpen);
+  chip.classList.toggle('open', willOpen);
+}
+function closeTabChipMenu() {
+  document.getElementById('tabChipMenu')?.classList.remove('open');
+  document.getElementById('activeTabChip')?.classList.remove('open');
+}
+// القائمة دي مابتعملش re-render — القفل بعد الاختيار سلوك مقصود، فمش محتاجة الحارس
+document.addEventListener('click', (e) => {
+  const chip = document.getElementById('activeTabChip');
+  if (chip && !chip.contains(e.target)) closeTabChipMenu();
+});
+
+// ── Auto-focus scan input ──────────────────────────────────────────────────────
+document.addEventListener('click', e => {
+  const inp = document.getElementById('scanInput');
+  if (!inp) return;
+  // ⚠️ شرط `loginOverlay` اتشال — مفيش شاشة دخول في الصفحة دي، الجلسة
+  //    اتأكدت في `requireSession()` قبل أي سطر تاني.
+  if (currentTab === 'scanner' &&
+      !e.target.closest('.eco-overlay') &&
+      !e.target.closest('.settings-overlay') &&
+      !e.target.closest('.res-overlay') &&
+      !isOutcomeOpen() &&
+      !e.target.closest('button') &&
+      !e.target.closest('input') &&
+      !e.target.closest('select') &&
+      !e.target.closest('table')) {
+    inp.focus();
+  }
+});
+
+// ══════════════════════════════════════════════════════════════
+// §SCAN — Scanner gun input (CRITICAL pattern)
+// ══════════════════════════════════════════════════════════════
+// ⚠️ **نسخة طبق الأصل من `pack.html` و`bosta-shipped.html`** — نفس المهل
+//    بالحرف (١٥٠ms للسكانة · ٤٠٠ms للكتابة اليدوي). الموظف بيتنقّل بين
+//    الصفحات بنفس السكانة في إيده، وسلوك مختلف = «سكنت وماحصلش حاجة».
+//    أي تعديل يتعمل في الصفحات كلها في نفس التمريرة (درس R1).
+// ⚠️ والمسح والقراءة **جوّه `handleScan`** مش جوّه الـ listener — المسح في
+//    الـ listener بيقطع دفعة السكانر في نصّها.
+
+let scanTimer;
+const scanInputEl = document.getElementById('scanInput');
+
+scanInputEl.addEventListener('input', () => {
+  clearTimeout(scanTimer);
+  // دفعة السكانر بتيجي أسرع من ٨٠ms بين الحروف: بعد ٣ حروف نعتبرها سكانر
+  // ونستنى ١٥٠ms بس بعد آخر حرف. الكتابة اليدوية بتاخد المهلة الكاملة.
+  const isBurst = scanInputEl.value.length > 3;
+  scanTimer = setTimeout(handleScan, isBurst ? 150 : 400);
+});
+
+function handleScan() {
+  const val = scanInputEl.value.trim();
+  scanInputEl.value = '';
+  scanInputEl.focus();
+  if (!val) return;
+  scanOrder(val, false);
+}
+
+// ══════════════════════════════════════════════════════════════
+// §TOOL-JS — حالة الجلسة
+// ══════════════════════════════════════════════════════════════
+//
+// 🔴 **مفيش دفعة** (قرار أحمد 15-09-2026): كل سكانة نداء مستقل بيكتب فورًا.
+//    عشان كده مفيش `CHUNK` ولا `MAX_BATCH` ولا زرار تنفيذ في الأداة دي.
+// 🔴 **والشاشة لازم تتغيّر بعد كل نجاح** — الصف بيتشال من الطابور والعدّاد
+//    بيتحرّك وصف بيتضاف لجدول الجلسة. الدرس ده أنتج **٥٩ صف فشل كذّاب من
+//    ٦١** في سكانر المرتجعات: الشاشة بعد النجاح كان شكلها زي قبل الضغط
+//    بالظبط، فالموظف بيضغط تاني.
+
+let sessionRows = [];          // سكانات الجلسة — عرض بحت، مش مصدر للسجل
+let scanBusy    = false;       // بيمنع سكانتين متوازيتين على نفس النداء
+let pendingAck  = null;        // الأوردر المستني إقرار (نافذة التحذير مفتوحة)
+
+const OUTCOME_LABEL = {
+  success:  { cls: 'badge-green',   text: '✓ تم' },
+  warning:  { cls: 'badge-amber',   text: '⚠ تم بتحذير' },
+  error:    { cls: 'badge-red',     text: '✗ فشل' },
+  rejected: { cls: 'badge-purple',  text: '⛔ مرفوض' },
+  already:  { cls: 'badge-neutral', text: '⏭ خلاص متعمل' },
+};
+
+function machineText(m) {
+  return m === 's2' ? 'استبدال/استرجاع (S2)' : m === 's1' ? 'الشحنة الأصلية (S1)' : '—';
+}
+
+// ─── §TOOL-JS::scanOrder — المسار الوحيد للسكان ───
+// ⚠️ **مسار واحد بس**: السكانة والإقرار الاتنين بيعدّوا من هنا. مسار تاني
+//    للإقرار كان هيفترق مع أول تعديل (درس R1).
+async function scanOrder(code, ack) {
+  if (scanBusy) { showToast('استنى لحد ما السكانة اللي قبلها تخلص', 'warn'); return; }
+  if (isOutcomeOpen() && !ack) return;          // نافذة مفتوحة = الموظف لسه بيقرا
+
+  scanBusy = true;
+  setScanBusyUI(true);
+  try {
+    const res = await apiPost('scan', {
+      code,
+      ack: ack === true,
+      employee: currentEmployee.username,
+    });
+
+    // ① محتاج إقرار — نافذة تفاصيل، ومفيش أي كتابة ومفيش صف في السجل
+    if (res.result === 'needs_ack') {
+      pendingAck = { code, order: res.order, machine: res.machine };
+      playBeep('warn');
+      showOutcome({
+        tone: 'warn',
+        title: '⚠️ محتاج مراجعة قبل التسجيل',
+        order: res.order,
+        machine: res.machine,
+        lines: res.warnings || [res.message],
+        note: 'التسجيل مش هيحصل غير لما تضغط «سجّل برضه».',
+        buttons: [
+          { label: '✅ سجّل برضه', cls: 'btn-primary', primary: true,
+            onClick: () => { closeOutcome(); scanOrder(code, true); } },
+          { label: '✕ إلغاء', cls: 'btn-red', onClick: () => { pendingAck = null; closeOutcome(); } },
+        ],
+      });
+      return;
+    }
+
+    // ② نجاح (أو نجاح بتحذير) — توست، والصف بيختفي من الطابور
+    if (res.result === 'success' || res.result === 'warning') {
+      playBeep(res.result === 'warning' ? 'warn' : 'success');
+      pushSession(res, code);
+      rqRemove(res.order?.orderId);
+      if (res.logged === false) {
+        // العملية حصلت على شوبيفاي — والسجل هو اللي فشل. الفرق ده لازم يتقال.
+        showToast(`تم تسجيل ${res.order?.orderName || ''} — ⚠️ بس ما اتكتبش في السجل: ${res.logError || ''}`, 'warn', 8000);
+      } else if (res.result === 'warning') {
+        showToast(`تم تسجيل ${res.order?.orderName || ''} مع تحذير`, 'warn');
+      } else {
+        showToast(`✅ ${res.order?.orderName || ''} → المكتب`, 'success');
+      }
+      return;
+    }
+
+    // ③ خلاص متعمل — **محايد** مش فشل ومش تحذير (`ecommoda-constants` §12)
+    if (res.result === 'already') {
+      playBeep('warn');
+      pushSession(res, code);
+      rqRemove(res.order?.orderId);
+      showOutcome({
+        tone: 'neutral', title: '⏭ الطرد ده في المكتب خلاص',
+        order: res.order, machine: res.machine,
+        lines: [res.message],
+        note: 'مفيش حاجة كانت مطلوبة — مش فشل ومش رفض.',
+      });
+      return;
+    }
+
+    // ④ مرفوض — أحمر بالسبب والفعل المطلوب
+    playBeep('error');
+    pushSession(res, code);
+    showOutcome({
+      tone: 'fail', title: '⛔ الأوردر ده مش هيتسجّل',
+      order: res.order, machine: res.machine,
+      lines: [res.message],
+      note: res.code === 'cancelled'
+        ? 'متاخدوش للمكتب — افتح الطرد ورجّع المنتجات على الرف.'
+        : (res.code === 'bosta'
+            ? 'الطرد ده بيتسلّم لبوسطة من المخزن — مكانه «قسم تسليمات بوسطة».'
+            : null),
+    });
+  } catch (err) {
+    playBeep('error');
+    // 🔴 «ما ردّش» ≠ «ما اتنفّذش» — الكتابة ممكن تكون تمّت فعلاً.
+    showOutcome({
+      tone: 'fail', title: '❌ النداء فشل',
+      lines: [err.message],
+      note: 'راجع تاب السجل قبل ما تسكن الأوردر ده تاني — ممكن يكون اتسجّل فعلاً.',
+    });
+  } finally {
+    scanBusy = false;
+    setScanBusyUI(false);
+  }
+}
+
+function setScanBusyUI(busy) {
+  scanInputEl.disabled = busy;
+  if (!busy) scanInputEl.focus();
+}
+
+// ─── §TOOL-JS::session — جدول سكانات الجلسة + العدّادات ───
+function pushSession(res, code) {
+  sessionRows.unshift({
+    at:        new Date(),
+    orderName: res.order?.orderName || null,
+    orderId:   res.order?.orderId   || null,
+    scanned:   code,
+    machine:   res.machine || null,
+    result:    res.result,
+    message:   res.message || '',
+  });
+  renderSession();
+}
+
+function renderSession() {
+  const wrap = document.getElementById('sessionWrap');
+  const body = document.getElementById('sessionBody');
+  const n = { success: 0, warning: 0, error: 0, rejected: 0, already: 0 };
+  for (const r of sessionRows) if (n[r.result] !== undefined) n[r.result]++;
+
+  document.getElementById('doneCount').textContent =
+    (n.success + n.warning).toLocaleString('en-US');
+
+  // ⚠️ المربعات بتظهر **بس لما يكون فيها فعلاً** — مربع بصفر بيتعوّد عليه
+  //    الموظف فبيبطّل يشوفه (نفس مبدأ مربعات «بلا قناة» في `print.html`).
+  const pills = [];
+  if (n.success + n.warning) pills.push({ cls: 'green', val: n.success + n.warning, lbl: 'اتسجّل' });
+  if (n.already)             pills.push({ cls: '',      val: n.already,  lbl: 'خلاص متعمل' });
+  if (n.rejected)            pills.push({ cls: 'red',   val: n.rejected, lbl: 'مرفوض' });
+  if (n.error)               pills.push({ cls: 'red',   val: n.error,    lbl: 'فشل' });
+  document.getElementById('sessionPills').innerHTML = pills.map(p =>
+    `<div class="pill ${p.cls}"><span class="pill-val">${p.val}</span><span class="pill-lbl">${esc(p.lbl)}</span></div>`
+  ).join('');
+
+  if (!sessionRows.length) { wrap.style.display = 'none'; body.innerHTML = ''; return; }
+  wrap.style.display = '';
+  body.innerHTML = sessionRows.map(r => {
+    const b = OUTCOME_LABEL[r.result] || { cls: 'badge-neutral', text: '—' };
+    return `<tr>
+      <td class="col-num">${esc(formatTimeOnly(r.at.toISOString()))}</td>
+      <td>${r.orderName ? orderLink(r.orderName, r.orderId) : `<span class="col-num">${esc(r.scanned)}</span>`}</td>
+      <td>${esc(machineText(r.machine))}</td>
+      <td><span class="badge ${b.cls}">${b.text}</span></td>
+      <td class="reject-reason">${esc(r.message || '—')}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── §TOOL-JS::outcomeModal — المدخل الوحيد للنافذة ───
+// 🔴 نافذة واحدة بأربع نغمات — مش نافذة لكل حالة. أربع كتل منفصلة كانت
+//    هتفترق مع أول تعديل (درس R1).
+function isOutcomeOpen() {
+  return document.getElementById('outcomeOverlay')?.classList.contains('open');
+}
+
+function showOutcome({ tone, title, order, machine, lines, note, buttons }) {
+  const ov   = document.getElementById('outcomeOverlay');
+  const mod  = document.getElementById('outcomeModal');
+  const hdr  = document.getElementById('outcomeHdr');
+  const sub  = document.getElementById('outcomeSub');
+  const det  = document.getElementById('outcomeDetails');
+  const noteEl = document.getElementById('outcomeNote');
+  const ftr  = document.getElementById('outcomeFtr');
+
+  mod.className = 'res-modal' + (tone === 'fail' ? ' fail' : tone === 'warn' ? ' warn' : '');
+  hdr.textContent = title;
+
+  sub.innerHTML = order
+    ? `<span>${orderLink(order.orderName, order.orderId)}</span>`
+      + (machine ? `<span>·</span><b>${esc(machineText(machine))}</b>` : '')
+      + (order.zone ? `<span>·</span><span>${esc(order.zone)}</span>` : '')
+    : '';
+
+  const list = (lines || []).filter(Boolean);
+  if (list.length) {
+    det.style.display = '';
+    det.innerHTML = `<div class="res-rej-hdr">التفاصيل</div><div class="res-rej-list">`
+      + list.map(l => `<div class="res-rej-item"><div class="res-rej-top">${esc(l)}</div></div>`).join('')
+      + `</div>`;
+  } else { det.style.display = 'none'; det.innerHTML = ''; }
+
+  if (note) { noteEl.style.display = ''; noteEl.textContent = note; }
+  else { noteEl.style.display = 'none'; noteEl.textContent = ''; }
+
+  // ⚠️ الأزرار بـ`createElement` + `addEventListener` مش `onclick` بنص —
+  //    عشان مفيش قيمة (اسم أوردر · سبب) تتسرّب جوّه HTML. والفوتر بيتبني
+  //    من جديد كل مرة فمفيش listener قديم فاضل.
+  ftr.innerHTML = '';
+  const btns = buttons && buttons.length ? buttons
+    : [{ label: 'تمام', cls: 'btn-primary', primary: true, onClick: closeOutcome }];
+  let primaryEl = null;
+  for (const b of btns) {
+    const el = document.createElement('button');
+    el.className = 'btn ' + b.cls;
+    el.textContent = b.label;
+    el.addEventListener('click', b.onClick);
+    ftr.appendChild(el);
+    if (b.primary) primaryEl = el;
+  }
+
+  ov.classList.add('open');
+  // الفوكس على الزرار الرئيسي — بيدّي `Enter` للوحة المفاتيح، وبيمنع السكانة
+  // الجاية من إنها تروح لمربع مخفي ورا النافذة.
+  (primaryEl || ftr.firstChild)?.focus();
+}
+
+function closeOutcome() {
+  document.getElementById('outcomeOverlay').classList.remove('open');
+  document.getElementById('scanInput')?.focus();   // الفوكس يرجع للسكانر
+}
+
+// ══════════════════════════════════════════════════════════════
+// §LOG-JS — Log Filter Model v2: كل الفلترة server-side + pagination
+// ══════════════════════════════════════════════════════════════
+// ⚠️ الفلترة client-side ممنوعة هنا: صف "النتائج" كان هيعدّ الصفحة مش القاعدة،
+// والصفحة التانية كانت هتيجي بلا فلترة، والتصدير هينزّل غير المفلتر — كله في
+// السكوت. عشان كده كل الفلاتر بتتبعت للـ Worker من مصدر واحد (logParams).
+
+const LOG_PAGE_SIZE = 100;
+
+let logCurrentPage = 1;
+let logTotalCount  = 0;
+let logSearchTimer = null;
+let logRows        = [];      // صفوف الصفحة الحالية بعد التطبيع — مصدر الترتيب
+
+// ─── §LOG-JS::filters — multi-select state (بند ٢١: كل الفلاتر multi-select) ───
+const msState = {
+  type: { items: [
+            { value: 'transfer', label: 'تسجيل للمكتب' },
+            { value: 'rejected', label: 'مرفوض (ما اتكتبش)' },
+          ], selected: new Set(), search: '' },
+  result: { items: [
+            { value: 'success',  label: '✓ تم' },
+            { value: 'warning',  label: '⚠ تم بتحذير' },
+            { value: 'error',    label: '✗ فشل' },
+            { value: 'rejected', label: '⛔ مرفوض' },
+            { value: 'already',  label: '⏭ خلاص متعمل' },
+          ], selected: new Set(), search: '' },
+  // ⚠️ «الطرد» مش «حالة الأوردر» — S1 الشحنة الأصلية و S2 طرد الاستبدال/
+  //    الاسترجاع. أوردر واحد ممكن يكون ليه الاتنين في وقتين مختلفين.
+  machine: { items: [
+            { value: 'S1', label: 'الشحنة الأصلية (S1)' },
+            { value: 'S2', label: 'استبدال/استرجاع (S2)' },
+          ], selected: new Set(), search: '' },
+  emp:  { items: [], selected: new Set(), search: '' },
+};
+const filterLabels = { type: 'نوع العملية', result: 'النتيجة', machine: 'الطرد', emp: 'الموظف' };
+
+let searchTerm = '';
+let dateFrom = null, dateTo = null;
+let dateFilterActive = false;   // الحالة المحايدة = بلا فلتر تاريخ خالص (بند ٢٢)
+
+// ─── §LOG-JS::collapse ───
+let fltOpen = true;
+function toggleFilters() {
+  fltOpen = !fltOpen;
+  document.getElementById('fltBody').classList.toggle('collapsed', !fltOpen);
+  document.getElementById('fltToggleIcon').classList.toggle('open', fltOpen);
+}
+let tblOpen = true;
+function toggleTable() {
+  tblOpen = !tblOpen;
+  document.getElementById('tblBodyWrap').classList.toggle('collapsed', !tblOpen);
+  document.getElementById('tblToggleIcon').classList.toggle('open', tblOpen);
+}
+
+// ⚠️ !!value مش !== null — الفلاتر اللي مالهاش rangeFrom قيمتها undefined،
+// و undefined !== null بترجع true فالزرار كان هيفضل نشط للأبد (بند ٣).
+function anyFilterActive() {
+  const msActive = Object.keys(msState).some(k =>
+    msState[k].selected.size > 0 || !!msState[k].rangeFrom || !!msState[k].rangeTo);
+  return msActive || searchTerm.trim().length > 0 || dateFilterActive;
+}
+
+function updateFilterIconState() {
+  const active = anyFilterActive();
+  document.getElementById('fltIcon').classList.toggle('active', active);
+  document.getElementById('clearAllBtn').classList.toggle('inactive', !active);
+}
+
+// ─── §LOG-JS::multiSelect ───
+function msRenderList(key) {
+  const st = msState[key];
+  const listEl = document.getElementById(`msList-${key}`);
+  const q = st.search.trim().toLowerCase();
+  const visible = q ? st.items.filter(it => it.label.toLowerCase().includes(q)) : st.items;
+
+  listEl.innerHTML = !visible.length
+    ? '<div class="ms-empty">لا توجد نتائج مطابقة للبحث</div>'
+    : visible.map(it => {
+        const checked = st.selected.has(it.value);
+        return `<div class="ms-item ${checked ? 'checked' : ''}" onclick="msToggleItem('${key}','${it.value}')">
+          <input type="checkbox" ${checked ? 'checked' : ''} onclick="event.stopPropagation(); msToggleItem('${key}','${it.value}')">
+          <span class="ms-item-label">${it.label}</span>
+        </div>`;
+      }).join('');
+
+  const allVisibleChecked = visible.length > 0 && visible.every(it => st.selected.has(it.value));
+  const saEl = document.getElementById(`msSelectAll-${key}`);
+  if (saEl) saEl.checked = allVisibleChecked;
+  const saLbl = document.getElementById(`msSelectAllLabel-${key}`);
+  if (saLbl) saLbl.textContent = q ? `تحديد كل نتائج البحث (${visible.length})` : 'تحديد الكل';
+  msUpdateButtonLabel(key);
+  const cnt = document.getElementById(`msFtrCount-${key}`);
+  if (cnt) cnt.textContent = `${st.selected.size} مختار`;
+}
+
+function msUpdateButtonLabel(key) {
+  const st  = msState[key];
+  const btn = document.getElementById(`msBtn-${key}`);
+  const lbl = document.getElementById(`msBtnLabel-${key}`);
+  const n   = st.selected.size;
+  btn.classList.toggle('has-selection', n > 0);
+  const dflt = key === 'emp' ? 'كل الموظفين' : 'الكل';
+  if (n === 0)      lbl.textContent = dflt;
+  else if (n === 1) {
+    const item = st.items.find(it => it.value === [...st.selected][0]);
+    lbl.textContent = item ? item.label : [...st.selected][0];
+  }
+  else lbl.innerHTML = `${n} محددين <span class="ms-count">${n}</span>`;
+}
+
+function msToggle(key) {
+  const menu = document.getElementById(`msMenu-${key}`), btn = document.getElementById(`msBtn-${key}`);
+  const willOpen = !menu.classList.contains('open');
+  Object.keys(msState).forEach(k => {
+    document.getElementById(`msMenu-${k}`).classList.remove('open');
+    document.getElementById(`msBtn-${k}`).classList.remove('open');
+  });
+  if (willOpen) { menu.classList.add('open'); btn.classList.add('open'); }
+}
+
+function msToggleItem(key, value) {
+  const st = msState[key];
+  st.selected.has(value) ? st.selected.delete(value) : st.selected.add(value);
+  msRenderList(key); renderChips(); onLogFilterChange();
+}
+
+function msToggleSelectAll(key, forceState) {
+  const st = msState[key];
+  const q = st.search.trim().toLowerCase();
+  const visible = q ? st.items.filter(it => it.label.toLowerCase().includes(q)) : st.items;
+  const allChecked = visible.length > 0 && visible.every(it => st.selected.has(it.value));
+  const shouldCheck = forceState !== undefined ? forceState : !allChecked;
+  visible.forEach(it => shouldCheck ? st.selected.add(it.value) : st.selected.delete(it.value));
+  msRenderList(key); renderChips(); onLogFilterChange();
+}
+
+function msFilterList(key, value) { msState[key].search = value; msRenderList(key); }
+
+function msClear(key) {
+  msState[key].selected.clear();
+  msRenderList(key); renderChips(); onLogFilterChange();
+}
+
+// ⚠️ الحارس الأول إلزامي (Standards #32): اختيار عنصر بيعمل re-render، فالعنصر
+// المضغوط بيتشال من الـ DOM قبل ما الحدث يوصل هنا — و wrap.contains(detached)
+// بترجّع false، فالقائمة كانت هتتقفل بعد **أول** اختيار ويبقى الفلتر
+// multi-select بالاسم بس.
+document.addEventListener('click', (e) => {
+  if (!document.contains(e.target)) return;   // ← لا تشيله
+  Object.keys(msState).forEach(k => {
+    const wrap = document.getElementById(`msWrap-${k}`);
+    if (wrap && !wrap.contains(e.target)) {
+      document.getElementById(`msMenu-${k}`).classList.remove('open');
+      document.getElementById(`msBtn-${k}`).classList.remove('open');
+    }
+  });
+});
+
+// اسم الفلتر مرة واحدة في أول السطر — مش مكرر جوّه كل chip (بند ٢٣)
+function renderChips() {
+  Object.keys(msState).forEach(key => {
+    const row = document.getElementById(`chipsRow-${key}`);
+    if (!row) return;
+    const label = filterLabels[key] || key;
+    const chips = [...msState[key].selected].map(val => {
+      const item = msState[key].items.find(it => it.value === val);
+      const v = item ? item.label : val;
+      return `<span class="ms-chip">${v}<button onclick="msToggleItem('${key}','${val.replace(/'/g, "\\'")}')">✕</button></span>`;
+    }).join('');
+    row.innerHTML = chips ? `<span class="chips-label">${label}:</span>${chips}` : '';
+  });
+}
+
+// ─── §LOG-JS::dateRange ───
+const RANGE_PRESET_LABELS = {
+  today:'اليوم', yesterday:'أمس', last3:'آخر 3 أيام', last7:'آخر 7 أيام',
+  last30:'آخر 30 يوم', last90:'آخر 90 يوم', thisMonth:'الشهر الحالي',
+  lastMonth:'الشهر السابق', thisQuarter:'الربع الحالي', thisYear:'العام الحالي', lastYear:'العام السابق',
+};
+const RANGE_MONTH_NAMES = ['','يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+let activePreset = '';
+let rangeDebounce = null;
+
+function cairoNow()          { return toCairo(new Date().toISOString()); }
+function cairoDateStr(d)     { const p = n => String(n).padStart(2,'0');
+                               return `${d.getUTCFullYear()}-${p(d.getUTCMonth()+1)}-${p(d.getUTCDate())}`; }
+function addDays(ymd, n)     { const d = new Date(`${ymd}T00:00:00Z`); d.setUTCDate(d.getUTCDate()+n); return cairoDateStr(d); }
+
+function toggleRangePresetMenu(e) {
+  e.stopPropagation();
+  const menu = document.getElementById('rangePresetMenu'), btn = document.getElementById('rangePresetBtn');
+  const isOpen = menu.classList.contains('open');
+  menu.classList.toggle('open', !isOpen); btn.classList.toggle('open', !isOpen);
+}
+// قائمة الفترة السريعة مابتعملش re-render، فمش محتاجة حارس document.contains
+document.addEventListener('click', () => {
+  document.getElementById('rangePresetMenu')?.classList.remove('open');
+  document.getElementById('rangePresetBtn')?.classList.remove('open');
+  closeMonthSubmenu();
+});
+
+function computePresetRange(preset) {
+  const now = cairoNow();
+  const today = cairoDateStr(now);
+  switch (preset) {
+    case 'today':     return { from: today, to: today };
+    case 'yesterday': { const y = addDays(today, -1); return { from: y, to: y }; }
+    case 'last3':     return { from: addDays(today, -2),  to: today };
+    case 'last7':     return { from: addDays(today, -6),  to: today };
+    case 'last30':    return { from: addDays(today, -29), to: today };
+    case 'last90':    return { from: addDays(today, -89), to: today };
+    case 'thisMonth': return { from: `${now.getUTCFullYear()}-${String(now.getUTCMonth()+1).padStart(2,'0')}-01`, to: today };
+    case 'lastMonth': {
+      const firstThis = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+      const lastPrev  = new Date(firstThis); lastPrev.setUTCDate(0);
+      const firstPrev = new Date(Date.UTC(lastPrev.getUTCFullYear(), lastPrev.getUTCMonth(), 1));
+      return { from: cairoDateStr(firstPrev), to: cairoDateStr(lastPrev) };
+    }
+    case 'thisQuarter': {
+      const q = Math.floor(now.getUTCMonth() / 3);
+      return { from: cairoDateStr(new Date(Date.UTC(now.getUTCFullYear(), q*3, 1))), to: today };
+    }
+    case 'thisYear':  return { from: `${now.getUTCFullYear()}-01-01`, to: today };
+    case 'lastYear':  { const y = now.getUTCFullYear() - 1; return { from: `${y}-01-01`, to: `${y}-12-31` }; }
+    default: return null;
+  }
+}
+
+function applyRangePreset(preset) {
+  document.getElementById('rangePresetMenu').classList.remove('open');
+  document.getElementById('rangePresetBtn').classList.remove('open');
+  resetMonthSpecific();
+  const range = computePresetRange(preset);
+  if (!range) return;
+  activePreset = preset;
+  dateFrom = range.from; dateTo = range.to;
+  dateFilterActive = true;   // أي فترة يختارها المستخدم (حتى "اليوم") = فلتر مفعّل
+  document.getElementById('rangeDateFrom').value = range.from;
+  document.getElementById('rangeDateTo').value   = range.to;
+  document.querySelectorAll('.range-preset-item').forEach(el => el.classList.toggle('active', el.dataset.preset === preset));
+  document.getElementById('rangePresetLabel').textContent = `⚡ ${RANGE_PRESET_LABELS[preset]}`;
+  document.getElementById('rangePresetBtn').classList.add('has-preset');
+  onLogFilterChange();
+}
+
+function onRangeDateChange() {
+  activePreset = '';
+  resetMonthSpecific();
+  document.querySelectorAll('.range-preset-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('rangePresetLabel').textContent = '⚡ اختار فترة';
+
+  dateFrom = document.getElementById('rangeDateFrom').value || null;
+  dateTo   = document.getElementById('rangeDateTo').value   || null;
+  dateFilterActive = !!(dateFrom || dateTo);
+  document.getElementById('rangePresetBtn').classList.toggle('has-preset', dateFilterActive);
+
+  clearTimeout(rangeDebounce);
+  rangeDebounce = setTimeout(onLogFilterChange, 400);
+}
+
+// الحالة المحايدة الوحيدة — تُستخدم في "مسح الاختيار" و"مسح كل الفلاتر"
+function resetDateFilter() {
+  activePreset = ''; dateFrom = null; dateTo = null; dateFilterActive = false;
+  document.getElementById('rangeDateFrom').value = '';
+  document.getElementById('rangeDateTo').value   = '';
+  document.getElementById('rangePresetLabel').textContent = '⚡ اختار فترة';
+  document.getElementById('rangePresetBtn').classList.remove('has-preset');
+  document.querySelectorAll('.range-preset-item').forEach(el => el.classList.remove('active'));
+  resetMonthSpecific();
+}
+
+function clearRangePreset() {
+  resetDateFilter();
+  document.getElementById('rangePresetMenu').classList.remove('open');
+  onLogFilterChange();
+}
+
+// "📅 شهر محدد" — السنة الحالية + آخر سنتين + إدخال يدوي لأي سنة أقدم
+function ensureRangeYearOptions() {
+  const sel = document.getElementById('monthSelectYear');
+  if (!sel || sel.options.length) return;
+  const y = cairoNow().getUTCFullYear();
+  sel.innerHTML = '<option value="">السنة</option>'
+    + [y, y-1, y-2].map(v => `<option value="${v}">${v}</option>`).join('')
+    + '<option value="__other">سنة تانية...</option>';
+}
+function resetMonthSpecific() {
+  const mSel = document.getElementById('monthSelectMonth');
+  const ySel = document.getElementById('monthSelectYear');
+  const yMan = document.getElementById('monthSelectYearManual');
+  if (mSel) { mSel.value = ''; mSel.classList.remove('filled'); }
+  if (ySel) { ySel.value = ''; ySel.classList.remove('filled'); }
+  if (yMan) { yMan.value = ''; yMan.style.display = 'none'; }
+}
+function toggleMonthSubmenu(e) {
+  e.stopPropagation();
+  ensureRangeYearOptions();
+  const sub = document.getElementById('monthSubmenu'), item = document.getElementById('monthSpecificItem');
+  const isOpen = sub.classList.contains('open');
+  sub.classList.toggle('open', !isOpen); item.classList.toggle('open', !isOpen);
+}
+function closeMonthSubmenu() {
+  document.getElementById('monthSubmenu')?.classList.remove('open');
+  document.getElementById('monthSpecificItem')?.classList.remove('open');
+}
+function onYearSelectChange() {
+  const sel = document.getElementById('monthSelectYear'), manual = document.getElementById('monthSelectYearManual');
+  if (sel.value === '__other') { manual.style.display = 'block'; manual.value = ''; sel.classList.remove('filled'); manual.focus(); }
+  else { manual.style.display = 'none'; manual.value = ''; onMonthYearChange(); }
+}
+function onMonthYearManualInput() { onMonthYearChange(); }
+function onMonthYearChange() {
+  const monthSel = document.getElementById('monthSelectMonth');
+  const yearSel  = document.getElementById('monthSelectYear');
+  const manual   = document.getElementById('monthSelectYearManual');
+  const month = monthSel.value;
+  const year  = yearSel.value === '__other' ? manual.value.trim() : yearSel.value;
+  monthSel.classList.toggle('filled', !!month);
+  yearSel.classList.toggle('filled', !!yearSel.value && yearSel.value !== '__other');
+  if (!month || !year || year.length !== 4 || isNaN(Number(year))) return;
+  applySpecificMonth(Number(year), Number(month));
+}
+function applySpecificMonth(year, month) {
+  const from = `${year}-${String(month).padStart(2,'0')}-01`;
+  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const to = `${year}-${String(month).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`;
+  activePreset = 'specificMonth';
+  dateFrom = from; dateTo = to; dateFilterActive = true;
+  document.getElementById('rangeDateFrom').value = from;
+  document.getElementById('rangeDateTo').value   = to;
+  document.querySelectorAll('.range-preset-item').forEach(el => el.classList.toggle('active', el.id === 'monthSpecificItem'));
+  document.getElementById('rangePresetLabel').textContent = `📅 ${RANGE_MONTH_NAMES[month]} ${year}`;
+  document.getElementById('rangePresetBtn').classList.add('has-preset');
+  closeMonthSubmenu();
+  document.getElementById('rangePresetMenu').classList.remove('open');
+  document.getElementById('rangePresetBtn').classList.remove('open');
+  onLogFilterChange();
+}
+
+// ─── §LOG-JS::search ───
+function onLogSearchInput(el) {
+  toggleSearchActiveState(el);
+  clearTimeout(logSearchTimer);
+  logSearchTimer = setTimeout(() => { searchTerm = el.value; onLogFilterChange(); }, 400);
+}
+
+function clearAllFilters() {
+  Object.keys(msState).forEach(k => { msState[k].selected.clear(); msRenderList(k); });
+  const searchEl = document.getElementById('logSearch');
+  searchEl.value = ''; searchTerm = '';
+  toggleSearchActiveState(searchEl);
+  renderChips();
+  resetDateFilter();
+  onLogFilterChange();
+}
+
+// ─── §LOG-JS::sort — مستقل تمامًا عن الفلاتر (بند ٢٥) ───
+// ⚠️ v3.5 — الترتيب بقى **server-side**. قبل كده كان بيرتّب `logRows` (١٠٠ صف
+// الصفحة الحالية) بينما الـ pagination بترتيب `timestamp DESC` من السيرفر —
+// يعني "رتّب بالموظف" على سجل فيه ١٢١٧ صف كان بيرتّب ١٠٠ ويسيب ١١١٧، والسهم
+// في الترويسة شكله ترتيب عام. جدول بيوعد بحاجة وبينفّذ غيرها.
+// المفاتيح هنا **لازم تطابق `LOG_SORT_COLUMNS` في الـ Worker حرفيًا**.
+const sortConfig = {
+  date:{type:'date'}, time:{type:'date'}, employee:{type:'string'}, orderName:{type:'string'},
+  machine:{type:'string'}, result:{type:'string'}, tn:{type:'string'}, orderType:{type:'string'},
+};
+let sortState = { key: null, dir: null };
+
+function toggleSort(key) {
+  if (sortState.key !== key) { sortState.key = key; sortState.dir = 'asc'; }
+  else if (sortState.dir === 'asc') { sortState.dir = 'desc'; }
+  else { sortState.key = null; sortState.dir = null; }   // ضغطة تالتة = بلا ترتيب
+  updateSortHeaderUI();
+  logCurrentPage = 1;      // ترتيب جديد = صفحة جديدة، وإلا الصفحة ٣ بترتيب تاني
+  fetchLog();
+}
+
+function updateSortHeaderUI() {
+  document.querySelectorAll('.sort-icon').forEach(el => {
+    const isActive = sortState.key === el.dataset.sortKey;
+    el.textContent = isActive ? (sortState.dir === 'asc' ? '▲' : '▼') : '';
+    el.classList.toggle('active', isActive);
+  });
+  document.querySelectorAll('.sortable-th').forEach(th => {
+    th.classList.toggle('sorted', th.dataset.sortKey === sortState.key);
+  });
+}
+
+// ⚠️ الترتيب بيتعمل في السيرفر — الدالة دي بقت تمرير مباشر. متحوّلهاش لترتيب
+// client-side تاني: ده بيرجّع باج "الجدول بيرتّب الصفحة ويقول إنه رتّب الكل".
+function applySort(rows) { return rows; }
+
+// ─── §LOG-JS::logParams — المصدر الوحيد لفلاتر التلات نداءات ───
+// ⚠️ التعريف المكرر هو اللي بيخلي التصدير ينزّل غير المعروض. مصدر واحد بس.
+function logParams() {
+  const p = {};
+  const employees = [...msState.emp.selected];
+  const types     = [...msState.type.selected];
+  const results   = [...msState.result.selected];
+  const machines  = [...msState.machine.selected];
+  if (employees.length) p.employees = employees.join(',');
+  if (types.length)     p.types     = types.join(',');
+  if (results.length)   p.results   = results.join(',');
+  if (machines.length)  p.machines  = machines.join(',');
+  if (searchTerm.trim()) p.search   = searchTerm.trim();
+  if (dateFilterActive && dateFrom) p.dateFrom = dateFrom;
+  if (dateFilterActive && dateTo)   p.dateTo   = dateTo;
+  return p;
+}
+
+// ⚠️ الترتيب بيتبعت لـ `get_logs` **بس** — مش للعدّ ولا للتصدير. العدّ مالوش
+// ترتيب أصلاً، والتصدير بياخد ترتيبه من السيرفر برضه بس من غير ما نخلط
+// الباراميترات: نداء بفلاتر مختلفة عن اللي جنبه هو أصل باج "التصدير مش مطابق".
+function logSortParams() {
+  return sortState.key ? { sortBy: sortState.key, sortDir: sortState.dir } : {};
+}
+
+function clearExportWarn() {
+  const w = document.getElementById('logExportWarn');
+  if (w) { w.style.display = 'none'; w.innerHTML = ''; }
+}
+
+function onLogFilterChange() {
+  logCurrentPage = 1;
+  clearExportWarn();
+  updateFilterIconState();
+  fetchLog();
+}
+
+async function loadLog() {
+  logCurrentPage = 1;
+  await populateLogEmployeeFilter();
+  await fetchLog();
+}
+
+async function populateLogEmployeeFilter() {
+  try {
+    const data = await apiGet('get_employees');
+    msState.emp.items = (data.employees || []).map(e => ({ value: e.username, label: e.display_name }));
+    msRenderList('emp');
+  } catch { /* الفلتر بيفضل فاضي — مش سبب لتعطيل السجل */ }
+}
+
+async function fetchLog() {
+  updateFilterIconState();
+  const offset = (logCurrentPage - 1) * LOG_PAGE_SIZE;
+  const base   = logParams();
+
+  document.getElementById('logTableBody').innerHTML =
+    '<tr class="empty-row"><td colspan="8"><div class="spinner spinner-dark" style="margin:0 auto 10px;"></div>جاري التحميل...</td></tr>';
+  document.getElementById('paginationRow').style.display = 'none';
+
+  try {
+    // نفس الفلاتر بالظبط للصفحة وللعدّ — نداء بفلاتر مختلفة بيطلّع رقم كذّاب
+    const [pageData, countData] = await Promise.all([
+      apiGet('get_logs',       { ...base, ...logSortParams(), limit: LOG_PAGE_SIZE, offset }),
+      apiGet('get_logs_count', base),
+    ]);
+
+    logTotalCount = countData.total || 0;
+    logRows       = normalizeLogRows(pageData.entries || []);
+    renderLogTable(logRows);
+
+    // ⚠️ "النتائج" = العدّ من القاعدة (server-side)، مش طول صفوف الصفحة —
+    // الفلترة هنا server-side، وده الاستثناء الموثّق لبند ٧ في معيار الجداول.
+    document.getElementById('filteredCount').textContent = logTotalCount.toLocaleString('en-US');
+
+    const totalPages = Math.max(1, Math.ceil(logTotalCount / LOG_PAGE_SIZE));
+    if (logTotalCount > LOG_PAGE_SIZE) {
+      document.getElementById('paginationRow').style.display = 'flex';
+      document.getElementById('pageInfo').textContent =
+        `صفحة ${logCurrentPage.toLocaleString('en-US')} من ${totalPages.toLocaleString('en-US')}`;
+      document.getElementById('btnPrevPage').disabled = logCurrentPage <= 1;
+      document.getElementById('btnNextPage').disabled = logCurrentPage >= totalPages;
+    }
+  } catch (err) {
+    document.getElementById('filteredCount').textContent = '—';
+    document.getElementById('logTableBody').innerHTML =
+      `<tr class="empty-row"><td colspan="8">❌ فشل التحميل: ${esc(err.message)}</td></tr>`;
+  }
+}
+
+function goPage(dir) {
+  const totalPages = Math.max(1, Math.ceil(logTotalCount / LOG_PAGE_SIZE));
+  const next = logCurrentPage + dir;
+  if (next < 1 || next > totalPages) return;
+  logCurrentPage = next;
+  fetchLog();
+  document.getElementById('panelLog').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// تطبيع صف السجل — الترتيب والعرض الاتنين بيقروا من هنا
+// السجل بيخزّن username — نعرضه بالاسم المعروض لو الماب متاح (من get_employees)،
+// وإلا بالـ username زي ما هو. ممنوع أي قائمة أسماء مكتوبة في الكود.
+function employeeDisplayName(username) {
+  if (!username) return '';
+  const item = msState.emp.items.find(it => it.value === username);
+  return item ? item.label : username;
+}
+
+function normalizeLogRows(entries) {
+  return entries.map(e => {
+    let extra = {};
+    try { extra = JSON.parse(e.extra || '{}'); } catch { /* صف بـ extra تالف */ }
+    const d = e.timestamp ? toCairo(e.timestamp) : null;
+    return {
+      raw:        e,
+      extra,
+      // ⚠️ صف رفض = أوردر اتسكن وما اتسجّلش. مفيش كتابة حصلت، فالنتيجة عنده
+      //    مش success/warning/error — نوع رابع ليه بادج وسبب خاص بيه.
+      isRejected: e.type === 'rejected',
+      reason:     e.notes || '',
+      date:       d, time: d,          // نفس الـ timestamp — عمودان مستقلان في الترتيب
+      employee:   employeeDisplayName(e.employee),
+      orderName:  e.order_name || '',
+      orderId:    e.order_id   || null,
+      machine:    extra.machine || '',
+      result:     extra.result  || '',
+    };
+  });
+}
+
+function resultBadge(result) {
+  if (result === 'success')  return '<span class="badge badge-green">✓ تم</span>';
+  if (result === 'warning')  return '<span class="badge badge-amber">⚠ تم بتحذير</span>';
+  if (result === 'error')    return '<span class="badge badge-red">✗ فشل</span>';
+  // ⛔ مرفوض ≠ ✗ فشل: مفيش كتابة اتحاولت وفشلت — كان ممنوع أصلاً يتكتب.
+  if (result === 'rejected') return '<span class="badge badge-purple" title="الأوردر مش مؤهل — ما اتكتبش أي حاجة على شوبيفاي">⛔ مرفوض</span>';
+  // ⏭ "خلاص اتعمل" — لا نجاح ولا فشل ولا رفض. الحالة اللي كانت بتتقال بلغة
+  //    تقنية وبلون رفض، وهي أكتر واحدة بتتكرر.
+  if (result === 'already')  return '<span class="badge badge-neutral" title="الطرد كان في المكتب أصلاً — مفيش حاجة كانت مطلوبة">⏭ خلاص متعمل</span>';
+  // ⚠️ الأداة دي **جديدة** ومفيش عندها صفوف قبل تسجيل النتيجة — الفرع ده
+  //    بيمسك صف بـ`extra` تالف بس، وبيقول «معرفناش» مش «تم».
+  return '<span class="badge badge-neutral" title="النتيجة غير مسجّلة على الصف ده">—</span>';
+}
+
+function renderLogTable(rows) {
+  const body   = document.getElementById('logTableBody');
+  const sorted = applySort(rows);
+
+  if (!sorted.length) {
+    body.innerHTML = '<tr class="empty-row"><td colspan="8">لا توجد نتائج تطابق الفلاتر</td></tr>';
+    return;
+  }
+
+  body.innerHTML = sorted.map(r => {
+    const machineBadge =
+        r.machine === 'S1' ? `<span class="badge badge-accent col-num">S1</span>`
+      : r.machine === 'S2' ? `<span class="badge badge-purple col-num">S2</span>`
+      : `<span class="badge badge-neutral">${esc(r.machine || '—')}</span>`;
+
+    // ⚠️ LTR صريح: "Warehouse → Office" جوّه خلية RTL بيتقلب ترتيبها بالـ bidi
+    //    فيبان وكأن الاتجاه معكوس. الاتجاه هنا **جزء من المعنى** مش تنسيق.
+    // ⚠️ وصف الرفض مالوش «إلى» — العمود بيقول العهدة اللي وقف عندها صراحةً.
+    //    لو اتعرض `Warehouse → —` كان هيتقرا «اتكتب فاضي».
+    const transition = r.isRejected
+      ? `<span class="col-num">${esc(r.raw.value_before || '—')}</span>`
+        + `<span style="color:var(--text-secondary);font-weight:700;"> · ما اتكتبش</span>`
+      : `<span class="col-num">${esc(r.raw.value_before || '—')} → ${esc(r.raw.value_after || '—')}</span>`;
+
+    return `<tr>
+      <td class="col-num">${r.date ? formatDate(r.raw.timestamp) : '—'}</td>
+      <td class="col-num">${r.date ? formatTimeOnly(r.raw.timestamp) : '—'}</td>
+      <td>${esc(r.employee || '—')}</td>
+      <td>${r.orderName ? orderLink(r.orderName, r.orderId) : '—'}</td>
+      <td>${machineBadge}</td>
+      <td style="font-size:12px;">${transition}</td>
+      <td>${resultBadge(r.result)}</td>
+      <td class="reject-reason">${esc(r.reason || '—')}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── XLSX Export — get_logs_export بنفس فلاتر الشاشة، والتقصّ لازم يبان ──
+async function exportLogXLSX() {
+  clearExportWarn();
+  showToast('جاري تحضير التصدير...', 'neutral');
+
+  try {
+    const data    = await apiGet('get_logs_export', logParams());   // نفس مصدر الفلاتر
+    const entries = data.entries || [];
+
+    if (!entries.length) { showToast('لا توجد بيانات للتصدير', 'error'); return; }
+
+    const wb = new ExcelJS.Workbook();
+    wb.views = [{ rightToLeft: true }];
+    const ws = wb.addWorksheet('السجل');
+    ws.views = [{ state: 'frozen', ySplit: 1, rightToLeft: true }];
+    ws.columns = [
+      { header: 'التاريخ',     key: 'dt',        width: 14 },
+      { header: 'الوقت',       key: 'time',      width: 14 },
+      { header: 'الموظف',      key: 'employee',  width: 16 },
+      { header: 'رقم الأوردر', key: 'orderName', width: 14 },
+      { header: 'الطرد',       key: 'machine',   width: 12 },
+      { header: 'من',          key: 'before',    width: 16 },
+      { header: 'إلى',         key: 'after',     width: 16 },
+      { header: 'النتيجة',     key: 'result',    width: 14 },
+      { header: 'الزون',       key: 'zone',      width: 14 },
+      // ⚠️ عمود السبب مش زينة: صف الرفض كل قيمته فيه — من غيره التصدير
+      //    بيطلع صفوف «مرفوض» من غير أي سبب، وهي أكتر صفوف بيتسأل عنها.
+      { header: 'السبب / ملاحظة', key: 'reason', width: 46 },
+    ];
+
+    const RESULT_LABELS = { success: 'تم', warning: 'تم بتحذير', error: 'فشل', rejected: 'مرفوض', already: 'خلاص متعمل' };
+
+    normalizeLogRows(entries).forEach(r => {
+      ws.addRow({
+        dt:        r.raw.timestamp ? formatDateForExport(r.raw.timestamp) : '—',
+        // ⚠️ من نفس الـ iso مباشرة — مش split على نص formatDateTime المعروض،
+        // وإلا الإيموجي بيتسرّب جوّه خلية الوقت (datetime-format § 4).
+        time:      r.raw.timestamp ? formatTimeForExport(r.raw.timestamp) : '—',
+        employee:  r.employee  || '—',
+        orderName: r.orderName || '—',
+        machine:   r.machine   || '—',
+        before:    r.raw.value_before || '—',
+        after:     r.isRejected ? '—' : (r.raw.value_after || '—'),
+        result:    RESULT_LABELS[r.result] || '—',
+        zone:      r.extra.zone || '—',
+        reason:    r.reason || '—',
+      });
+    });
+
+    const buf  = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const a    = document.createElement('a');
+    a.href     = URL.createObjectURL(blob);
+    // ⚠️ بتوقيت القاهرة زي باقي الأداة — `toISOString()` بيدّي UTC، فتصدير
+    //    الساعة ١ صباحًا كان بيتسمّى بتاريخ إمبارح.
+    a.download = `office-transfer-log-${cairoDateStr(cairoNow())}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+
+    // ⚠️ الحقيقة بتيجي من الـ Worker — ممنوع الواجهة تكتب السقف عندها.
+    // ورسالة النجاح في فرع else **بس**: علامة صح خضرا على ملف ناقص هي
+    // بالظبط الباج اللي البند ده اتكتب عشانه (Standards #30).
+    const truncated = data.truncated === true || (data.cap && entries.length >= data.cap);
+    if (truncated) {
+      const warn = document.getElementById('logExportWarn');
+      warn.innerHTML = `⚠️ <b>التصدير اتقص</b> — الملف فيه ${entries.length.toLocaleString('en-US')} صف`
+        + (data.total != null ? ` من أصل <b>${data.total.toLocaleString('en-US')}</b> مطابقين للفلاتر` : '')
+        + `. ضيّق الفترة أو الفلاتر وصدّر على دفعات.`;
+      warn.style.display = '';
+      showToast(`⚠️ التصدير اتقص عند ${entries.length.toLocaleString('en-US')} صف — الملف مش كامل`, 'error', 7000);
+    } else {
+      showToast(`تم تصدير ${entries.length.toLocaleString('en-US')} عملية ✓`, 'success');
+    }
+  } catch (err) {
+    showToast(`فشل التصدير: ${err.message}`, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// §OFFICE-QUEUE-JS — طابور «جاهز للتسليم للمكتب» (v1.26.0)
+// ══════════════════════════════════════════════════════════════
+// 🔴 **الأهلية بتتحسب من `wocOfficeGate` في `shared/shell.js` §OFFICE-GATE**
+//    — مش هنا، ومش في `index.html`. الصفحة والشاشة الرئيسية بينادوا **نفس**
+//    الـ endpoint و**نفس** الدالة، فمستحيل الرقمين يفترقوا (درس R1 — v1.11.0:
+//    الرئيسية قالت ٦٦ والصفحة فتحت على ٦ لأن البوابة كانت في صفحة واحدة).
+//    ⛔ ممنوع أي شرط أهلية مكتوب في الملف ده.
+//
+// ⚠️ **والفلترة في الواجهة مش اختيار معماري** — `package_whereabouts_s1` مش
+//    قابل للفلترة في بحث شوبيفاي، والفلتر عليه بيرجّع المتجر كله في صمت.
+//    فالـ Worker بيجيب `Ready` خام والواجهة بتحكم.
+//
+// ⚠️ **التحديث التلقائي بنفس حراس الشاشة الرئيسية التلاتة** — التسليح بعد
+//    كل جلب ناجح (مش من الدخول)، و`document.hidden` = صفر استعلام، والنبضة
+//    بتحدّث «منذ كام» **بلا أي نداء شبكة**.
+const RQ_AUTO_REFRESH_MS = 15 * 60 * 1000;   // نفس فترة `pack.html` والرئيسية
+const RQ_TICK_MS         = 30 * 1000;        // نبضة عرض — صفر شبكة
+
+const rqState = { orders: [], at: null, loading: false, dirty: false, timer: null, failed: false };
+
+function rqSetFresh() {
+  const info  = agoInfo(rqState.at, Date.now());
+  const agoEl = document.getElementById('rqAgo');
+  const btn   = document.getElementById('rqBtn');
+  if (agoEl) { agoEl.className = 'woc-ago ' + info.cls; agoEl.textContent = info.text; }
+  if (btn)   btn.classList.toggle('is-stale', info.stale);
+  const stamp = document.getElementById('rqStamp');
+  if (stamp) {
+    stamp.innerHTML = rqState.at
+      ? `<span class="woc-stamp-chip">${esc(formatDate(rqState.at.toISOString()))}</span>` +
+        `<span class="woc-stamp-chip">${esc(formatTimeOnly(rqState.at.toISOString()))}</span>`
+      : '<span class="woc-stamp-chip">—</span>';
+  }
+}
+
+// ⚠️ العدّاد قبل أول جلب ناجح = `—` **مش `0`** — «ما اتحدّثش» ≠ «مفيش شغل»
+//    (قاعدة ٣ في الشاشة الرئيسية بالحرف).
+function rqRender() {
+  const rows   = rqState.orders;
+  const tbody  = document.getElementById('rqTableBody');
+  const wrap   = document.getElementById('rqTableWrap');
+  const empty  = document.getElementById('rqEmpty');
+  const cntEl  = document.getElementById('rqCount');
+  const badge  = document.getElementById('rqBadge');
+  if (!tbody) return;
+
+  const shown = rqState.at ? String(rows.length) : '—';
+  if (cntEl) cntEl.textContent = shown;
+  if (badge) badge.textContent = shown;
+
+  if (!rows.length) {
+    wrap.style.display  = 'none';
+    empty.style.display = '';
+    empty.innerHTML = rqState.at
+      ? '<div class="ico">✅</div><div>مفيش طرود مستنية تسليم للمكتب دلوقتي</div>'
+      : (rqState.failed
+          ? '<div class="ico">⚠️</div><div>تعذّر تحميل الطابور — اضغط «تحديث»</div>'
+          : '<div class="ico">⏳</div><div>جاري تحميل الطابور…</div>');
+    return;
+  }
+
+  empty.style.display = 'none';
+  wrap.style.display  = '';
+  const now = new Date();
+  tbody.innerHTML = rows.map(o => {
+    const age = wocOrderAge(o.createdAt, now);
+    const qty = (o.itemsQty === null || o.itemsQty === undefined) ? '—' : o.itemsQty;
+    const tot = o.total ? Number(o.total).toLocaleString('en-US', { maximumFractionDigits: 2 }) : '—';
+    // ⚠️ بادج الطرد (S1/S2) **مقصود هنا** — بخلاف طابور بوسطة اللي اتقرر
+    //    يبقى بلا علامة. السبب: الموظف هنا بيسكن **باركود الأوردر**، وهو
+    //    نفسه على الطردين؛ فلو الأوردر عليه طرد أصلي وطرد استبدال، السكانة
+    //    لوحدها مابتقولش أنهي واحد فيهم. في بوسطة الملصق مختلف فالسؤال
+    //    مابيتسألش أصلاً.
+    const mb = o.machine === 's2'
+      ? '<span class="badge badge-purple">استبدال/استرجاع</span>'
+      : '<span class="badge badge-accent">الشحنة الأصلية</span>';
+    return `<tr>
+      <td>${orderLink(o.orderName, o.orderId)}</td>
+      <td>${esc(o.customer || '—')}</td>
+      <td>${mb}</td>
+      <td>${esc(o.zone || '—')}</td>
+      <td class="col-num">${esc(String(qty))}</td>
+      <td class="col-num">${esc(tot)}</td>
+      <td>${esc(formatDate(o.createdAt))} <span class="time-badge age-badge ${age.cls}">${esc(age.text)}</span></td>
+      <td>${o.packedAt ? esc(formatTimeOnly(o.packedAt)) : '—'}</td>
+      <td>${esc(o.packedBy || '—')}</td>
+    </tr>`;
+  }).join('');
+}
+
+// 🔴 **نزع سلاح الصف** — الأوردر اللي اتسجّل بيتشال من الطابور فورًا.
+//    الشاشة **لازم تتغيّر** بعد النجاح: الدرس ده أنتج ٥٩ صف فشل كذّاب في
+//    سكانر المرتجعات لما الشاشة فضلت زي ما هي والموظف ضغط تاني.
+//    ⚠️ والشيل محلي بس — أول تحديث بيجيب الحقيقة من الـ Worker.
+function rqRemove(orderId) {
+  if (!orderId) return;
+  const before = rqState.orders.length;
+  rqState.orders = rqState.orders.filter(o => String(o.orderId) !== String(orderId));
+  if (rqState.orders.length !== before) rqRender();
+}
+
+// ⚠️ `loading` بيمنع نداءين متوازيين (ضغطة + نبضة)، و`dirty` مابيتصفّرش
+//    غير بعد جلب ناجح — لو الجلب فشل، أول رجوع تاني للتاب بيحاول.
+async function rqLoad(silent) {
+  if (rqState.loading) return;
+  rqState.loading = true;
+  const btn = document.getElementById('rqBtn');
+  if (btn) btn.disabled = true;
+
+  try {
+    const data = await apiGet('get_ready_to_office');
+    // 🔴 **المصدر الوحيد للأهلية** — الـ shell، مش الصفحة.
+    rqState.orders = wocOfficeQueue(data.orders || []);
+    rqState.at     = new Date();
+    rqState.dirty  = false;
+    rqState.failed = false;
+    document.getElementById('rqFail').style.display = 'none';
+
+    // ⚠️ الاقتطاع بانر **منفصل** عن بانر الفشل — «الطابور أطول من اللي
+    //    بيتعرض» حاجة تانية خالص عن «الطابور ما اتجابش».
+    const trunc = document.getElementById('rqTrunc');
+    trunc.style.display = data.truncated ? '' : 'none';
+    if (data.truncated) trunc.textContent =
+      '⚠️ فيه أوردرات أكتر من الحد المعروض — فيه طرود مش ظاهرة في القايمة. اسكن عادي، والـ Worker هو اللي بيحكم.';
+  } catch (err) {
+    // 🔴 **الفشل بيتقال، والرقم القديم بيفضل معروض لو كان فيه واحد.**
+    //    و«تعذّر» بتتعرض بس لو مافيش أي جلب ناجح قبل كده (قاعدة ٤).
+    //    ⚠️ والفشل هنا **مايمنعش السكان** خالص — حارس بيمنع الشغل بيتشال
+    //       بعد أسبوع.
+    rqState.failed = true;
+    const fail = document.getElementById('rqFail');
+    fail.style.display = '';
+    fail.textContent = `⚠️ تعذّر تحميل طابور المكتب — ${err.message}. السكان شغّال عادي.`;
+  } finally {
+    rqState.loading = false;
+    if (btn) btn.disabled = false;
+    rqRender();
+    rqSetFresh();
+    rqArmAuto();
+    if (!silent) document.getElementById('scanInput')?.focus();   // الفوكس يرجع للسكانر
+  }
+}
+
+// التسليح **بعد كل جلب** — «١٥ دقيقة من آخر تحديث فعلي» مش من فتح الصفحة
+function rqArmAuto() {
+  if (rqState.timer) clearTimeout(rqState.timer);
+  rqState.timer = setTimeout(() => {
+    if (document.hidden) { rqState.dirty = true; return; }   // مخفي = صفر استعلام
+    rqLoad(true);
+  }, RQ_AUTO_REFRESH_MS);
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && rqState.dirty) rqLoad(true);
+});
+
+// النبضة عرض بحت — بتحدّث «منذ كام» وبادج العمر **بلا أي نداء شبكة**.
+// ⚠️ إعادة رسم الجدول كل نص دقيقة كانت هتصفّر التمرير تحت إيد الموظف.
+setInterval(() => {
+  rqSetFresh();
+  if (!rqState.orders.length) return;
+  const now = new Date();
+  document.querySelectorAll('#rqTableBody .age-badge').forEach((el, i) => {
+    const o = rqState.orders[i];
+    if (!o) return;
+    const age = wocOrderAge(o.createdAt, now);
+    el.className   = `time-badge age-badge ${age.cls}`;
+    el.textContent = age.text;
+  });
+}, RQ_TICK_MS);
+
+// ══════════════════════════════════════════════════════════════
+// §INIT — التحميل (الجلسة اتأكدت فوق)
+// ══════════════════════════════════════════════════════════════
+document.getElementById('headerMount').innerHTML = wocHeader({
+  icon: '🏢', title: 'قسم تسليمات المكتب', subtitle: 'مركز عمليات المخزن',
+  session,
+  // ⚠️ Chip التاب الحالي — بيظهر **بس وقت الـ Sticky** (شريط التابات بيتقفل
+  //    وقتها). كان جوّه الهيدر القديم، فبيتحط هنا في `extras` عشان الهيدر
+  //    بقى موحّد في الـ shell. نفس نمط `print.html` و`bosta-shipped.html`.
+  extras: '<div class="active-tab-chip" id="activeTabChip" onclick="toggleTabChipMenu(event)">'
+        +   '<span id="activeTabChipLabel">📷 السكانر</span><span class="chip-arrow">▾</span>'
+        +   '<div class="tab-chip-menu" id="tabChipMenu"></div>'
+        + '</div>',
+});
+renderVersionUI();                       // بعد ما الهيدر يتحقن — زرار النسخة جوّاه
+checkWorkerVersion(PAGE_WORKERS);        // حارس نسخة الـ Worker (حد أدنى، مش تطابق)
+renderAboutWorkers();
+
+Object.keys(msState).forEach(k => msRenderList(k));
+renderChips();
+resetDateFilter();                       // بلا فلتر تاريخ خالص من أول تحميل
+updateFilterIconState();
+updateSortHeaderUI();
+
+buildTabChipMenu();
+updateTabChip();
+measureSticky();                         // ← بعد رسم التابات والـ chip
+
+document.getElementById('scanInput')?.focus();   // السكانر جاهز من أول لحظة
+rqLoad(true);                            // الطابور — قراءة بحتة
+</script>
+</body>
+</html>
