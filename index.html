@@ -247,6 +247,50 @@
           </button>
         </div>
       </a>
+      <!-- ══ صف رابع — «جاهز للتسليم للمكتب» (v1.26.0 · قرار أحمد 15-09-2026) ══
+           🔴 **الرقم بيعدّ الطرد اللي المفروض ينتقل من المخزن للمكتب النهاردة**:
+              زونه قاهرة+جيزة أو شو روم · حالته Ready (S1 أو S2) · **اتغلّف
+              فعلاً** · وعهدته لسه `Warehouse` أو فاضية.
+           🔴 **وبوسطة خارج النطاق بالكامل** — بوسطة بتستلم من المخزن نفسه
+              وطردها عمره ما بيعدّي على المكتب (`ecommoda-order-lifecycle`
+              قاعدة ١٧). من غير الشرط ده كان **٤٠ أوردر بوسطة** يظهروا هنا
+              (تلت الـ Ready يوم القياس)، ونفس الأوردر يتعدّ في الصف اللي فوق
+              **وفي الصف ده** — والموظف يروح يدوّر على طرد مش موجود.
+           🔴 **العدّ من `wocOfficeGate` في `shared/shell.js` §OFFICE-GATE** —
+              **نفس** الدالة اللي `office-transfer.html` بتعدّ بيها بالحرف،
+              على **نفس** رد الـ endpoint. ⛔ ممنوع أي حساب أهلية هنا (درس R1).
+           ⚠️ **بلا مربعات تقسيمة** زي صف بوسطة بالظبط — مناديب وشو روم
+              الاتنين بيروحوا نفس المكتب بنفس الطريقة، فالتفرقة مش حاجة
+              الموظف بيتصرّف عليها. -->
+      <a class="woc-row" href="office-transfer.html">
+        <div class="woc-row-id">
+          <span class="woc-card-ico ico-blue">🏢</span>
+          <div>
+            <div class="woc-card-name">جاهز للتسليم للمكتب</div>
+            <div class="woc-card-desc">اتغلّف ولسه في المخزن</div>
+          </div>
+        </div>
+        <div class="woc-row-num woc-num">
+          <span class="woc-count pending" id="cntOffice">—</span><span class="woc-unit">أوردر</span>
+        </div>
+        <div class="woc-row-mid">
+          <div class="woc-chips" id="chipsOffice"></div>
+          <div class="woc-fail" id="failOffice" style="display:none"></div>
+        </div>
+        <div class="woc-row-act">
+          <div class="woc-fresh">
+            <div class="woc-fresh-row">
+              <span class="woc-fresh-lbl">آخر تحديث</span>
+              <span class="woc-ago" id="agoOffice">لسه ما اتحدّثش</span>
+            </div>
+            <div class="woc-fresh-row" id="stampOffice"><span class="woc-stamp-chip">—</span></div>
+          </div>
+          <button class="woc-rbtn" id="btnOffice"
+                  onclick="event.preventDefault();event.stopPropagation();loadQueue('office', false)">
+            <span class="woc-rbtn-ico">↺</span><span>تحديث</span><span class="woc-rbtn-badge" id="badgeOffice">—</span>
+          </button>
+        </div>
+      </a>
   </div>
 
   <!-- ══ «أدوات» = اللي الموظف بيشتغل بيه على أوردر قدامه دلوقتي ══
@@ -1001,12 +1045,31 @@ const HOME_QUEUES = {
       return { total: data.counts?.total ?? orders.length, chips: [] };
     },
   },
+
+  // ── «جاهز للتسليم للمكتب» (v1.26.0) ────────────────────────────
+  // 🔴 **الـ Worker بيرجّع اللي حالته `Ready` خام، والأهلية بتتحسب هنا** —
+  //    مش اختيار معماري: `custom.package_whereabouts_s1` **مش قابل للفلترة**
+  //    في بحث شوبيفاي، والفلتر عليه بيرجّع المتجر كله في صمت.
+  // ⛔ **بس الحساب مش هنا فعليًا** — `wocOfficeGate` في الـ shell §OFFICE-GATE،
+  //    و`office-transfer.html` بتنادي **نفس الدالة** على **نفس الرد**.
+  //    نسخة تانية من القاعدة في أي صفحة = الرقم هنا يخالف القايمة هناك
+  //    (درس R1 · v1.11.0).
+  office: {
+    err: 'تعذّر جلب طابور تسليمات المكتب',
+    ids: { count:'cntOffice', chips:'chipsOffice', fail:'failOffice',
+           ago:'agoOffice', stamp:'stampOffice', btn:'btnOffice', badge:'badgeOffice' },
+    async fetch() {
+      const data = await wocApi(WOC_WORKERS.office).apiGet('get_ready_to_office');
+      return { total: wocOfficeQueue(data.orders || []).length, chips: [] };
+    },
+  },
 };
 
 const homeQ = {
   print: { at: null, dirty: false, timer: null, loading: false },
   pack:  { at: null, dirty: false, timer: null, loading: false },
   bosta: { at: null, dirty: false, timer: null, loading: false },
+  office:{ at: null, dirty: false, timer: null, loading: false },
 };
 let homeTickTimer = null;
 
@@ -1028,15 +1091,21 @@ function showHome() {
 
 // الأعداد — التلاتة **بالتوازي**، و`allSettled` مش `all`:
 // Workers مختلفين = isolates مختلفين = توازي حقيقي، وفشل طابور
-// **مايخفيش** التاني. (بقوا تلاتة في v1.23.0 — تسليمات بوسطة على
-// Worker تالت مستقل، فنفس القاعدة بتنطبق عليه بالحرف.)
+// **مايخفيش** التاني. (بقوا **أربعة** في v1.26.0 — تسليمات بوسطة وتسليمات
+// المكتب على Workers مستقلة، فنفس القاعدة بتنطبق عليهم بالحرف.)
 function loadCounts() {
   renderFreshness();
   startHomeTicker();
   // ⚠️ التسليح **من الدخول** كمان مش من أول نجاح بس: لو أول جلب فشل،
   //    تفضل فيه محاولة تلقائية بدل ما الكارت يقف على ⚠️ للأبد.
   Object.keys(homeQ).forEach(armAuto);
-  Promise.allSettled([loadQueue('print'), loadQueue('pack'), loadQueue('bosta')]);
+  // 🔴 **القايمة بتتبني من `homeQ` نفسه — مش مكتوبة بالإيد** (v1.26.0).
+  //    القايمة اليدوية هي اللي بتنسى طابور جديد **في صمت**: الصف بيترسم،
+  //    والعدّاد بيفضل `—` للأبد، ومفيش أي خطأ في الكونسول — الموظف بيقرا
+  //    «ما اتحدّثش» على طابور شغّال. اتمسك في `docs/office-check.mjs` وقت
+  //    إضافة صف المكتب، مش بمراجعة كود.
+  //    ⚠️ و`allSettled` مش `all` — فشل طابور **مايخفيش** التاني (قاعدة ٢).
+  Promise.allSettled(Object.keys(homeQ).map(k => loadQueue(k)));
 }
 
 // المسار الوحيد للجلب — الضغطة اليدوية والنبضة التلقائية الاتنين
