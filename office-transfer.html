@@ -170,6 +170,12 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .time-badge.tb-d7 { background: var(--crit);         color: var(--on-accent);   border-color: var(--crit); }
 .time-badge.tb-none { background: var(--surface-2);  color: var(--text-muted); }
 
+/* «نوع الأوردر» — نسخة طبق الأصل من `pack.html` بالحرف: نص عادي بلون
+   بدل بادج (عادي = أزرق التفاعل · استبدال = بنفسجي). نفس القاعدة —
+   تعديل عليها يتعمل في الصفحتين في نفس التمريرة (درس R1). */
+.type-text { font-weight: 800; white-space: nowrap; }
+.type-text.type-s1 { color: var(--accent-dark); }
+.type-text.type-s2 { color: var(--purple-dark); }
 
 .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: var(--on-accent); border-radius: 50%; animation: spin .6s linear infinite; flex-shrink: 0; }
 .spinner-dark { border-color: rgba(0,0,0,.15); border-top-color: var(--accent); }
@@ -443,7 +449,20 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
            واحد للنسخة (Standards #24). الرقم هنا **مش** مكتوب بإيد. -->
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.26.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.26.1</span>
+          <span class="cl-ver-date">15-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>عمود <b>«الطرد»</b> بقى <b>«نوع الأوردر»</b> — نفس القيم والألوان والتصميم بتاعة عمود «نوع الأوردر» في قسم التغليف (نص عادي بدل بادج: عادي أزرق · استبدال بنفسجي)، بنفس المعنى اللي كان في «الطرد» (S1/S2).</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>عمودا <b>«الزون»</b> و<b>«الإجمالي»</b> اتشالوا من جدول الطابور.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>عمود <b>«غلّفه»</b> بقى <b>«قام بالتغليف»</b>.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>عمودا <b>«تاريخ التغليف»</b> و<b>«الوقت منذ التغليف»</b> — بنفس تصميم عمود «الوقت منذ الطباعة» في قسم التغليف بالحرف (بادج ملوّن بدرجات التأخير حسب فرق الأيام التقويمية).</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.26.0</span>
           <span class="cl-ver-date">15-09-2026</span>
         </div>
         <ul class="cl-items">
@@ -730,13 +749,13 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
                   <tr>
                     <th>رقم الأوردر</th>
                     <th>العميل</th>
-                    <th>الطرد</th>
-                    <th>الزون</th>
+                    <th>نوع الأوردر</th>
                     <th>عدد القطع</th>
-                    <th>الإجمالي</th>
                     <th>تاريخ الأوردر</th>
+                    <th>تاريخ التغليف</th>
                     <th>وقت التغليف</th>
-                    <th>غلّفه</th>
+                    <th>الوقت منذ التغليف</th>
+                    <th>قام بالتغليف</th>
                   </tr>
                 </thead>
                 <tbody id="rqTableBody"></tbody>
@@ -2179,27 +2198,48 @@ function rqRender() {
   tbody.innerHTML = rows.map(o => {
     const age = wocOrderAge(o.createdAt, now);
     const qty = (o.itemsQty === null || o.itemsQty === undefined) ? '—' : o.itemsQty;
-    const tot = o.total ? Number(o.total).toLocaleString('en-US', { maximumFractionDigits: 2 }) : '—';
-    // ⚠️ بادج الطرد (S1/S2) **مقصود هنا** — بخلاف طابور بوسطة اللي اتقرر
-    //    يبقى بلا علامة. السبب: الموظف هنا بيسكن **باركود الأوردر**، وهو
-    //    نفسه على الطردين؛ فلو الأوردر عليه طرد أصلي وطرد استبدال، السكانة
-    //    لوحدها مابتقولش أنهي واحد فيهم. في بوسطة الملصق مختلف فالسؤال
-    //    مابيتسألش أصلاً.
-    const mb = o.machine === 's2'
-      ? '<span class="badge badge-purple">استبدال/استرجاع</span>'
-      : '<span class="badge badge-accent">الشحنة الأصلية</span>';
+    // ⚠️ «نوع الأوردر» — بادچ الطرد (S1/S2) القديم مهمّته هنا **مقصودة**
+    //    (بخلاف طابور بوسطة اللي بلا علامة): الموظف بيسكن **باركود
+    //    الأوردر**، وهو نفسه على الطردين، فالتفرقة لازم تتقال. دلوقتي
+    //    نفس المعنى بنفس تصميم عمود «نوع الأوردر» في `pack.html` بالحرف —
+    //    نص عادي بلون بدل بادج (§READY-JS::renderTable هناك).
+    const typeClass = o.machine === 's2' ? 'type-s2' : 'type-s1';
+    const typeLabel = o.machine === 's2' ? 'استبدال' : 'عادي';
+    const since = o.packedAt ? rqSincePack(o.packedAt, now) : { cls: 'tb-none', text: '— لا يوجد وقت تغليف' };
     return `<tr>
       <td>${orderLink(o.orderName, o.orderId)}</td>
       <td>${esc(o.customer || '—')}</td>
-      <td>${mb}</td>
-      <td>${esc(o.zone || '—')}</td>
+      <td><span class="type-text ${typeClass}">${esc(typeLabel)}</span></td>
       <td class="col-num">${esc(String(qty))}</td>
-      <td class="col-num">${esc(tot)}</td>
       <td>${esc(formatDate(o.createdAt))} <span class="time-badge age-badge ${age.cls}">${esc(age.text)}</span></td>
-      <td>${o.packedAt ? esc(formatTimeOnly(o.packedAt)) : '—'}</td>
+      <td class="col-num">${o.packedAt ? esc(formatDate(o.packedAt)) : '—'}</td>
+      <td class="col-num">${o.packedAt ? esc(formatTimeOnly(o.packedAt)) : '—'}</td>
+      <td><span class="time-badge ${since.cls}" data-rq-pack="${o.packedAt ? esc(o.packedAt) : ''}">${esc(since.text)}</span></td>
       <td>${esc(o.packedBy || '—')}</td>
     </tr>`;
   }).join('');
+}
+
+// «الوقت منذ التغليف» — نفس تصميم `rdySincePrint` في `pack.html` بالحرف
+// (نفس الدرجات ونفس النغمة اللفظية)، بس عن التغليف مش الطباعة: الطرد
+// اتغلّف ولسه مستني يتسلّم للمكتب، وكل يوم تقويمي زيادة معناه تأخير.
+// ⚠️ الدرجة من `wocDayDiff`/`wocDayLevel` في الـ shell — نفس مصدر بادج
+// عمر الأوردر — فمستحيل تفترق (نفس درس R1).
+function rqSincePack(iso, now = new Date()) {
+  const t = new Date(iso).getTime();
+  if (isNaN(t)) return { cls: 'tb-none', text: '— وقت غير مقروء' };
+  const days = wocDayDiff(iso, now);
+  if (days <= 0) {
+    const mins = Math.max(0, Math.floor((now.getTime() - t) / 60000));
+    const text = mins < 60
+      ? `🟢 منذ ${arMin(mins)}`
+      : `🟢 منذ ${arHour(Math.floor(mins / 60))}${mins % 60 ? ` و${arMin(mins % 60)}` : ''}`;
+    return { cls: 'tb-d0', text };
+  }
+  if (days === 1) return { cls: 'tb-d1', text: '🟡 متأخر يوم — منذ أمس' };
+  if (days === 2) return { cls: 'tb-d2', text: '🟠 متأخر يومين' };
+  if (days <  7)  return { cls: 'tb-d3', text: `🔴 متأخر ${arDay(days)}` };
+  return { cls: 'tb-d7', text: `⛔ متأخر ${arDay(days)}` };
 }
 
 // 🔴 **نزع سلاح الصف** — الأوردر اللي اتسجّل بيتشال من الطابور فورًا.
@@ -2280,6 +2320,16 @@ setInterval(() => {
     const age = wocOrderAge(o.createdAt, now);
     el.className   = `time-badge age-badge ${age.cls}`;
     el.textContent = age.text;
+  });
+  // «الوقت منذ التغليف» — بالـ ISO المخزّن على الخلية نفسها
+  // (`data-rq-pack`) مش بترتيب الصفوف، نفس نمط `data-rdy-since` في
+  // `pack.html`.
+  document.querySelectorAll('#rqTableBody [data-rq-pack]').forEach(el => {
+    const iso = el.dataset.rqPack;
+    if (!iso) return;
+    const since = rqSincePack(iso, now);
+    el.className   = `time-badge ${since.cls}`;
+    el.textContent = since.text;
   });
 }, RQ_TICK_MS);
 
