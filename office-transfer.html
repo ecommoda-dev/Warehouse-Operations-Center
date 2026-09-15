@@ -511,7 +511,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
             <li>النتيجة: نجاح = توست + الصف بيختفي من الطابور · خلاص متعمل / مرفوض
               = <b>نافذة بالسبب</b> · حالة شاذة = <b>نافذة تفاصيل وإقرار</b> قبل
               التسجيل.</li>
-            <li>كل سكانة بتسيب <b>صف واحد بالظبط</b> في D1 — يا <code>transfer</code>
+            <li>كل سكانة بتسيب <b>صف واحد بالظبط</b> في D1 — يا <code>update</code>
               يا <code>rejected</code>.</li>
           </ol>
 
@@ -565,7 +565,8 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
             <li><code>WOC_WORKERS.office.min</code> (shell) — أقل نسخة Worker مقبولة. <b>مالهاش أي علاقة بـ <code>TOOL_VERSION</code></b></li>
             <li><code>LS_SECRET = 'warehouse_ops_worker_secret'</code> (shell) — 🔴 الأداة دي <b>عضو في مجموعة <code>warehouse_ops</code> من أول يوم</b>: مفيش سر قديم خاص بيها لأنها مالهاش نسخة مستقلة</li>
             <li><code>WOC_API_TIMEOUT_MS</code> (shell) — مهلة ٩٠ ثانية على كل نداء</li>
-            <li>D1: <code>tool = "package_transfer_to_office"</code> · <code>type = "transfer"</code> أو <code>"rejected"</code>. أحداث الدخول/الخروج تحت <code>warehouse_ops_center</code> (الهب)</li>
+            <li>D1: <code>tool = "metafields_change"</code> (سجل <b>مشترك</b>) + <code>extra.sourceTool = "package_transfer_to_office"</code> · <code>type = "update"</code> أو <code>"rejected"</code>. أحداث الدخول/الخروج تحت <code>warehouse_ops_center</code> (الهب)</li>
+            <li>🔴 أي استعلام خط أساس على السجل ده <b>لازم يفلتر على <code>extra.sourceTool</code></b> — من غيره بيعدّ صفوف تلات أدوات مع بعض</li>
             <li><code>extra.result</code> — <code>success</code>/<code>warning</code>/<code>error</code>/<code>rejected</code>/<code>already</code></li>
             <li><code>extra.machine</code> — <code>S1</code> أو <code>S2</code>: <b>أنهي طرد</b> اتسجّل، مش حالة الأوردر</li>
             <li><code>doneThisSession</code> — الأوردر اللي اتسجّل في الجلسة دي بيتشال من الطابور فورًا؛ الشاشة <b>لازم تتغيّر</b> بعد النجاح</li>
@@ -1470,8 +1471,12 @@ let logRows        = [];      // صفوف الصفحة الحالية بعد ا�
 
 // ─── §LOG-JS::filters — multi-select state (بند ٢١: كل الفلاتر multi-select) ───
 const msState = {
+  // ⚠️ القيم دي **قيم `type` في D1**، والأداة بتكتب تحت سجل
+  //    `metafields_change` المشترك — فالقيمتين مسجّلتين أصلاً وصفر قيمة
+  //    جديدة. والفصل عن سكانرَي بوسطة بيحصل في الـ Worker بـ
+  //    `extra.sourceTool`، **مش** بفلتر من هنا.
   type: { items: [
-            { value: 'transfer', label: 'تسجيل للمكتب' },
+            { value: 'update',   label: 'تسجيل للمكتب' },
             { value: 'rejected', label: 'مرفوض (ما اتكتبش)' },
           ], selected: new Set(), search: '' },
   result: { items: [

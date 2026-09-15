@@ -2345,17 +2345,26 @@ type  : login · logout      ← بس. الهب **مابيكتبش** أي فعل
 `order_printer`/`S1`·`S2`·**`AWB`**·**`not_found`** · `pack_checker`/`packed` ·
 `order_item_remover`/`remove_item` ·
 **`order_sku_barcode_printer`/`print`·`print_sku`** (جديد في v1.15.0) ·
-**`metafields_change`/`update`·`rejected`** (سكانرا بوسطة — v1.22.0) ·
-**`package_transfer_to_office`/`transfer`·`rejected`** (تسليمات المكتب — v1.26.0).
+**`metafields_change`/`update`·`rejected`** (سكانرا بوسطة — v1.22.0 ·
+**وتسليمات المكتب — v1.26.0**).
 
-> 🔴 **«تسليمات المكتب» بتكتب تحت اسمها هي — مش تحت `metafields_change`**،
-> بخلاف سكانرَي بوسطة. السبب إن `metafields_change` هو المصدر الوحيد لتاريخ
-> **حالة الأوردر** (`ecommoda-order-lifecycle` قاعدة ٩)، وصف `type = 'update'`
-> جوّاه بيتقري **انتقال حالة**. والأداة دي **مابتلمسش `manual_status` ولا
-> `status_2_r_e` خالص** — بتكتب **عهدة الطرد**، وهي محور تاني تمامًا. صف عهدة
-> جوّه سجل الحالة كان هيضخّم أي عدّ ساذج لانتقالات الحالة.
-> ⚠️ **البند ده قابل للمراجعة قبل أول تشغيل حي بس** — بعدها التغيير بيحتاج
-> `ecommoda-tool-rename` وبييتّم الصفوف القديمة.
+> 🔴 **«تسليمات المكتب» بتكتب تحت `metafields_change` زي سكانرَي بوسطة**
+> (قرار أحمد 15-09-2026)، والفاصل هو **`extra.sourceTool`**
+> (`package_transfer_to_office`). السبب إن الأداة بتكتب **ميتافيلد**،
+> و`metafields_change` هو سجل تغيير الميتافيلد المشترك في الستاك — فكاتب تالت
+> بنفس النمط بالحرف.
+> ✅ **والمكسب: صفر قيمة `type` جديدة** — `update` و`rejected` مسجّلتين أصلاً
+> لصف `metafields_change`، فنطاق Rule 7 بقى **تسجيل كاتب** مش صف `tool` جديد.
+> 🔴 **والثمن لازم يتقال:** الصف ده هو كمان المصدر اللي
+> `ecommoda-order-lifecycle` قاعدة ٩ بتسمّيه لتاريخ **حالة الأوردر**، والأداة
+> دي **مابتلمسش `manual_status` ولا `status_2_r_e` خالص** — بتكتب **عهدة
+> الطرد**. يعني أي عدّ ساذج لـ`type = 'update'` في الجدول ده بيضخّم انتقالات
+> الحالة بصفوف عهدة. ⛔ **كل استعلام خط أساس لازم يفلتر على `extra.sourceTool`**
+> — بالظبط زي سكانرَي بوسطة.
+> ⚠️ **وانحراف موثّق:** `ecommoda-constants` §7 بتسمّي المفتاح `extra.source`
+> للكُتّاب الجداد؛ الأداة دي بتستخدم **`extra.sourceTool`** بقرار أحمد — عشان
+> تطابق الكاتبين الموجودين في **نفس** الصف بالحرف، وإلا بقى فيه مفتاحين
+> بيفصلوا كُتّاب نفس الجدول.
 
 > 🔴 **سكانرا بوسطة بيكتبوا تحت `metafields_change` مش تحت اسم الأداة** —
 > ده **موروث ومقصود**، والفصل بينهم بمفتاح **`extra.sourceTool`**
@@ -2447,7 +2456,7 @@ node docs/browser-check.mjs          # print.html      — ١٤٣ بند
 node docs/sku-barcode-check.mjs      # sku-barcode.html — ٩٢ بند
 node docs/pack-check.mjs             # pack.html        — ٤٣ بند (جديد v1.21.0)
 node docs/scanners-check.mjs        # bosta-shipped + bosta-returned — ٧٩ بند (جديد v1.22.0)
-node docs/office-check.mjs           # office-transfer.html — ٥٧ بند (جديد v1.26.0)
+node docs/office-check.mjs           # office-transfer.html — ٥٨ بند (جديد v1.26.0)
 ```
 
 > ⚠️ **خمس ملفات مش ملف واحد بقرار** — كل واحد بيشغّل Worker وهمي بشكل رد
@@ -2696,12 +2705,16 @@ node docs/office-check.mjs           # office-transfer.html — ٥٧ بند (ج�
   ⚠️ والأداة دي **مالهاش نسخة مستقلة**، فمفيش نقطة رجوع: لو الـ Worker وقع،
   التسجيل بيتعمل من أدمن شوبيفاي بالإيد.
 
-- 🔴 **تسجيل `package_transfer_to_office` في `ecommoda-constants` §7** بقيم
-  `transfer` · `rejected` — **صف `tool` جديد بالكامل**. Rule 7 بتقول التسجيل
-  **قبل** أول `writeLog`، والقاعدة دي **اتخرقت ست مرات** في الستاك ده وكل مرة
-  كان الادعاء موجود في `CLAUDE.md` بتاع الأداة. **التحقق الوحيد المقبول `grep`
-  على المهارة نفسها.** ⚠️ ودي فرصة نادرة: الأداة **لسه ما كتبتش ولا صف**،
-  فالترتيب اللي Rule 7 بتطلبه **ممكن يتحقق لأول مرة** بدل ما يتعكس.
+- 🔴 **تسجيل «تسليمات المكتب» ككاتب جديد على `metafields_change` في
+  `ecommoda-constants` §7** — **مش صف `tool` جديد**: `update` و`rejected`
+  مسجّلتين أصلاً لصف الجدول ده، فصفر قيمة `type` جديدة. اللي مطلوب: الأداة
+  تتسجّل في **جدول الكُتّاب** بقيمة `extra.sourceTool = package_transfer_to_office`،
+  ومعاها **انحراف `sourceTool` بدل `source`** (قرار أحمد — فوق في قسم D1).
+  Rule 7 بتقول التسجيل **قبل** أول `writeLog`، والقاعدة دي **اتخرقت ست مرات**
+  في الستاك ده وكل مرة كان الادعاء موجود في `CLAUDE.md` بتاع الأداة.
+  **التحقق الوحيد المقبول `grep` على المهارة نفسها.** ⚠️ ودي فرصة نادرة:
+  الأداة **لسه ما كتبتش ولا صف**، فالترتيب اللي Rule 7 بتطلبه **ممكن يتحقق
+  لأول مرة** بدل ما يتعكس.
 
 - 🔴 **تحديث `ecommoda-order-lifecycle` → `package-whereabouts.md` §5** —
   المهارة مسجّلة الأداة دي على إنها **أداة واحدة بقايمتين**، وقرار أحمد
@@ -2844,6 +2857,8 @@ node docs/office-check.mjs           # office-transfer.html — ٥٧ بند (ج�
   من v3.4.0 — **كاتبين مش واحد**. الصف المطلوب في الجدول (صف «Metafields
   Change Log»): `update` · `rejected` · `login` · `logout`. من غير التسجيل ده
   دي نفس مخالفة `shopify_woo_sync` (صفوف اتكتبت قبل التسجيل) — ومرتين بدل مرة.
+  ⚠️ **و«تسليمات المكتب» بقت كاتب تالت لنفس القيمة من v1.26.0** — فالتسجيل ده
+  بقى بيغطّي تلات كُتّاب، والقيمة نفسها ما اتغيّرتش.
 - 🟡 **`read_all_orders` مش من صلاحيات التطبيق** — موروث من الأداتين.
   **مش عطل حالي** (الأوردرات المستخدمة أحدث من ٣٠ يوم)، لكن شوبيفاي بتخفي أي
   أوردر أقدم من **٦٠ يوم** عن تطبيق مالوش الصلاحية. **وسكانر المرتجعات أكتر
@@ -2980,7 +2995,8 @@ Promote، صفر ترفيع لأي `min`، ومفيش قيمة `tool` جديدة
 آخر مطابقة: 15-09-2026 · الهب `v1.26.0`
 🔴 معلّقة: **إنشاء `package-transfer-to-office-worker` + ربط Builds + سر
 `warehouse_ops` + OAuth (حاجز — الأداة الجديدة مش شغّالة من غيرهم)** ·
-**تسجيل `package_transfer_to_office` في `ecommoda-constants` §7** ·
+**تسجيل «تسليمات المكتب» ككاتب على `metafields_change` في
+`ecommoda-constants` §7** ·
 **تسجيل `--teal*` في `ecommoda-html-builder` (design-system)** ·
 **Promote لـ `order-printer-worker` v2.8.1 (حاجز — من غيره الورق بيخرج بلا تسجيل)** ·
 **Promote لـ `bosta-orders-shipped-scanner` v3.5.0 (حاجز للطابور)** ·

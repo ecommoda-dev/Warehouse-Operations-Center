@@ -134,6 +134,7 @@ const DIAG = { ok:false, version:'1.0.0', checks:[
 ]};
 
 const scanCalls = [];
+const logCalls  = [];
 function makeStub() {
   return async (route) => {
     const url = new URL(route.request().url());
@@ -155,7 +156,7 @@ function makeStub() {
                 : { ok:true, result:'rejected', code:'not_found',
                     message:`مفيش أوردر على شوبيفاي بالرقم ${digits}`, scanned:b.code };
     }
-    else if (action === 'get_logs')        body = { ok:true, entries:[] };
+    else if (action === 'get_logs')        { logCalls.push(url.toString()); body = { ok:true, entries:[] }; }
     else if (action === 'get_logs_count')  body = { ok:true, total:0 };
     else if (action === 'get_logs_export') body = { ok:true, entries:[], cap:2000, total:0, truncated:false };
     await route.fulfill({ status:200, contentType:'application/json', body:JSON.stringify(body) });
@@ -434,6 +435,19 @@ console.log('⑤ السجل والفحص الذاتي');
   const typeOpts = await page.locator('#msList-type').textContent() || '';
   is(typeOpts.includes('تسجيل للمكتب') && typeOpts.includes('مرفوض'),
      'فلتر «نوع العملية» بقيم الأداة دي');
+
+  // 🔴 **القيمة المبعوتة هي البند مش الليبل.** الأداة بتكتب تحت سجل
+  //    `metafields_change` المشترك بـ`type = 'update'`؛ لو الواجهة فضلت
+  //    بتبعت `transfer` (القيمة القديمة) الفلتر بيرجّع **صفر صف** —
+  //    والجدول بيقول «لا توجد نتائج» على سجل مليان، **بلا أي خطأ**.
+  logCalls.length = 0;
+  await page.click('#msBtn-type');
+  await page.click('#msList-type .ms-item:has-text("تسجيل للمكتب")');
+  await page.waitForTimeout(800);
+  const sent = logCalls.map(u => new URL(u).searchParams.get('types')).filter(Boolean);
+  is(sent.length > 0 && sent.every(v => v === 'update'),
+     '🔴 فلتر «تسجيل للمكتب» بيبعت `types=update` (القيمة المسجّلة) مش `transfer`',
+     JSON.stringify(sent));
 
   // الفحص الذاتي — بيسمّي الـ Worker وبيعرض `hint` تحت الفاشل بس
   await page.click('.hbtn:has-text("الإعدادات")');
