@@ -367,6 +367,21 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
 .bc-preview-wrap{margin-top:14px;padding-top:14px;border-top:1px dashed var(--border-strong)}
 
 /* ══════════════════════════════════════════════════════════════
+   §LABEL-MACHINE — ماكينة الليبل المطبوع · نسخة مكرّرة عن قصد
+   التوأمان: pack.html · sku-barcode.html
+   ══════════════════════════════════════════════════════════════
+   🔴 الكتلة اللي بين §LABEL-MACHINE و§LABEL-END **متطابقة بايت ببايت**
+      في الملفين. أي تعديل هنا لازم يتعمل في التوأم في **نفس التمريرة**
+      (درس R1) — والفشل هنا **مالوش صوت**: ليبل بيتقص من تحت في صمت،
+      والسكانر بيبطّل يقرا، وصفر خطأ في الكونسول.
+   ✅ الانحراف بيتمسك بسطر واحد من جذر الريبو:
+      bash docs/label-twin-check.sh
+   ✅ وفحص المتصفح (docs/sku-barcode-check.mjs) بيقيس النسخة اللي في
+      sku-barcode.html — فطول ما الفحص ده عدّى **والتوأمان متطابقين**،
+      النسخة التانية متغطية بالوراثة.
+   ⛔ ممنوع أي سطر خاص بصفحة واحدة يدخل جوّه العلامتين.
+   ══════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
    الليبل المطبوع — 2×1 إنش: نص الـ SKU فوق، وتحته باركود CODE128
    بيشفّر **رقم الـ Barcode** (مش الـ SKU) بدون أي نص تحته.
 
@@ -441,6 +456,7 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
   .print-label{page-break-after:always;break-after:page}
   .print-label:last-child{page-break-after:auto;break-after:auto}
 }
+/* ══ §LABEL-END — آخر ماكينة الليبل ══ */
 </style>
 </head>
 <body>
@@ -730,7 +746,7 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
             <li><code>§TOOL-JS::bcResolveTracking</code> — تراكينج بوسطة → اسم أوردر (Worker التغليف)</li>
             <li><code>§SCAN</code> — ربط السكانر بالمربعين الأولانيين + <code>lastEntryMode</code></li>
             <li><code>§LIGHTBOX</code> — صورة المنتج بالحجم الكامل</li>
-            <li><code>§LABEL-JS</code> — بناء عنصر ملصق الباركود-SKU + ضبط حجم خط الـ SKU</li>
+            <li><code>§LABEL-MACHINE</code> (CSS + JS · فيها <code>§LABEL-JS</code>) — ماكينة الليبل: بناء عنصر الباركود-SKU + ضبط حجم خط الـ SKU + <code>bcRenderLabels</code> + <code>bcFirePrint</code>. 🔴 <b>نسخة مكرّرة عن قصد</b> — التوأم في <code>pack.html</code> (زرار «باركود المنتجات» في شاشة التغليف)، والكتلتان <b>متطابقتان بايت ببايت</b>؛ أي تعديل يتعمل في الاتنين في نفس التمريرة، والتحقق بـ<code>bash docs/label-twin-check.sh</code></li>
             <li><code>§PRINT-JS</code> — بناء الدفعة والمعاينة و<code>window.print()</code> + التسجيل + المسح التلقائي</li>
             <li><code>§LOG-JS</code> — سجل العمليات (فلاتر · جدول · تصفيح · تصدير XLSX)</li>
           </ul>
@@ -819,7 +835,18 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.19.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.27.0</span>
+          <span class="cl-ver-date">16-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🏷️ <b>بقى ينفع تطبع باركود منتجات الأوردر من «قسم التغليف» على طول</b> — زرار جوّه شاشة التغليف بيطلّع نفس الليبل بالظبط من غير ما تفتح الأداة دي. الأداة دي لسه هي المكان الوحيد للدفعات وتعديل الأعداد والبحث بالـ SKU والسجل.</span></li>
+          <li class="cl-item"><span class="cl-tag change">ملاحظة</span><span>شكل الليبل ما اتغيّرش ولا مليمتر — نفس المقاس ونفس الخط ونفس الباركود.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge">v1.19.0</span>
           <span class="cl-ver-date">09-09-2026</span>
         </div>
         <ul class="cl-items">
@@ -1047,10 +1074,6 @@ function switchMainTab(tab) {
 // ══════════════════════════════════════════════════════════════
 // §TOOL-JS — دفعة أوردرات
 // ══════════════════════════════════════════════════════════════
-
-// عرض المحتوى جوّه ليبل ٢ إنش بعد الحشو (0.1in على كل ناحية).
-const BC_LABEL_MAX_W_IN = 1.8;
-const BC_PX_PER_IN      = 96;   // 96 CSS px ≈ إنش
 
 // ⛔ **حد تزامن على الإدخال اليدوي المتعدد — مش ضبط أداء.** الموظف
 //    بيلزق ١٥ رقم مرة واحدة، و`Promise.all` على الخمستاشر معناها ١٥ نداء
@@ -2033,6 +2056,29 @@ function bcSubmitSku() {
 }
 
 // ══════════════════════════════════════════════════════════════
+// §LABEL-MACHINE — ماكينة الليبل المطبوع · نسخة مكرّرة عن قصد
+// التوأمان: pack.html · sku-barcode.html
+// ══════════════════════════════════════════════════════════════
+//
+// 🔴 الكتلة اللي بين §LABEL-MACHINE و§LABEL-END **متطابقة بايت ببايت**
+//    في الملفين. أي تعديل هنا لازم يتعمل في التوأم في **نفس التمريرة**
+//    (درس R1) — والفشل هنا **مالوش صوت**: ليبل بيتقص من تحت في صمت،
+//    والسكانر بيبطّل يقرا، وصفر خطأ في الكونسول.
+// ✅ الانحراف بيتمسك بسطر واحد من جذر الريبو:
+//      bash docs/label-twin-check.sh
+// ✅ وفحص المتصفح (docs/sku-barcode-check.mjs) بيقيس النسخة اللي في
+//    sku-barcode.html — فطول ما الفحص ده عدّى **والتوأمان متطابقين**،
+//    النسخة التانية متغطية بالوراثة.
+// ⛔ ممنوع أي سطر خاص بصفحة واحدة يدخل جوّه العلامتين — نسخة JsBarcode
+//    في <head> **بره** العلامتين، فالفحص مابيمسكهاش: لازم تفضل
+//    `3.11.6` من نفس الـ CDN في الملفين.
+// ══════════════════════════════════════════════════════════════
+
+// عرض المحتوى جوّه ليبل ٢ إنش بعد الحشو (0.1in على كل ناحية).
+const BC_LABEL_MAX_W_IN = 1.8;
+const BC_PX_PER_IN      = 96;   // 96 CSS px ≈ إنش
+
+// ══════════════════════════════════════════════════════════════
 // §LABEL-JS — SKU فوق · باركود تحته. **سطران وبس** (v1.15.0)
 // ══════════════════════════════════════════════════════════════
 //
@@ -2107,6 +2153,36 @@ function bcBuildLabel(row) {
   return wrap;
 }
 
+// بتملّى `#printArea` بليبلات الصفوف اللي جاتلها وبتضبط حجم خط كل SKU،
+// وبترجّع العناصر عشان المستدعي يعمل بيها اللي هو عايزه (معاينة مثلاً).
+// 🔴 **المستدعي مابيبنيش ليبل بنفسه ومابيقيسش بنفسه** — ده المسار الوحيد،
+//    وإلا بقى فيه قياسان يفترقوا مع أول تعديل في الميزانية.
+function bcRenderLabels(rows) {
+  const printArea = document.getElementById('printArea');
+  printArea.innerHTML = '';
+  const els = rows.map(row => {
+    const el = bcBuildLabel(row);
+    printArea.appendChild(el);
+    return el;
+  });
+  const maxW = BC_LABEL_MAX_W_IN * BC_PX_PER_IN;
+  for (const el of els) {
+    const t = el.querySelector('.lbl-sku-text');
+    if (t) bcFitLabelText(t, t.textContent, maxW);
+  }
+  return els;
+}
+
+// ⚠️ **انتظار رسم فعلي قبل `window.print()`.** الـ SVG بيتضاف ديناميكيًا،
+//    والطباعة من غير الانتظار ده بتطلّع ورق **بلا باركود**.
+//    `requestAnimationFrame` مزدوجة بتضمن إن المتصفح خلص layout + paint —
+//    أدق من `setTimeout` بمدة ثابتة (بتعدّي في الاختبار وتقع على جهاز أبطأ).
+function bcFirePrint() {
+  requestAnimationFrame(() => requestAnimationFrame(() => window.print()));
+}
+
+// ══ §LABEL-END — آخر ماكينة الليبل ══
+
 // ══════════════════════════════════════════════════════════════
 // §PRINT-JS
 // ══════════════════════════════════════════════════════════════
@@ -2167,35 +2243,23 @@ function bcPrint() {
   }
   if (!labels.length) { showToast('مفيش أي صنف بـ Barcode وعدد طباعة أكبر من صفر', 'warning'); return; }
 
-  const printArea = document.getElementById('printArea');
-  printArea.innerHTML = '';
-  const els = labels.map(row => {
-    const el = bcBuildLabel(row);
-    printArea.appendChild(el);
-    return el;
-  });
+  // 🔴 البناء والقياس **من ماكينة الليبل** (§LABEL-MACHINE فوق) — مش من
+  //    هنا. الصفحة التوأم (`pack.html`) بتنادي **نفس** الدالتين، فمستحيل
+  //    يكون فيه قياسان أو مسارا بناء يفترقوا (درس R1).
+  const els = bcRenderLabels(labels);
 
   const grid = document.getElementById('bcPreviewGrid');
   grid.innerHTML = '';
   document.getElementById('bcPreviewWrap').style.display = '';
 
-  const maxW = BC_LABEL_MAX_W_IN * BC_PX_PER_IN;
-  for (const el of els) {
-    const t = el.querySelector('.lbl-sku-text');
-    if (t) bcFitLabelText(t, t.textContent, maxW);
-    // المعاينة **نسخة من عناصر الطباعة نفسها** — مش بناء تاني.
-    grid.appendChild(el.cloneNode(true));
-  }
+  // المعاينة **نسخة من عناصر الطباعة نفسها** — مش بناء تاني.
+  for (const el of els) grid.appendChild(el.cloneNode(true));
 
   const n = labels.length;
   bcLogPrint();           // مش `await` — الورق مايستناش D1 (فوق)
   bcArmAutoClear(n);
 
-  // ⚠️ **انتظار رسم فعلي قبل `window.print()`.** الـ SVG اتضاف ديناميكيًا،
-  //    والطباعة من غير الانتظار ده بتطلّع ورق **بلا باركود**.
-  //    `requestAnimationFrame` مزدوجة بتضمن إن المتصفح خلص layout + paint —
-  //    أدق من `setTimeout` بمدة ثابتة.
-  requestAnimationFrame(() => requestAnimationFrame(() => window.print()));
+  bcFirePrint();
 }
 
 // ══════════════════════════════════════════════════════════════

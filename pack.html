@@ -7,6 +7,13 @@
   <title>قسم التغليف — مركز عمليات المخزن</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+  <!-- ⚠️ **نفس المكتبة ونفس النسخة ونفس الـ CDN بتوع `sku-barcode.html`** —
+       السطر ده **بره** علامتَي §LABEL-MACHINE فـ`docs/label-twin-check.sh`
+       مابيمسكهوش: نسخة مختلفة بين الصفحتين = عرض خطوط مختلف على نفس الصنف
+       من غير أي فرق يبان في الـ diff. ⛔ متغيّرهاش في صفحة لوحدها.
+       ومقابل خطر الـ CDN المحجوب: حارس `bcLibReady()` بيقفل الطباعة برسالة
+       صريحة — فشل معلن بدل ليبل فاضي بيخرج من الطابعة. -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 
   <!-- 🔴 قاعدة الأسبقية: الـ shell أولاً، وستايل الصفحة بعده وبيغلب -->
   <link rel="stylesheet" href="shared/shell.css">
@@ -728,6 +735,103 @@
 .opt-ico{width:14px;height:14px;flex:none;display:block}
 .col-num{font-family:var(--font-mono);white-space:nowrap}
 .empty-row td{text-align:center;padding:22px 12px;color:var(--text-muted);font-size:12.5px;font-weight:600}
+
+/* زرار «🏷️ باركود المنتجات» — نفس مقاس `.po-btn-detail` بالظبط، واللون
+   بيفرّق بينهم: ده بيطلّع **ورق** والتاني بيفتح نافذة قراءة. */
+.po-btn-label{background:none;border:1px solid var(--accent-border);border-radius:var(--radius-sm);padding:5px 11px;font-family:var(--font-body);font-size:12px;font-weight:700;color:var(--accent);cursor:pointer}
+.po-btn-label:hover{background:var(--accent-light)}
+
+/* ══════════════════════════════════════════════════════════════
+   §LABEL-MACHINE — ماكينة الليبل المطبوع · نسخة مكرّرة عن قصد
+   التوأمان: pack.html · sku-barcode.html
+   ══════════════════════════════════════════════════════════════
+   🔴 الكتلة اللي بين §LABEL-MACHINE و§LABEL-END **متطابقة بايت ببايت**
+      في الملفين. أي تعديل هنا لازم يتعمل في التوأم في **نفس التمريرة**
+      (درس R1) — والفشل هنا **مالوش صوت**: ليبل بيتقص من تحت في صمت،
+      والسكانر بيبطّل يقرا، وصفر خطأ في الكونسول.
+   ✅ الانحراف بيتمسك بسطر واحد من جذر الريبو:
+      bash docs/label-twin-check.sh
+   ✅ وفحص المتصفح (docs/sku-barcode-check.mjs) بيقيس النسخة اللي في
+      sku-barcode.html — فطول ما الفحص ده عدّى **والتوأمان متطابقين**،
+      النسخة التانية متغطية بالوراثة.
+   ⛔ ممنوع أي سطر خاص بصفحة واحدة يدخل جوّه العلامتين.
+   ══════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   الليبل المطبوع — 2×1 إنش: نص الـ SKU فوق، وتحته باركود CODE128
+   بيشفّر **رقم الـ Barcode** (مش الـ SKU) بدون أي نص تحته.
+
+   🔴 **سطران بس من v1.15.0** (قرار أحمد 08-09-2026): رقم الأوردر تحت
+      الباركود **اتشال**. كان اتضاف في v1.10.0 كمعلومة إسناد وقت ما الأداة
+      بقت بتطبع دفعة أوردرات مع بعض. الثمن اللي لازم يتقال: الورق بيطلع من
+      الطابعة مكوّم، وبقى **مفيش على الليبل نفسه أي إشارة لأوردره** —
+      الفرز بقى على ترتيب الخروج من الطابعة بس (وده لسه **أوردر ورا
+      التاني** بالحرف، §PRINT-JS). ومن v1.15.0 كمان بقى فيه ليبلات
+      **من غير أوردر أصلاً** (مدخل الـ SKU المباشر)، فالسطر ماكانش هيبقى
+      موجود على كل ليبل حتى لو اتساب.
+
+   🔴 `--font-label` معرّف في `shared/shell.css` مع باقي التوكنز (كتلة
+      التوكنز مصدر واحد). وهو **استثناء موثّق من Standards #11** (خط واحد
+      Noto Sans Arabic): الاستثناء متحدّد بالليبل **المطبوع** بس — مفيش أي
+      عنصر على الشاشة بيستخدمه.
+      ⚠️ **قيمته اتغيّرت في v1.15.0** من سيريف (Georgia) لـ grotesque
+         محايد (Arial/Helvetica). السبب والتفاصيل في `shared/shell.css`
+         جنب التوكن نفسه — **مش هنا**، عشان مايبقاش فيه مصدرين.
+   ══════════════════════════════════════════════════════════════ */
+#printArea{display:none}
+/* ⚠️ **ميزانية ارتفاع الليبل مقفولة على ١ إنش = ٩٦px.** الحشو بياخد
+   ١٩.٢px فالمتاح ٧٦.٨px، والمحتوى **المقيس فعليًا في المتصفح**
+   (`docs/sku-barcode-check.mjs` بند ⑪): ٥٧px للسطرين + فراغ ٥.٧٦
+   (`.06in`) = ٦٢.٧٦px، الباقي ١٤px.
+   ⚠️ ٥٧ دي قياس مش حساب — `JsBarcode` بترسم الـ SVG بارتفاع أقل من
+      `height: 40` اللي بتتبعت لها. **متحسبهاش من الإعدادات، اقرا من
+      الفحص.**
+   🔴 **الـ ١٤px دول مش مساحة فاضية للاستعمال** — دول الهامش اللي بيمنع
+      القص وقت ما الخط بيترسم أعلى شوية من مقاسه الاسمي على جهاز تاني.
+      أي زيادة في `height` بتاعة الباركود أو في حجم أي سطر لازم تتحسب
+      هنا الأول: الزيادة **مابتديش أي خطأ**، `overflow:hidden` بيقص
+      **من تحت في صمت** — يعني بتاكل من الباركود نفسه، والليبل بيطلع
+      بخطوط ناقصة والسكانر مش بيقراه.
+   ⚠️ الباركود رجع لـ ٤٠px (كان ٣٤) والفراغ رجع لـ `.06in` بعد ما سطر
+      رقم الأوردر اتشال — الميزانية اللي اتفضّت اتصرفت في **ارتفاع
+      الخطوط**، وده اللي بيحسّن قراءة السكانر فعلاً. */
+.print-label{width:2in;height:1in;box-sizing:border-box;padding:.1in;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.06in;overflow:hidden;background:var(--print-paper)}
+.print-label .lbl-sku-text{font-family:var(--font-label);font-weight:700;color:var(--print-ink);white-space:nowrap;line-height:1;text-align:center;font-size:22px}
+.print-label svg{display:block;max-width:100%}
+
+@media screen{
+  .bc-preview-grid .print-label{border:1px dashed var(--border-strong);border-radius:4px}
+}
+
+@media print{
+  /* 🔴 **`display:none` مش `visibility:hidden` — ودي مش تفصيلة تنسيق.**
+     `visibility:hidden` بيخفي العنصر و**بيسيبه واخد مكانه في التخطيط**.
+     مع `@page{size:2in 1in}` الصفحة بقت ٢ إنش عرض بس، فباقي الصفحة
+     (الكارت والجدول والمودالات) كان بيتمدّ لطول رهيب وبيتقسّم على
+     **عشرات الصفحات الفاضية** ورا الليبلات — ٥ ليبل كانوا بيطلعوا ملف
+     ٣٧ صفحة، ٣٢ منهم بيضا. ومحصّلش أي خطأ في الكونسول ولا في المعاينة
+     غير إن العدّاد بيقول رقم غريب.
+     ⛔ ممنوع الرجوع لـ `visibility:hidden` هنا. */
+  body>*{display:none !important}
+  #printArea{display:block !important}
+  /* ⚠️ `shell.css` بيحط `padding:12px` على `body` — من غير التصفير ده
+     الليبل بينزاح داخل الورقة الصغيرة (٢×١ إنش مفيهاش هامش يستحمّل).
+     🔴 و`min-height:100vh` عليه كمان، وده **مساهم تاني في الصفحات
+     البيضا**: بيفرض على الـ body ارتفاع صفحة كاملة على الأقل حتى لو
+     المحتوى أقصر، فالليبل الأخير بيجرّ وراه صفحة زيادة. اتمسك في فحص
+     المتصفح بعد ما `display:none` اتحطّت — يعني السببين كانوا متراكبين
+     والأول لوحده ماكانش بيقفل البند. */
+  body{padding:0;margin:0;min-height:0;background:var(--print-paper)}
+  html{min-height:0}
+  /* ⚠️ `position:static` مقصودة — الوضع القديم كان `absolute`، وده كان
+     ضروري وقت `visibility:hidden` (عشان الليبلات تقعد فوق المحتوى
+     المخفي). دلوقتي مافيش محتوى تاني أصلاً، وعنصر absolute + فواصل
+     صفحات سلوكه غير مضمون بين المتصفحات. */
+  #printArea{position:static}
+  @page{size:2in 1in;margin:0}
+  .print-label{page-break-after:always;break-after:page}
+  .print-label:last-child{page-break-after:auto;break-after:auto}
+}
+/* ══ §LABEL-END — آخر ماكينة الليبل ══ */
 </style>
 </head>
 <body>
@@ -750,7 +854,19 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.25.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.27.0</span>
+          <span class="cl-ver-date">16-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🏷️ <b>زرار «باركود المنتجات» في شاشة التغليف</b> — بيجهّز ويفتح صفحة طباعة الباركود لمنتجات الأوردر اللي قدامك على طول، من غير ما تسيب الشاشة وتفتح أداة باركود SKU. نسخة لكل قطعة هتخرج من المخزن.</span></li>
+          <li class="cl-item"><span class="cl-tag change">ملاحظة</span><span>بيطبع <b>بنود المرحلة اللي بتغلّفها دلوقتي</b> (S1 أو S2) — يعني على أوردر استبدال بيطلّع الليبلات الصح. و<b>مفيش تعديل على العدد من هنا</b>: عايز تعدّل أو تضيف أصناف، افتح أداة باركود SKU.</span></li>
+          <li class="cl-item"><span class="cl-tag change">ملاحظة</span><span>الطباعة من هنا <b>مالهاش صف في سجل باركود SKU</b> — قرار مقصود.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge">v1.25.0</span>
           <span class="cl-ver-date">14-09-2026</span>
         </div>
         <ul class="cl-items">
@@ -1120,6 +1236,8 @@
             <li><code>§READY-JS::autoRefresh</code> (HTML) — <code>rdyArmAutoRefresh</code> · <code>rdyAutoRefreshTick</code> · <code>rdyQueueVisible</code> — التحديث التلقائي كل ١٥ دقيقة (النداء الدوري الوحيد في الأداة)</li>
             <li><code>§READY-JS::courier</code> (HTML) — عرض المندوب بلونه (بوسطة أحمر · شو روم أخضر · غيرهم أزرق · فاضي رمادي)</li>
             <li><code>§READY-JS::courierChips</code> (HTML) — مربعا «بوسطة/مناديب» فوق الجدول (v2.6.2، بدّلوا مربعات المنطقة اللي اتشالت): عدّ من الطابور كله وفلترة بضغطة، <b>نفس حالة</b> فلتر «المندوب»</li>
+            <li><code>§LABEL-MACHINE</code> (HTML · CSS + JS) — ماكينة الليبل المطبوع ٢×١ إنش: <code>bcBuildLabel</code> · <code>bcFitLabelText</code> · <code>bcRenderLabels</code> · <code>bcFirePrint</code>. 🔴 <b>نسخة مكرّرة عن قصد</b> — التوأم في <code>sku-barcode.html</code>، والكتلتان <b>متطابقتان بايت ببايت</b>. الانحراف بيتمسك بـ<code>bash docs/label-twin-check.sh</code></li>
+            <li><code>§PACK-LABELS</code> (HTML) — <code>packPrintLabels</code>: زرار «🏷️ باركود المنتجات» في شاشة التشييك. بيطبع بنود <b>المرحلة الجارية</b> (<code>currentItems</code>) بصفر نداء للـ Worker</li>
           </ul>
 
           <h4>KEY VARIABLES</h4>
@@ -1174,6 +1292,8 @@
             <li><b>v2.6.2</b> — نفس مبدأ v2.5.0: المربعان **حالة واحدة** مع فلتر «المندوب» التفصيلي (بقى أول فلتر بدل المنطقة) — الضغط بيحدد/يلغي كل قيم المندوب الحقيقية اللي بتقع في المجموعة دي جوّه <code>rdyMsState.courier.selected</code>، مش حالة موازية.</li>
             <li><b>فخّ v2.5.0:</b> §BOSTA اتنقل حرفيًا من ريبو <code>Bosta-Orders-Shipped-Scanner</code>، فالكود ده بقى في <b>مكانين</b>. أي إصلاح على شكل رد بوسطة أو على <code>cleanOrderName</code> لازم يتعمل في الاتنين — نفس عيلة خطر <code>classifyS2Subtype</code>.</li>
             <li><b>فخّ:</b> منطق الـ multi-select والترتيب <b>متكرر</b> بين <code>§LOG-JS</code> و<code>§READY-JS</code> (الأول server-side والتاني client-side). أي تعديل على سلوك القوايم أو الترتيب لازم يتعمل في <b>الاتنين</b>.</li>
+            <li><b>فخّ v1.27.0:</b> <code>§LABEL-MACHINE</code> <b>مكرّرة عن قصد</b> بين <code>pack.html</code> و<code>sku-barcode.html</code> (قرار أحمد 16-09-2026). الفشل لو افترقوا <b>مالوش صوت</b>: الليبل بيتقص من تحت في صمت وبياكل من خطوط الباركود، والسكانر بيبطّل يقرا. أي تعديل يتعمل في <b>الاتنين في نفس التمريرة</b>، والتحقق بـ<code>bash docs/label-twin-check.sh</code>.</li>
+            <li><b>v1.27.0:</b> الطباعة من هنا <b>مابتكتبش أي صف في D1</b> (قرار أحمد) — الصفحة مابتناديش <code>log_print</code> ولا Worker الباركود خالص، و<code>PAGE_WORKERS</code> فضلت <code>['pack']</code>.</li>
             <li><code>isPrintedNotPacked</code> بتسأل «اتطبع <b>بعد</b> آخر تغليف؟» مش «متملّي ولا فاضي» — ميتافيلدات التغليف مبتتصفّرش بين دورات الإرجاع، والمقارنة بـ <code>new Date()</code> مش نصوص (<code>printing_time</code> بتيجي بصيغتين).</li>
           </ul>
         </div>
@@ -1599,6 +1719,12 @@
                    «الأوردر ده حكايته إيه؟» من غير ما الموظف يسيب الشاشة
                    ويفتح شوبيفاي. -->
               <button class="po-btn-detail" id="btnOrderDetail" onclick="showOrderDetail()">📋 تفاصيل الأوردر</button>
+              <!-- 🔴 **بيطبع بنود المرحلة اللي بتتغلّف دلوقتي** (`currentItems`) —
+                   مش كل بنود الأوردر. ده الفرق اللي بيخلّي الطباعة من هنا
+                   **أدق من `sku-barcode.html`** على أوردر استبدال. والبيانات
+                   (`sku` · `barcode` · `quantity`) جاية في رد `get_order`
+                   أصلاً، فالزرار ده **بصفر نداء للـ Worker**. -->
+              <button class="po-btn-label" id="btnPrintLabels" onclick="packPrintLabels()">🏷️ باركود المنتجات</button>
             </div>
             <button class="btn-ghost btn-cancel-pack" onclick="resetToEntry()">❌ إلغاء التغليف</button>
           </div>
@@ -1885,6 +2011,12 @@
 </div><!-- /panel-log -->
 
 </div><!-- /.container -->
+
+<!-- منطقة الطباعة الفعلية — مخفية على الشاشة، بتبان وقت الطباعة بس.
+     ⚠️ **ابن مباشر لـ`<body>` عن قصد** — قاعدة الطباعة
+        `body>*{display:none!important}` بتخفي أبناء الـ body المباشرين بس،
+        فلو اتحط جوّه `.container` كان هيتخفي معاها والورق يطلع فاضي. -->
+<div id="printArea"></div>
 
 <div id="sharedMount"></div>
 
@@ -2597,6 +2729,11 @@ function renderCheckScreen() {
   // زرار مش موجود.
   const detailBtn = document.getElementById('btnOrderDetail');
   if (detailBtn) detailBtn.style.display = currentProfile ? '' : 'none';
+
+  // زرار «🏷️ باركود المنتجات» بيظهر **بس لما يكون فيه بنود فعلاً** — زرار
+  // بيطلّع ورق فاضي أسوأ من زرار مش موجود (نفس قاعدة زرار التفاصيل فوق).
+  const lblBtn = document.getElementById('btnPrintLabels');
+  if (lblBtn) lblBtn.style.display = currentItems.length ? '' : 'none';
 
   if (sa?.conflict) {
     conflictEl.style.display = '';
@@ -4464,6 +4601,201 @@ async function exportLogXLSX() {
     showToast(err.message || 'خطأ في التصدير', 'error', 6000);
   }
 }
+
+// ══════════════════════════════════════════════════════════════
+// §LABEL-MACHINE — ماكينة الليبل المطبوع · نسخة مكرّرة عن قصد
+// التوأمان: pack.html · sku-barcode.html
+// ══════════════════════════════════════════════════════════════
+//
+// 🔴 الكتلة اللي بين §LABEL-MACHINE و§LABEL-END **متطابقة بايت ببايت**
+//    في الملفين. أي تعديل هنا لازم يتعمل في التوأم في **نفس التمريرة**
+//    (درس R1) — والفشل هنا **مالوش صوت**: ليبل بيتقص من تحت في صمت،
+//    والسكانر بيبطّل يقرا، وصفر خطأ في الكونسول.
+// ✅ الانحراف بيتمسك بسطر واحد من جذر الريبو:
+//      bash docs/label-twin-check.sh
+// ✅ وفحص المتصفح (docs/sku-barcode-check.mjs) بيقيس النسخة اللي في
+//    sku-barcode.html — فطول ما الفحص ده عدّى **والتوأمان متطابقين**،
+//    النسخة التانية متغطية بالوراثة.
+// ⛔ ممنوع أي سطر خاص بصفحة واحدة يدخل جوّه العلامتين — نسخة JsBarcode
+//    في <head> **بره** العلامتين، فالفحص مابيمسكهاش: لازم تفضل
+//    `3.11.6` من نفس الـ CDN في الملفين.
+// ══════════════════════════════════════════════════════════════
+
+// عرض المحتوى جوّه ليبل ٢ إنش بعد الحشو (0.1in على كل ناحية).
+const BC_LABEL_MAX_W_IN = 1.8;
+const BC_PX_PER_IN      = 96;   // 96 CSS px ≈ إنش
+
+// ══════════════════════════════════════════════════════════════
+// §LABEL-JS — SKU فوق · باركود تحته. **سطران وبس** (v1.15.0)
+// ══════════════════════════════════════════════════════════════
+//
+// 2in × 1in، خط grotesque محايد للنص (`--font-label` في `shell.css`)،
+// وبدون أي نص تحت الباركود نفسه.
+//
+// 🔴 **سطر رقم الأوردر اتشال** (قرار أحمد 08-09-2026). كان اتضاف في
+//    v1.10.0 لما الأداة بقت تطبع دفعة أوردرات مع بعض، والثمن اللي رجع
+//    معاه: الورق بيطلع مكوّم و**مفيش على الليبل أي إشارة لأوردره** —
+//    الفرز بقى على ترتيب الخروج من الطابعة بس، وده لسه **أوردر ورا
+//    التاني** بالحرف (§PRINT-JS تحت، ومعاه بند في فحص المتصفح).
+//    ⚠️ ومن v1.15.0 فيه ليبلات **من غير أوردر أصلاً** (مدخل الـ SKU)،
+//       فالسطر ماكانش هيبقى على كل ليبل حتى لو اتساب.
+//    الميزانية اللي اتفضّت راحت لارتفاع الباركود (٣٤ → ٤٠px).
+
+function bcLibReady() { return typeof JsBarcode !== 'undefined'; }
+
+// ⚠️ **ليه Canvas `measureText` مش `el.scrollWidth`:** `#printArea` عليه
+//    `display:none` طول الوقت لحد الطباعة الفعلية (`@media print` بس) —
+//    يعني أي قياس بيعتمد على الـ layout (`scrollWidth`/`offsetWidth`)
+//    بيرجّع **صفر دايمًا**، والحلقة بتوهم إنها شغالة وهي بتقف من أول لفة
+//    من غير أي تصغير حقيقي. `measureText` بيحسب العرض من الخط نفسه من غير
+//    ما العنصر يكون مرسوم.
+const _bcMeasureCtx = document.createElement('canvas').getContext('2d');
+function bcTextWidth(text, sizePx, fontFamily) {
+  _bcMeasureCtx.font = `700 ${sizePx}px ${fontFamily}`;
+  return _bcMeasureCtx.measureText(text).width;
+}
+function bcFitLabelText(el, text, maxWidthPx) {
+  const family = getComputedStyle(document.documentElement)
+    .getPropertyValue('--font-label').trim() || 'Georgia, serif';
+  let size = 22;
+  while (size > 8 && bcTextWidth(text, size, family) > maxWidthPx) size -= 1;
+  el.style.fontSize = size + 'px';
+}
+
+// بيبني عنصر ليبل واحد — **نفس العنصر** بيتستخدم في الطباعة وفي المعاينة،
+// فمفيش نسختين يفترقوا.
+function bcBuildLabel(row) {
+  const wrap = document.createElement('div');
+  wrap.className = 'print-label';
+
+  const textEl = document.createElement('div');
+  textEl.className = 'lbl-sku-text';
+  textEl.textContent = row.sku || row.barcode;
+  wrap.appendChild(textEl);
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  wrap.appendChild(svg);
+
+  // 🔴 الباركود بيشفّر **رقم الـ Barcode**، مش الـ SKU.
+  //    JsBarcode متزامنة — بترسم فورًا بلا أي `setTimeout`.
+  try {
+    JsBarcode(svg, row.barcode, {
+      // ⚠️ `height` رجع لـ ٤٠ (كان ٣٤) بعد ما سطر رقم الأوردر اتشال —
+      //    الميزانية محسوبة في `.print-label` فوق. **متزوّدهاش من غير ما
+      //    تعدّ الميزانية دي تاني**: الزيادة بتتقص في صمت من تحت، يعني
+      //    بتاكل من الخطوط نفسها والسكانر بيبطّل يقرا.
+      format: 'CODE128', width: 1.7, height: 40, margin: 0,
+      displayValue: false,   // زي الإعداد الحالي: "Content below barcode: None"
+    });
+  } catch (e) {
+    // رمز فيه حروف مش مدعومة — نادر مع الأرقام، بس ليبل واحد **مايوقّفش**
+    // باقي الدفعة، والليبل التالف بيبان تالف بدل ما يطلع فاضي.
+    svg.remove();
+    const err = document.createElement('div');
+    err.style.cssText = 'color:var(--red);font-size:10px;font-weight:700';
+    err.textContent = 'تعذّر رسم الباركود';
+    wrap.appendChild(err);
+  }
+
+  return wrap;
+}
+
+// بتملّى `#printArea` بليبلات الصفوف اللي جاتلها وبتضبط حجم خط كل SKU،
+// وبترجّع العناصر عشان المستدعي يعمل بيها اللي هو عايزه (معاينة مثلاً).
+// 🔴 **المستدعي مابيبنيش ليبل بنفسه ومابيقيسش بنفسه** — ده المسار الوحيد،
+//    وإلا بقى فيه قياسان يفترقوا مع أول تعديل في الميزانية.
+function bcRenderLabels(rows) {
+  const printArea = document.getElementById('printArea');
+  printArea.innerHTML = '';
+  const els = rows.map(row => {
+    const el = bcBuildLabel(row);
+    printArea.appendChild(el);
+    return el;
+  });
+  const maxW = BC_LABEL_MAX_W_IN * BC_PX_PER_IN;
+  for (const el of els) {
+    const t = el.querySelector('.lbl-sku-text');
+    if (t) bcFitLabelText(t, t.textContent, maxW);
+  }
+  return els;
+}
+
+// ⚠️ **انتظار رسم فعلي قبل `window.print()`.** الـ SVG بيتضاف ديناميكيًا،
+//    والطباعة من غير الانتظار ده بتطلّع ورق **بلا باركود**.
+//    `requestAnimationFrame` مزدوجة بتضمن إن المتصفح خلص layout + paint —
+//    أدق من `setTimeout` بمدة ثابتة (بتعدّي في الاختبار وتقع على جهاز أبطأ).
+function bcFirePrint() {
+  requestAnimationFrame(() => requestAnimationFrame(() => window.print()));
+}
+
+// ══ §LABEL-END — آخر ماكينة الليبل ══
+
+// ══════════════════════════════════════════════════════════════
+// §PACK-LABELS — طباعة باركود منتجات الأوردر من شاشة التغليف (v1.27.0)
+// ══════════════════════════════════════════════════════════════
+//
+// قرار أحمد 16-09-2026: الموظف واقف على الأوردر في شاشة التغليف ومحتاج
+// ليبلات منتجاته — من غير ما يسيب الشاشة ويفتح `sku-barcode.html`.
+//
+// ✅ **صفر نداء للـ Worker** — `currentItems` جاية من رد `get_order` أصلاً
+//    وفيها `sku` و`barcode` و`quantity` لكل بند.
+//
+// 🔴 **بتطبع بنود المرحلة اللي بتتغلّف دلوقتي** (S1 أو S2 بعد
+//    `analyzeStage`)، بينما Worker الباركود بيرجّع **كل** البنود الفعّالة
+//    بلا أي تفرقة S1/S2. يعني على أوردر استبدال المساران بيدّوا
+//    **مجموعتين ليبلات مختلفتين** — والطباعة من هنا هي الأدق. فرق سلوك
+//    مقصود وموثّق، مش باج.
+//
+// 🔴 **قرارات أحمد الصريحة في التمريرة دي — متتغيّرش من غير قرار جديد:**
+//    ① **صفر تسجيل في D1** للطباعة اللي بتحصل من هنا. الصفحة **مابتناديش**
+//       `log_print` ومابتناديش Worker الباركود خالص، فـ`PAGE_WORKERS`
+//       فضلت `['pack']` وحارس النسخة لسه بيسمّي Worker واحد. الثمن مقبول
+//       بقرار: الطباعة من التغليف **مالهاش أثر في تاب سجل باركود SKU**.
+//    ② **مفيش أي تعديل على البنود ولا على عدد النسخ** من الشاشة دي —
+//       نسخة لكل قطعة هتخرج (`quantity`) وخلاص. عايز تعدّل؟ `sku-barcode.html`.
+//    ③ **صفر نافذة تأكيد** — الضغطة بتفتح نافذة الطابعة على طول.
+//
+// ⚠️ **وصنف بلا `barcode` بيتقال بالاسم.** أحمد أكّد إن ده مالوش وجود على
+//    المتجر، والحارس ده **مش مراجعة للكلام ده** — هو منع لحفرة صامتة:
+//    ليبل ناقص في السكوت = قطعة بتخرج من المخزن من غير باركود. التوست
+//    **مابيمنعش الطباعة** — باقي الليبلات بتطلع عادي.
+function packPrintLabels() {
+  // 🔴 المكتبة من CDN — لو الشبكة حاجباه، الفشل لازم يبقى **معلن**.
+  //    من غير الحارس ده الطابعة بتطلّع ورق فيه النص من غير خطوط.
+  if (!bcLibReady()) {
+    showToast('مكتبة الباركود (JsBarcode) ما اتحمّلتش — اعمل ريفريش، ولو استمرت المشكلة الشبكة بتحجب jsdelivr.', 'error', 8000);
+    return;
+  }
+
+  const rows = [], noBarcode = [];
+  for (const it of currentItems) {
+    if (!it.barcode) { noBarcode.push(it.sku || it.title || '—'); continue; }
+    // نسخة لكل قطعة هتخرج من المخزن — نفس قاعدة `sku-barcode.html` بالحرف.
+    for (let c = 0; c < (it.quantity || 0); c++) rows.push(it);
+  }
+
+  if (noBarcode.length) {
+    showToast(`⚠️ مالهاش Barcode فمش هتتطبع: ${noBarcode.join(' · ')}`, 'warning', 9000);
+  }
+  if (!rows.length) {
+    showToast('مفيش أي صنف بـ Barcode في الأوردر ده', 'warning');
+    return;
+  }
+
+  bcRenderLabels(rows);
+  bcFirePrint();
+}
+
+// ⚠️ **الفوكس لازم يرجع لمربع السكان بعد ما نافذة الطابعة تتقفل** — الشاشة
+//    دي بتتساق بالسكانر، ومربع فقد الفوكس معناه إن الموظف بيسكن قطعة
+//    **وماتحصلش حاجة**. و`afterprint` بيتطلّق سواء طبع أو دوس Cancel،
+//    والحالتين عايزين نفس الرجوع.
+// ⚠️ الـ listener بيتربط **مرة واحدة عند التحميل** — ربطه جوّه
+//    `packPrintLabels` كان هيراكم listener على كل ضغطة.
+window.addEventListener('afterprint', () => {
+  if (document.getElementById('subscreenCheck').style.display === 'none') return;
+  setTimeout(() => document.getElementById('barcodeScanInput').focus(), 100);
+});
 
 // ══════════════════════════════════════════════════════════════
 // Init
