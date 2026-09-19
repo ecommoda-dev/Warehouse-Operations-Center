@@ -145,7 +145,7 @@ const WOC_WORKERS = {
   warehouse:{ url: 'https://package-transfer-to-warehouse-worker.ecommoda-dev.workers.dev', min: '1.0.0', label: 'قسم استلام المرتجعات' },
 };
 
-const TOOL_VERSION = 'v1.29.0';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.30.0';                      // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const WOC_APP_ID   = 'warehouse_ops_center';         // قيمة `tool` في D1 — login/logout بس
 const SHOP_HANDLE  = '6c7e1a-53';
@@ -699,13 +699,21 @@ function wocOfficeGate(o) {
 // بيرجّع المؤهلين بس، بترتيب **الأقدم تغليفًا الأول** — الطرد اللي قاعد من
 // الصبح هو اللي المفروض يتنقل الأول، والترتيب بتاريخ الأوردر كان هيحط طرد
 // اتغلّف دلوقتي فوق طرد قاعد من امبارح.
+// ⚠️ **و`whereabouts` بيتلزق على الصف زي `wocWarehouseQueue` بالظبط** —
+//    عمود «موقع الشحنة» في `office-transfer.html` بيقرا منه. والقيم اللي
+//    ممكن توصل هنا **اتنين بس** (`Warehouse` أو فاضي)، لأن البوابة فوق
+//    بتستبعد `Office` و`Courier` وأي قيمة بره القايمة قبل ما يوصل الصف.
+//    🔴 يعني العمود ده **مش تكرار لعمود المرتجعات** — هناك بيفرّق بين تلات
+//       مصادر رجوع، وهنا بيجاوب سؤال واحد: «إحنا مسجّلين إن الطرد في المخزن
+//       ولا لسه ما اتسجّلش؟».
 function wocOfficeQueue(orders) {
   const out = [];
   for (const o of orders || []) {
     const g = wocOfficeGate(o);
     if (g.eligible) out.push({ ...o, machine: g.machine,
                                packedAt: g.machine === 's1' ? o.packedAtS1 : o.packedAtS2,
-                               packedBy: g.machine === 's1' ? o.packedByS1 : o.packedByS2 });
+                               packedBy: g.machine === 's1' ? o.packedByS1 : o.packedByS2,
+                               whereabouts: (g.machine === 's1' ? o.whereaboutsS1 : o.whereaboutsS2) || null });
   }
   out.sort((a, b) => String(a.packedAt || '').localeCompare(String(b.packedAt || '')));
   return out;
@@ -793,13 +801,16 @@ function wocWarehouseGate(o) {
   return { eligible: true, machine, code: 'ok', reason: '' };
 }
 
-// بيرجّع المؤهلين بس، بترتيب **الأقدم `updatedAt` الأول**.
-// 🔴 **الترتيب مختلف عن `wocOfficeQueue` عن قصد.** هناك وقت التغليف هو وقت
-//    الانتظار (الطرد اتغلّف ومستني يتنقل). هنا التغليف ممكن يكون من شهر
-//    والرجوع من ساعة — فوقت التغليف **مابيقولش حاجة عن الانتظار**، و
-//    `updatedAt` أقرب أثر لتحوّل الحالة لـ`Returned`/`Cancelled`.
-// ⚠️ وهو **تقريب مش تسجيل** — أي تعديل تاني على الأوردر بيحرّكه، عشان كده
-//    العمود في الصفحة اسمه «آخر تحديث» بالحرف مش «وقت الرجوع».
+// بيرجّع المؤهلين بس، بترتيب **الأقدم تغليفًا الأول** — نفس ترتيب
+// `wocOfficeQueue` بالحرف.
+// 🔴 **كان بترتيب `updatedAt`، واتشال بقرار أحمد 19-09-2026 مع العمود نفسه.**
+//    `updatedAt` كان **تقريب مش تسجيل**: شوبيفاي مالهاش حقل بيقول «الطرد رجع
+//    إمتى»، والقيمة بتتحرّك مع أي تعديل — وعملية جماعية واحدة كانت بتخلّي
+//    صفوف كتير تقول نفس التاريخ، فالترتيب نفسه كان مبني على رقم مش بيقيس
+//    الانتظار. وقت التغليف **مش مثالي هنا** (الطرد ممكن يكون اتغلّف من شهر)،
+//    بس هو **وقت مسجّل فعلاً** بدل تقريب بيتحرّك لوحده.
+// ⛔ ممنوع الرجوع لـ`updatedAt` — لا كترتيب ولا كعمود — إلا لما يبقى فيه
+//    تسجيل حقيقي لوقت الرجوع.
 function wocWarehouseQueue(orders) {
   const out = [];
   for (const o of orders || []) {
@@ -809,7 +820,7 @@ function wocWarehouseQueue(orders) {
                                packedBy: g.machine === 's1' ? o.packedByS1 : o.packedByS2,
                                whereabouts: (g.machine === 's1' ? o.whereaboutsS1 : o.whereaboutsS2) || null });
   }
-  out.sort((a, b) => String(a.updatedAt || '').localeCompare(String(b.updatedAt || '')));
+  out.sort((a, b) => String(a.packedAt || '').localeCompare(String(b.packedAt || '')));
   return out;
 }
 

@@ -58,45 +58,45 @@ const browser = await chromium.launch(launchOpts);
 const RAW = [
   // ✅ مؤهل — مرتجع راجع من المكتب
   { orderId:'7212244533570', orderName:'#54727', createdAt:'2026-09-02T08:00:00Z',
-    updatedAt:'2026-09-18T10:00:00Z', cancelledAt:null,
+    cancelledAt:null,
     customer:'أحمد سمير', itemsQty:2, total:'1825.00', zone:'Cairo+Giza', courier:'Saif',
     s1:'Returned', s2:null, packedAtS1:'2026-09-04T14:29:48Z', packedAtS2:null,
     packedByS1:'Mohammed Tarek', packedByS2:null, whereaboutsS1:'Office', whereaboutsS2:null },
   // 🔴 ✅ **الصف اللي البند التاني اتكتب عشانه** — ملغي، ولازم يبقى **مؤهل**.
   //    في `office-check.mjs` الصف ده مستبعَد؛ هنا لو اتستبعد فالحارس اتنسخ غلط.
   { orderId:'7212244533571', orderName:'#54580', createdAt:'2026-09-03T08:00:00Z',
-    updatedAt:'2026-09-17T09:00:00Z', cancelledAt:null,
+    cancelledAt:null,
     customer:'منى فؤاد', itemsQty:1, total:'990.00', zone:'Show_Room', courier:'Showroom',
     s1:'Cancelled', s2:null, packedAtS1:'2026-09-05T09:23:01Z', packedAtS2:null,
     packedByS1:'Abo Selim', packedByS2:null, whereaboutsS1:'Courier', whereaboutsS2:null },
   // ✅ مؤهل — الملغي على شوبيفاي نفسها (`cancelledAt`) والحالة لسه `Confirmed`
   { orderId:'7212244533572', orderName:'#54296', createdAt:'2026-09-06T08:00:00Z',
-    updatedAt:'2026-09-16T12:00:00Z', cancelledAt:'2026-09-16T12:00:00Z',
+    cancelledAt:'2026-09-16T12:00:00Z',
     customer:'كريم لطفي', itemsQty:1, total:'1500.00', zone:'Cairo+Giza', courier:'Saif',
     s1:'Confirmed', s2:null, packedAtS1:'2026-09-08T06:43:11Z', packedAtS2:null,
     packedByS1:'Abo Selim', packedByS2:null, whereaboutsS1:null, whereaboutsS2:null },
   // ✅ مؤهل — دورة استبدال مرتجعة **ومتغلّفة على S2**
   { orderId:'7212244533573', orderName:'#54301', createdAt:'2026-08-30T08:00:00Z',
-    updatedAt:'2026-09-15T08:00:00Z', cancelledAt:null,
+    cancelledAt:null,
     customer:'كريمة لطفي', itemsQty:1, total:'1500.00', zone:'Cairo+Giza', courier:'Sobhy',
     s1:'Delivered', s2:'Returned', packedAtS1:'2026-09-01T06:43:11Z', packedAtS2:'2026-09-09T08:20:10Z',
     packedByS1:'Abo Selim', packedByS2:'Marwan Mohammed', whereaboutsS1:null, whereaboutsS2:'Office' },
 
   // ❌ بوسطة — مرتجعاتها ليها أداتها
   { orderId:'7212244533574', orderName:'#54777', createdAt:'2026-09-10T08:00:00Z',
-    updatedAt:'2026-09-18T08:00:00Z', cancelledAt:null,
+    cancelledAt:null,
     customer:'سارة محمود', itemsQty:1, total:'700.00', zone:'Other_Regions', courier:'Bosta',
     s1:'Returned', s2:null, packedAtS1:'2026-09-11T10:00:00Z', packedAtS2:null,
     packedByS1:'Abo Selim', packedByS2:null, whereaboutsS1:null, whereaboutsS2:null },
   // ❌ ما اتغلّفش — ملغي قبل التغليف، يعني **مفيهوش طرد أصلاً**
   { orderId:'7212244533575', orderName:'#54773', createdAt:'2026-09-12T08:00:00Z',
-    updatedAt:'2026-09-18T08:00:00Z', cancelledAt:null,
+    cancelledAt:null,
     customer:'هبة علي', itemsQty:1, total:'500.00', zone:'Cairo+Giza', courier:null,
     s1:'Cancelled', s2:null, packedAtS1:null, packedAtS2:null,
     packedByS1:null, packedByS2:null, whereaboutsS1:null, whereaboutsS2:null },
   // ❌ في المخزن خلاص
   { orderId:'7212244533576', orderName:'#54690', createdAt:'2026-09-01T08:00:00Z',
-    updatedAt:'2026-09-14T08:00:00Z', cancelledAt:null,
+    cancelledAt:null,
     customer:'ياسمين رأفت', itemsQty:1, total:'800.00', zone:'Cairo+Giza', courier:null,
     s1:'Returned', s2:null, packedAtS1:'2026-09-03T09:30:00Z', packedAtS2:null,
     packedByS1:'Abo Selim', packedByS2:null, whereaboutsS1:'Warehouse', whereaboutsS2:null },
@@ -104,7 +104,7 @@ const RAW = [
   //    **S1 بس**. الفحص بـ`s1_packing_date_time` كان هيعدّيه — والطرد ده
   //    **ما اتغلّفش**.
   { orderId:'7212244533577', orderName:'#54173', createdAt:'2026-08-28T08:00:00Z',
-    updatedAt:'2026-09-13T08:00:00Z', cancelledAt:null,
+    cancelledAt:null,
     customer:'نهى صبري', itemsQty:1, total:'1200.00', zone:'Cairo+Giza', courier:'Sobhy',
     s1:'Delivered', s2:'Returned', packedAtS1:'2026-09-02T11:06:53Z', packedAtS2:null,
     packedByS1:'Abo Selim', packedByS2:null, whereaboutsS1:null, whereaboutsS2:null },
@@ -112,14 +112,16 @@ const RAW = [
   //    لو الحالة اتشالت من الشرط، الصف ده بيظهر — والأداة بتبقى بتسجّل رجوع
   //    لطرود لسه **خارجة**.
   { orderId:'7212244533579', orderName:'#54888', createdAt:'2026-09-14T08:00:00Z',
-    updatedAt:'2026-09-18T11:00:00Z', cancelledAt:null,
+    cancelledAt:null,
     customer:'طارق فهمي', itemsQty:1, total:'640.00', zone:'Cairo+Giza', courier:'Saif',
     s1:'Ready', s2:null, packedAtS1:'2026-09-15T10:00:00Z', packedAtS2:null,
     packedByS1:'Abo Selim', packedByS2:null, whereaboutsS1:'Warehouse', whereaboutsS2:null },
 ];
 // 🔴 الترتيب هنا **جزء من البند** — `wocWarehouseQueue` بترتّب بالأقدم
-//    `updatedAt` الأول. الترتيب بتاريخ الأوردر كان هيدّي ترتيب تاني خالص.
-const ELIGIBLE_NAMES = ['#54301', '#54296', '#54580', '#54727'];
+//    **تغليفًا** الأول (زي `wocOfficeQueue` بالحرف). الترتيب بتاريخ الأوردر
+//    كان هيدّي ترتيب تاني خالص، و`updatedAt` **اتشال بالكامل** في v1.30.0.
+// ⚠️ ولاحظ إن `#54301` بيترتّب بوقت تغليف **S2** مش S1 — الماكينة بتاعته.
+const ELIGIBLE_NAMES = ['#54727', '#54580', '#54296', '#54301'];
 
 const SCAN_REPLIES = {
   // نجاح
@@ -257,7 +259,7 @@ console.log('① الجلسة والهيدر الموحّد');
      'زرار الخروج عليه `aria-label` (الـ✕ لوحده مايتقريش عند قارئ الشاشة)');
 
   const ver = (await page.locator('.hbtn.ver-btn').first().textContent() || '').trim();
-  is(/v1\.29\.\d+/.test(ver), 'زرار النسخة بيقول نسخة الهب', ver);
+  is(/v1\.30\.\d+/.test(ver), 'زرار النسخة بيقول نسخة الهب', ver);
   const clBadge = (await page.locator('#clLatestVerBadge').textContent() || '').trim();
   is(clBadge === ver.replace(/[^v0-9.]/g, ''), 'بادج سجل التحديثات == نسخة الهب', `${clBadge} ≠ ${ver}`);
 
@@ -316,9 +318,9 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
   is(names.some(n => n.includes('#54301')),
      'صف S2 المرتجع والمتغلّف فعلاً (وقت تغليف S2 موجود) **ظاهر**');
 
-  // 🔴 الترتيب جزء من العقد — الأقدم `updatedAt` الأول
-  is(names[0].includes('#54301') && names[names.length - 1].includes('#54727'),
-     '🔴 الترتيب بالأقدم `updatedAt` الأول — الطرد اللي مستني من زمان فوق',
+  // 🔴 الترتيب جزء من العقد — الأقدم **تغليفًا** الأول
+  is(names[0].includes('#54727') && names[names.length - 1].includes('#54301'),
+     '🔴 الترتيب بالأقدم تغليفًا الأول — نفس ترتيب طابور المكتب بالحرف',
      names.join(' · '));
 
   const cnt = (await page.locator('#rqCount').textContent() || '').trim();
@@ -345,11 +347,26 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
   is((await rowTxt('#54301')).includes('استبدال'),
      'صف S2 عليه «استبدال» — باركود الأوردر واحد للطردين فالتفرقة لازم تتقال');
 
-  // عمود «الطرد فين دلوقتي» — العهدة قبل السكانة
+  // عمود «موقع الشحنة» — العهدة قبل السكانة
   is((await rowTxt('#54727')).includes('في المكتب'), 'عمود العهدة بيقول «في المكتب» للراجع من المكتب');
   is((await rowTxt('#54580')).includes('مع المندوب'), 'وبيقول «مع المندوب» للراجع من المندوب');
   is((await rowTxt('#54296')).includes('مش مسجّل'),
      '🔴 العهدة الفاضية «مش مسجّل» مش «في المخزن» — «مش معروف» ≠ «هنا»');
+
+  // 🔴 **أعمدة الجدول** — الاسم الموحّد، و`updatedAt` اتشال بالكامل (v1.30.0)
+  const heads = await page.$$eval('#rqTableWrap thead th', ths => ths.map(t => t.textContent.trim()));
+  is(heads.includes('موقع الشحنة'),
+     '🔴 العمود اسمه «موقع الشحنة» — نفس اسمه في طابور المكتب بالحرف', heads.join(' | '));
+  is(!heads.some(h => h.includes('آخر تحديث')),
+     '🔴 مفيش عمود «آخر تحديث» ولا «الوقت منذ آخر تحديث» — `updatedAt` كان تقريب بيتقري تسجيل',
+     heads.join(' | '));
+  is(!heads.includes('الطرد فين دلوقتي'), 'والاسم القديم اتشال خالص', heads.join(' | '));
+  const cells = await page.$$eval('#rqTableBody tr:first-child td', td => td.length);
+  is(cells === heads.length, 'خلايا الصف == أعمدة الهيدر', `${cells} ≠ ${heads.length}`);
+  // ⛔ ولا أثر لـ`updatedAt` في الصفحة نفسها
+  const pageSrc = await page.content();
+  is(!/data-rq-upd|rqSinceUpdate/.test(pageSrc),
+     '🔴 صفر أثر لـ`rqSinceUpdate`/`data-rq-upd` في الصفحة');
 
   // النافذة الزمنية بتتقال على الشاشة، وجاية من الرد مش مكتوبة بالإيد
   // 🔴 **الأرضية مكتوبة على الشاشة وجاية من الرد** — لو الصفحة كتبتها
