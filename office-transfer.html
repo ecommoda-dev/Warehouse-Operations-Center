@@ -449,7 +449,18 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
            واحد للنسخة (Standards #24). الرقم هنا **مش** مكتوب بإيد. -->
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.26.1</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.29.0</span>
+          <span class="cl-ver-date">19-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>الطابور بقى بأرضية تاريخ أوردر ثابتة: 01/04/2026.</b> الأوردرات الأقدم من كده <b>مش بتظهر في القايمة</b>. ⚠️ <b>والأرضية عرض بس</b> — الأوردر الأقدم منها <b>بيتسكن عادي</b> والتسجيل بيتم، هو مش في القايمة وبس.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>السطر تحت عنوان الطابور بقى بيقول الأرضية بالتاريخ — <b>والتاريخ جاي من رد الـ Worker</b> مش مكتوب في الصفحة. ⚠️ ومعاها <b>الـ Worker لازم يبقى <code>1.1.0</code></b>: على نسخة أقدم السطر بيختفي والقايمة بترجع لكل الأوردرات.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.26.1</span>
           <span class="cl-ver-date">15-09-2026</span>
         </div>
         <ul class="cl-items">
@@ -717,7 +728,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <div class="rq-head">
             <div>
               <div class="rq-title">🏢 جاهز للتسليم للمكتب</div>
-              <div class="rq-sub">اتغلّف ولسه في المخزن · قاهرة+جيزة وشو روم</div>
+              <div class="rq-sub" id="rqSub">اتغلّف ولسه في المخزن · قاهرة+جيزة وشو روم</div>
             </div>
             <div class="count-badge">
               <span class="count-num" id="rqCount">—</span>
@@ -2276,6 +2287,20 @@ async function rqLoad(silent) {
     trunc.style.display = data.truncated ? '' : 'none';
     if (data.truncated) trunc.textContent =
       '⚠️ فيه أوردرات أكتر من الحد المعروض — فيه طرود مش ظاهرة في القايمة. اسكن عادي، والـ Worker هو اللي بيحكم.';
+
+    // ⚠️ **أرضية التاريخ بتتقال على الشاشة** (v1.29.0 · قرار أحمد
+    //    19-09-2026) — الطابور بيعرض من تاريخ معيّن فأحدث، ولو الأرضية دي
+    //    مكتوبة في الـ Worker لوحده الموظف بيقرا القايمة كأنها **كل**
+    //    الجاهز. ⛔ ممنوع تتكتب هنا بالإيد: بتييجي من الرد نفسه، وإلا
+    //    تاريخ الواجهة وتاريخ الـ Worker يفترقوا في صمت (درس R1).
+    //    ⚠️ والسطر ده **نسخة طبق الأصل من `warehouse-return.html`** —
+    //    الأرضية واحدة في الأداتين، وأي تعديل يتعمل في الاتنين في نفس
+    //    التمريرة.
+    const sub = document.getElementById('rqSub');
+    const since = wocYmdToDMY(data.ordersSince);
+    if (sub && since) {
+      sub.textContent = `اتغلّف ولسه في المخزن · قاهرة+جيزة وشو روم · أوردرات من ${since}`;
+    }
   } catch (err) {
     // 🔴 **الفشل بيتقال، والرقم القديم بيفضل معروض لو كان فيه واحد.**
     //    و«تعذّر» بتتعرض بس لو مافيش أي جلب ناجح قبل كده (قاعدة ٤).

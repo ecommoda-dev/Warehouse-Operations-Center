@@ -124,7 +124,14 @@ const WOC_WORKERS = {
   // ⚠️ الأداة دي **مالهاش نسخة مستقلة** — الريبو بتاعها Worker وبس، فمفيش
   //    مفتاح `localStorage` تاني ومفيش سر قديم: `WORKER_SECRET` بيتحط بقيمة
   //    مجموعة `warehouse_ops` من أول يوم.
-  office:   { url: 'https://package-transfer-to-office-worker.ecommoda-dev.workers.dev', min: '1.0.0', label: 'قسم تسليمات المكتب' },
+  // 🔴 `1.1.0` = **أول نسخة بتحط أرضية `created_at >= 2026-04-01`** على
+  //    طابور المكتب وبترجّع `ordersSince` في الرد (هب v1.29.0 · قرار أحمد
+  //    19-09-2026). على `1.0.0` الطابور بيرجّع **كل** أوردرات `Ready` مهما
+  //    كان قِدَمها، والسطر اللي تحت عنوان الطابور **بيختفي** (الواجهة
+  //    بتعرضه من `ordersSince` وبس) — يعني الموظف بيقرا قايمة أطول بلا أي
+  //    سطر يقول إن النطاق اتغيّر. ⚠️ التدهور **معلن جزئيًا** (السطر بيختفي)
+  //    بس **الرقم بيكبر في صمت**، فالحارس هنا بيسمّي السبب.
+  office:   { url: 'https://package-transfer-to-office-worker.ecommoda-dev.workers.dev', min: '1.1.0', label: 'قسم تسليمات المكتب' },
   // 🔴 قسم استلام المرتجعات — Worker جديد بالكامل (هب v1.28.0).
   // `1.0.0` = أول نسخة، ومفيش أي نسخة أقدم منشورة — فالحارس هنا **مش** بيمنع
   // rollback، هو بيمسك الحالة الوحيدة الممكنة: الـ Worker ما اتنشرش أصلاً أو
@@ -138,7 +145,7 @@ const WOC_WORKERS = {
   warehouse:{ url: 'https://package-transfer-to-warehouse-worker.ecommoda-dev.workers.dev', min: '1.0.0', label: 'قسم استلام المرتجعات' },
 };
 
-const TOOL_VERSION = 'v1.28.0';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.29.0';                      // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const WOC_APP_ID   = 'warehouse_ops_center';         // قيمة `tool` في D1 — login/logout بس
 const SHOP_HANDLE  = '6c7e1a-53';
@@ -333,6 +340,18 @@ function formatDateTime(iso) {
 function formatDate(iso) {
   const d = toCairo(iso), pad = n => String(n).padStart(2, '0');
   return `📅 ${pad(d.getUTCDate())}/${pad(d.getUTCMonth()+1)}/${d.getUTCFullYear()}`;
+}
+// ── أرضية تاريخ الأوردر — `YYYY-MM-DD` → `DD/MM/YYYY` ─────────
+// 🔴 **في الـ shell مش في الصفحة** — `office-transfer.html` و
+//    `warehouse-return.html` الاتنين بيعرضوا نفس السطر من نفس الرد، ونسخة
+//    في كل صفحة هي درس R1 بالحرف.
+// ⚠️ **ومافيهاش `new Date()`** — القيمة **تاريخ مجرّد** جاي من الـ Worker،
+//    و`new Date('2026-04-01')` بتتقرا UTC وبتتعرض بتوقيت الجهاز، فأرضية
+//    `01/04` كانت ممكن تتعرض `31/03` على جهاز غرب جرينتش. القصّ النصّي هنا
+//    **مقصود**: مفيش وقت في القيمة أصلاً عشان يتحوّل.
+function wocYmdToDMY(ymd) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(ymd || '').trim());
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : null;
 }
 function formatTimeOnly(iso) {
   const d = toCairo(iso), pad = n => String(n).padStart(2, '0');

@@ -127,7 +127,9 @@ const SCAN_REPLIES = {
          warnings:['الشحنة الأصلية ودورة الاستبدال الاتنين حالتهم Ready'] }),
 };
 
-const DIAG = { ok:false, version:'1.0.0', checks:[
+const ORDERS_SINCE = '2026-04-01';
+
+const DIAG = { ok:false, version:'1.1.0', checks:[
   { ok:true,  label:'متغيرات وأسرار الـ Worker', detail:'SHOP_DOMAIN=22 حرف · WORKER_SECRET=40 حرف' },
   { ok:false, label:'تعريف package_whereabouts_s1', detail:'type=single_line_text_field',
     hint:'قيمة «Office» مش في قايمة الاختيار' },
@@ -146,7 +148,8 @@ function makeStub() {
       body = { ok:true, employees:[{ username:'tester', display_name:'الموظف التجريبي' }] };
     // 🔴 **خام** — نفس عقد الـ Worker الحقيقي: `Ready` بس بلا أي فلترة أهلية.
     else if (action === 'get_ready_to_office')
-      body = { ok:true, orders:RAW, truncated:false, fetchedAt:new Date().toISOString() };
+      body = { ok:true, orders:RAW, truncated:false, ordersSince:ORDERS_SINCE,
+               fetchedAt:new Date().toISOString() };
     else if (action === 'scan') {
       const b = JSON.parse(route.request().postData() || '{}');
       scanCalls.push(b);
@@ -222,7 +225,7 @@ console.log('① الجلسة والهيدر الموحّد');
      'زرار الخروج عليه `aria-label` (الـ✕ لوحده مايتقريش عند قارئ الشاشة)');
 
   const ver = (await page.locator('.hbtn.ver-btn').first().textContent() || '').trim();
-  is(/v1\.28\.\d+/.test(ver), 'زرار النسخة بيقول نسخة الهب', ver);
+  is(/v1\.29\.\d+/.test(ver), 'زرار النسخة بيقول نسخة الهب', ver);
   const clBadge = (await page.locator('#clLatestVerBadge').textContent() || '').trim();
   is(clBadge === ver.replace(/[^v0-9.]/g, ''), 'بادج سجل التحديثات == نسخة الهب', `${clBadge} ≠ ${ver}`);
 
@@ -289,6 +292,15 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
      'مفيش مربعات اختيار — الطابور عرض بحت');
   is((await page.locator('#rqAgo').textContent() || '') !== 'لسه ما اتحدّثش',
      'لوحة «آخر تحديث» اتملّت بعد الجلب');
+
+  // 🔴 أرضية تاريخ الأوردر (v1.29.0) — **جاية من الرد مش مكتوبة في الصفحة**
+  const subTxt  = (await page.locator('#rqSub').textContent() || '');
+  const wantDay = await page.evaluate((d) => wocYmdToDMY(d), ORDERS_SINCE);
+  is(subTxt.includes(wantDay),
+     '🔴 أرضية تاريخ الأوردر مكتوبة على الشاشة — والتاريخ جاي من رد الـ Worker',
+     `${subTxt} ⊅ ${wantDay}`);
+  is(wantDay === '01/04/2026',
+     '🔴 الأرضية بتتعرض `01/04/2026` — مش بيوم ناقص من تحويل توقيت', String(wantDay));
   is(errors.length === 0, 'صفر أخطاء في الكونسول', errors.join(' | '));
 
   // ⑥ نفس الرقم على الشاشة الرئيسية — من **نفس** الدالة و**نفس** الـ endpoint

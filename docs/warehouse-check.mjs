@@ -156,12 +156,12 @@ const SCAN_REPLIES = {
 
 const DIAG = { ok:false, version:'1.0.0', checks:[
   { ok:true,  label:'متغيرات وأسرار الـ Worker', detail:'SHOP_DOMAIN=22 حرف · WORKER_SECRET=40 حرف' },
-  { ok:true,  label:'نافذة الطابور', detail:'آخر 30 يوم (من 2026-08-20)' },
+  { ok:true,  label:'أرضية تاريخ الأوردر', detail:'الطابور بيعرض أوردرات من 2026-04-01 فأحدث' },
   { ok:false, label:'تعريف package_whereabouts_s1', detail:'type=single_line_text_field',
     hint:'قيمة «Warehouse» مش في قايمة الاختيار' },
 ]};
 
-const WINDOW_DAYS = 30;
+const ORDERS_SINCE = '2026-04-01';
 const scanCalls = [];
 const logCalls  = [];
 function makeStub() {
@@ -175,8 +175,8 @@ function makeStub() {
       body = { ok:true, employees:[{ username:'tester', display_name:'الموظف التجريبي' }] };
     // 🔴 **خام** — نفس عقد الـ Worker الحقيقي: مرتجع/ملغي بلا أي فلترة أهلية.
     else if (action === 'get_ready_to_warehouse')
-      body = { ok:true, orders:RAW, truncated:false, windowDays:WINDOW_DAYS,
-               windowFrom:'2026-08-20', fetchedAt:new Date().toISOString() };
+      body = { ok:true, orders:RAW, truncated:false, ordersSince:ORDERS_SINCE,
+               fetchedAt:new Date().toISOString() };
     else if (action === 'scan') {
       const b = JSON.parse(route.request().postData() || '{}');
       scanCalls.push(b);
@@ -257,7 +257,7 @@ console.log('① الجلسة والهيدر الموحّد');
      'زرار الخروج عليه `aria-label` (الـ✕ لوحده مايتقريش عند قارئ الشاشة)');
 
   const ver = (await page.locator('.hbtn.ver-btn').first().textContent() || '').trim();
-  is(/v1\.28\.\d+/.test(ver), 'زرار النسخة بيقول نسخة الهب', ver);
+  is(/v1\.29\.\d+/.test(ver), 'زرار النسخة بيقول نسخة الهب', ver);
   const clBadge = (await page.locator('#clLatestVerBadge').textContent() || '').trim();
   is(clBadge === ver.replace(/[^v0-9.]/g, ''), 'بادج سجل التحديثات == نسخة الهب', `${clBadge} ≠ ${ver}`);
 
@@ -352,14 +352,19 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
      '🔴 العهدة الفاضية «مش مسجّل» مش «في المخزن» — «مش معروف» ≠ «هنا»');
 
   // النافذة الزمنية بتتقال على الشاشة، وجاية من الرد مش مكتوبة بالإيد
-  // ⚠️ المقارنة بنص `arDay` **المحسوب في الصفحة** مش بنص مكتوب هنا — لو
-  //    الاختبار كتب الرقم بإيده، أي تغيير في صياغة `arDay` بيفشّل البند
-  //    **لسبب مالوش علاقة بالكود**.
-  const subTxt = (await page.locator('#rqSub').textContent() || '');
-  const wantWin = await page.evaluate((d) => arDay(d), WINDOW_DAYS);
-  is(subTxt.includes(wantWin),
-     '🔴 نافذة الطابور مكتوبة على الشاشة — والرقم جاي من رد الـ Worker',
-     `${subTxt} ⊅ ${wantWin}`);
+  // 🔴 **الأرضية مكتوبة على الشاشة وجاية من الرد** — لو الصفحة كتبتها
+  //    بالإيد، تغيير الأرضية في الـ Worker بيسيب الشاشة بتقول القديم
+  //    **في صمت** (درس R1).
+  // ⚠️ والمقارنة بنص `wocYmdToDMY` **المحسوب في الصفحة** مش بنص مكتوب هنا.
+  const subTxt  = (await page.locator('#rqSub').textContent() || '');
+  const wantDay = await page.evaluate((d) => wocYmdToDMY(d), ORDERS_SINCE);
+  is(subTxt.includes(wantDay),
+     '🔴 أرضية تاريخ الأوردر مكتوبة على الشاشة — والتاريخ جاي من رد الـ Worker',
+     `${subTxt} ⊅ ${wantDay}`);
+  is(wantDay === '01/04/2026',
+     '🔴 الأرضية بتتعرض `01/04/2026` — مش بيوم ناقص من تحويل توقيت', String(wantDay));
+  is(!/يوم|آخر ٣٠|آخر 30/.test(subTxt),
+     '🔴 صفر أثر للنافذة المتحرّكة القديمة في السطر — الأرضية ثابتة مش «آخر N يوم»', subTxt);
 
   is(await page.locator('#rqTableBody input[type=checkbox]').count() === 0,
      'مفيش مربعات اختيار — الطابور عرض بحت');
@@ -548,6 +553,8 @@ console.log('⑤ السجل والفحص الذاتي');
   is(diagTxt.includes('قسم استلام المرتجعات'), 'الفحص الذاتي بيسمّي الـ Worker');
   is(diagTxt.includes('قيمة «Warehouse» مش في قايمة الاختيار'),
      '`hint` بيتعرض تحت الفحص الفاشل');
+  is(diagTxt.includes('2026-04-01'),
+     'الفحص الذاتي بيقول أرضية تاريخ الأوردر بالتاريخ');
   is(!/test-secret-0123456789/.test(diagTxt), '🔴 صفر قيمة سر في شاشة الفحص');
   is(errors.length === 0, 'صفر أخطاء في الكونسول', errors.join(' | '));
   await ctx.close();

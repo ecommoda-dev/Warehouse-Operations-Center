@@ -459,7 +459,19 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
            واحد للنسخة (Standards #24). الرقم هنا **مش** مكتوب بإيد. -->
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.28.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.29.0</span>
+          <span class="cl-ver-date">19-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>الطابور بقى بأرضية تاريخ أوردر ثابتة: 01/04/2026.</b> الأوردرات الأقدم من كده <b>مش بتظهر في القايمة</b>. ⚠️ <b>والأرضية عرض بس</b> — الأوردر الأقدم منها <b>بيتسكن عادي</b> والتسجيل بيتم، هو مش في القايمة وبس.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>نافذة الـ٣٠ يوم المتحرّكة اتشالت.</b> كانت بتفلتر بآخر تحديث، و<b>كانت بتخفي الطرد الراجع من شهرين بالظبط لما يبقى منسي فعلاً</b> — وهو الطرد اللي الأداة دي اتعملت عشانه.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>السطر تحت عنوان الطابور بقى بيقول الأرضية بالتاريخ — <b>والتاريخ جاي من رد الـ Worker</b> مش مكتوب في الصفحة.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.28.0</span>
           <span class="cl-ver-date">19-09-2026</span>
         </div>
         <ul class="cl-items">
@@ -2356,13 +2368,15 @@ async function rqLoad(silent) {
     if (data.truncated) trunc.textContent =
       '⚠️ فيه أوردرات أكتر من الحد المعروض — فيه طرود مش ظاهرة في القايمة. اسكن عادي، والـ Worker هو اللي بيحكم.';
 
-    // ⚠️ **النافذة بتتقال على الشاشة** — الطابور بيعرض آخر N يوم بس، ولو
-    //    الرقم ده مكتوب في الـ Worker لوحده الموظف بيقرا القايمة كأنها
-    //    **كل** المرتجعات. ⛔ ممنوع يتكتب هنا بالإيد: بييجي من الرد نفسه،
-    //    وإلا رقم الواجهة والـ Worker يفترقوا في صمت (درس R1).
+    // ⚠️ **أرضية التاريخ بتتقال على الشاشة** — الطابور بيعرض من تاريخ معيّن
+    //    فأحدث، ولو الأرضية دي مكتوبة في الـ Worker لوحده الموظف بيقرا
+    //    القايمة كأنها **كل** المرتجعات. ⛔ ممنوع تتكتب هنا بالإيد: بتييجي
+    //    من الرد نفسه، وإلا تاريخ الواجهة وتاريخ الـ Worker يفترقوا في صمت
+    //    (درس R1). وفيه بند في فحص المتصفح بيقفل ده.
     const sub = document.getElementById('rqSub');
-    if (sub && data.windowDays) {
-      sub.textContent = `مرتجع أو ملغي ولسه ما اترجّعش · قاهرة+جيزة وشو روم · آخر ${arDay(data.windowDays)}`;
+    const since = wocYmdToDMY(data.ordersSince);
+    if (sub && since) {
+      sub.textContent = `مرتجع أو ملغي ولسه ما اترجّعش · قاهرة+جيزة وشو روم · أوردرات من ${since}`;
     }
   } catch (err) {
     // 🔴 **الفشل بيتقال، والرقم القديم بيفضل معروض لو كان فيه واحد.**
