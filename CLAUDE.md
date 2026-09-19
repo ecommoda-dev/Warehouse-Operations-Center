@@ -2,13 +2,13 @@
 
 # مركز عمليات المخزن — Warehouse Operations Center (`Warehouse-Operations-Center`)
 
-![version](https://img.shields.io/badge/version-v1.30.0-blue)
+![version](https://img.shields.io/badge/version-v1.31.0-blue)
 
 **بتعمل إيه:** هب واحد لمحطة المخزن. الموظف بيدخل **مرة واحدة**، وبعدين
 بيتنقّل بين الطباعة والتغليف وحذف المنتج وتسليمات بوسطة وسكانر المرتجعات
 ورحلة الأوردر من غير ما يدخل تاني ومن غير ما يفتح تبويبات متفرقة.
 **مين بيستخدمها:** المخزن
-**الإصدار:** `v1.30.0` — **واحد للهب كله** (`TOOL_VERSION` في `shared/shell.js`)
+**الإصدار:** `v1.31.0` — **واحد للهب كله** (`TOOL_VERSION` في `shared/shell.js`)
 
 > 🔴 **الهب واجهة بحتة.** مفيش Worker جديد، مفيش `wrangler.toml`، مفيش
 > `index.js`، مفيش ربط Cloudflare Builds ومفيش Promote **من الريبو ده**.
@@ -3429,7 +3429,7 @@ Promote، صفر ترفيع لأي `min`، ومفيش قيمة `tool` جديدة
 > التانية لسه على بصمتها القديمة (بند في المسائل المفتوحة فوق) —
 > **البصمة ادعاء عن الملف، مش عن الريبو**.
 
-آخر مطابقة: 19-09-2026 · الهب `v1.30.0`
+آخر مطابقة: 19-09-2026 · الهب `v1.31.0`
 🔴 معلّقة: **إنشاء `package-transfer-to-warehouse-worker` + ربط Builds + سر
 `warehouse_ops` + OAuth (حاجز — أداة استلام المرتجعات مش شغّالة من غيرهم)** ·
 **تسجيل «استلام المرتجعات» ككاتب على `metafields_change` في
@@ -3439,16 +3439,34 @@ Promote، صفر ترفيع لأي `min`، ومفيش قيمة `tool` جديدة
 **تسجيل «تسليمات المكتب» ككاتب على `metafields_change` في
 `ecommoda-constants` §7** ·
 **تسجيل `--teal*` في `ecommoda-html-builder` (design-system)** ·
-**Promote لـ `order-printer-worker` v2.8.1 (حاجز — من غيره الورق بيخرج بلا تسجيل)** ·
-**Promote لـ `bosta-orders-shipped-scanner` v3.5.0 (حاجز للطابور)** ·
+**Promote لـ `order-printer-worker` v2.8.2 (حاجز — يشمل v2.8.1: من غيره الورق
+بيخرج بلا تسجيل + retry على OAuth)** ·
+**Promote لـ `bosta-orders-shipped-scanner` v3.6.1 (حاجز للطابور — يشمل
+v3.5.0 وv3.6.0)** ·
 **`WORKER_SECRET` = سر `warehouse_ops` على سكانرَي بوسطة (حاجز)** ·
-**Promote لـ Worker التغليف v2.6.0 (حاجز)** ·
+**Promote لـ Worker التغليف v2.7.1 (حاجز — يشمل v2.6.0)** ·
+**Promote لـ `Package-Transfer-To-Warehouse` v1.4.0 وPromote لـ
+`Package-Transfer-To-Office` v1.2.0 (§٨+§٩ — راجع v1.31.0 تحت)** ·
+**شبكة الأمان (تقرير دوري) للنافذة المتحرّكة الجديدة في أداتَي العهدة** ·
 تسجيل `order_sku_barcode_printer` و`rejected` في `ecommoda-constants` §7 ·
 مراجعة `print`/`pack`/`remove`/`journey`/`stats` على html-builder v6.6.0
 
 ---
 
-آخر تحديث: 19-09-2026 — v1.30.0 (§OFFICE-ONLY — طابور «استلام المرتجعات» بقى
+آخر تحديث: 19-09-2026 — v1.31.0 (🔴 **حل تجربة `docs/query-cost-experiment.md`
+— قرارات أحمد النهائية §٨ و§٩.** §٨: تفريق توقيت الخمس نداءات المتوازية في
+`index.html` (① — تأخير ٢٠٠ms بين إطلاق كل طابور) + `getAccessToken()` بقت
+بنفس انضباط `shopifyGQL` (retry + backoff) في الخمس Workers (② — تصحيح عام
+مش خاص بأداة واحدة). السبب: الخمس Workers بتشارك نفس الـ Custom App، وقياس
+حي لقى فشل جماعي (٤ من ٥ طوابير وقعوا مع بعض) لما الشاشة حمّلت الخمسة
+بالتوازي. §٩: «جاهز للرجوع للمخزن» و«جاهز للتسليم للمكتب» رجعوا لنافذة
+زمنية متحرّكة (`٢٥٠` يوم) بدل الأرضية الثابتة (`2026-04-01` من v1.29.0) —
+⚠️ **تراجع مُعلَن**، مقابل استقرار تكلفة الاستعلام على المدى الطويل بدل رفع
+سقف الصفحات المتكرر. صفر تغيير في أي عقد رد، صفر رفع لأي `min`. دليل مرجعي
+جديد `docs/shopify-query-cost-design-guide.md` — مسوّدة جاهزة لتحديث
+`ecommoda-worker-builder`)
+
+19-09-2026 — v1.30.0 (§OFFICE-ONLY — طابور «استلام المرتجعات» بقى
 بيعرض عهدة `Office` **بس**، والفاضي مستبعَد عن قصد · ⛔ فلتر عرض مش شرط أهلية،
 والـ Worker لسه بيقبل الباقي · ورسالة القايمة الفاضية بتسمّي الشرط ·
 وسقف استعلام الـ Worker اترفع من ٣٠٠ لـ**١٬٠٠٠** لكل استعلام (Worker → `1.2.0`)
