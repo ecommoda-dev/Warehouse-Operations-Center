@@ -291,6 +291,51 @@
           </button>
         </div>
       </a>
+      <!-- ══ صف خامس — «جاهز للرجوع للمخزن» (v1.28.0) ══
+           🔴 **الرقم بيعدّ الطرد الراجع اللي لسه ما اتسجّلش رجوعه**: زونه
+              قاهرة+جيزة أو شو روم · حالته `Returned` أو `Cancelled` (S1 أو
+              S2) · **اتغلّف فعلاً** · وعهدته لسه **مش** `Warehouse`.
+           🔴 **والصف ده معكوس الصف اللي فوقه بالظبط** — هناك الطرد **خارج**
+              للمكتب، وهنا **راجع** للمخزن. نفس الحقل، والفرق في شرط الأهلية
+              وفي القيمة المكتوبة.
+           ⛔ **وأخطر حاجة: الإلغاء.** في صف المكتب الملغي **مستبعَد**؛ هنا
+              هو **شرط أهلية**. نسخ الشرط من فوق بيفضّي الصف ده في صمت.
+           🔴 **العدّ من `wocWarehouseGate` في `shared/shell.js`
+              §WAREHOUSE-GATE** — **نفس** الدالة اللي `warehouse-return.html`
+              بتعدّ بيها بالحرف، على **نفس** رد الـ endpoint. ⛔ ممنوع أي
+              حساب أهلية هنا (درس R1).
+           ⚠️ **والرقم بيعدّ آخر ٣٠ يوم بس** — `Returned`/`Cancelled` حالتان
+              نهائيتان بتتراكم، والنافذة في الـ Worker. الطرد الأقدم من كده
+              **بيتسكن عادي** بس مش بيتعدّ هنا. -->
+      <a class="woc-row" href="warehouse-return.html">
+        <div class="woc-row-id">
+          <span class="woc-card-ico ico-blue">🏭</span>
+          <div>
+            <div class="woc-card-name">جاهز للرجوع للمخزن</div>
+            <div class="woc-card-desc">مرتجع أو ملغي ولسه ما اترجّعش</div>
+          </div>
+        </div>
+        <div class="woc-row-num woc-num">
+          <span class="woc-count pending" id="cntWarehouse">—</span><span class="woc-unit">أوردر</span>
+        </div>
+        <div class="woc-row-mid">
+          <div class="woc-chips" id="chipsWarehouse"></div>
+          <div class="woc-fail" id="failWarehouse" style="display:none"></div>
+        </div>
+        <div class="woc-row-act">
+          <div class="woc-fresh">
+            <div class="woc-fresh-row">
+              <span class="woc-fresh-lbl">آخر تحديث</span>
+              <span class="woc-ago" id="agoWarehouse">لسه ما اتحدّثش</span>
+            </div>
+            <div class="woc-fresh-row" id="stampWarehouse"><span class="woc-stamp-chip">—</span></div>
+          </div>
+          <button class="woc-rbtn" id="btnWarehouse"
+                  onclick="event.preventDefault();event.stopPropagation();loadQueue('warehouse', false)">
+            <span class="woc-rbtn-ico">↺</span><span>تحديث</span><span class="woc-rbtn-badge" id="badgeWarehouse">—</span>
+          </button>
+        </div>
+      </a>
   </div>
 
   <!-- ══ «أدوات» = اللي الموظف بيشتغل بيه على أوردر قدامه دلوقتي ══
@@ -449,7 +494,31 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.25.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.29.0</span>
+          <span class="cl-ver-date">19-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>صفّا «جاهز للتسليم للمكتب» و«جاهز للرجوع للمخزن» بقوا بأرضية تاريخ أوردر ثابتة: 01/04/2026.</b> الأوردرات الأقدم من كده <b>مش بتتعدّ في الرقمين</b>. ⚠️ <b>والأرضية عرض بس</b> — الأوردر الأقدم منها <b>بيتسكن عادي</b> جوّه الأداة.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>ونافذة الـ٣٠ يوم المتحرّكة في صف المخزن اتشالت</b> — كانت بتخفي الطرد الراجع من شهرين بالظبط لما يبقى منسي فعلاً.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.28.0</span>
+          <span class="cl-ver-date">19-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🔴 <b>قسم استلام المرتجعات</b> — أداة جديدة بالكامل، وصف <b>خامس</b> على الشاشة دي: «جاهز للرجوع للمخزن». بتسجّل رجوع الطرد للمخزن على <code>custom.package_whereabouts_s1</code>/<code>_s2</code> بقيمة <code>Warehouse</code>.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🔴 <b>والأداة دي معكوس «قسم تسليمات المكتب» على نفس الحقل</b> — الصف الرابع بيعدّ الطرد <b>الخارج</b> للمكتب، والخامس بيعدّ <b>الراجع</b> للمخزن. ⛔ والإلغاء <b>مقلوب</b>: في صف المكتب مستبعَد، وهنا <b>شرط أهلية</b>.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>الشروط: الزون قاهرة+جيزة أو شو روم · الحالة <code>Returned</code> أو <code>Cancelled</code> (S1 أو S2) · <b>اتغلّف فعلاً</b> · وعهدة الطرد لسه مش <code>Warehouse</code>. ⚠️ والرقم بيعدّ <b>آخر ٣٠ يوم</b> بس.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>بوسطة خارج نطاق الأداة الجديدة</b> — مرتجعاتها ليها أداتها («قسم مرتجعات بوسطة»).</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.25.0</span>
           <span class="cl-ver-date">14-09-2026</span>
         </div>
         <ul class="cl-items">
@@ -1063,6 +1132,25 @@ const HOME_QUEUES = {
       return { total: wocOfficeQueue(data.orders || []).length, chips: [] };
     },
   },
+
+  // ── «جاهز للرجوع للمخزن» (v1.28.0) ─────────────────────────────
+  // 🔴 **نفس عقد صف المكتب بالحرف** — الـ Worker بيرجّع خام والأهلية في
+  //    `wocWarehouseGate` بالـ shell، و`warehouse-return.html` بتنادي **نفس
+  //    الدالة** على **نفس الرد**. ⛔ ممنوع أي حساب أهلية هنا (درس R1).
+  // ⛔ **ومعكوس صف المكتب في الإلغاء:** هناك الملغي مستبعَد، هنا مؤهل.
+  // ⚠️ **بلا مربعات تقسيمة** — «مرتجع» و«ملغي» بيتفرقوا في **الصفحة** (عمود
+  //    الحالة) لأن الموظف بيتصرّف فيهم هناك؛ على الشاشة الرئيسية الرقم
+  //    الإجمالي هو اللي بيودّيه للصفحة، ومربع بصفر في اليوم العادي بيتعوّد
+  //    عليه فبيبطّل يشوفه.
+  warehouse: {
+    err: 'تعذّر جلب طابور استلام المرتجعات',
+    ids: { count:'cntWarehouse', chips:'chipsWarehouse', fail:'failWarehouse',
+           ago:'agoWarehouse', stamp:'stampWarehouse', btn:'btnWarehouse', badge:'badgeWarehouse' },
+    async fetch() {
+      const data = await wocApi(WOC_WORKERS.warehouse).apiGet('get_ready_to_warehouse');
+      return { total: wocWarehouseQueue(data.orders || []).length, chips: [] };
+    },
+  },
 };
 
 const homeQ = {
@@ -1070,6 +1158,7 @@ const homeQ = {
   pack:  { at: null, dirty: false, timer: null, loading: false },
   bosta: { at: null, dirty: false, timer: null, loading: false },
   office:{ at: null, dirty: false, timer: null, loading: false },
+  warehouse:{ at: null, dirty: false, timer: null, loading: false },
 };
 let homeTickTimer = null;
 

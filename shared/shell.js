@@ -124,10 +124,28 @@ const WOC_WORKERS = {
   // ⚠️ الأداة دي **مالهاش نسخة مستقلة** — الريبو بتاعها Worker وبس، فمفيش
   //    مفتاح `localStorage` تاني ومفيش سر قديم: `WORKER_SECRET` بيتحط بقيمة
   //    مجموعة `warehouse_ops` من أول يوم.
-  office:   { url: 'https://package-transfer-to-office-worker.ecommoda-dev.workers.dev', min: '1.0.0', label: 'قسم تسليمات المكتب' },
+  // 🔴 `1.1.0` = **أول نسخة بتحط أرضية `created_at >= 2026-04-01`** على
+  //    طابور المكتب وبترجّع `ordersSince` في الرد (هب v1.29.0 · قرار أحمد
+  //    19-09-2026). على `1.0.0` الطابور بيرجّع **كل** أوردرات `Ready` مهما
+  //    كان قِدَمها، والسطر اللي تحت عنوان الطابور **بيختفي** (الواجهة
+  //    بتعرضه من `ordersSince` وبس) — يعني الموظف بيقرا قايمة أطول بلا أي
+  //    سطر يقول إن النطاق اتغيّر. ⚠️ التدهور **معلن جزئيًا** (السطر بيختفي)
+  //    بس **الرقم بيكبر في صمت**، فالحارس هنا بيسمّي السبب.
+  office:   { url: 'https://package-transfer-to-office-worker.ecommoda-dev.workers.dev', min: '1.1.0', label: 'قسم تسليمات المكتب' },
+  // 🔴 قسم استلام المرتجعات — Worker جديد بالكامل (هب v1.28.0).
+  // `1.0.0` = أول نسخة، ومفيش أي نسخة أقدم منشورة — فالحارس هنا **مش** بيمنع
+  // rollback، هو بيمسك الحالة الوحيدة الممكنة: الـ Worker ما اتنشرش أصلاً أو
+  // الـ Promote ناقص، فـ`get_config` بيرجّع 404/401 والحارس بيسمّي الأداة.
+  // ⚠️ الأداة دي **مالهاش نسخة مستقلة** زي أداة المكتب بالظبط — الريبو
+  //    بتاعها Worker وبس، فمفيش مفتاح `localStorage` تاني ومفيش سر قديم:
+  //    `WORKER_SECRET` بيتحط بقيمة مجموعة `warehouse_ops` من أول يوم.
+  // 🔴 **وهي معكوس أداة المكتب على نفس الحقل** — بتكتب `Warehouse` على طرد
+  //    راجع (مرتجع/ملغي)، بينما دي بتكتب `Office` على طرد خارج. الاتنين
+  //    Workers مستقلين وحدّين أدنى مستقلين — ⛔ ممنوع يتربطوا برقم واحد.
+  warehouse:{ url: 'https://package-transfer-to-warehouse-worker.ecommoda-dev.workers.dev', min: '1.0.0', label: 'قسم استلام المرتجعات' },
 };
 
-const TOOL_VERSION = 'v1.27.0';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.29.0';                      // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const WOC_APP_ID   = 'warehouse_ops_center';         // قيمة `tool` في D1 — login/logout بس
 const SHOP_HANDLE  = '6c7e1a-53';
@@ -322,6 +340,18 @@ function formatDateTime(iso) {
 function formatDate(iso) {
   const d = toCairo(iso), pad = n => String(n).padStart(2, '0');
   return `📅 ${pad(d.getUTCDate())}/${pad(d.getUTCMonth()+1)}/${d.getUTCFullYear()}`;
+}
+// ── أرضية تاريخ الأوردر — `YYYY-MM-DD` → `DD/MM/YYYY` ─────────
+// 🔴 **في الـ shell مش في الصفحة** — `office-transfer.html` و
+//    `warehouse-return.html` الاتنين بيعرضوا نفس السطر من نفس الرد، ونسخة
+//    في كل صفحة هي درس R1 بالحرف.
+// ⚠️ **ومافيهاش `new Date()`** — القيمة **تاريخ مجرّد** جاي من الـ Worker،
+//    و`new Date('2026-04-01')` بتتقرا UTC وبتتعرض بتوقيت الجهاز، فأرضية
+//    `01/04` كانت ممكن تتعرض `31/03` على جهاز غرب جرينتش. القصّ النصّي هنا
+//    **مقصود**: مفيش وقت في القيمة أصلاً عشان يتحوّل.
+function wocYmdToDMY(ymd) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(ymd || '').trim());
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : null;
 }
 function formatTimeOnly(iso) {
   const d = toCairo(iso), pad = n => String(n).padStart(2, '0');
@@ -678,6 +708,108 @@ function wocOfficeQueue(orders) {
                                packedBy: g.machine === 's1' ? o.packedByS1 : o.packedByS2 });
   }
   out.sort((a, b) => String(a.packedAt || '').localeCompare(String(b.packedAt || '')));
+  return out;
+}
+
+// ══════════════════════════════════════════════════════════════
+// 🏭 §WAREHOUSE-GATE — «الطرد ده راجع للمخزن؟»
+// ══════════════════════════════════════════════════════════════
+//
+// 🔴 **دي معكوس §OFFICE-GATE فوق على نفس الحقل بالظبط.** هناك الطرد **خارج**
+//    (`Ready` → `Office`)؛ هنا الطرد **راجع** (`Returned`/`Cancelled` →
+//    `Warehouse`). الاتنين بيقروا نفس الميتافيلدات من نفس شكل الرد، والفرق
+//    كله في شرط الأهلية وفي القيمة.
+//
+// ⛔ **وأخطر حاجة ممكن تحصل هنا: نسخ حارس الإلغاء من §OFFICE-GATE.** هناك
+//    `cancelledAt` **أول سبب رفض**؛ هنا هو **شرط أهلية**. النسخة الغلط
+//    بتخلّي الطابور يستبعد أكبر شريحة عنده — **وصفر خطأ في الكونسول**.
+//
+// 🔴 **ومكانها الـ shell مش الصفحة** — نفس سبب §OFFICE-GATE بالحرف:
+//    `warehouse-return.html` و`index.html` بينادوا **نفس الدالة** على **نفس
+//    الرد**. نسخة تانية في صفحة = درس R1 بالحرف (v1.11.0: الرئيسية قالت
+//    «بوسطة ٦٦» والصفحة فتحت على ٦). ممنوع أي صفحة تعرّفهم تاني — تعريف في
+//    صفحة بيغلب الـ shell (بيتحمّل قبلها) والقاعدتين هيفترقوا **في صمت**.
+//
+// 🔴 **ودي بوابة عرض — مش حارس كتابة.** الحارس الحقيقي في الـ Worker
+//    (`?action=scan`)، وهو اللي بيقرا الأوردر **حيًّا** وقت الضغطة.
+
+// 🔴 الحالات المؤهلة — الفرق الجوهري عن بوابة المكتب
+const WOC_WH_S1_ELIGIBLE = ['Returned', 'Cancelled'];
+const WOC_WH_S2_ELIGIBLE = ['Returned'];
+
+// 🔴 نفس نطاق المكتب بالحرف: قاهرة+جيزة والشو روم بس.
+// ⚠️ **والاستبعاد هنا أضعف من نظيره في المكتب ولازم يتقال:** مرتجع بوسطة
+//    **بيرجع المخزن فعلاً**، بخلاف طرد بوسطة الخارج اللي عمره ما بيعدّي على
+//    المكتب. اللي بيبرّره إن `package_whereabouts` مش بيتتبع لطرود بوسطة
+//    أصلاً (`ecommoda-order-lifecycle` قاعدة ١٧) وإن مرتجعاتها ليها أداتها
+//    («قسم مرتجعات بوسطة»). التحفّظ الكامل في
+//    `Package-Transfer-To-Warehouse/CLAUDE.md` §النطاق.
+// ⛔ لو اتغيّر، يتغيّر **هنا وفي `ZONE_IN_SCOPE` في الـ Worker** في نفس
+//    التمريرة (درس R1).
+const WOC_WAREHOUSE_ZONES = ['Cairo+Giza', 'Show_Room'];
+
+// بيرجّع { eligible, machine, code, reason }:
+//   machine: 's1' | 's2' | null — أنهي عهدة هتتكتب (`_s1` ولا `_s2`)
+//   code:    سبب الاستبعاد — للتشخيص، والواجهة مابتعرضهوش في الطابور
+function wocWarehouseGate(o) {
+  if (!o) return { eligible: false, machine: null, code: 'none', reason: 'مفيش أوردر' };
+
+  // ① خارج النطاق — بوسطة (نفس ترتيب الـ Worker بالحرف)
+  if (o.courier === 'Bosta' || o.zone === 'Other_Regions')
+    return { eligible: false, machine: null, code: 'bosta', reason: 'مرتجع بوسطة — ليه أداته' };
+  if (!WOC_WAREHOUSE_ZONES.includes(o.zone || ''))
+    return { eligible: false, machine: null, code: 'zone', reason: `زون «${o.zone || 'فاضي'}» مش من نطاق الأداة` };
+
+  // ② الماكينة — S1 الأول (زي بوابة المكتب)، و S2 بعده
+  // ⚠️ `cancelledAt` مؤهل زي `Cancelled` بالظبط — الطرد راجع سواء الإلغاء
+  //    اتكتب في الميتافيلد ولا لأ.
+  const s1Eligible = WOC_WH_S1_ELIGIBLE.includes(o.s1 || '') || !!o.cancelledAt;
+  const s2Eligible = WOC_WH_S2_ELIGIBLE.includes(o.s2 || '');
+  let machine = null;
+  if (s1Eligible)      machine = 's1';
+  else if (s2Eligible) machine = 's2';
+  if (!machine)
+    return { eligible: false, machine: null, code: 'status', reason: 'لا مرتجع ولا ملغي' };
+
+  // ③ متغلّف فعلاً — **بميتافيلد الماكينة بتاعتها**
+  // 🔴 صف S2 بيتفحص بـ`s2_packing_date_time` مش `s1_…` (نفس درس بوابة المكتب:
+  //    ٦ من ٦ صفوف S2 كانت هتعدّي، والصح ٢).
+  // ⚠️ **ومعنى الشرط هنا أقوى:** أوردر اتلغى قبل ما يتغلّف **مفيهوش طرد
+  //    أصلاً** — مفيش حاجة ترجع على الرف.
+  const packedAt = machine === 's1' ? o.packedAtS1 : o.packedAtS2;
+  if (!packedAt)
+    return { eligible: false, machine, code: 'not_packed', reason: 'ما اتغلّفش — مفيش طرد يرجع' };
+
+  // ④ العهدة الحالية — **مقلوبة عن بوابة المكتب**
+  // 🔴 هناك `Office` = خلاص متعمل و`Courier` = رفض؛ هنا `Warehouse` = خلاص
+  //    متعمل، و**`Office` و`Courier` هما الحالتان الطبيعيتان** (الطرد راجع
+  //    من المكتب أو من إيد المندوب).
+  // ⚠️ والفاضية مقبولة — أداة التغليف لسه ما بتكتبش `Warehouse` وقت التغليف
+  //    (بند مفتوح)، فالحقل فاضي على أغلب الأوردرات.
+  const cur = machine === 's1' ? o.whereaboutsS1 : o.whereaboutsS2;
+  if (cur === WOC_WHEREABOUTS.WAREHOUSE)
+    return { eligible: false, machine, code: 'already_warehouse', reason: 'في المخزن خلاص' };
+
+  return { eligible: true, machine, code: 'ok', reason: '' };
+}
+
+// بيرجّع المؤهلين بس، بترتيب **الأقدم `updatedAt` الأول**.
+// 🔴 **الترتيب مختلف عن `wocOfficeQueue` عن قصد.** هناك وقت التغليف هو وقت
+//    الانتظار (الطرد اتغلّف ومستني يتنقل). هنا التغليف ممكن يكون من شهر
+//    والرجوع من ساعة — فوقت التغليف **مابيقولش حاجة عن الانتظار**، و
+//    `updatedAt` أقرب أثر لتحوّل الحالة لـ`Returned`/`Cancelled`.
+// ⚠️ وهو **تقريب مش تسجيل** — أي تعديل تاني على الأوردر بيحرّكه، عشان كده
+//    العمود في الصفحة اسمه «آخر تحديث» بالحرف مش «وقت الرجوع».
+function wocWarehouseQueue(orders) {
+  const out = [];
+  for (const o of orders || []) {
+    const g = wocWarehouseGate(o);
+    if (g.eligible) out.push({ ...o, machine: g.machine,
+                               packedAt: g.machine === 's1' ? o.packedAtS1 : o.packedAtS2,
+                               packedBy: g.machine === 's1' ? o.packedByS1 : o.packedByS2,
+                               whereabouts: (g.machine === 's1' ? o.whereaboutsS1 : o.whereaboutsS2) || null });
+  }
+  out.sort((a, b) => String(a.updatedAt || '').localeCompare(String(b.updatedAt || '')));
   return out;
 }
 
