@@ -68,13 +68,13 @@ const RAW = [
     cancelledAt:null,
     customer:'منى فؤاد', itemsQty:1, total:'990.00', zone:'Show_Room', courier:'Showroom',
     s1:'Cancelled', s2:null, packedAtS1:'2026-09-05T09:23:01Z', packedAtS2:null,
-    packedByS1:'Abo Selim', packedByS2:null, whereaboutsS1:'Courier', whereaboutsS2:null },
+    packedByS1:'Abo Selim', packedByS2:null, whereaboutsS1:'Office', whereaboutsS2:null },
   // ✅ مؤهل — الملغي على شوبيفاي نفسها (`cancelledAt`) والحالة لسه `Confirmed`
   { orderId:'7212244533572', orderName:'#54296', createdAt:'2026-09-06T08:00:00Z',
     cancelledAt:'2026-09-16T12:00:00Z',
     customer:'كريم لطفي', itemsQty:1, total:'1500.00', zone:'Cairo+Giza', courier:'Saif',
     s1:'Confirmed', s2:null, packedAtS1:'2026-09-08T06:43:11Z', packedAtS2:null,
-    packedByS1:'Abo Selim', packedByS2:null, whereaboutsS1:null, whereaboutsS2:null },
+    packedByS1:'Abo Selim', packedByS2:null, whereaboutsS1:'Office', whereaboutsS2:null },
   // ✅ مؤهل — دورة استبدال مرتجعة **ومتغلّفة على S2**
   { orderId:'7212244533573', orderName:'#54301', createdAt:'2026-08-30T08:00:00Z',
     cancelledAt:null,
@@ -107,6 +107,23 @@ const RAW = [
     cancelledAt:null,
     customer:'نهى صبري', itemsQty:1, total:'1200.00', zone:'Cairo+Giza', courier:'Sobhy',
     s1:'Delivered', s2:'Returned', packedAtS1:'2026-09-02T11:06:53Z', packedAtS2:null,
+    packedByS1:'Abo Selim', packedByS2:null, whereaboutsS1:null, whereaboutsS2:null },
+  // 🔴 ❌ **الصفّان اللي الفلتر الجديد اتكتب عشانهم** (قرار أحمد 19-09-2026):
+  //    الطابور بيعرض اللي عهدته `Office` **بس**. الاتنين دول **مرتجعان
+  //    ومتغلّفان وفي النطاق** — يعني كانوا مؤهلين لحد v1.30.0، والاستبعاد
+  //    دلوقتي سببه **العهدة لوحدها**.
+  //    ⛔ والاتنين مطلوبين مش واحد: `Courier` بيقفل «قيمة تانية معروفة»،
+  //       والفاضي بيقفل **أكبر شريحة في المتجر** (الحقل فاضي على أغلب
+  //       الأوردرات لأن أداة التغليف لسه ما بتكتبش `Warehouse`).
+  { orderId:'7212244533580', orderName:'#54555', createdAt:'2026-09-05T08:00:00Z',
+    cancelledAt:null,
+    customer:'وليد نبيل', itemsQty:1, total:'450.00', zone:'Cairo+Giza', courier:'Saif',
+    s1:'Returned', s2:null, packedAtS1:'2026-09-06T10:00:00Z', packedAtS2:null,
+    packedByS1:'Abo Selim', packedByS2:null, whereaboutsS1:'Courier', whereaboutsS2:null },
+  { orderId:'7212244533581', orderName:'#54556', createdAt:'2026-09-05T09:00:00Z',
+    cancelledAt:null,
+    customer:'رانيا حسن', itemsQty:1, total:'380.00', zone:'Cairo+Giza', courier:'Sobhy',
+    s1:'Returned', s2:null, packedAtS1:'2026-09-06T11:00:00Z', packedAtS2:null,
     packedByS1:'Abo Selim', packedByS2:null, whereaboutsS1:null, whereaboutsS2:null },
   // 🔴 ❌ **الصف اللي بيمنع «الطابور فتح على كل حاجة»**: لا مرتجع ولا ملغي.
   //    لو الحالة اتشالت من الشرط، الصف ده بيظهر — والأداة بتبقى بتسجّل رجوع
@@ -318,6 +335,18 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
   is(names.some(n => n.includes('#54301')),
      'صف S2 المرتجع والمتغلّف فعلاً (وقت تغليف S2 موجود) **ظاهر**');
 
+  // 🔴🔴 **الفلتر الجديد (v1.30.0)** — الطابور بيعرض عهدة `Office` **بس**
+  is(!names.some(n => n.includes('#54555')),
+     '🔴 المرتجع اللي عهدته `Courier` **مستبعَد** — الطابور بيعرض اللي في المكتب بس');
+  is(!names.some(n => n.includes('#54556')),
+     '🔴 والمرتجع اللي عهدته **فاضية** مستبعَد كمان — «مش عارفين كان فين» مش طابور شغل');
+  // ⚠️ والصفّان دول **مؤهلان في الـ Worker** — الفلتر عرض بس، والسكانة شغّالة
+  //    عليهم. البند ده بيقرا البوابة مباشرةً عشان يثبت السبب مش النتيجة.
+  const whyCourier = await page.evaluate((raw) =>
+    wocWarehouseGate(raw.find(o => o.orderName === '#54555')).code, RAW);
+  is(whyCourier === 'not_in_office',
+     '🔴 وسبب الاستبعاد `not_in_office` — مش `status` ولا `not_packed`', String(whyCourier));
+
   // 🔴 الترتيب جزء من العقد — الأقدم **تغليفًا** الأول
   is(names[0].includes('#54727') && names[names.length - 1].includes('#54301'),
      '🔴 الترتيب بالأقدم تغليفًا الأول — نفس ترتيب طابور المكتب بالحرف',
@@ -342,6 +371,7 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
   // عمود «الحالة» — السبب اللي الأوردر في القايمة عشانه
   const rowTxt = (n) => page.$$eval('#rqTableBody tr', (trs, nm) =>
     (trs.map(t => t.textContent).find(t => t.includes(nm)) || ''), n);
+  const rowsTxt = await page.$$eval('#rqTableBody tr', trs => trs.map(t => t.textContent));
   is((await rowTxt('#54727')).includes('مرتجع'), 'صف المرتجع عليه بادج «مرتجع»');
   is((await rowTxt('#54580')).includes('ملغي'),  'صف الملغي عليه بادج «ملغي» — مش نفس البادج');
   is((await rowTxt('#54301')).includes('استبدال'),
@@ -349,9 +379,9 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
 
   // عمود «موقع الشحنة» — العهدة قبل السكانة
   is((await rowTxt('#54727')).includes('في المكتب'), 'عمود العهدة بيقول «في المكتب» للراجع من المكتب');
-  is((await rowTxt('#54580')).includes('مع المندوب'), 'وبيقول «مع المندوب» للراجع من المندوب');
-  is((await rowTxt('#54296')).includes('مش مسجّل'),
-     '🔴 العهدة الفاضية «مش مسجّل» مش «في المخزن» — «مش معروف» ≠ «هنا»');
+  is(!rowsTxt.some(t => t.includes('مش مسجّل') || t.includes('مع المندوب')),
+     '🔴 صفر صف بعهدة غير «في المكتب» — الفلتر بيشتغل على القيمة مش على وجودها',
+     rowsTxt.join(' | ').slice(0, 300));
 
   // 🔴 **أعمدة الجدول** — الاسم الموحّد، و`updatedAt` اتشال بالكامل (v1.30.0)
   const heads = await page.$$eval('#rqTableWrap thead th', ths => ths.map(t => t.textContent.trim()));
@@ -378,6 +408,8 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
   is(subTxt.includes(wantDay),
      '🔴 أرضية تاريخ الأوردر مكتوبة على الشاشة — والتاريخ جاي من رد الـ Worker',
      `${subTxt} ⊅ ${wantDay}`);
+  is(subTxt.includes('في المكتب'),
+     '🔴 السطر تحت العنوان بيسمّي شرط القايمة — «مسجّل إنه في المكتب»', subTxt);
   is(wantDay === '01/04/2026',
      '🔴 الأرضية بتتعرض `01/04/2026` — مش بيوم ناقص من تحويل توقيت', String(wantDay));
   is(!/يوم|آخر ٣٠|آخر 30/.test(subTxt),

@@ -468,6 +468,10 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <span class="cl-ver-date">19-09-2026</span>
         </div>
         <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>الطابور بقى بيعرض الأوردرات اللي «موقع الشحنة» بتاعها = <b>في المكتب</b> بس.</b> كان بيعرض كمان اللي مع المندوب <b>واللي عهدته فاضية</b> — والفاضي معناه «مش عارفين الطرد كان فين»، وقايمة مبنية على «مش عارفين» مش طابور شغل.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>⛔ <b>وده فلتر عرض مش شرط أهلية</b> — الأوردر اللي عهدته فاضية أو «مع المندوب» <b>بيتسكن ويتسجّل عادي</b>، هو مش في القايمة وبس.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>⚠️ <b>والطابور هيفتح فاضي لحد ما «قسم تسليمات المكتب» يشتغل</b> — هو الوحيد اللي بيكتب القيمة دي، ولسه ما اتنشرش. ورسالة القايمة الفاضية <b>بتسمّي الشرط</b> بدل ما تقول «مفيش طرود راجعة».</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>سقف استعلام الـ Worker اترفع من ٣٠٠ لـ١٬٠٠٠ لكل استعلام.</b> الرقم القديم اتنسخ من أداة مصدرها حالة <b>عابرة</b>، وحالات الأداة دي (<code>Returned</code>/<code>Cancelled</code>) <b>بتتراكم</b> — فالسقف كان بيتضرب من أول يوم والطابور بيقول رقم أقل من الحقيقة.</span></li>
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span>عمود <b>«الطرد فين دلوقتي»</b> بقى اسمه <b>«موقع الشحنة»</b> — نفس الاسم في «قسم تسليمات المكتب» بالحرف، والمعنى ما اتغيّرش.</span></li>
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>عمودا «آخر تحديث» و«الوقت منذ آخر تحديث» اتشالوا بالكامل</b>، ومعاهم <code>order.updatedAt</code> من الـ Worker. ⚠️ <b>والسبب:</b> شوبيفاي مالهاش حقل بيقول «الطرد رجع إمتى»، و<code>updatedAt</code> بيتحرّك مع <b>أي</b> تعديل — حتى كتابة الميتافيلد بتاعتنا. فكان <b>تقريب بيتقري تسجيل</b>، وعملية جماعية واحدة كانت بتخلّي صفوف كتير تقول نفس التاريخ.</span></li>
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>وترتيب الطابور بقى بالأقدم تغليفًا</b> بدل آخر تحديث — نفس ترتيب «قسم تسليمات المكتب» بالحرف. وقت التغليف <b>مش مثالي هنا</b>، بس هو وقت <b>مسجّل فعلاً</b> بدل تقريب بيتحرّك لوحده.</span></li>
@@ -783,7 +787,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <div class="rq-head">
             <div>
               <div class="rq-title">🏭 جاهز للرجوع للمخزن</div>
-              <div class="rq-sub" id="rqSub">مرتجع أو ملغي ولسه ما اترجّعش · قاهرة+جيزة وشو روم</div>
+              <div class="rq-sub" id="rqSub">مرتجع أو ملغي · مسجّل إنه في المكتب · قاهرة+جيزة وشو روم</div>
             </div>
             <div class="count-badge">
               <span class="count-num" id="rqCount">—</span>
@@ -2258,7 +2262,14 @@ function rqRender() {
     wrap.style.display  = 'none';
     empty.style.display = '';
     empty.innerHTML = rqState.at
-      ? '<div class="ico">✅</div><div>مفيش طرود راجعة مستنية تسجيل دلوقتي</div>'
+      // 🔴 **الرسالة بتسمّي شرط القايمة — مش بتقول «مفيش شغل».** الطابور
+      //    بيعرض اللي عهدته `Office` **بس**، و`Office` مابيكتبهاش غير «قسم
+      //    تسليمات المكتب». فالفاضي هنا معناه «مفيش طرد **مسجّل** في
+      //    المكتب» — مش «مفيش طرد راجع»، والفرق بينهم هو الفرق بين معلومة
+      //    وكذبة. ⛔ ممنوع ترجع لجملة عامة.
+      ? '<div class="ico">✅</div><div>مفيش طرد مسجّل إنه في المكتب مستني رجوع</div>'
+        + '<div style="margin-top:6px;font-size:12px;">الطابور بيعرض اللي عهدته «في المكتب» بس — '
+        + 'وأي طرد راجع تاني <b>بيتسكن عادي</b> والـ Worker هو اللي بيحكم.</div>'
       : (rqState.failed
           ? '<div class="ico">⚠️</div><div>تعذّر تحميل الطابور — اضغط «تحديث»</div>'
           : '<div class="ico">⏳</div><div>جاري تحميل الطابور…</div>');
@@ -2367,7 +2378,7 @@ async function rqLoad(silent) {
     const sub = document.getElementById('rqSub');
     const since = wocYmdToDMY(data.ordersSince);
     if (sub && since) {
-      sub.textContent = `مرتجع أو ملغي ولسه ما اترجّعش · قاهرة+جيزة وشو روم · أوردرات من ${since}`;
+      sub.textContent = `مرتجع أو ملغي · مسجّل إنه في المكتب · قاهرة+جيزة وشو روم · أوردرات من ${since}`;
     }
   } catch (err) {
     // 🔴 **الفشل بيتقال، والرقم القديم بيفضل معروض لو كان فيه واحد.**
