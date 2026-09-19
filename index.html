@@ -494,7 +494,19 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.30.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.31.0</span>
+          <span class="cl-ver-date">19-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>تفريق توقيت الخمس نداءات على الشاشة الرئيسية.</b> كانت الخمس طوابير (الطباعة · التغليف · تسليمات بوسطة · تسليمات المكتب · استلام المرتجعات) بتتنادى في نفس اللحظة بالظبط — والخمسة بيشاركوا نفس حساب شوبيفاي، فطلب توكن متزامن من الخمسة كان بيسبّب فشل جماعي (<code>THROTTLED</code>/<code>Failed to fetch</code>) حتى في أدوات ما اتلمستش. دلوقتي فيه فاصل بسيط بين إطلاق كل طابور والتاني.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>الخمس Workers اتعدّلوا عشان يعيدوا محاولة طلب التوكن (بدل ما يفشلوا فورًا على أول زحمة عابرة) — نفس انضباط باقي نداءات شوبيفاي في كل واحد فيهم. صفر تغيير في أي عقد رد.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>«جاهز للرجوع للمخزن» رجع لنافذة زمنية متحرّكة (٢٥٠ يوم) بدل الأرضية الثابتة.</b> نفس القيمة اتطبّقت على «جاهز للتسليم للمكتب» (كانت أرضية ثابتة من v1.29.0). ⚠️ <b>ده تراجع مُعلَن عن قرار v1.29.0</b> — مقابل استقرار تكلفة استعلام شوبيفاي بدل رفع سقف الصفحات المتكرر.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.30.0</span>
           <span class="cl-ver-date">19-09-2026</span>
         </div>
         <ul class="cl-items">
@@ -1193,8 +1205,25 @@ function showHome() {
   loadCounts();
 }
 
-// الأعداد — التلاتة **بالتوازي**، و`allSettled` مش `all`:
-// Workers مختلفين = isolates مختلفين = توازي حقيقي، وفشل طابور
+// 🔴 **تفريق التوقيت بين الخمس نداءات (قرار أحمد 19-09-2026 · §٨① في
+//    `docs/query-cost-experiment.md`).** الخمس Workers بتشارك **نفس** الـ
+//    Custom App في شوبيفاي (قرار ثابت)، فلما الخمسة بيتنادوا في نفس اللحظة
+//    بالظبط، الخمسة بيطلبوا توكن OAuth **متزامن** على نفس التطبيق — وده
+//    اللي أنتج `THROTTLED`/`Failed to fetch` جماعي حيًا (٤ من ٥ فشلوا مع
+//    بعض في قياس حي 19-09-2026، حتى أدوات ما اتلمستش في نفس التمريرة).
+//    التأخير هنا **مش** بديل عن الـ retry اللي اتضاف في الخمس Workers —
+//    الاتنين مع بعض هما اللي بيقللوا التزامن الفعلي.
+// ⚠️ **مش بديل لـ `allSettled`** — لسه فشل طابور واحد **مايخفيش** التاني
+//    (قاعدة ٢)، والتأخير هنا في **وقت الإطلاق** بس مش في المعالجة بعد كده.
+const WOC_QUEUE_STAGGER_MS = 200;   // فاصل بين إطلاق كل طابور والتاني
+function loadQueuesStaggered(keys) {
+  return Promise.allSettled(keys.map((k, i) =>
+    new Promise(r => setTimeout(r, i * WOC_QUEUE_STAGGER_MS)).then(() => loadQueue(k))
+  ));
+}
+
+// الأعداد — التلاتة **بالتوازي** (بتأخير بسيط بين الإطلاق — فوق)، و`allSettled`
+// مش `all`: Workers مختلفين = isolates مختلفين = توازي حقيقي، وفشل طابور
 // **مايخفيش** التاني. (بقوا **أربعة** في v1.26.0 — تسليمات بوسطة وتسليمات
 // المكتب على Workers مستقلة، فنفس القاعدة بتنطبق عليهم بالحرف.)
 function loadCounts() {
@@ -1208,8 +1237,7 @@ function loadCounts() {
   //    والعدّاد بيفضل `—` للأبد، ومفيش أي خطأ في الكونسول — الموظف بيقرا
   //    «ما اتحدّثش» على طابور شغّال. اتمسك في `docs/office-check.mjs` وقت
   //    إضافة صف المكتب، مش بمراجعة كود.
-  //    ⚠️ و`allSettled` مش `all` — فشل طابور **مايخفيش** التاني (قاعدة ٢).
-  Promise.allSettled(Object.keys(homeQ).map(k => loadQueue(k)));
+  loadQueuesStaggered(Object.keys(homeQ));
 }
 
 // المسار الوحيد للجلب — الضغطة اليدوية والنبضة التلقائية الاتنين
@@ -1329,9 +1357,13 @@ function autoTick(key) {
 
 // الرجوع للتاب — بيجيب اللي اتأجّل بس. `dirty` **مابيتصفّرش غير بعد
 // جلب ناجح**، فلو الجلب فشل أول رجوع تاني بيحاول.
+// 🔴 **مفرّقة بنفس `loadQueuesStaggered` (§٨①)** — لو أكتر من طابور اتعلّم
+// `dirty` أثناء التاب مخفي (مثلاً بعد غيبة أطول من ١٥ دقيقة)، الرجوع كان
+// هيطلق نفس عدد النداءات المتزامنة اللي التأخير ده اتعمل عشان يمنعها.
 document.addEventListener('visibilitychange', () => {
   if (document.hidden || !getSession()) return;
-  Object.keys(homeQ).forEach(k => { if (homeQ[k].dirty) loadQueue(k); });
+  const dirtyKeys = Object.keys(homeQ).filter(k => homeQ[k].dirty);
+  if (dirtyKeys.length) loadQueuesStaggered(dirtyKeys);
 });
 
 // ⚠️ الحلقة دي مكرّرة في الخمس صفحات **عن قصد**: `WOC_WORKERS` و`cmpVersion`
