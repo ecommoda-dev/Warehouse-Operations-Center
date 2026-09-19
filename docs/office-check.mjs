@@ -225,7 +225,7 @@ console.log('① الجلسة والهيدر الموحّد');
      'زرار الخروج عليه `aria-label` (الـ✕ لوحده مايتقريش عند قارئ الشاشة)');
 
   const ver = (await page.locator('.hbtn.ver-btn').first().textContent() || '').trim();
-  is(/v1\.29\.\d+/.test(ver), 'زرار النسخة بيقول نسخة الهب', ver);
+  is(/v1\.30\.\d+/.test(ver), 'زرار النسخة بيقول نسخة الهب', ver);
   const clBadge = (await page.locator('#clLatestVerBadge').textContent() || '').trim();
   is(clBadge === ver.replace(/[^v0-9.]/g, ''), 'بادج سجل التحديثات == نسخة الهب', `${clBadge} ≠ ${ver}`);
 
@@ -292,6 +292,22 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
      'مفيش مربعات اختيار — الطابور عرض بحت');
   is((await page.locator('#rqAgo').textContent() || '') !== 'لسه ما اتحدّثش',
      'لوحة «آخر تحديث» اتملّت بعد الجلب');
+
+  // 🔴 عمود «موقع الشحنة» (v1.30.0) — نفس اسم عمود طابور المرتجعات بالحرف
+  const heads = await page.$$eval('#rqTableWrap thead th', ths => ths.map(t => t.textContent.trim()));
+  is(heads.includes('موقع الشحنة'),
+     '🔴 عمود «موقع الشحنة» موجود — بنفس اسمه في `warehouse-return.html`', heads.join(' | '));
+  const cells = await page.$$eval('#rqTableBody tr:first-child td', td => td.length);
+  is(cells === heads.length, 'خلايا الصف == أعمدة الهيدر', `${cells} ≠ ${heads.length}`);
+  // 🔴 والقيمة جاية من `wocOfficeQueue` — لو السطر اتشال من الـ shell، الخانة
+  //    بتقول «مش مسجّل» على **كل** صف حتى اللي عليه `Warehouse` فعلاً، **بلا
+  //    أي خطأ في الكونسول**. البند ده بيقفل الحفرة دي بصف عليه القيمة فعلاً.
+  const rowTxt = (n) => page.$$eval('#rqTableBody tr', (trs, nm) =>
+    (trs.map(t => t.textContent).find(t => t.includes(nm)) || ''), n);
+  is((await rowTxt('#54580')).includes('في المخزن'),
+     '🔴 الصف اللي عهدته `Warehouse` بيقول «في المخزن» — `whereabouts` بيوصل من الـ shell');
+  is((await rowTxt('#54727')).includes('مش مسجّل'),
+     '🔴 والعهدة الفاضية «مش مسجّل» مش «في المخزن» — «مش معروف» ≠ «هنا»');
 
   // 🔴 أرضية تاريخ الأوردر (v1.29.0) — **جاية من الرد مش مكتوبة في الصفحة**
   const subTxt  = (await page.locator('#rqSub').textContent() || '');

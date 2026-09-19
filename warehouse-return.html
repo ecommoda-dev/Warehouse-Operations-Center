@@ -177,7 +177,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .type-text.type-s1 { color: var(--accent-dark); }
 .type-text.type-s2 { color: var(--purple-dark); }
 
-/* ── «الطرد فين دلوقتي» — العهدة **قبل** السكانة ──────────────
+/* ── «موقع الشحنة» — العهدة **قبل** السكانة ───────────────────
    ⚠️ نص ملوّن مش بادج، زي `.type-text` بالظبط: العمود ده جنب عمود «الحالة»
       اللي فيه بادج فعلاً، وبادجين متلاصقين في صف واحد بيتقروا حاجة واحدة.
    ⚠️ و«مش مسجّل» **رمادي مش أخضر** — الفاضي معناه «مش معروف» مش «في
@@ -186,6 +186,11 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .wh-text.wh-office   { color: var(--accent-dark); }
 .wh-text.wh-courier  { color: var(--purple-dark); }
 .wh-text.wh-unknown  { color: var(--text-muted); }
+/* ⚠️ `.wh-home` مالهوش صف هنا — البوابة بتستبعد `Warehouse` («في المخزن
+   خلاص»). متساب عشان الكتلة تفضل **مطابقة** لنسخة `office-transfer.html`
+   بالحرف؛ كلاس ناقص في ناحية واحدة بيكسر التطابق اللي القاعدة مبنية عليه
+   (نفس منطق `.scan-hint` في `sku-barcode.html`). */
+.wh-text.wh-home     { color: var(--green-dark); }
 
 .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: var(--on-accent); border-radius: 50%; animation: spin .6s linear infinite; flex-shrink: 0; }
 .spinner-dark { border-color: rgba(0,0,0,.15); border-top-color: var(--accent); }
@@ -459,7 +464,23 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
            واحد للنسخة (Standards #24). الرقم هنا **مش** مكتوب بإيد. -->
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.29.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.30.0</span>
+          <span class="cl-ver-date">19-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>الطابور بقى بيعرض الأوردرات اللي «موقع الشحنة» بتاعها = <b>في المكتب</b> بس.</b> كان بيعرض كمان اللي مع المندوب <b>واللي عهدته فاضية</b> — والفاضي معناه «مش عارفين الطرد كان فين»، وقايمة مبنية على «مش عارفين» مش طابور شغل.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>⛔ <b>وده فلتر عرض مش شرط أهلية</b> — الأوردر اللي عهدته فاضية أو «مع المندوب» <b>بيتسكن ويتسجّل عادي</b>، هو مش في القايمة وبس.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>⚠️ <b>والطابور هيفتح فاضي لحد ما «قسم تسليمات المكتب» يشتغل</b> — هو الوحيد اللي بيكتب القيمة دي، ولسه ما اتنشرش. ورسالة القايمة الفاضية <b>بتسمّي الشرط</b> بدل ما تقول «مفيش طرود راجعة».</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>سقف استعلام الـ Worker اترفع من ٣٠٠ لـ١٬٠٠٠ لكل استعلام.</b> الرقم القديم اتنسخ من أداة مصدرها حالة <b>عابرة</b>، وحالات الأداة دي (<code>Returned</code>/<code>Cancelled</code>) <b>بتتراكم</b> — فالسقف كان بيتضرب من أول يوم والطابور بيقول رقم أقل من الحقيقة.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>عمود <b>«الطرد فين دلوقتي»</b> بقى اسمه <b>«موقع الشحنة»</b> — نفس الاسم في «قسم تسليمات المكتب» بالحرف، والمعنى ما اتغيّرش.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>عمودا «آخر تحديث» و«الوقت منذ آخر تحديث» اتشالوا بالكامل</b>، ومعاهم <code>order.updatedAt</code> من الـ Worker. ⚠️ <b>والسبب:</b> شوبيفاي مالهاش حقل بيقول «الطرد رجع إمتى»، و<code>updatedAt</code> بيتحرّك مع <b>أي</b> تعديل — حتى كتابة الميتافيلد بتاعتنا. فكان <b>تقريب بيتقري تسجيل</b>، وعملية جماعية واحدة كانت بتخلّي صفوف كتير تقول نفس التاريخ.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>وترتيب الطابور بقى بالأقدم تغليفًا</b> بدل آخر تحديث — نفس ترتيب «قسم تسليمات المكتب» بالحرف. وقت التغليف <b>مش مثالي هنا</b>، بس هو وقت <b>مسجّل فعلاً</b> بدل تقريب بيتحرّك لوحده.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.29.0</span>
           <span class="cl-ver-date">19-09-2026</span>
         </div>
         <ul class="cl-items">
@@ -766,7 +787,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <div class="rq-head">
             <div>
               <div class="rq-title">🏭 جاهز للرجوع للمخزن</div>
-              <div class="rq-sub" id="rqSub">مرتجع أو ملغي ولسه ما اترجّعش · قاهرة+جيزة وشو روم</div>
+              <div class="rq-sub" id="rqSub">مرتجع أو ملغي · مسجّل إنه في المكتب · قاهرة+جيزة وشو روم</div>
             </div>
             <div class="count-badge">
               <span class="count-num" id="rqCount">—</span>
@@ -801,10 +822,8 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
                     <th>نوع الأوردر</th>
                     <th>الحالة</th>
                     <th>عدد القطع</th>
-                    <th>الطرد فين دلوقتي</th>
+                    <th>موقع الشحنة</th>
                     <th>تاريخ الأوردر</th>
-                    <th>آخر تحديث</th>
-                    <th>الوقت منذ آخر تحديث</th>
                   </tr>
                 </thead>
                 <tbody id="rqTableBody"></tbody>
@@ -2243,7 +2262,14 @@ function rqRender() {
     wrap.style.display  = 'none';
     empty.style.display = '';
     empty.innerHTML = rqState.at
-      ? '<div class="ico">✅</div><div>مفيش طرود راجعة مستنية تسجيل دلوقتي</div>'
+      // 🔴 **الرسالة بتسمّي شرط القايمة — مش بتقول «مفيش شغل».** الطابور
+      //    بيعرض اللي عهدته `Office` **بس**، و`Office` مابيكتبهاش غير «قسم
+      //    تسليمات المكتب». فالفاضي هنا معناه «مفيش طرد **مسجّل** في
+      //    المكتب» — مش «مفيش طرد راجع»، والفرق بينهم هو الفرق بين معلومة
+      //    وكذبة. ⛔ ممنوع ترجع لجملة عامة.
+      ? '<div class="ico">✅</div><div>مفيش طرد مسجّل إنه في المكتب مستني رجوع</div>'
+        + '<div style="margin-top:6px;font-size:12px;">الطابور بيعرض اللي عهدته «في المكتب» بس — '
+        + 'وأي طرد راجع تاني <b>بيتسكن عادي</b> والـ Worker هو اللي بيحكم.</div>'
       : (rqState.failed
           ? '<div class="ico">⚠️</div><div>تعذّر تحميل الطابور — اضغط «تحديث»</div>'
           : '<div class="ico">⏳</div><div>جاري تحميل الطابور…</div>');
@@ -2267,11 +2293,9 @@ function rqRender() {
     //    بيتفتح ويتراجع · الملغي بيترجّع على الرف زي ما هو)، فجمعهم في كلمة
     //    واحدة كان بيشيل المعلومة الوحيدة اللي بتفرّق بينهم.
     const st = rqStatusOf(o);
-    // ⚠️ «الطرد فين دلوقتي» — العهدة **قبل** السكانة: هي اللي بتقول للموظف
+    // ⚠️ «موقع الشحنة» — العهدة **قبل** السكانة: هي اللي بتقول للموظف
     //    الطرد جاي منين. الفاضية `—` مش `المخزن`: «مش معروف» ≠ «هنا».
     const wh = rqWhereaboutsText(o.whereabouts);
-    const since = o.updatedAt ? rqSinceUpdate(o.updatedAt, now)
-                              : { cls: 'tb-none', text: '— مفيش وقت تحديث' };
     return `<tr>
       <td>${orderLink(o.orderName, o.orderId)}</td>
       <td>${esc(o.customer || '—')}</td>
@@ -2280,8 +2304,6 @@ function rqRender() {
       <td class="col-num">${esc(String(qty))}</td>
       <td><span class="wh-text ${wh.cls}">${esc(wh.text)}</span></td>
       <td>${esc(formatDate(o.createdAt))} <span class="time-badge age-badge ${age.cls}">${esc(age.text)}</span></td>
-      <td class="col-num">${o.updatedAt ? esc(formatDate(o.updatedAt)) : '—'}</td>
-      <td><span class="time-badge ${since.cls}" data-rq-upd="${o.updatedAt ? esc(o.updatedAt) : ''}">${esc(since.text)}</span></td>
     </tr>`;
   }).join('');
 }
@@ -2298,39 +2320,19 @@ function rqStatusOf(o) {
 }
 
 // ─── عهدة الطرد قبل السكانة ──────────────────────────────────
+// ⚠️ **نفس الدالة بالحرف في `office-transfer.html`** — أي تعديل في الاتنين
+//    في نفس التمريرة (درس R1). وفرع `Warehouse` هنا **حارس**: البوابة
+//    بتستبعده («في المخزن خلاص») فمفروض مايوصلش — ولو وصل يومًا، الخانة
+//    بتقول القيمة بدل ما تسكت.
 function rqWhereaboutsText(v) {
-  if (v === 'Office')  return { cls: 'wh-office',  text: '🏢 في المكتب' };
-  if (v === 'Courier') return { cls: 'wh-courier', text: '🚚 مع المندوب' };
+  if (v === 'Warehouse') return { cls: 'wh-home',    text: '🏬 في المخزن' };
+  if (v === 'Office')    return { cls: 'wh-office',  text: '🏢 في المكتب' };
+  if (v === 'Courier')   return { cls: 'wh-courier', text: '🚚 مع المندوب' };
   if (v) return { cls: 'wh-unknown', text: `⚠️ ${v}` };
   // ⚠️ فاضية = **مش معروف**، مش «في المخزن». أداة التغليف لسه ما بتكتبش
   //    `Warehouse` وقت التغليف، فالفاضي هو الحالة الغالبة — وتسميته «المخزن»
   //    كانت هتقول للموظف إن الطرد هنا وهو مش عارف.
   return { cls: 'wh-unknown', text: '— مش مسجّل' };
-}
-
-// «الوقت منذ آخر تحديث» — نفس درجات `rdySincePrint` في `pack.html` بالحرف.
-// 🔴 **والمصدر `updatedAt` مش وقت التغليف — وده قرار.** الطرد هنا ممكن يكون
-//    اتغلّف من شهر ورجع من ساعة، فوقت التغليف **مابيقولش حاجة عن الانتظار**.
-//    آخر تحديث أقرب أثر لتحوّل الحالة لـ`Returned`/`Cancelled`.
-// ⚠️ وهو **تقريب مش تسجيل** — أي تعديل تاني على الأوردر بيحرّكه. عشان كده
-//    العمود اسمه «آخر تحديث» بالحرف مش «وقت الرجوع». ⛔ ممنوع يتسمّى غير كده.
-// ⚠️ الدرجة من `wocDayDiff`/`wocDayLevel` في الـ shell — نفس مصدر بادج
-// عمر الأوردر — فمستحيل تفترق (نفس درس R1).
-function rqSinceUpdate(iso, now = new Date()) {
-  const t = new Date(iso).getTime();
-  if (isNaN(t)) return { cls: 'tb-none', text: '— وقت غير مقروء' };
-  const days = wocDayDiff(iso, now);
-  if (days <= 0) {
-    const mins = Math.max(0, Math.floor((now.getTime() - t) / 60000));
-    const text = mins < 60
-      ? `🟢 منذ ${arMin(mins)}`
-      : `🟢 منذ ${arHour(Math.floor(mins / 60))}${mins % 60 ? ` و${arMin(mins % 60)}` : ''}`;
-    return { cls: 'tb-d0', text };
-  }
-  if (days === 1) return { cls: 'tb-d1', text: '🟡 مستني يوم — منذ أمس' };
-  if (days === 2) return { cls: 'tb-d2', text: '🟠 مستني يومين' };
-  if (days <  7)  return { cls: 'tb-d3', text: `🔴 مستني ${arDay(days)}` };
-  return { cls: 'tb-d7', text: `⛔ مستني ${arDay(days)}` };
 }
 
 // 🔴 **نزع سلاح الصف** — الأوردر اللي اتسجّل بيتشال من الطابور فورًا.
@@ -2376,7 +2378,7 @@ async function rqLoad(silent) {
     const sub = document.getElementById('rqSub');
     const since = wocYmdToDMY(data.ordersSince);
     if (sub && since) {
-      sub.textContent = `مرتجع أو ملغي ولسه ما اترجّعش · قاهرة+جيزة وشو روم · أوردرات من ${since}`;
+      sub.textContent = `مرتجع أو ملغي · مسجّل إنه في المكتب · قاهرة+جيزة وشو روم · أوردرات من ${since}`;
     }
   } catch (err) {
     // 🔴 **الفشل بيتقال، والرقم القديم بيفضل معروض لو كان فيه واحد.**
@@ -2422,16 +2424,6 @@ setInterval(() => {
     const age = wocOrderAge(o.createdAt, now);
     el.className   = `time-badge age-badge ${age.cls}`;
     el.textContent = age.text;
-  });
-  // «الوقت منذ آخر تحديث» — بالـ ISO المخزّن على الخلية نفسها
-  // (`data-rq-upd`) مش بترتيب الصفوف، نفس نمط `data-rdy-since` في
-  // `pack.html`.
-  document.querySelectorAll('#rqTableBody [data-rq-upd]').forEach(el => {
-    const iso = el.dataset.rqUpd;
-    if (!iso) return;
-    const since = rqSinceUpdate(iso, now);
-    el.className   = `time-badge ${since.cls}`;
-    el.textContent = since.text;
   });
 }, RQ_TICK_MS);
 
