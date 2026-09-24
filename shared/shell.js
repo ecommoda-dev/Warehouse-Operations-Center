@@ -34,6 +34,21 @@
 //    Worker ده (Standards #29). ترفيعه بلا سبب = تحذير كاذب على أي
 //    rollback مشروع.
 const WOC_WORKERS = {
+  // 🔴 **Worker الدخول — بتاع الهب نفسه، وعايش في نفس الريبو** (v1.32.0).
+  //    الهب واجهة + Worker دخول = الشكل القياسي (قرار ٨ في
+  //    `ecommoda-tool-migration-playbook`) — نفس شكل
+  //    `Delivery-COD-Operations-Center`. بيخدم: `get_employees` ·
+  //    `check_employee` · `register_pin` · `verify_employee` · `log_logout`.
+  //    ⛔ **ومالوش أي endpoint تشغيلي** — كل أداة تشغيلية على Worker بتاعها.
+  //    ⚠️ والهب **مابيبعتش `appId`** خالص من دلوقتي: الـ Worker بيخدم واجهة
+  //    واحدة فاسم الأداة في D1 (`warehouse_ops_center`) متحدّد في كوده.
+  //    `1.0.0` = أول نسخة، ومفيش نسخة أقدم منشورة — فالحارس هنا **مش**
+  //    بيمنع rollback، هو بيمسك الحالة الوحيدة الممكنة: الـ Worker ما
+  //    اتنشرش أصلاً أو الـ Promote ناقص.
+  // 🔴 **قبل ده الدخول كان بيحصل عبر Worker التغليف** (`pack`) بـ
+  //    `appId: 'warehouse_ops_center'`. اتنقل عشان أكبر Worker شغل في
+  //    المخزن مايبقاش هو نقطة الفشل الوحيدة لدخول الهب كله.
+  auth:    { url: 'https://warehouse-operations-center-worker.ecommoda-dev.workers.dev', min: '1.0.0', label: 'الدخول' },
   // 2.7.0 = أول نسخة بترجّع `machine`/`chan` من `POST /logs` و`itemsQty` من
   // `/orders` وبتقبل `items` — الأعمدة الجديدة في `print.html` (§LOG-CHAN
   // و§COLS، هب v1.20.0) **مبنية عليها**: من غيرها عمود «نوع الفاتورة» في
@@ -66,8 +81,10 @@ const WOC_WORKERS = {
   //   · و«مفيش قطعة تتغلّف» ترجع رسالة **بلا أي سبب** والنافذة تطلع فاضية
   // ⚠️ ودي **مش** حالة تدهور آمن — الحارس بيختفي بالكامل في صمت، فالترفيع
   //    هنا مش رفاهية (نفس عيلة `remover.min = 1.4.0`).
-  // و2.5.0 كانت أول نسخة بتقبل `appId` في `verify_employee`/`log_logout` —
-  // من غيرها الدخول بيتسجّل `pack_checker` في صمت بدل اسم الهب.
+  // ⚠️ 2.5.0 كانت أول نسخة بتقبل `appId` في `verify_employee`/`log_logout` —
+  // الهب **ما عادش بيناديهم خالص** من v1.32.0 (الدخول بقى على Worker
+  // مستقل)، فالسطر ده بقى تاريخي. الأداة المستقلة `Orders-Packing-Checker`
+  // لسه بتستخدمهم لدخولها هي.
   pack:    { url: 'https://orders-packing-checker-worker.ecommoda-dev.workers.dev', min: '2.6.0', label: 'التغليف' },
   remover: { url: 'https://order-item-remover-worker.ecommoda-dev.workers.dev',     min: '1.4.0', label: 'حذف منتج' },
   // 1.2.0 = أول نسخة فيها **سجل العمليات** (`log_print` · `get_logs` ·
@@ -145,10 +162,12 @@ const WOC_WORKERS = {
   warehouse:{ url: 'https://package-transfer-to-warehouse-worker.ecommoda-dev.workers.dev', min: '1.0.0', label: 'قسم استلام المرتجعات' },
 };
 
-const TOOL_VERSION = 'v1.31.0';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.32.0';                      // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
-const WOC_APP_ID   = 'warehouse_ops_center';         // قيمة `tool` في D1 — login/logout بس
 const SHOP_HANDLE  = '6c7e1a-53';
+// ⚠️ `WOC_APP_ID` اتشالت في v1.32.0 — Worker الدخول المستقل (`WOC_WORKERS.auth`)
+//    بيخدم واجهة واحدة، فاسم الأداة في D1 (`warehouse_ops_center`) متحدّد
+//    في كوده هو مش مبعوت من العميل. مفيش appId يتبعته من هنا خالص.
 
 // 🔴 السر (`LS_SECRET`) هو **الحاجة الوحيدة** في التخزين المحلي في الريبو
 //    كله (#28 · #39). الهوية في sessionStorage، والروابط ثوابت في الكود.
@@ -1080,15 +1099,15 @@ function showWorkerStale() {
 }
 
 // ── الخروج ────────────────────────────────────────────────────
-// ⚠️ `appId` بيتبعت هنا كمان — من غيره صف الـ `logout` بيتسجّل
-//    `pack_checker` والدخول `warehouse_ops_center`، فالزوج مايتقفلش.
+// ⚠️ الخروج بينادي `WOC_WORKERS.auth` — نفس Worker الدخول بالضبط، بلا
+//    `appId` (الاسم متحدّد في كود الـ Worker نفسه من v1.32.0).
 // ⚠️ الجلسة والكاش بيتمسحوا **حتى لو** نداء التسجيل فشل — الخروج فعل
 //    محلي، ومانسيبش موظف داخل عشان D1 ما ردّتش.
 async function doLogout() {
   const s = getSession();
   try {
     if (s?.username) {
-      await wocApi(WOC_WORKERS.pack).apiGet('log_logout', { username: s.username, appId: WOC_APP_ID });
+      await wocApi(WOC_WORKERS.auth).apiGet('log_logout', { username: s.username });
     }
   } catch { /* الخروج بيتم برضه */ }
   clearSession();
