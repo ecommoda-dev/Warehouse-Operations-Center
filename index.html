@@ -466,8 +466,8 @@
                 كتابة النهاردة كمان، والـ Worker بيتحقق من السر مش من هوية الموظف.
                 المحاسبة شرف مش إثبات — قبل الهب وبعده.</li>
             <li>صف الدخول في D1 بيتسجّل باسم <code>warehouse_ops_center</code> —
-                <code>appId</code> بيتبعت مع <code>verify_employee</code> و<code>log_logout</code>
-                (محتاج Worker التغليف <b>2.5.0</b> على الأقل).</li>
+                على <b>Worker الدخول المستقل</b> بتاع الهب نفسه، متحدّد في كوده
+                مباشرة من v1.32.0 (قبلها كان عبر Worker التغليف بـ<code>appId</code>).</li>
           </ul>
         </div>
       </details>
@@ -475,8 +475,9 @@
         <summary>السر والإعدادات</summary>
         <div class="about-sec-body">
           <ul>
-            <li>سر واحد لمجموعة <code>warehouse_ops</code> — نفس القيمة على <b>الست Workers</b>
-                (الطباعة · التغليف · حذف منتج · باركود SKU · تسليمات بوسطة · مرتجعات بوسطة).</li>
+            <li>سر واحد لمجموعة <code>warehouse_ops</code> — نفس القيمة على <b>تسعة
+                Workers</b> (الطباعة · التغليف · حذف منتج · باركود SKU · تسليمات بوسطة ·
+                مرتجعات بوسطة · تسليمات المكتب · استلام المرتجعات · <b>الدخول</b>).</li>
             <li>مفتاح التخزين <code>warehouse_ops_worker_secret</code>، وهو <b>الحاجة
                 الوحيدة</b> في التخزين المحلي (<code>warehouse_ops_worker_secret</code>) في الهب كله.</li>
             <li>روابط الـ Workers <b>ثوابت في الكود</b> — مش حقول إعدادات (Standards #28).</li>
@@ -494,7 +495,21 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.31.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.32.0</span>
+          <span class="cl-ver-date">24-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>الدخول بقى على Worker مستقل بتاع الهب نفسه</b> (<code>warehouse-operations-center-worker</code>) — مش عبر Worker التغليف زي ما كان. نفس الشكل اللي «مركز عمليات الشحن والتحصيل» شغّال بيه من الأول: أداة = Worker واحد + HTML واحد + ريبو واحد (قرار ٨ في <code>ecommoda-tool-migration-playbook</code>).</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>⛔ <b>الهب ما عادش بيناديش Worker التغليف للدخول خالص</b> — صفر <code>check_employee</code>/<code>register_pin</code>/<code>verify_employee</code>/<code>log_logout</code>/<code>get_employees</code> من هناك. السبب: أكبر Worker شغل في المخزن كان بيتحكم في أهم نقطة في الهب، وأي مشكلة أو Promote ناقص فيه كان بيقفل باب الدخول كله معاه.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>Worker الدخول الجديد بيخدم <b>واجهة واحدة</b> فمابيبعتش <code>appId</code> خالص — اسم الأداة (<code>warehouse_ops_center</code>) متحدّد في كوده مباشرة، بدل ما يوصل من العميل.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>سره عضو في مجموعة <code>warehouse_ops</code> الحالية — نفس سر التخزين المحلي (<code>warehouse_ops_worker_secret</code>) بلا أي مفتاح جديد.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>Worker التغليف رجع يخدم شغله بس (التغليف · طابور «جاهز للتغليف»)، ومفيش أي تعديل عليه — <code>pack.min</code> زي ما هو.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.31.0</span>
           <span class="cl-ver-date">19-09-2026</span>
         </div>
         <ul class="cl-items">
@@ -828,11 +843,13 @@
 // ⚠️ الصفحة دي **مافيهاش حارس جلسة** — دي شاشة الدخول نفسها.
 //    باقي الصفحات بتنادي الحارس في أول سطر عندها.
 
-const { apiGet, apiPost } = wocApi(WOC_WORKERS.pack);   // الدخول على Worker التغليف — أكتر الأدوات استخدامًا
+const { apiGet, apiPost } = wocApi(WOC_WORKERS.auth);   // الدخول على Worker مستقل بتاع الهب (v1.32.0)
 // ⚠️ `barcode` داخل هنا رغم إن الشاشة الرئيسية **مابتناديهوش** لأي عدد:
 //    القايمة دي بتغذّي 🩺 فحص النظام كمان (`wocRunDiag`)، والفحص من الشاشة
 //    الرئيسية هو الفحص الشامل — Worker مش في القايمة بيختفي من الفحص خالص.
-const PAGE_WORKERS = ['printer', 'pack', 'remover', 'barcode'];
+// 🔴 `auth` داخل هنا من v1.32.0 — هو Worker الدخول، وحارس النسخة لازم
+//    يسمّيه زي أي Worker تاني لو اتأخر أو وقع.
+const PAGE_WORKERS = ['auth', 'printer', 'pack', 'remover', 'barcode'];
 
 // ══════════════════════════════════════════════════════════════
 // §AUTH-JS — Unified Login UI (منقولة من أداة التغليف)
@@ -960,9 +977,9 @@ async function verifyExistingPin() {
   const pin = pinDigits.join('');
   setLoginBusy(true, '⏳ جاري التحقق...');
   try {
-    // ⚠️ `appId` — من غيره الدخول بيتسجّل `pack_checker` والصف المسجّل
-    //    لـ `warehouse_ops_center` في `ecommoda-constants` §7 يفضل فاضي.
-    const data = await apiPost('verify_employee', { username: selectedUsername, pin, appId: WOC_APP_ID });
+    // ⚠️ بلا `appId` — Worker الدخول المستقل بيكتب `warehouse_ops_center`
+    //    من كوده هو مباشرة (v1.32.0).
+    const data = await apiPost('verify_employee', { username: selectedUsername, pin });
     if (!data.ok) { await presentLoginPinError('PIN خطأ — حاول مرة أخرى'); return; }
     await finishLogin(selectedUsername, data.displayName || selectedDisplayName, data.logged);
   } catch (err) { await presentLoginPinError(err.message || 'PIN خطأ'); }
@@ -975,7 +992,7 @@ async function registerNewPinAndLogin() {
   try {
     const reg = await apiPost('register_pin', { username: selectedUsername, pin: pendingNewPin });
     if (reg && reg.ok === false) { await presentLoginPinError(reg.error || 'تعذّر تسجيل الـ PIN'); return; }
-    const data = await apiPost('verify_employee', { username: selectedUsername, pin: pendingNewPin, appId: WOC_APP_ID });
+    const data = await apiPost('verify_employee', { username: selectedUsername, pin: pendingNewPin });
     if (!data.ok) { await presentLoginPinError(data.error || 'تعذّر تسجيل الدخول'); return; }
     await finishLogin(selectedUsername, data.displayName || selectedDisplayName, data.logged);
   } catch (err) { await presentLoginPinError(err.message || 'تعذّر تسجيل الـ PIN'); }

@@ -2,25 +2,32 @@
 
 # مركز عمليات المخزن — Warehouse Operations Center (`Warehouse-Operations-Center`)
 
-![version](https://img.shields.io/badge/version-v1.31.0-blue)
+![version](https://img.shields.io/badge/version-v1.32.0-blue)
 
 **بتعمل إيه:** هب واحد لمحطة المخزن. الموظف بيدخل **مرة واحدة**، وبعدين
 بيتنقّل بين الطباعة والتغليف وحذف المنتج وتسليمات بوسطة وسكانر المرتجعات
 ورحلة الأوردر من غير ما يدخل تاني ومن غير ما يفتح تبويبات متفرقة.
 **مين بيستخدمها:** المخزن
-**الإصدار:** `v1.31.0` — **واحد للهب كله** (`TOOL_VERSION` في `shared/shell.js`)
+**الإصدار:** `v1.32.0` — **واحد للهب كله** (`TOOL_VERSION` في `shared/shell.js`)
 
-> 🔴 **الهب واجهة بحتة.** مفيش Worker جديد، مفيش `wrangler.toml`، مفيش
-> `index.js`، مفيش ربط Cloudflare Builds ومفيش Promote **من الريبو ده**.
-> بينادي **ست** Workers عايشين في ريبوهاتهم.
+> 🔴 **الهب واجهة + Worker دخول بس — من v1.32.0.** الريبو ده بقى فيه
+> `index.js` و`wrangler.toml`، **بس نطاقهم محصور في الدخول والخروج بس**
+> (`check_employee` · `register_pin` · `verify_employee` · `log_logout` ·
+> `get_employees` · `diag` · `get_config`) — نفس الشكل اللي
+> `Delivery-COD-Operations-Center` بيه من أول يوم (قرار ٨ في
+> `ecommoda-tool-migration-playbook`: أداة = Worker واحد + HTML واحد + ريبو
+> واحد). راجع «§AUTH-WORKER — Worker الدخول المستقل» تحت للتفاصيل الكاملة.
+> ⛔ **وصفر endpoint تشغيلي عليه** — لا طابور ولا سكان ولا تغليف. الهب لسه
+> بينادي **تمن** Workers تشغيلية عايشين في ريبوهاتهم (زائد Worker الدخول ده
+> بقى تاسع Worker مستقل)، والـ Promote على أي واحد فيهم **من ريبوه هو**.
 
-> 🔴 **استثناء واحد معتمد من v1.23.0 — وهو الأول من نوعه.** طابور «جاهز
-> لتسليم بوسطة» احتاج **endpoint جديد** (`?action=get_ready_to_ship`)، والـ
-> endpoint ده اتكتب في **`Bosta-Orders-Shipped-Scanner/index.js`** — يعني
-> في ريبو الـ Worker، والـ Promote **من هناك** زي أي تعديل Worker تاني.
-> ⚠️ **القاعدة فوق ما اتكسرتش** — الريبو ده لسه مافيهوش `index.js` ولا
-> `wrangler.toml` ولا Promote. اللي اتغيّر إن التمريرة دي **مش واجهة بحتة**:
-> فيها تعديل Worker في ريبو تاني، وده **حاجز** لحد ما الـ Promote يتعمل.
+> 🔴 **استثناء واحد معتمد من v1.23.0.** طابور «جاهز لتسليم بوسطة» احتاج
+> **endpoint جديد** (`?action=get_ready_to_ship`)، والـ endpoint ده اتكتب في
+> **`Bosta-Orders-Shipped-Scanner/index.js`** — يعني في ريبو الـ Worker
+> التشغيلي، والـ Promote **من هناك** زي أي تعديل Worker تاني.
+> ⚠️ **القاعدة فوق ما اتكسرتش** — التمريرة دي **مش واجهة بحتة على Worker
+> تشغيلي**: فيها تعديل Worker في ريبو تاني، وده **حاجز** لحد ما الـ Promote
+> يتعمل. (هي منفصلة عن Worker الدخول اللي فوق — ده حاجز على طابور بوسطة بس.)
 
 > 🔴 **الاستثناء التاني المعتمد — v1.26.0 (قرار أحمد 15-09-2026).** «قسم
 > تسليمات المكتب» أداة **جديدة بالكامل**، وريبوها
@@ -28,9 +35,9 @@
 > الواجهة الوحيدة هي `office-transfer.html` **هنا**.
 > ⚠️ يعني دي **أول أداة في الستاك مالهاش نسخة مستقلة أصلاً** — مش أداة
 > اتحوّلت للهب وسابت نسختها كنقطة رجوع، دي **اتولدت جوّه الهب**.
-> ⚠️ **والقاعدة فوق ما اتكسرتش** — الريبو ده لسه مافيهوش `index.js` ولا
-> `wrangler.toml`. اللي اتغيّر إن الأداة دي **محتاجة Worker جديد يتعمل
-> ويتربط ويتحط له سر** قبل ما تشتغل، وكل ده **من هناك** — وكله **حاجز**.
+> ⚠️ **والقاعدة سارية على الأداة دي زي ما هي** — ريبو `Package-Transfer-To-Office`
+> Worker وبس، مفيش واجهة فيه خالص. اللي اتغيّر إن الأداة دي **محتاجة Worker
+> جديد يتعمل ويتربط ويتحط له سر** قبل ما تشتغل، وكل ده **من هناك** — وكله **حاجز**.
 > ⚠️ **والمكسب:** مفيش مفتاح `localStorage` تاني ومفيش سر قديم لازم يتلزق في
 > مكانين — الأداة عضو في مجموعة `warehouse_ops` **من أول يوم**.
 
@@ -38,9 +45,9 @@
 > **جديدة بالكامل**، وريبوها (`Package-Transfer-To-Warehouse`) **Worker وبس
 > — مفيش فيه واجهة خالص**، زي `Package-Transfer-To-Office` بالحرف. الواجهة
 > الوحيدة هي `warehouse-return.html` **هنا**.
-> ⚠️ **والقاعدة فوق ما اتكسرتش** — الريبو ده لسه مافيهوش `index.js` ولا
-> `wrangler.toml`. اللي اتغيّر إن الأداة دي **محتاجة Worker جديد يتعمل
-> ويتربط ويتحط له سر** قبل ما تشتغل، وكل ده **من هناك** — وكله **حاجز**.
+> ⚠️ **والقاعدة سارية على الأداة دي زي ما هي** — نفس شكل «تسليمات المكتب»
+> بالحرف. اللي اتغيّر إن الأداة دي **محتاجة Worker جديد يتعمل ويتربط ويتحط
+> له سر** قبل ما تشتغل، وكل ده **من هناك** — وكله **حاجز**.
 > 🔴 **والأداة دي معكوس «تسليمات المكتب» على نفس الحقل** — دي بتكتب
 > `Warehouse` على طرد **راجع** (مرتجع/ملغي)، وتلك بتكتب `Office` على طرد
 > **خارج**. ⛔ **وأخطر فرق بينهم: الإلغاء** — هناك سبب رفض، وهنا **شرط
@@ -66,12 +73,40 @@
 > 🔴 **الأدوات القديمة التلاتة لسه منشورة وشغّالة** كنقطة رجوع طول التجربة
 > الحية. تحويلها لصفحات تحويل = قرار منفصل بعد نجاح التجربة.
 
+## §AUTH-WORKER — Worker الدخول المستقل (v1.32.0)
+
+الهب كان بيدخل عبر `orders-packing-checker-worker` (`appId:
+'warehouse_ops_center'`) — أكبر Worker شغل في المخزن، وأي عطل أو Promote
+ناقص فيه كان بيقفل باب الدخول للهب كله معاه. من v1.32.0 الدخول على
+**`warehouse-operations-center-worker`**: Worker مستقل عايش في ريبو الهب
+نفسه (`index.js` + `wrangler.toml`)، نفس الشكل اللي `Delivery-COD-Operations-Center`
+بيه من أول يوم (قرار ٨ في `ecommoda-tool-migration-playbook`).
+
+- ⛔ **صفر endpoint تشغيلي عليه** — بس `check_employee` · `register_pin` ·
+  `verify_employee` · `log_logout` · `get_employees` · `diag` · `get_config`.
+- 🔴 **بيخدم واجهة واحدة، فمابيبعتش `appId` أصلاً** — اسم الأداة
+  (`warehouse_ops_center`) متحدّد في كوده مباشرة. `AUTH_APPS` فيها اسم
+  واحد (`TOOL_NAME`)، ولو اتضافت واجهة تانية يومًا اسمها بيتضاف هناك
+  **وبيترفع `auth.min` في الشاشة في نفس التسليم**.
+- 🔴 **سره عضو في مجموعة `warehouse_ops` الحالية** — نفس القيمة على
+  التسعة Workers، بلا مفتاح `localStorage` جديد.
+- ⛔ **ومفيش `CLIENT_ID`/`CLIENT_SECRET` عليه بقرار** — مالوش أي نداء
+  لشوبيفاي. سطح الـ PIN ومفاتيح المتجر في Workers مختلفة.
+- 🔴 **`orders-packing-checker-worker` رجع يخدم شغله بس** — التغليف وطابور
+  «جاهز للتغليف». `AUTH_APPS` بتاعته رجعت لاسم واحد (`pack_checker`)،
+  والهب **مابيناديش** `check_employee`/`register_pin`/`verify_employee`/
+  `log_logout`/`get_employees` عليه خالص من دلوقتي (كان بيناديهم للدخول
+  والأداة الوحيدة اللي لسه بتستخدمهم هي `Orders-Packing-Checker` المستقلة
+  لدخولها هي).
+- ⚠️ **صف الدخول في D1 ما اتأثرش** — لسه `tool = 'warehouse_ops_center'`،
+  `type = 'login'/'logout'` — الاسم اللي بيكتبه اتغيّر مصدره بس مش قيمته.
+
 ## الروابط
 
 ```
 الواجهة : https://ecommoda-dev.github.io/Warehouse-Operations-Center/
 tool في D1 : warehouse_ops_center      ← login · logout بس
-مجموعة السر : warehouse_ops            ← ٨ Workers + الهب (تسع مستهلكين)
+مجموعة السر : warehouse_ops            ← ٩ Workers + الهب (عشرة مستهلكين)
 مفتاح localStorage : warehouse_ops_worker_secret   ← Standards #39
 ```
 
@@ -79,7 +114,7 @@ tool في D1 : warehouse_ops_center      ← login · logout بس
 
 | الصفحة | الأداة | الـ Worker | الحد الأدنى | Tier |
 |---|---|---|---|---|
-| `index.html` | الدخول + الشاشة الرئيسية | التغليف (للدخول) + التلاتة (للأعداد) | — | L (1400) |
+| `index.html` | الدخول + الشاشة الرئيسية | **`warehouse-operations-center-worker`** (للدخول) + التمن (للأعداد) | **`1.0.0`** | L (1400) |
 | `print.html` | قسم الطباعة — فواتير **وبوالص بوسطة (S1 و S2)** | `order-printer-worker` | **`2.8.1`** | L (1400) |
 | `pack.html` | قسم التغليف | `orders-packing-checker-worker` | **`2.5.0`** | L (1400) |
 | `remove.html` | حذف منتج من الأوردر | `order-item-remover-worker` | **`1.4.0`** | M (1200) |
@@ -91,7 +126,7 @@ tool في D1 : warehouse_ops_center      ← login · logout بس
 | `office-transfer.html` | **قسم تسليمات المكتب** — نقل الطرد من المخزن للمكتب | `package-transfer-to-office-worker` | **`1.1.0`** | M (1200) |
 | `warehouse-return.html` | **قسم استلام المرتجعات** — رجوع الطرد الراجع للمخزن | `package-transfer-to-warehouse-worker` | **`1.0.0`** | M (1200) |
 
-> ⚠️ **تمن `min` مستقلة تمامًا** — مالهمش أي علاقة ببعض ولا بـ
+> ⚠️ **تسعة `min` مستقلة تمامًا** — مالهمش أي علاقة ببعض ولا بـ
 > `TOOL_VERSION`. `min` مايترفعش إلا لما الهب **يعتمد فعلاً** على حاجة جديدة
 > في الـ Worker ده (Standards #29). ترفيعه بلا سبب = تحذير كاذب على أي
 > rollback مشروع.
@@ -201,10 +236,11 @@ tool في D1 : warehouse_ops_center      ← login · logout بس
 > هنا مش رفاهية (نفس عيلة `remover.min = 1.4.0`).
 
 > 🔴 **الصفحتان مابيناديوش أي Worker تاني — ولا حتى للدخول.** الدخول بيحصل
-> **مرة واحدة** في `index.html` عبر Worker التغليف، والهوية بتوصل من
-> `sessionStorage`. و`get_employees` لفلتر السجل بييجي من **Worker الأداة
-> نفسها** (الاتنين عندهم المسار ده أصلاً) — بخلاف `sku-barcode.html` اللي
-> اضطرت تنادي التغليف لأن Worker الباركود مالوش نقطة دخول.
+> **مرة واحدة** في `index.html` عبر Worker الدخول المستقل (§AUTH-WORKER
+> فوق)، والهوية بتوصل من `sessionStorage`. و`get_employees` لفلتر السجل
+> بييجي من **Worker الأداة نفسها** (الاتنين عندهم المسار ده أصلاً) — بخلاف
+> `sku-barcode.html` اللي اضطرت تنادي التغليف لأن Worker الباركود مالوش
+> نقطة دخول.
 > ⚠️ النتيجة: `PAGE_WORKERS` في كل صفحة فيهم **مفتاح واحد**، وحارس النسخة
 > بيسمّي Worker واحد بس.
 
@@ -217,9 +253,11 @@ tool في D1 : warehouse_ops_center      ← login · logout بس
 > عشانه)، و«مفيش قطعة تتغلّف» ترجع رسالة **بلا أي سبب** والنافذة تطلع فاضية.
 > ⛔ ودي **مش** حالة تدهور آمن: الحارس بيختفي بالكامل **في صمت** — نفس عيلة
 > `remover.min = 1.4.0`، فالحارس هنا مش رفاهية.
-> **①** والمرة الأولانية (v1.6.0): الهب بيبعت `appId` في `verify_employee`
-> و`log_logout`، والباراميتر ده اتضاف في Worker التغليف v2.5.0. نسخة أقدم
-> **مش هترجّع خطأ** — هتسجّل الدخول تحت `pack_checker` **في صمت**.
+> **①** والمرة الأولانية (v1.6.0): الهب كان بيبعت `appId` في `verify_employee`
+> و`log_logout` (الباراميتر ده اتضاف في Worker التغليف v2.5.0). **البند ده
+> بقى تاريخي من v1.32.0** — الهب ما عادش بينادي الدخول على Worker التغليف
+> خالص (راجع §AUTH-WORKER فوق)، وWorker التغليف رجع يخدم واجهة واحدة
+> (نفسه المستقلة) لدخولها هي.
 
 > 🔴 **`sku-barcode.html` بقت بتنادي Worker التغليف كمان من v1.10.0** —
 > في حالتين بس (التانية اتضافت في v1.15.0):
@@ -413,7 +451,7 @@ tool في D1 : warehouse_ops_center      ← login · logout بس
 
 | القسم | المحتوى |
 |---|---|
-| §CONFIG | `WOC_WORKERS` · `TOOL_VERSION` · `LS_SECRET` · `WOC_APP_ID` · `getSecret`/`setSecret`/`isConfigured` |
+| §CONFIG | `WOC_WORKERS` (فيها `auth`) · `TOOL_VERSION` · `LS_SECRET` · `getSecret`/`setSecret`/`isConfigured` |
 | §SESSION | `getSession` · `setSession` · `clearSession` · `requireSession` · `cacheGet` · `cacheSet` |
 | §API | `wocApi(worker)` — **مصنع** بدل دوال عامة · **`WOC_API_TIMEOUT_MS`** |
 | §HELPERS | `esc` · `toCairo` · `cairoDayStr` · `cairoDayIndex` · `formatDate*` · `arMin`/`arHour`/`arDay` · `sinceText` · **`agoInfo`** · **`wocDayDiff`/`wocDayLevel`/`wocOrderAge`** · `orderLink` · `shopifyOrderUrl` · **`shopifyVariantUrl`** · `cmpVersion` · `playBeep` |
@@ -2679,7 +2717,8 @@ pack.html  →  print.html?order=<num>&from=pack
 
 | الـ Worker | الـ actions |
 |---|---|
-| التغليف | `get_employees` · `check_employee` · `register_pin` · **`verify_employee` (+`appId`)** · **`log_logout` (+`appId`)** · `get_config` · `diag` · `get_ready_orders` · `get_order` · `complete_pack` · `get_logs*` |
+| **الدخول** (`warehouse-operations-center-worker`) | `get_employees` · `check_employee` · `register_pin` · `verify_employee` · `log_logout` · `get_config` · `diag` — **صفر endpoint تشغيلي** (§AUTH-WORKER فوق) |
+| التغليف | `get_config` · `diag` · `get_ready_orders` · `get_order` · `complete_pack` · `get_logs*` — **صفر endpoint دخول من الهب** من v1.32.0 (كانت `get_employees`/`check_employee`/`register_pin`/`verify_employee`/`log_logout` قبلها) |
 | الطباعة | `get_config` · `diag` · `get_logs*` · **`bosta_lookup` (+`machine`)** · **`bosta_awb`** · والمسارات `/orders` · `/invoice` · `/track` · `/logs` |
 | الحذف | `get_config` · `diag` · `get_logs*` · وباقي مسار الحذف |
 | باركود SKU | `get_config` · `diag` · **`get_order` (+`id`)** · **`search_sku`** (رجع له مستهلك في v1.15.0) · **`log_print` (POST)** · **`get_logs*`** |
@@ -2693,14 +2732,17 @@ pack.html  →  print.html?order=<num>&from=pack
 > بيرجّع `apiPath` جنب `apiGet`/`apiPost`.
 
 > 🔴 **الهب مابيناديش `check_employee`/`register_pin`/`verify_employee`/
-> `log_logout` على السكانرين خالص** — المسارات دي موجودة في الـ Workers بتوعهم
-> وشغّالة، بس الدخول بيحصل **مرة واحدة** في `index.html` عبر Worker التغليف.
-> ⚠️ يعني الأداتين المستقلتين **لسه بتكتبا `login`/`logout` تحت
-> `bosta_tracker` و`bosta_return`** لما حد يفتحهم من روابطهم القديمة، والهب
-> بيكتب تحت `warehouse_ops_center`. **الزوج مايتلخبطش** لأن كل واجهة بتكتب
-> الاتنين تحت نفس الاسم.
-> ⚠️ و`appId` **مش مطلوب** على الـ Workerين دول (بخلاف Worker التغليف) —
-> الهب مابينادهمش للدخول أصلاً، فمفيش سبب لتعديل Worker هنا.
+> `log_logout` على السكانرين خالص، ولا على Worker التغليف من v1.32.0.**
+> المسارات دي موجودة في الـ Workers بتوعهم وشغّالة (لدخول الأداتين
+> المستقلتين هما)، بس الدخول بيحصل **مرة واحدة** في `index.html` عبر
+> **Worker الدخول المستقل** (§AUTH-WORKER فوق).
+> ⚠️ يعني الأدوات المستقلة **لسه بتكتب `login`/`logout` تحت أسمائها هي**
+> (`bosta_tracker` · `bosta_return` · `pack_checker`) لما حد يفتحها من
+> روابطها القديمة، والهب بيكتب تحت `warehouse_ops_center`. **الزوج مايتلخبطش**
+> لأن كل واجهة بتكتب الاتنين تحت نفس الاسم.
+> ⚠️ و`appId` **مش مطلوب على أي Worker تشغيلي في الستاك من v1.32.0** —
+> الهب مابيناديهمش للدخول أصلاً. الوحيد اللي بيقرا `appId` دلوقتي هو Worker
+> الدخول نفسه، وهو بيتجاهله عمليًا (`AUTH_APPS` فيها اسم واحد).
 
 ## D1
 
@@ -2708,6 +2750,10 @@ pack.html  →  print.html?order=<num>&from=pack
 tool  : warehouse_ops_center
 type  : login · logout      ← بس. الهب **مابيكتبش** أي فعل تشغيلي تحت اسمه
 ```
+
+> 🔴 **الكاتب من v1.32.0 هو Worker الدخول المستقل** (`warehouse-operations-center-worker`)
+> — قبلها كان `orders-packing-checker-worker` عبر `appId`. القيمة نفسها
+> (`tool`/`type`) ما اتغيّرتش، **المصدر** بس هو اللي اتغيّر.
 
 الأفعال التشغيلية بتفضل تحت أسمائها التاريخية:
 `order_printer`/`S1`·`S2`·**`AWB`**·**`not_found`** · `pack_checker`/`packed` ·
@@ -2775,7 +2821,12 @@ type  : login · logout      ← بس. الهب **مابيكتبش** أي فعل
 
 ## CORS
 
-**صفر تعديل مطلوب.** التلات Workers بيسمحوا بـ `https://ecommoda-dev.github.io`
+🔴 **Worker الدخول الجديد على Option B (قايمة صارمة)** بنفس الأصل بالظبط
+(`ALLOWED_ORIGINS = ['https://ecommoda-dev.github.io']`) — بيستقبل **PIN**،
+فمفيش wildcard بأي حال. المسار مش جزء من الـ Origin، فمفيش أي تعديل CORS
+مطلوب في أي Worker تاني بسبب الإضافة دي.
+
+**وباقي الستاك — صفر تعديل مطلوب.** التلات Workers بيسمحوا بـ `https://ecommoda-dev.github.io`
 **على مستوى الدومين**، والمسار مش جزء من الـ Origin.
 و`order-sku-barcode-printer-worker` على **Option A (wildcard)**.
 وسكانرا بوسطة على **Option B (قايمة صارمة)** بنفس الأصل بالظبط
@@ -2816,11 +2867,28 @@ localStorage.setItem('warehouse_ops_worker_secret',
                      localStorage.getItem('pack_checker_worker_secret'));
 ```
 
+### 🔴 إعداد Worker الدخول (مرة واحدة — v1.32.0)
+
+```
+① Cloudflare → Workers → إنشاء Worker باسم warehouse-operations-center-worker بالحرف
+② Workers Builds → ربط الريبو ده → main
+③ Build watch paths — إلزامية:
+     Include paths : index.js        ← chip منفصل
+                     wrangler.toml   ← chip منفصل
+   ⛔ chip واحد باسم غلط (مسافة بين الاتنين في نفس السطر) = مفيش أي build
+      هيحصل تاني، بلا خطأ ولا رسالة، والـ Worker بيتجمّد على نسخته للأبد.
+   ⚠️ من غير التضييق، أي تعديل على أي صفحة HTML في الهب بينشر Worker
+      الدخول تاني بنفس الكود.
+④ WORKER_SECRET = قيمة مجموعة warehouse_ops الحالية → Promote
+⑤ تسجيل الانضمام في ecommoda-constants → references/secret-groups.md
+```
+
 | | مطلوب من الريبو ده؟ |
 |---|---|
-| Worker جديد · `wrangler.toml` · `index.js` · تعديل CORS | ❌ كلهم |
-| تعديل على `index.js` بتاع سكانرا بوسطة | ❌ — الدمج واجهة بحتة، الـ Workers ما اتلمسوش |
-| ربط Builds · Promote | ❌ من هنا — **بس مطلوبين في `Order-SKU-Barcode-Printer`** (تحت في المسائل المفتوحة) |
+| Worker الدخول · `wrangler.toml` · `index.js` · ربط Builds · Promote بتاعه | ✅ **أيوه — من هنا، ومحصور في الدخول بس** |
+| Worker تشغيلي جديد (طابور/سكان/كتابة) · تعديل CORS على Worker تاني | ❌ — كل أداة تشغيلية Worker بتاعها في ريبوها |
+| تعديل على `index.js` بتاع سكانرا بوسطة أو أي Worker تشغيلي تاني | ❌ — الدمج واجهة بحتة، الـ Workers التشغيلية ما اتلمستش |
+| ربط Builds · Promote لـWorkers تشغيلية | ❌ من هنا — **بس مطلوبين في `Order-SKU-Barcode-Printer`** (تحت في المسائل المفتوحة) |
 
 ## 🔴 فحص CSS بـ parser — إلزامي، وgrep مش بديل عنه
 
@@ -3088,6 +3156,23 @@ bash docs/label-twin-check.sh   # pack.html ⟷ sku-barcode.html — صفر تب
 (300/310) أعلى من «محتوى ≤ 200` — السبب فوق في فخاخ الطابعة.
 
 ## مسائل مفتوحة
+
+- 🔴 **إنشاء `warehouse-operations-center-worker` وربطه وتسريره — حاجز الدخول
+  بالكامل (جديد v1.32.0).** Worker الدخول الجديد مالوش أي وجود على
+  Cloudflare لسه. المطلوب بالترتيب: ① إنشاء Worker **بنفس الاسم بالحرف** ·
+  ② ربط Workers Builds على الريبو ده (`main`) · ③ **`Build watch paths`**
+  (`index.js` + `wrangler.toml` كـ chips منفصلة — القسم فوق) · ④
+  **`WORKER_SECRET` = قيمة مجموعة `warehouse_ops`** → Promote.
+  **من غيره:** الدخول كله بيفشل — الهب بيرجّع `401` على أول محاولة دخول،
+  ومفيش نقطة رجوع للدخول القديم عبر Worker التغليف (اتشال في نفس التمريرة).
+  ⚠️ **وده أخطر بند مفتوح في الملف ده حاليًا** — لو الأداتين التانيتين
+  (تسليمات المكتب/استلام المرتجعات) واقعين، باقي الهب شغّال؛ لو Worker
+  الدخول واقع، **مفيش حد يقدر يدخل الهب خالص**.
+
+- 🔴 **تسجيل انضمام `warehouse-operations-center-worker` لمجموعة
+  `warehouse_ops` في `ecommoda-constants` → `references/secret-groups.md`**
+  (قاعدة ٢) — المجموعة بقت تسعة Workers + الهب. عضو غير مسجّل = تدوير السر
+  مستقبلاً بيتكسر بصمت.
 
 - 🔴 **إنشاء `package-transfer-to-warehouse-worker` وربطه وتسريره — حاجز
   بالكامل (جديد v1.28.0).** الأداة الجديدة Worker مالوش أي وجود على
@@ -3429,8 +3514,11 @@ Promote، صفر ترفيع لأي `min`، ومفيش قيمة `tool` جديدة
 > التانية لسه على بصمتها القديمة (بند في المسائل المفتوحة فوق) —
 > **البصمة ادعاء عن الملف، مش عن الريبو**.
 
-آخر مطابقة: 19-09-2026 · الهب `v1.31.0`
-🔴 معلّقة: **إنشاء `package-transfer-to-warehouse-worker` + ربط Builds + سر
+آخر مطابقة: 24-09-2026 · الهب `v1.32.0`
+🔴 معلّقة: **إنشاء `warehouse-operations-center-worker` + ربط Builds + سر
+`warehouse_ops` (حاجز — الدخول كله مش شغّال من غيره، صفر نقطة رجوع)** ·
+**تسجيل انضمامه لمجموعة `warehouse_ops` في `ecommoda-constants`** ·
+**إنشاء `package-transfer-to-warehouse-worker` + ربط Builds + سر
 `warehouse_ops` + OAuth (حاجز — أداة استلام المرتجعات مش شغّالة من غيرهم)** ·
 **تسجيل «استلام المرتجعات» ككاتب على `metafields_change` في
 `ecommoda-constants` §7** ·
@@ -3453,7 +3541,20 @@ v3.5.0 وv3.6.0)** ·
 
 ---
 
-آخر تحديث: 19-09-2026 — v1.31.0 (🔴 **حل تجربة `docs/query-cost-experiment.md`
+آخر تحديث: 24-09-2026 — v1.32.0 (🔴 **الدخول بقى على Worker مستقل بتاع الهب
+نفسه** (`warehouse-operations-center-worker` — `index.js` + `wrangler.toml`
+في الريبو ده) **بدل الدخول عبر Worker التغليف** (`orders-packing-checker-worker`
+عن طريق `appId: 'warehouse_ops_center'`). نفس شكل `Delivery-COD-Operations-Center`
+بالحرف (قرار ٨ في `ecommoda-tool-migration-playbook`). ⛔ **وصفر endpoint
+تشغيلي على Worker الدخول الجديد** — بس `check_employee`/`register_pin`/
+`verify_employee`/`log_logout`/`get_employees`/`diag`/`get_config`. سره
+عضو في مجموعة `warehouse_ops` الحالية (بلا مفتاح `localStorage` جديد).
+`AUTH_APPS` بقت اسم واحد في **الاتنين** (Worker الدخول الجديد وWorker
+التغليف) — الهب مابيبعتش `appId` أصلاً من دلوقتي، وWorker التغليف رجع
+يخدم واجهة واحدة (نفسه المستقلة) لدخولها. راجع §AUTH-WORKER فوق. **حاجز
+حتى ما ينشرش Worker الدخول ويتحط له سر — مسائل مفتوحة.**)
+
+19-09-2026 — v1.31.0 (🔴 **حل تجربة `docs/query-cost-experiment.md`
 — قرارات أحمد النهائية §٨ و§٩.** §٨: تفريق توقيت الخمس نداءات المتوازية في
 `index.html` (① — تأخير ٢٠٠ms بين إطلاق كل طابور) + `getAccessToken()` بقت
 بنفس انضباط `shopifyGQL` (retry + backoff) في الخمس Workers (② — تصحيح عام
