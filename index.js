@@ -1,4 +1,5 @@
 // ══════════════════════════════════════════════════════════════
+
 // §HEADER
 // Worker: warehouse-operations-center-worker — EcomModa
 // Tool:   مركز عمليات المخزن — **الدخول والخروج وبس**
