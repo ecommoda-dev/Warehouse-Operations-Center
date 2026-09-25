@@ -162,7 +162,7 @@ const WOC_WORKERS = {
   warehouse:{ url: 'https://package-transfer-to-warehouse-worker.ecommoda-dev.workers.dev', min: '1.0.0', label: 'قسم استلام المرتجعات' },
 };
 
-const TOOL_VERSION = 'v1.34.0';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.35.0';                      // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const SHOP_HANDLE  = '6c7e1a-53';
 // ⚠️ `WOC_APP_ID` اتشالت في v1.32.0 — Worker الدخول المستقل (`WOC_WORKERS.auth`)
@@ -361,8 +361,8 @@ function formatDate(iso) {
   return `📅 ${pad(d.getUTCDate())}/${pad(d.getUTCMonth()+1)}/${d.getUTCFullYear()}`;
 }
 // ── أرضية تاريخ الأوردر — `YYYY-MM-DD` → `DD/MM/YYYY` ─────────
-// 🔴 **في الـ shell مش في الصفحة** — `office-transfer.html` و
-//    `warehouse-return.html` الاتنين بيعرضوا نفس السطر من نفس الرد، ونسخة
+// 🔴 **في الـ shell مش في الصفحة** — `Package-Transfer-To-Office.html` و
+//    `Package-Transfer-To-Warehouse.html` الاتنين بيعرضوا نفس السطر من نفس الرد، ونسخة
 //    في كل صفحة هي درس R1 بالحرف.
 // ⚠️ **ومافيهاش `new Date()`** — القيمة **تاريخ مجرّد** جاي من الـ Worker،
 //    و`new Date('2026-04-01')` بتتقرا UTC وبتتعرض بتوقيت الجهاز، فأرضية
@@ -641,7 +641,7 @@ function wocCourierCounts(orders) {
 //    كله (١٠٬٠٠٠ صف — مقيس 15-09-2026). فالـ Worker بيجيب اللي حالته `Ready`
 //    بس، والأهلية بتتحسب هنا.
 //
-// ⛔ **وعشان كده مكانها الـ shell مش الصفحة.** `office-transfer.html`
+// ⛔ **وعشان كده مكانها الـ shell مش الصفحة.** `Package-Transfer-To-Office.html`
 //    و`index.html` بينادوا **نفس الدالة** على **نفس الرد**. نسخة تانية في
 //    صفحة = درس R1 بالحرف (v1.11.0: الرئيسية قالت «بوسطة ٦٦» والصفحة فتحت
 //    على ٦، لأن البوابة كانت في `print.html` لوحدها). ممنوع أي صفحة تعرّفهم
@@ -719,7 +719,7 @@ function wocOfficeGate(o) {
 // الصبح هو اللي المفروض يتنقل الأول، والترتيب بتاريخ الأوردر كان هيحط طرد
 // اتغلّف دلوقتي فوق طرد قاعد من امبارح.
 // ⚠️ **و`whereabouts` بيتلزق على الصف زي `wocWarehouseQueue` بالظبط** —
-//    عمود «موقع الشحنة» في `office-transfer.html` بيقرا منه. والقيم اللي
+//    عمود «موقع الشحنة» في `Package-Transfer-To-Office.html` بيقرا منه. والقيم اللي
 //    ممكن توصل هنا **اتنين بس** (`Warehouse` أو فاضي)، لأن البوابة فوق
 //    بتستبعد `Office` و`Courier` وأي قيمة بره القايمة قبل ما يوصل الصف.
 //    🔴 يعني العمود ده **مش تكرار لعمود المرتجعات** — هناك بيفرّق بين تلات
@@ -752,7 +752,7 @@ function wocOfficeQueue(orders) {
 //    بتخلّي الطابور يستبعد أكبر شريحة عنده — **وصفر خطأ في الكونسول**.
 //
 // 🔴 **ومكانها الـ shell مش الصفحة** — نفس سبب §OFFICE-GATE بالحرف:
-//    `warehouse-return.html` و`index.html` بينادوا **نفس الدالة** على **نفس
+//    `Package-Transfer-To-Warehouse.html` و`index.html` بينادوا **نفس الدالة** على **نفس
 //    الرد**. نسخة تانية في صفحة = درس R1 بالحرف (v1.11.0: الرئيسية قالت
 //    «بوسطة ٦٦» والصفحة فتحت على ٦). ممنوع أي صفحة تعرّفهم تاني — تعريف في
 //    صفحة بيغلب الـ shell (بيتحمّل قبلها) والقاعدتين هيفترقوا **في صمت**.

@@ -1,5 +1,5 @@
 // ══════════════════════════════════════════════════════════════
-// docs/warehouse-check.mjs — فحص متصفح فعلي لـ `warehouse-return.html`
+// docs/warehouse-check.mjs — فحص متصفح فعلي لـ `Package-Transfer-To-Warehouse.html`
 //
 // 🔴 **ليه ملف سادس؟** نفس قرار الخمسة اللي قبله: كل ملف بيشغّل Worker وهمي
 //    بشكل رد **مختلف تمامًا**. الأداة دي عقدها فريد حتى وسط الأدوات الشبيهة:
@@ -10,7 +10,7 @@
 // 🔴 **وأربع عيلات فشل صامتة الملف ده اتكتب عشانها:**
 //    ① شرط أهلية اتكتب في الصفحة بدل الـ shell → الطابور والشاشة الرئيسية
 //      بيقولوا رقمين مختلفين، **وصفر خطأ في الكونسول** (درس R1 · v1.11.0).
-//    ② 🔴 **حارس الإلغاء اتنسخ من `office-transfer.html`** → الملغي بيترفض،
+//    ② 🔴 **حارس الإلغاء اتنسخ من `Package-Transfer-To-Office.html`** → الملغي بيترفض،
 //      والأداة بترفض **أكبر شريحة عندها** بلا أي رسالة تقول ليه. ودي أخطر
 //      واحدة فيهم لأن الكود بيبان سليم تمامًا.
 //    ③ صف S2 بيتفحص بوقت تغليف S1 → طرد ما اتغلّفش بيعدّي، **بلا أي رسالة**.
@@ -53,7 +53,7 @@ const browser = await chromium.launch(launchOpts);
 // 🔴 القايمة دي فيها **مؤهلين وغير مؤهلين مع بعض عن قصد**. ده بالظبط اللي
 //    الـ endpoint الحقيقي بيرجّعه، والبند اللي بيتقفل هنا هو إن **الواجهة
 //    بتفلتر صح**.
-// ⚠️ ومفيش سطر واحد من الفلترة دي مكتوب في `warehouse-return.html` — كله في
+// ⚠️ ومفيش سطر واحد من الفلترة دي مكتوب في `Package-Transfer-To-Warehouse.html` — كله في
 //    `shared/shell.js` §WAREHOUSE-GATE، والاختبار بيقارن الاتنين تحت.
 const RAW = [
   // ✅ مؤهل — مرتجع راجع من المكتب
@@ -260,11 +260,11 @@ async function scan(page, code) {
 // ══════════════════════════════════════════════════════════════
 // ① الهب — الجلسة والهيدر وحارس النسخة
 // ══════════════════════════════════════════════════════════════
-console.log('\n══ warehouse-return.html ══');
+console.log('\n══ Package-Transfer-To-Warehouse.html ══');
 console.log('① الجلسة والهيدر الموحّد');
 {
   const { page, ctx, errors } = await newPage();
-  await page.goto(`${BASE}/warehouse-return.html`);
+  await page.goto(`${BASE}/Package-Transfer-To-Warehouse.html`);
   await page.waitForTimeout(900);
 
   is(await page.locator('#loginOverlay').count() === 0,
@@ -295,7 +295,7 @@ console.log('① الجلسة والهيدر الموحّد');
 
 {
   const { page, ctx } = await newPage({ withSession:false });
-  await page.goto(`${BASE}/warehouse-return.html`);
+  await page.goto(`${BASE}/Package-Transfer-To-Warehouse.html`);
   await page.waitForTimeout(700);
   const u = page.url();
   is(u.includes('index.html') && u.includes('next='),
@@ -309,7 +309,7 @@ console.log('① الجلسة والهيدر الموحّد');
 console.log('② الطابور — الفلترة من الـ shell مش من الصفحة');
 {
   const { page, ctx, errors } = await newPage();
-  await page.goto(`${BASE}/warehouse-return.html`);
+  await page.goto(`${BASE}/Package-Transfer-To-Warehouse.html`);
   await page.waitForTimeout(1200);
 
   const names = await page.$$eval('#rqTableBody tr td:first-child', tds =>
@@ -449,7 +449,7 @@ console.log('③ السكان الفوري');
 {
   scanCalls.length = 0;
   const { page, ctx, errors } = await newPage();
-  await page.goto(`${BASE}/warehouse-return.html`);
+  await page.goto(`${BASE}/Package-Transfer-To-Warehouse.html`);
   await page.waitForTimeout(1200);
 
   is(await page.locator('button:has-text("إضافة يدوي")').count() === 0,
@@ -546,7 +546,7 @@ console.log('③ السكان الفوري');
 console.log('④ نغمات playBeep');
 {
   const { page, ctx } = await newPage();
-  await page.goto(`${BASE}/warehouse-return.html`);
+  await page.goto(`${BASE}/Package-Transfer-To-Warehouse.html`);
   await page.waitForTimeout(1000);
 
   await page.evaluate(() => { window.__beeps = []; });
@@ -568,7 +568,7 @@ console.log('④ نغمات playBeep');
 console.log('⑤ السجل والفحص الذاتي');
 {
   const { page, ctx, errors } = await newPage();
-  await page.goto(`${BASE}/warehouse-return.html`);
+  await page.goto(`${BASE}/Package-Transfer-To-Warehouse.html`);
   await page.waitForTimeout(900);
   await page.click('#tabLog');
   await page.waitForTimeout(700);

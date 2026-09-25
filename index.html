@@ -257,12 +257,12 @@
               (تلت الـ Ready يوم القياس)، ونفس الأوردر يتعدّ في الصف اللي فوق
               **وفي الصف ده** — والموظف يروح يدوّر على طرد مش موجود.
            🔴 **العدّ من `wocOfficeGate` في `shared/shell.js` §OFFICE-GATE** —
-              **نفس** الدالة اللي `office-transfer.html` بتعدّ بيها بالحرف،
+              **نفس** الدالة اللي `Package-Transfer-To-Office.html` بتعدّ بيها بالحرف،
               على **نفس** رد الـ endpoint. ⛔ ممنوع أي حساب أهلية هنا (درس R1).
            ⚠️ **بلا مربعات تقسيمة** زي صف بوسطة بالظبط — مناديب وشو روم
               الاتنين بيروحوا نفس المكتب بنفس الطريقة، فالتفرقة مش حاجة
               الموظف بيتصرّف عليها. -->
-      <a class="woc-row" href="office-transfer.html">
+      <a class="woc-row" href="Package-Transfer-To-Office.html">
         <div class="woc-row-id">
           <span class="woc-card-ico ico-blue">🏢</span>
           <div>
@@ -301,13 +301,13 @@
            ⛔ **وأخطر حاجة: الإلغاء.** في صف المكتب الملغي **مستبعَد**؛ هنا
               هو **شرط أهلية**. نسخ الشرط من فوق بيفضّي الصف ده في صمت.
            🔴 **العدّ من `wocWarehouseGate` في `shared/shell.js`
-              §WAREHOUSE-GATE** — **نفس** الدالة اللي `warehouse-return.html`
+              §WAREHOUSE-GATE** — **نفس** الدالة اللي `Package-Transfer-To-Warehouse.html`
               بتعدّ بيها بالحرف، على **نفس** رد الـ endpoint. ⛔ ممنوع أي
               حساب أهلية هنا (درس R1).
            ⚠️ **والرقم بيعدّ آخر ٣٠ يوم بس** — `Returned`/`Cancelled` حالتان
               نهائيتان بتتراكم، والنافذة في الـ Worker. الطرد الأقدم من كده
               **بيتسكن عادي** بس مش بيتعدّ هنا. -->
-      <a class="woc-row" href="warehouse-return.html">
+      <a class="woc-row" href="Package-Transfer-To-Warehouse.html">
         <div class="woc-row-id">
           <span class="woc-card-ico ico-blue">🏭</span>
           <div>
@@ -386,7 +386,7 @@
            ⚠️ المربع كان `.tool-danger` أحمر لحد v1.24.1. الأداة **لسه
               هدّامة** (`orderCancel` بلا رجعة) — الأحمر اتنقل جوّه الصفحة
               لنافذة التأكيد وزرار التنفيذ وصفوف الرفض. -->
-      <a class="woc-tool tool-return" href="bosta-returned.html">
+      <a class="woc-tool tool-return" href="Bosta-Orders-Returned-Scanner.html">
         <span class="woc-card-ico">↩️</span>
         <div class="woc-card-name">قسم مرتجعات بوسطة</div>
       </a>
@@ -1164,7 +1164,7 @@ const HOME_QUEUES = {
   //    مش اختيار معماري: `custom.package_whereabouts_s1` **مش قابل للفلترة**
   //    في بحث شوبيفاي، والفلتر عليه بيرجّع المتجر كله في صمت.
   // ⛔ **بس الحساب مش هنا فعليًا** — `wocOfficeGate` في الـ shell §OFFICE-GATE،
-  //    و`office-transfer.html` بتنادي **نفس الدالة** على **نفس الرد**.
+  //    و`Package-Transfer-To-Office.html` بتنادي **نفس الدالة** على **نفس الرد**.
   //    نسخة تانية من القاعدة في أي صفحة = الرقم هنا يخالف القايمة هناك
   //    (درس R1 · v1.11.0).
   office: {
@@ -1179,7 +1179,7 @@ const HOME_QUEUES = {
 
   // ── «جاهز للرجوع للمخزن» (v1.28.0) ─────────────────────────────
   // 🔴 **نفس عقد صف المكتب بالحرف** — الـ Worker بيرجّع خام والأهلية في
-  //    `wocWarehouseGate` بالـ shell، و`warehouse-return.html` بتنادي **نفس
+  //    `wocWarehouseGate` بالـ shell، و`Package-Transfer-To-Warehouse.html` بتنادي **نفس
   //    الدالة** على **نفس الرد**. ⛔ ممنوع أي حساب أهلية هنا (درس R1).
   // ⛔ **ومعكوس صف المكتب في الإلغاء:** هناك الملغي مستبعَد، هنا مؤهل.
   // ⚠️ **بلا مربعات تقسيمة** — «مرتجع» و«ملغي» بيتفرقوا في **الصفحة** (عمود

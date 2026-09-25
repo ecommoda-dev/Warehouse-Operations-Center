@@ -2,13 +2,13 @@
 
 # مركز عمليات المخزن — Warehouse Operations Center (`Warehouse-Operations-Center`)
 
-![version](https://img.shields.io/badge/version-v1.34.0-blue)
+![version](https://img.shields.io/badge/version-v1.35.0-blue)
 
 **بتعمل إيه:** هب واحد لمحطة المخزن. الموظف بيدخل **مرة واحدة**، وبعدين
 بيتنقّل بين الطباعة والتغليف وحذف المنتج وتسليمات بوسطة وسكانر المرتجعات
 ورحلة الأوردر من غير ما يدخل تاني ومن غير ما يفتح تبويبات متفرقة.
 **مين بيستخدمها:** المخزن
-**الإصدار:** `v1.34.0` — **واحد للهب كله** (`TOOL_VERSION` في `shared/shell.js`)
+**الإصدار:** `v1.35.0` — **واحد للهب كله** (`TOOL_VERSION` في `shared/shell.js`)
 
 > 🔴 **الهب واجهة + Worker دخول بس — من v1.32.0.** الريبو ده بقى فيه
 > `index.js` و`wrangler.toml`، **بس نطاقهم محصور في الدخول والخروج بس**
@@ -32,7 +32,7 @@
 > 🔴 **الاستثناء التاني المعتمد — v1.26.0 (قرار أحمد 15-09-2026).** «قسم
 > تسليمات المكتب» أداة **جديدة بالكامل**، وريبوها
 > (`Package-Transfer-To-Office`) **Worker وبس — مفيش فيه واجهة خالص**.
-> الواجهة الوحيدة هي `office-transfer.html` **هنا**.
+> الواجهة الوحيدة هي `Package-Transfer-To-Office.html` **هنا**.
 > ⚠️ يعني دي **أول أداة في الستاك مالهاش نسخة مستقلة أصلاً** — مش أداة
 > اتحوّلت للهب وسابت نسختها كنقطة رجوع، دي **اتولدت جوّه الهب**.
 > ⚠️ **والقاعدة سارية على الأداة دي زي ما هي** — ريبو `Package-Transfer-To-Office`
@@ -44,7 +44,7 @@
 > 🔴 **الاستثناء التالت المعتمد — v1.28.0.** «قسم استلام المرتجعات» أداة
 > **جديدة بالكامل**، وريبوها (`Package-Transfer-To-Warehouse`) **Worker وبس
 > — مفيش فيه واجهة خالص**، زي `Package-Transfer-To-Office` بالحرف. الواجهة
-> الوحيدة هي `warehouse-return.html` **هنا**.
+> الوحيدة هي `Package-Transfer-To-Warehouse.html` **هنا**.
 > ⚠️ **والقاعدة سارية على الأداة دي زي ما هي** — نفس شكل «تسليمات المكتب»
 > بالحرف. اللي اتغيّر إن الأداة دي **محتاجة Worker جديد يتعمل ويتربط ويتحط
 > له سر** قبل ما تشتغل، وكل ده **من هناك** — وكله **حاجز**.
@@ -58,7 +58,7 @@
 
 > ⚠️ **«الستة» من v1.22.0** — سكانر الشحن وسكانر المرتجعات انضموا
 > (`shipped.html` · `returned.html` — الأولى بقت `bosta-shipped.html` في
-> v1.23.0، والتانية بقت **`bosta-returned.html`** في v1.25.0). الـ Workers بتوعهم في ريبوهاتهم
+> v1.23.0، والتانية بقت **`Bosta-Orders-Returned-Scanner.html`** في v1.25.0). الـ Workers بتوعهم في ريبوهاتهم
 > (`Bosta-Orders-Shipped-Scanner` · `Bosta-Orders-Returned-Scanner`)
 > والـ Promote بتاعهم **من هناك** — القاعدة فوق ما اتكسرتش.
 > 🔴 **بس الدمج ده ليه شرط يدوي واحد وهو حاجز:** `WORKER_SECRET` على
@@ -122,9 +122,9 @@ tool في D1 : warehouse_ops_center      ← login · logout بس
 | `stats.html` | إحصائيات المخزن | التلاتة (قراءة سجل) | — | L (1400) |
 | `sku-barcode.html` | باركود SKU — **دفعة أوردرات + سجل** | `order-sku-barcode-printer-worker` + التغليف (تراكينج · موظفين) | **`1.3.0`** · pack `2.5.0` | M (1200) |
 | `Bosta-Orders-Shipped-Scanner.html` | **قسم تسليمات بوسطة** — طابور «جاهز للتسليم» + سكانر | `bosta-orders-shipped-scanner` | **`3.5.0`** | M (1200) |
-| `bosta-returned.html` | **قسم مرتجعات بوسطة** — استلام راجع | `bosta-orders-returned-scanner` | **`3.4.0`** | M (1200) |
-| `office-transfer.html` | **قسم تسليمات المكتب** — نقل الطرد من المخزن للمكتب | `package-transfer-to-office-worker` | **`1.1.0`** | M (1200) |
-| `warehouse-return.html` | **قسم استلام المرتجعات** — رجوع الطرد الراجع للمخزن | `package-transfer-to-warehouse-worker` | **`1.0.0`** | M (1200) |
+| `Bosta-Orders-Returned-Scanner.html` | **قسم مرتجعات بوسطة** — استلام راجع | `bosta-orders-returned-scanner` | **`3.4.0`** | M (1200) |
+| `Package-Transfer-To-Office.html` | **قسم تسليمات المكتب** — نقل الطرد من المخزن للمكتب | `package-transfer-to-office-worker` | **`1.1.0`** | M (1200) |
+| `Package-Transfer-To-Warehouse.html` | **قسم استلام المرتجعات** — رجوع الطرد الراجع للمخزن | `package-transfer-to-warehouse-worker` | **`1.0.0`** | M (1200) |
 
 > ⚠️ **تسعة `min` مستقلة تمامًا** — مالهمش أي علاقة ببعض ولا بـ
 > `TOOL_VERSION`. `min` مايترفعش إلا لما الهب **يعتمد فعلاً** على حاجة جديدة
@@ -362,10 +362,10 @@ tool في D1 : warehouse_ops_center      ← login · logout بس
 
 > 🔴 **كتلة التوكنز في `shared/shell.css` بس.** أي كتلة توكنز في صفحة = التوكنز
 > اتفرّقت. **الاستثناء الوحيد المسموح:** `remove.html` و`journey.html`
-> و`sku-barcode.html` و`Bosta-Orders-Shipped-Scanner.html` و`bosta-returned.html` بيعرّفوا
+> و`sku-barcode.html` و`Bosta-Orders-Shipped-Scanner.html` و`Bosta-Orders-Returned-Scanner.html` بيعرّفوا
 > `--container-max: 1200px` لوحدها (Tier M) وخلاص.
 
-> 🔴 **`bosta-returned.html` ثيمها بني من v1.25.0 — وبقاعدة الأسبقية مش بكتلة
+> 🔴 **`Bosta-Orders-Returned-Scanner.html` ثيمها بني من v1.25.0 — وبقاعدة الأسبقية مش بكتلة
 > توكنز.** الأداة المستقلة كانت شاشتها كلها حمرا (`--accent: #dc2626`) كـ«استثناء
 > معتمد لأداة المرتجعات». الاستثناء ده **ما اتنقلش للهب** في v1.22.0 (كتلة توكنز
 > في صفحة هي أخطر قاعدة في الريبو)، والصفحة بقت على أزرق الهب. وفي v1.25.0 بقت
@@ -456,9 +456,9 @@ tool في D1 : warehouse_ops_center      ← login · logout بس
 | §API | `wocApi(worker)` — **مصنع** بدل دوال عامة · **`WOC_API_TIMEOUT_MS`** |
 | §HELPERS | `esc` · `toCairo` · `cairoDayStr` · `cairoDayIndex` · `formatDate*` · `arMin`/`arHour`/`arDay` · `sinceText` · **`agoInfo`** · **`wocDayDiff`/`wocDayLevel`/`wocOrderAge`** · `orderLink` · `shopifyOrderUrl` · **`shopifyVariantUrl`** · `cmpVersion` · `playBeep` |
 | §BOSTA-GATE | **`BOSTA_UPLOADED_TAGS`** (تاج لكل ماكينة) · **`wocMachineOf`** · `wocBostaUploaded` · `wocChannelOf` · `wocChannelGate` |
-| §OFFICE-GATE | **`wocOfficeGate`** · **`wocOfficeQueue`** · `WOC_WHEREABOUTS` · `WOC_OFFICE_ZONES` — أهلية «جاهز للتسليم للمكتب». `index.html` و`office-transfer.html` بيعدّوا منهم الاتنين |
-| §HELPERS (تكملة) | **`wocYmdToDMY`** — `YYYY-MM-DD` → `DD/MM/YYYY` لأرضية تاريخ الأوردر. `office-transfer.html` و`warehouse-return.html` بيعرضوا منها الاتنين (§ORDERS-SINCE) |
-| §WAREHOUSE-GATE | **`wocWarehouseGate`** · **`wocWarehouseQueue`** · `WOC_WH_S1_ELIGIBLE`/`WOC_WH_S2_ELIGIBLE` · `WOC_WAREHOUSE_ZONES` — أهلية «جاهز للرجوع للمخزن». `index.html` و`warehouse-return.html` بيعدّوا منهم الاتنين |
+| §OFFICE-GATE | **`wocOfficeGate`** · **`wocOfficeQueue`** · `WOC_WHEREABOUTS` · `WOC_OFFICE_ZONES` — أهلية «جاهز للتسليم للمكتب». `index.html` و`Package-Transfer-To-Office.html` بيعدّوا منهم الاتنين |
+| §HELPERS (تكملة) | **`wocYmdToDMY`** — `YYYY-MM-DD` → `DD/MM/YYYY` لأرضية تاريخ الأوردر. `Package-Transfer-To-Office.html` و`Package-Transfer-To-Warehouse.html` بيعرضوا منها الاتنين (§ORDERS-SINCE) |
+| §WAREHOUSE-GATE | **`wocWarehouseGate`** · **`wocWarehouseQueue`** · `WOC_WH_S1_ELIGIBLE`/`WOC_WH_S2_ELIGIBLE` · `WOC_WAREHOUSE_ZONES` — أهلية «جاهز للرجوع للمخزن». `index.html` و`Package-Transfer-To-Warehouse.html` بيعدّوا منهم الاتنين |
 | §COURIER-GROUP | **`wocCourierGroup`** · **`WOC_COURIER_GROUPS`** · **`wocCourierCounts`** — بوسطة/**شو روم**/مناديب (تلاتة من v1.14.0). `index.html` و`pack.html` بيعدّوا منهم الاتنين |
 | §UI | `showToast` · الإعدادات · `wocRunDiag` · `renderVersionUI` · `checkWorkerVersion` · `showWorkerStale` · About/Changelog · `doLogout` |
 | §HEADER | `wocHeader(opts)` · `wocSharedModals()` |
@@ -2208,8 +2208,8 @@ const REPRINT_WARN_MINUTES = 30;   // ثابت مسمّى — تغييره قر�
 > `bosta-shipped.html` بدل الاسم الطويل») — القرار الجديد بيغلبه. ⛔ **الرابط
 > القديم `bosta-shipped.html` بيدّي 404 من دلوقتي، بلا إعادة توجيه** — نفس
 > النمط اللي اتقبل وقت `shipped.html → bosta-shipped.html` في v1.23.0.
-> ⚠️ **وباقي أدوات الهب المدمجة (`bosta-returned.html` ·
-> `office-transfer.html` · `warehouse-return.html` · `sku-barcode.html`)
+> ⚠️ **وباقي أدوات الهب المدمجة (`Bosta-Orders-Returned-Scanner.html` ·
+> `Package-Transfer-To-Office.html` · `Package-Transfer-To-Warehouse.html` · `sku-barcode.html`)
 > لسه بأسمائها المختصرة** — القاعدة الجديدة اتطبّقت هنا بس لحد دلوقتي؛
 > تعميمها على باقي الصفحات قرار وتمريرة منفصلين.
 
@@ -2217,8 +2217,8 @@ const REPRINT_WARN_MINUTES = 30;   // ثابت مسمّى — تغييره قر�
 > الواجهة الوحيدة الموجودة.** ريبو `Bosta-Orders-Shipped-Scanner` **اتحوّل
 > لـWorker وبس** (`index.html` بتاعه اتشال بالكامل بقرار، بلا إعادة توجيه من
 > رابطه القديم). ⛔ **يعني صفر نقطة رجوع** لو `Bosta-Orders-Shipped-Scanner.html` هنا وقعت —
-> نفس وضع `office-transfer.html`/`warehouse-return.html` بالظبط، مش وضع
-> `bosta-returned.html` اللي لسه ليها نسخة مستقلة شغّالة كنقطة رجوع.
+> نفس وضع `Package-Transfer-To-Office.html`/`Package-Transfer-To-Warehouse.html` بالظبط، مش وضع
+> `Bosta-Orders-Returned-Scanner.html` اللي لسه ليها نسخة مستقلة شغّالة كنقطة رجوع.
 
 > 🔴 **§LOG-CLIP — قصّ تاب السجل من غير أي إشارة (اتصلح 25-09-2026).**
 > `.tbl-body-wrap` كانت بتحدّد سقف بكسل ثابت (`max-height:4000px`) على القسم
@@ -2339,7 +2339,7 @@ const REPRINT_WARN_MINUTES = 30;   // ثابت مسمّى — تغييره قر�
 - 🔴 **الـ Worker اتعدّل** (v3.5.0 · `get_ready_to_ship`) — أول تمريرة على
   الريبو ده مش واجهة بحتة. التفاصيل في §READY-QUEUE فوق.
 
-### `bosta-returned.html` (قسم مرتجعات بوسطة — **جديدة v1.22.0 · اتسمّت في v1.25.0**)
+### `Bosta-Orders-Returned-Scanner.html` (قسم مرتجعات بوسطة — **جديدة v1.22.0 · اتسمّت في v1.25.0**)
 
 الأداة دي **هدّامة**: بتلغي أوردرات (`orderCancel` — **مفيش ميوتيشن بيرجّعه**)
 وبتحرّك مخزون. التفاصيل الكاملة في `Bosta-Orders-Returned-Scanner/CLAUDE.md`.
@@ -2435,7 +2435,7 @@ const ORDERS_SINCE = '2026-04-01';   // في الـ Worker**ين** — مش في
 - ⚠️ **أي تعديل على القيمة يتعمل في الـ Workerين في نفس التمريرة** (درس R1) —
   أرضيتان مختلفتان على صفّين جنب بعض في الشاشة الرئيسية بتتقرا عطل.
 
-### `office-transfer.html` (قسم تسليمات المكتب — **جديدة v1.26.0**)
+### `Package-Transfer-To-Office.html` (قسم تسليمات المكتب — **جديدة v1.26.0**)
 
 الأداة بتسجّل انتقال الطرد من **المخزن للمكتب**: الموظف بيسكن باركود الأوردر،
 والـ Worker بيكتب `custom.package_whereabouts_s1` (أو `_s2`) بقيمة **`Office`**.
@@ -2527,7 +2527,7 @@ metafields.custom.package_whereabouts_s1:'Warehouse'  →  ١٠٬٠٠٠ صف (15
 #### 🧾 تمريرة أعمدة الطابور (v1.26.1)
 
 **صفر تعديل Worker · صفر Promote · صفر ترفيع لأي `min`** — كلها عرض في
-`office-transfer.html` بس.
+`Package-Transfer-To-Office.html` بس.
 
 - عمود **«الطرد»** بقى **«نوع الأوردر»** — بنفس القيم والألوان والتصميم
   بتاعة عمود «نوع الأوردر» في `pack.html` بالحرف (`.type-text`/`.type-s1`/
@@ -2544,7 +2544,7 @@ metafields.custom.package_whereabouts_s1:'Warehouse'  →  ١٠٬٠٠٠ صف (15
   عمر الأوردر** فمستحيل تفترق؛ النص المحلي (`rqSincePack`) هو اللي بيفرّق
   بين «تأخير في التغليف» هنا و«تأخير في الطباعة» في `pack.html` (درس R1).
 
-### `warehouse-return.html` (قسم استلام المرتجعات — **جديدة v1.28.0**)
+### `Package-Transfer-To-Warehouse.html` (قسم استلام المرتجعات — **جديدة v1.28.0**)
 
 الأداة بتسجّل رجوع الطرد **للمخزن**: الموظف بيسكن باركود الأوردر المرتجع أو
 الملغي، والـ Worker بيكتب `custom.package_whereabouts_s1` (أو `_s2`) بقيمة
@@ -2581,7 +2581,7 @@ metafields.custom.package_whereabouts_s1:'Warehouse'  →  ١٠٬٠٠٠ صف (15
 > `wocOfficeQueue` و`wocWarehouseQueue` بيرجّعوا **رقمين مختلفين** على نفس
 > البيانات — يعني البوابتان مش نسخة واحدة.
 
-> 🔴 **ومكانها الـ shell مش الصفحة** — `warehouse-return.html` و`index.html`
+> 🔴 **ومكانها الـ shell مش الصفحة** — `Package-Transfer-To-Warehouse.html` و`index.html`
 > بينادوا **نفس الدالة** على **نفس الرد**. نسخة تانية في صفحة = درس R1 بالحرف
 > (v1.11.0: الرئيسية قالت «بوسطة ٦٦» والصفحة فتحت على ٦). وفيه بند في فحص
 > المتصفح بيقارن الرقمين فعليًا — **مش بيقرا الكود**.
@@ -2664,7 +2664,7 @@ metafields.custom.package_whereabouts_s1:'Warehouse'  →  ١٠٬٠٠٠ صف (15
   (حمرا بالسبب والفعل المطلوب) · الحالة الشاذة (تفاصيل وإقرار).
   ⛔ **مفيش توست ونافذة لنفس الحدث**.
 - 🔴 **ومفيش فرع رفض للملغي في `scanOrder` — وده مقصود.** الفرع اللي في
-  `office-transfer.html` (`code === 'cancelled'`) لو اتنسخ هنا بيبقى **كود
+  `Package-Transfer-To-Office.html` (`code === 'cancelled'`) لو اتنسخ هنا بيبقى **كود
   ميّت بيوصف سلوك مش موجود**، وأسوأ: بيخلّي اللي بيقرا الملف يفتكر إن الأداة
   بترفض الملغي.
 - 🔴 **الحالة الشاذة بتكمّل بإقرار مش بتتمنع** — و**مفيش صف في D1 قبل
@@ -2678,7 +2678,7 @@ metafields.custom.package_whereabouts_s1:'Warehouse'  →  ١٠٬٠٠٠ صف (15
   مالوش طريق تاني من الشاشة دي.
 
 > ⚠️ **`§SCAN` نسخة طبق الأصل من `pack.html` و`Bosta-Orders-Shipped-Scanner.html` و
-> `office-transfer.html`** — نفس المهل بالحرف (١٥٠ms للسكانة · ٤٠٠ms
+> `Package-Transfer-To-Office.html`** — نفس المهل بالحرف (١٥٠ms للسكانة · ٤٠٠ms
 > للكتابة). أي تعديل يتعمل في **الأربعة** في نفس التمريرة (درس R1).
 
 > 🔴 **عمودا «آخر تحديث» و«الوقت منذ آخر تحديث» اتشالوا في v1.30.0 (قرار
@@ -2697,8 +2697,8 @@ metafields.custom.package_whereabouts_s1:'Warehouse'  →  ١٠٬٠٠٠ صف (15
 
 #### 🏷️ §WHEREABOUTS-COL — «موقع الشحنة» في الأداتين (v1.30.0)
 
-العمود بقى **بنفس الاسم ونفس الشكل ونفس الدالة** في `office-transfer.html`
-و`warehouse-return.html` (كان اسمه «الطرد فين دلوقتي» في المرتجعات وما كانش
+العمود بقى **بنفس الاسم ونفس الشكل ونفس الدالة** في `Package-Transfer-To-Office.html`
+و`Package-Transfer-To-Warehouse.html` (كان اسمه «الطرد فين دلوقتي» في المرتجعات وما كانش
 موجود في المكتب خالص). الموظف بيتنقّل بين الصفحتين، وشكلان مختلفين لنفس
 المعلومة = بيتعلّمها مرتين.
 
@@ -2723,9 +2723,9 @@ metafields.custom.package_whereabouts_s1:'Warehouse'  →  ١٠٬٠٠٠ صف (15
 
 #### 🎨 الثيم — أزرق الهب، والبني ممنوع
 
-الصفحة على **ثيم الهب الافتراضي** زي `office-transfer.html` بالظبط.
+الصفحة على **ثيم الهب الافتراضي** زي `Package-Transfer-To-Office.html` بالظبط.
 ⛔ **والبني (`--amber`) ممنوع هنا** رغم إن الأداة عن المرتجعات: اللون ده
-محجوز لـ`.woc-tool.tool-return` ولصفحة `bosta-returned.html` **وبس** (قرار
+محجوز لـ`.woc-tool.tool-return` ولصفحة `Bosta-Orders-Returned-Scanner.html` **وبس** (قرار
 أحمد 14-09-2026) — وهي أداة **هدّامة** بتلغي أوردرات وبترجّع مخزون. الأداة دي
 **مابتلمسش حالة الأوردر ولا المخزون** — بتكتب عهدة الطرد وخلاص، فلون التحذير
 عليها بيدّي إنذار كاذب.
@@ -2928,7 +2928,7 @@ localStorage.setItem('warehouse_ops_worker_secret',
 ## 🔴 فحص CSS بـ parser — إلزامي، وgrep مش بديل عنه
 
 ```bash
-node docs/css-check.js shared/shell.css index.html print.html pack.html remove.html journey.html stats.html sku-barcode.html Bosta-Orders-Shipped-Scanner.html bosta-returned.html office-transfer.html warehouse-return.html
+node docs/css-check.js shared/shell.css index.html print.html pack.html remove.html journey.html stats.html sku-barcode.html Bosta-Orders-Shipped-Scanner.html Bosta-Orders-Returned-Scanner.html Package-Transfer-To-Office.html Package-Transfer-To-Warehouse.html
 ```
 
 ## 🔴 فحص متصفح فعلي — أربع ملفات
@@ -2939,8 +2939,8 @@ node docs/browser-check.mjs          # print.html      — ١٤٣ بند
 node docs/sku-barcode-check.mjs      # sku-barcode.html — ٩٢ بند
 node docs/pack-check.mjs             # pack.html        — ٤٣ بند (جديد v1.21.0)
 node docs/scanners-check.mjs        # bosta-shipped + bosta-returned — ٧٩ بند (جديد v1.22.0)
-node docs/office-check.mjs           # office-transfer.html — ٦٤ بند (جديد v1.26.0)
-node docs/warehouse-check.mjs        # warehouse-return.html — ٨٣ بند (جديد v1.28.0)
+node docs/office-check.mjs           # Package-Transfer-To-Office.html — ٦٤ بند (جديد v1.26.0)
+node docs/warehouse-check.mjs        # Package-Transfer-To-Warehouse.html — ٨٣ بند (جديد v1.28.0)
 ```
 
 ## 🔴 فحص توأم ماكينة الليبل — إلزامي مع أي تعديل على الليبل
@@ -2963,7 +2963,7 @@ bash docs/label-twin-check.sh   # pack.html ⟷ sku-barcode.html — صفر تب
 > مختلف تمامًا (طابور طباعة وبوسطة · أوردر وأصناف · أهلية وملف أوردر ·
 > `lookup`/`update` بحالة `already`). Worker وهمي واحد بيرد على أربع أدوات
 > معناه إن أول تعديل في رد واحدة بيكسر اختبار التلاتة التانيين.
-> 🔴 **بس `Bosta-Orders-Shipped-Scanner.html` و`bosta-returned.html` في ملف واحد عن قصد** — دول نفس
+> 🔴 **بس `Bosta-Orders-Shipped-Scanner.html` و`Bosta-Orders-Returned-Scanner.html` في ملف واحد عن قصد** — دول نفس
 > الأداة بمسارين، نفس عقد الرد بالحرف، ونفس شكل جدول النتايج. فصلهم كان
 > هيكرّر الـ Worker الوهمي كله مرتين.
 
@@ -3216,7 +3216,7 @@ bash docs/label-twin-check.sh   # pack.html ⟷ sku-barcode.html — صفر تب
   ③ **`WORKER_SECRET` = قيمة مجموعة `warehouse_ops`** → Promote ·
   ④ `CLIENT_ID`/`CLIENT_SECRET` → Promote.
   **من غيرهم:** صف «جاهز للرجوع للمخزن» في الرئيسية بيقول **«تعذّر»**،
-  و`warehouse-return.html` بتطلّع **بانر أحمر** والسكان مايشتغلش، وحارس
+  و`Package-Transfer-To-Warehouse.html` بتطلّع **بانر أحمر** والسكان مايشتغلش، وحارس
   النسخة بيقول «⚠️ Worker قسم استلام المرتجعات نسخة قديمة».
   ⚠️ **وباقي الهب ما اتأثرش** — الطوابير الأربعة التانية بتتجاب من Workers
   مستقلين، و`allSettled` بيمنع فشل واحد إنه يخفي التانيين (قاعدة ٢).
@@ -3250,7 +3250,7 @@ bash docs/label-twin-check.sh   # pack.html ⟷ sku-barcode.html — صفر تب
   على ريبو `Package-Transfer-To-Office` (`main`) · ③ **`WORKER_SECRET` = قيمة
   مجموعة `warehouse_ops`** → Promote · ④ `CLIENT_ID`/`CLIENT_SECRET` → Promote.
   **من غيرهم:** صف «جاهز للتسليم للمكتب» في الرئيسية بيقول **«تعذّر»**،
-  و`office-transfer.html` بتطلّع **بانر أحمر** والسكان مايشتغلش، وحارس النسخة
+  و`Package-Transfer-To-Office.html` بتطلّع **بانر أحمر** والسكان مايشتغلش، وحارس النسخة
   بيقول «⚠️ Worker قسم تسليمات المكتب نسخة قديمة».
   ⚠️ **وباقي الهب ما اتأثرش** — الطوابير التلاتة التانية بتتجاب من Workers
   مستقلين، و`allSettled` بيمنع فشل واحد إنه يخفي التانيين (قاعدة ٢).
@@ -3303,7 +3303,7 @@ bash docs/label-twin-check.sh   # pack.html ⟷ sku-barcode.html — صفر تب
 
 - 🔴 **`WORKER_SECRET` = قيمة مجموعة `warehouse_ops` على سكانرَي بوسطة →
   Promote — حاجز.** الـ Workerين لسه بسرّهم القديم الخاص بكل واحد، والهب
-  بيبعت سر المجموعة. **من غير الخطوة دي `Bosta-Orders-Shipped-Scanner.html` و`bosta-returned.html`
+  بيبعت سر المجموعة. **من غير الخطوة دي `Bosta-Orders-Shipped-Scanner.html` و`Bosta-Orders-Returned-Scanner.html`
   بيرجّعوا `401` على كل نداء** — الصفحة بتفتح، والهيدر والتابات شغّالين،
   وأول استعلام بيقع.
   ⚠️ **`Bosta-Orders-Shipped-Scanner` بقى Worker وبس من 25-09-2026** — واجهته
@@ -3546,14 +3546,14 @@ Promote، صفر ترفيع لأي `min`، ومفيش قيمة `tool` جديدة
 | ecommoda-tool-migration-playbook | §13 (Promote) |
 
 > ⚠️ **البصمة دي بتوصف `shared/shell.js` و`shared/shell.css` و`index.html`
-> و`sku-barcode.html` و`Bosta-Orders-Shipped-Scanner.html` و`bosta-returned.html`
-> و`office-transfer.html` و`warehouse-return.html` بس** — دول اللي اتراجعوا فعليًا على الإصدارات دي في
+> و`sku-barcode.html` و`Bosta-Orders-Shipped-Scanner.html` و`Bosta-Orders-Returned-Scanner.html`
+> و`Package-Transfer-To-Office.html` و`Package-Transfer-To-Warehouse.html` بس** — دول اللي اتراجعوا فعليًا على الإصدارات دي في
 > تعديل v1.6.0 (و`sku-barcode.html` اتراجعت تاني في v1.15.0 و v1.16.0 و v1.17.0،
 > والجدول فيها اتحوّل للمعيار الموحّد §Data Tables في التمريرة دي). الخمس صفحات
 > التانية لسه على بصمتها القديمة (بند في المسائل المفتوحة فوق) —
 > **البصمة ادعاء عن الملف، مش عن الريبو**.
 
-آخر مطابقة: 25-09-2026 · الهب `v1.34.0`
+آخر مطابقة: 25-09-2026 · الهب `v1.35.0`
 🔴 معلّقة: **إنشاء `warehouse-operations-center-worker` + ربط Builds + سر
 `warehouse_ops` (حاجز — الدخول كله مش شغّال من غيره، صفر نقطة رجوع)** ·
 **تسجيل انضمامه لمجموعة `warehouse_ops` في `ecommoda-constants`** ·
@@ -3580,7 +3580,18 @@ v3.5.0 وv3.6.0)** ·
 
 ---
 
-آخر تحديث: 25-09-2026 — v1.34.0 (🔴 **الصفحة اتسمّت تاني** — من
+آخر تحديث: 25-09-2026 — v1.35.0 (🔴 **قاعدة رابط الأداة المدمجة اتعمّمت على
+تلات صفحات كمان:** `bosta-returned.html → Bosta-Orders-Returned-Scanner.html`
+· `office-transfer.html → Package-Transfer-To-Office.html` ·
+`warehouse-return.html → Package-Transfer-To-Warehouse.html` — كل واحد
+مطابق حرفيًا لاسم ريبو الـ Worker بتاعه، زي `Bosta-Orders-Shipped-Scanner.html`
+في v1.34.0. الروابط القديمة التلاتة بتدّي `404` بلا إعادة توجيه. تحديث
+توثيقي/routing بحت — صفر تعديل Worker وصفر تعديل CORS على التلاتة.
+⚠️ **`sku-barcode.html` لسه باسمها المختصر** — القاعدة اتطبّقت على الأربعة
+أدوات اللي ليها ريبو منفصل (شحن/مرتجعات بوسطة · تسليمات المكتب · استلام
+المرتجعات)، ومفيش قرار لحد دلوقتي بخصوص `sku-barcode.html`.)
+
+25-09-2026 — v1.34.0 (🔴 **الصفحة اتسمّت تاني** — من
 `bosta-shipped.html` لـ`Bosta-Orders-Shipped-Scanner.html`، مطابقة حرفيًا
 لاسم ريبو الـ Worker المنفصل. قاعدة جديدة: رابط أي أداة مدمجة جوّه الهب
 يتاخد بالنص من اسم ريبوها — راجع القسم فوق. الرابط القديم بيدّي `404` بلا
@@ -3599,7 +3610,7 @@ v3.5.0 وv3.6.0)** ·
 المستقلة (`index.html`) اتشالت بالكامل بقرار، بلا إعادة توجيه من رابطها
 القديم (`.../Bosta-Orders-Shipped-Scanner/` بيدّي `404` دلوقتي).
 `Bosta-Orders-Shipped-Scanner.html` هنا بقت **الواجهة الوحيدة** — صفر نقطة رجوع، نفس وضع
-`office-transfer.html`/`warehouse-return.html`. صفر تعديل Worker · صفر
+`Package-Transfer-To-Office.html`/`Package-Transfer-To-Warehouse.html`. صفر تعديل Worker · صفر
 تعديل CORS · صفر قيمة D1 جديدة)
 
 24-09-2026 — v1.32.0 (🔴 **الدخول بقى على Worker مستقل بتاع الهب

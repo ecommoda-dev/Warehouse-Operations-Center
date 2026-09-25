@@ -1,5 +1,5 @@
 // ══════════════════════════════════════════════════════════════
-// docs/office-check.mjs — فحص متصفح فعلي لـ `office-transfer.html`
+// docs/office-check.mjs — فحص متصفح فعلي لـ `Package-Transfer-To-Office.html`
 //
 // 🔴 **ليه ملف خامس؟** نفس قرار الأربعة اللي قبله: كل ملف بيشغّل Worker وهمي
 //    بشكل رد **مختلف تمامًا**. الأداة دي عقدها فريد: الـ Worker بيرجّع
@@ -50,7 +50,7 @@ const browser = await chromium.launch(launchOpts);
 // 🔴 القايمة دي فيها **مؤهلين وغير مؤهلين مع بعض عن قصد**. ده بالظبط اللي
 //    الـ endpoint الحقيقي بيرجّعه، والبند اللي بيتقفل هنا هو إن **الواجهة
 //    بتفلتر صح** — لو الفلتر اتشال، الجدول هيعرض التمانية كلهم.
-// ⚠️ ومفيش سطر واحد من الفلترة دي مكتوب في `office-transfer.html` — كله في
+// ⚠️ ومفيش سطر واحد من الفلترة دي مكتوب في `Package-Transfer-To-Office.html` — كله في
 //    `shared/shell.js` §OFFICE-GATE، والاختبار بيقارن الاتنين تحت.
 const RAW = [
   // ✅ مؤهل — S1 عادي، قاهرة+جيزة، متغلّف، عهدته فاضية
@@ -209,11 +209,11 @@ async function scan(page, code) {
 // ══════════════════════════════════════════════════════════════
 // ① الهب — الجلسة والهيدر وحارس النسخة
 // ══════════════════════════════════════════════════════════════
-console.log('\n══ office-transfer.html ══');
+console.log('\n══ Package-Transfer-To-Office.html ══');
 console.log('① الجلسة والهيدر الموحّد');
 {
   const { page, ctx, errors } = await newPage();
-  await page.goto(`${BASE}/office-transfer.html`);
+  await page.goto(`${BASE}/Package-Transfer-To-Office.html`);
   await page.waitForTimeout(900);
 
   is(await page.locator('#loginOverlay').count() === 0,
@@ -241,7 +241,7 @@ console.log('① الجلسة والهيدر الموحّد');
 
 {
   const { page, ctx } = await newPage({ withSession:false });
-  await page.goto(`${BASE}/office-transfer.html`);
+  await page.goto(`${BASE}/Package-Transfer-To-Office.html`);
   await page.waitForTimeout(700);
   const u = page.url();
   is(u.includes('index.html') && u.includes('next='),
@@ -255,7 +255,7 @@ console.log('① الجلسة والهيدر الموحّد');
 console.log('② الطابور — الفلترة من الـ shell مش من الصفحة');
 {
   const { page, ctx, errors } = await newPage();
-  await page.goto(`${BASE}/office-transfer.html`);
+  await page.goto(`${BASE}/Package-Transfer-To-Office.html`);
   await page.waitForTimeout(1200);
 
   const names = await page.$$eval('#rqTableBody tr td:first-child', tds =>
@@ -296,7 +296,7 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
   // 🔴 عمود «موقع الشحنة» (v1.30.0) — نفس اسم عمود طابور المرتجعات بالحرف
   const heads = await page.$$eval('#rqTableWrap thead th', ths => ths.map(t => t.textContent.trim()));
   is(heads.includes('موقع الشحنة'),
-     '🔴 عمود «موقع الشحنة» موجود — بنفس اسمه في `warehouse-return.html`', heads.join(' | '));
+     '🔴 عمود «موقع الشحنة» موجود — بنفس اسمه في `Package-Transfer-To-Warehouse.html`', heads.join(' | '));
   const cells = await page.$$eval('#rqTableBody tr:first-child td', td => td.length);
   is(cells === heads.length, 'خلايا الصف == أعمدة الهيدر', `${cells} ≠ ${heads.length}`);
   // 🔴 والقيمة جاية من `wocOfficeQueue` — لو السطر اتشال من الـ shell، الخانة
@@ -344,7 +344,7 @@ console.log('③ السكان الفوري');
 {
   scanCalls.length = 0;
   const { page, ctx, errors } = await newPage();
-  await page.goto(`${BASE}/office-transfer.html`);
+  await page.goto(`${BASE}/Package-Transfer-To-Office.html`);
   await page.waitForTimeout(1200);
 
   is(await page.locator('button:has-text("إضافة يدوي")').count() === 0,
@@ -429,7 +429,7 @@ console.log('③ السكان الفوري');
 console.log('④ نغمات playBeep');
 {
   const { page, ctx } = await newPage();
-  await page.goto(`${BASE}/office-transfer.html`);
+  await page.goto(`${BASE}/Package-Transfer-To-Office.html`);
   await page.waitForTimeout(1000);
 
   await page.evaluate(() => { window.__beeps = []; });
@@ -451,7 +451,7 @@ console.log('④ نغمات playBeep');
 console.log('⑤ السجل والفحص الذاتي');
 {
   const { page, ctx, errors } = await newPage();
-  await page.goto(`${BASE}/office-transfer.html`);
+  await page.goto(`${BASE}/Package-Transfer-To-Office.html`);
   await page.waitForTimeout(900);
   await page.click('#tabLog');
   await page.waitForTimeout(700);
