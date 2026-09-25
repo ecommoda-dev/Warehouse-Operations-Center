@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<!-- skills: html-builder v6.6.0 · worker-builder v3.3.0 · constants v2.6.0 · order-lifecycle v1.8.0 — 19-09-2026 -->
+<!-- skills: html-builder v6.6.0 · worker-builder v3.3.0 · constants v2.6.0 · order-lifecycle v1.8.0 — 15-09-2026 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>قسم استلام المرتجعات — مركز عمليات المخزن</title>
+  <title>قسم تسليمات المكتب — مركز عمليات المخزن</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 
@@ -177,19 +177,22 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .type-text.type-s1 { color: var(--accent-dark); }
 .type-text.type-s2 { color: var(--purple-dark); }
 
-/* ── «موقع الشحنة» — العهدة **قبل** السكانة ───────────────────
-   ⚠️ نص ملوّن مش بادج، زي `.type-text` بالظبط: العمود ده جنب عمود «الحالة»
-      اللي فيه بادج فعلاً، وبادجين متلاصقين في صف واحد بيتقروا حاجة واحدة.
+/* ── «موقع الشحنة» — العهدة المسجّلة قبل السكانة ───────────────
+   ⚠️ **نسخة طبق الأصل من `Package-Transfer-To-Warehouse.html`** (نفس أسماء الكلاسات
+      ونفس الألوان) — الموظف بيتنقّل بين الصفحتين، وشكلان مختلفين لنفس
+      المعلومة = بيتعلّمها مرتين. أي تعديل يتعمل في الاتنين في نفس
+      التمريرة (درس R1).
+   🔴 **بس القيم اللي بتوصل هنا اتنين بس** (`Warehouse` أو فاضي): البوابة
+      بتستبعد `Office` و`Courier` قبل ما الصف يوصل للجدول. `.wh-office`
+      و`.wh-courier` متسابين عشان التطابق يفضل قايم — مش كود ميّت،
+      دول توأم قاعدة في ملف تاني.
    ⚠️ و«مش مسجّل» **رمادي مش أخضر** — الفاضي معناه «مش معروف» مش «في
-      المخزن». اللون الأخضر هنا كان هيقول للموظف إن الطرد هنا وهو مش عارف. */
+      المخزن». أداة التغليف لسه ما بتكتبش `Warehouse` وقت التغليف، فالفاضي
+      هو الحالة الغالبة النهاردة. */
 .wh-text { font-weight: 800; white-space: nowrap; }
 .wh-text.wh-office   { color: var(--accent-dark); }
 .wh-text.wh-courier  { color: var(--purple-dark); }
 .wh-text.wh-unknown  { color: var(--text-muted); }
-/* ⚠️ `.wh-home` مالهوش صف هنا — البوابة بتستبعد `Warehouse` («في المخزن
-   خلاص»). متساب عشان الكتلة تفضل **مطابقة** لنسخة `office-transfer.html`
-   بالحرف؛ كلاس ناقص في ناحية واحدة بيكسر التطابق اللي القاعدة مبنية عليه
-   (نفس منطق `.scan-hint` في `sku-barcode.html`). */
 .wh-text.wh-home     { color: var(--green-dark); }
 
 .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: var(--on-accent); border-radius: 50%; animation: spin .6s linear infinite; flex-shrink: 0; }
@@ -464,17 +467,22 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
            واحد للنسخة (Standards #24). الرقم هنا **مش** مكتوب بإيد. -->
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.30.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.35.0</span>
+          <span class="cl-ver-date">25-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>الصفحة اتسمّت تاني — من <code>office-transfer.html</code> لـ<code>Package-Transfer-To-Office.html</code></b>، مطابقة حرفيًا لاسم ريبو الـ Worker المنفصل (نفس قاعدة <code>Bosta-Orders-Shipped-Scanner.html</code> في v1.34.0). ⚠️ الرابط القديم <b>ما بقاش شغّال</b> — حدّث أي بوكمارك على أجهزة المخزن.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.30.0</span>
           <span class="cl-ver-date">19-09-2026</span>
         </div>
         <ul class="cl-items">
-          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>الطابور بقى بيعرض الأوردرات اللي «موقع الشحنة» بتاعها = <b>في المكتب</b> بس.</b> كان بيعرض كمان اللي مع المندوب <b>واللي عهدته فاضية</b> — والفاضي معناه «مش عارفين الطرد كان فين»، وقايمة مبنية على «مش عارفين» مش طابور شغل.</span></li>
-          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>⛔ <b>وده فلتر عرض مش شرط أهلية</b> — الأوردر اللي عهدته فاضية أو «مع المندوب» <b>بيتسكن ويتسجّل عادي</b>، هو مش في القايمة وبس.</span></li>
-          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>⚠️ <b>والطابور هيفتح فاضي لحد ما «قسم تسليمات المكتب» يشتغل</b> — هو الوحيد اللي بيكتب القيمة دي، ولسه ما اتنشرش. ورسالة القايمة الفاضية <b>بتسمّي الشرط</b> بدل ما تقول «مفيش طرود راجعة».</span></li>
-          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>سقف استعلام الـ Worker اترفع من ٣٠٠ لـ١٬٠٠٠ لكل استعلام.</b> الرقم القديم اتنسخ من أداة مصدرها حالة <b>عابرة</b>، وحالات الأداة دي (<code>Returned</code>/<code>Cancelled</code>) <b>بتتراكم</b> — فالسقف كان بيتضرب من أول يوم والطابور بيقول رقم أقل من الحقيقة.</span></li>
-          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>عمود <b>«الطرد فين دلوقتي»</b> بقى اسمه <b>«موقع الشحنة»</b> — نفس الاسم في «قسم تسليمات المكتب» بالحرف، والمعنى ما اتغيّرش.</span></li>
-          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>عمودا «آخر تحديث» و«الوقت منذ آخر تحديث» اتشالوا بالكامل</b>، ومعاهم <code>order.updatedAt</code> من الـ Worker. ⚠️ <b>والسبب:</b> شوبيفاي مالهاش حقل بيقول «الطرد رجع إمتى»، و<code>updatedAt</code> بيتحرّك مع <b>أي</b> تعديل — حتى كتابة الميتافيلد بتاعتنا. فكان <b>تقريب بيتقري تسجيل</b>، وعملية جماعية واحدة كانت بتخلّي صفوف كتير تقول نفس التاريخ.</span></li>
-          <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>وترتيب الطابور بقى بالأقدم تغليفًا</b> بدل آخر تحديث — نفس ترتيب «قسم تسليمات المكتب» بالحرف. وقت التغليف <b>مش مثالي هنا</b>، بس هو وقت <b>مسجّل فعلاً</b> بدل تقريب بيتحرّك لوحده.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🔴 <b>عمود «موقع الشحنة»</b> في الطابور — بيقول العهدة المسجّلة على الطرد <b>قبل</b> السكانة. ⚠️ <b>والقيم اللي ممكن تظهر هنا اتنين بس</b> (<code>Warehouse</code> أو فاضي): البوابة بتستبعد <code>Office</code> و<code>Courier</code> قبل ما الصف يدخل الطابور.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>⚠️ <b>والعمود هيقول «— مش مسجّل» على كل الصفوف دلوقتي</b> — أداة التغليف لسه ما بتكتبش <code>Warehouse</code> وقت التغليف (بند مفتوح)، فالحقل فاضي على كل أوردر في المتجر. بيبقى مفيد أول ما التغليف يبدأ يكتب.</span></li>
         </ul>
       </div>
 
@@ -485,26 +493,36 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
         </div>
         <ul class="cl-items">
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>الطابور بقى بأرضية تاريخ أوردر ثابتة: 01/04/2026.</b> الأوردرات الأقدم من كده <b>مش بتظهر في القايمة</b>. ⚠️ <b>والأرضية عرض بس</b> — الأوردر الأقدم منها <b>بيتسكن عادي</b> والتسجيل بيتم، هو مش في القايمة وبس.</span></li>
-          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>نافذة الـ٣٠ يوم المتحرّكة اتشالت.</b> كانت بتفلتر بآخر تحديث، و<b>كانت بتخفي الطرد الراجع من شهرين بالظبط لما يبقى منسي فعلاً</b> — وهو الطرد اللي الأداة دي اتعملت عشانه.</span></li>
-          <li class="cl-item"><span class="cl-tag new">جديد</span><span>السطر تحت عنوان الطابور بقى بيقول الأرضية بالتاريخ — <b>والتاريخ جاي من رد الـ Worker</b> مش مكتوب في الصفحة.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>السطر تحت عنوان الطابور بقى بيقول الأرضية بالتاريخ — <b>والتاريخ جاي من رد الـ Worker</b> مش مكتوب في الصفحة. ⚠️ ومعاها <b>الـ Worker لازم يبقى <code>1.1.0</code></b>: على نسخة أقدم السطر بيختفي والقايمة بترجع لكل الأوردرات.</span></li>
         </ul>
       </div>
 
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge old">v1.28.0</span>
-          <span class="cl-ver-date">19-09-2026</span>
+          <span class="cl-ver-badge old">v1.26.1</span>
+          <span class="cl-ver-date">15-09-2026</span>
         </div>
         <ul class="cl-items">
-          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🔴 <b>قسم استلام المرتجعات</b> — أداة جديدة بالكامل. بتسجّل رجوع الطرد <b>للمخزن</b> على <code>custom.package_whereabouts_s1</code>/<code>_s2</code> بقيمة <code>Warehouse</code>، والسكان <b>فوري</b>: كل باركود بيتسجّل لوحده من غير دفعة ومن غير زرار تنفيذ.</span></li>
-          <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>طابور «جاهز للرجوع للمخزن»</b> — في الصفحة وفي صف خامس على الشاشة الرئيسية. الشروط: الزون قاهرة+جيزة أو شو روم · الحالة <code>Returned</code> أو <code>Cancelled</code> (S1 أو S2) · <b>اتغلّف فعلاً</b> · وعهدة الطرد لسه مش <code>Warehouse</code>.</span></li>
-          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>الإلغاء هنا شرط أهلية — مش سبب رفض.</b> في «قسم تسليمات المكتب» الأوردر الملغي بيترفض («قطع الشحنة ورجّع المنتجات على الرف»)؛ هنا ده <b>بالظبط</b> الطرد اللي الأداة اتعملت عشانه.</span></li>
-          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>وعهدة الطرد مقلوبة كمان:</b> <code>Warehouse</code> = «خلاص متعمل»، و<code>Office</code> و<code>Courier</code> هما <b>الحالتان الطبيعيتان</b> (الطرد راجع من المكتب أو من إيد المندوب).</span></li>
-          <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>نافذة زمنية ٣٠ يوم على الطابور</b> — <code>Returned</code> و<code>Cancelled</code> حالتان <b>نهائيتان بتتراكم</b> (بخلاف <code>Ready</code> العابرة)، ومن غير النافذة الاستعلام بيرجّع آلاف الصفوف. ⚠️ والنافذة <b>عرض بس</b>: الأوردر الأقدم منها بيتسكن عادي والـ Worker هو المرجع.</span></li>
-          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>صف الاستبدال/الاسترجاع بيتفحص بوقت تغليف S2</b> (<code>s2_packing_date_time</code>) مش S1 — نفس درس أداة المكتب. ⚠️ ومعنى الشرط هنا أقوى: أوردر اتلغى قبل ما يتغلّف <b>مفيهوش طرد أصلاً</b>.</span></li>
-          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>بوسطة خارج النطاق</b> — مرتجعاتها ليها أداتها («قسم مرتجعات بوسطة»)، و<code>package_whereabouts</code> مش بيتتبع لطرودها أصلاً.</span></li>
-          <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>شاشة تفاصيل قبل التسجيل</b> للحالات الشاذة (الشحنة الأصلية ودورة الاستبدال الاتنين مرتجعين · طرد S2 راجع والشحنة الأصلية لسه مش <code>Delivered</code> · حالة بره القايمة المعتمدة) — بتكمّل <b>بإقرار</b> مش بتتمنع.</span></li>
-          <li class="cl-item"><span class="cl-tag new">جديد</span><span>تاب <b>سجل العمليات</b> — فلاتر server-side (نوع العملية · النتيجة · الطرد · الموظف · فترة · بحث) وصفحات وترتيب وتصدير XLSX.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>عمود <b>«الطرد»</b> بقى <b>«نوع الأوردر»</b> — نفس القيم والألوان والتصميم بتاعة عمود «نوع الأوردر» في قسم التغليف (نص عادي بدل بادج: عادي أزرق · استبدال بنفسجي)، بنفس المعنى اللي كان في «الطرد» (S1/S2).</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>عمودا <b>«الزون»</b> و<b>«الإجمالي»</b> اتشالوا من جدول الطابور.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>عمود <b>«غلّفه»</b> بقى <b>«قام بالتغليف»</b>.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>عمودا <b>«تاريخ التغليف»</b> و<b>«الوقت منذ التغليف»</b> — بنفس تصميم عمود «الوقت منذ الطباعة» في قسم التغليف بالحرف (بادج ملوّن بدرجات التأخير حسب فرق الأيام التقويمية).</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.26.0</span>
+          <span class="cl-ver-date">15-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🔴 <b>قسم تسليمات المكتب</b> — أداة جديدة بالكامل. بتسجّل انتقال الطرد من <b>المخزن للمكتب</b> على <code>custom.package_whereabouts_s1</code>/<code>_s2</code>، والسكان <b>فوري</b>: كل باركود بيتسجّل لوحده من غير دفعة ومن غير زرار تنفيذ.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>طابور «جاهز للتسليم للمكتب»</b> — في الصفحة وفي صف رابع على الشاشة الرئيسية. الشروط: الزون قاهرة+جيزة أو شو روم · الحالة <code>Ready</code> (S1 أو S2) · <b>اتغلّف فعلاً</b> · وعهدة الطرد لسه <code>Warehouse</code> أو فاضية · <b>ومش ملغي</b>.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>بوسطة خارج النطاق بالكامل.</b> بوسطة بتستلم من المخزن نفسه والطرد عمره ما بيعدّي على المكتب — من غير الشرط ده كان <b>٤٠ أوردر</b> (تلت الـ<code>Ready</code> يوم القياس) هيظهروا هنا، ونفس الأوردر يتعدّ في صف «جاهز لتسليم بوسطة» <b>وفي الصف ده</b>.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>صف الاستبدال/الاسترجاع بيتفحص بوقت تغليف S2</b> (<code>s2_packing_date_time</code>) مش S1. الفحص بـS1 كان بيعدّي على طرد <b>ما اتغلّفش</b> — مقيس حيًا: ٦ من ٦ صفوف S2 كانت هتعدّي والصح <b>٢</b>.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>شاشة تفاصيل قبل التسجيل</b> للحالات الشاذة (الشحنة الأصلية ودورة الاستبدال الاتنين <code>Ready</code> · حالة بره القايمة المعتمدة) — بتكمّل <b>بإقرار</b> مش بتتمنع.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>شاشة رفض بالسبب</b> للأوردر الملغي («قطع الشحنة ورجّع المنتجات على الرف») · اللي مع بوسطة · اللي ما اتغلّفش · واللي مع المندوب خلاص.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>تاب <b>سجل العمليات</b> — فلاتر server-side (نوع العملية · النتيجة · الماكينة · الموظف · فترة · بحث) وصفحات وترتيب وتصدير XLSX.</span></li>
         </ul>
       </div>
 
@@ -515,7 +533,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 <div class="eco-overlay" id="aboutOverlay" onclick="if(event.target===this)closeAbout()">
   <div class="eco-modal">
     <div class="eco-modal-hdr">
-      <span>ℹ️ عن الأداة — قسم استلام المرتجعات (مركز عمليات المخزن)</span>
+      <span>ℹ️ عن الأداة — قسم تسليمات المكتب (مركز عمليات المخزن)</span>
       <button class="modal-close-x" onclick="closeAbout()">✕</button>
     </div>
     <div class="eco-modal-body">
@@ -523,54 +541,40 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
       <details class="about-sec" open>
         <summary>📋 وصف الأداة</summary>
         <div class="about-sec-body">
-          <p><strong>الهدف:</strong> تسجيل رجوع الطرد <b>للمخزن</b> —
-            الموظف بيسكن باركود الأوردر المرتجع أو الملغي، والأداة بتكتب
+          <p><strong>الهدف:</strong> تسجيل انتقال الطرد من <b>المخزن للمكتب</b> —
+            الموظف بيسكن باركود الأوردر، والأداة بتكتب
             <code>custom.package_whereabouts_s1</code> (أو <code>_s2</code> لدورة
-            الاستبدال/الاسترجاع) بقيمة <code>Warehouse</code>.</p>
-          <p><strong>ليه الأداة موجودة:</strong> «قسم تسليمات المكتب» بيكتب
-            <code>Office</code> على الطرد الخارج — وكانت دي <b>قيمة بلا طريق
-            رجوع</b>: الطرد اللي اترفض أو اتلغى بيرجع المخزن ومحدش بيسجّل رجوعه،
-            فيفضل مكتوب عليه «في المكتب» للأبد. الأداة دي هي <b>شبكة الأمان</b>
-            اللي بتقفل الدايرة.</p>
-          <p><strong>المستخدمون المستهدفون:</strong> فريق المخزن — لحظة استلام
-            الطرود الراجعة وترجيعها على الرف.</p>
-
-          <h4>🔴 دي معكوس «قسم تسليمات المكتب» على نفس الحقل</h4>
-          <table>
-            <tr><th></th><th>تسليمات المكتب</th><th>استلام المرتجعات (دي)</th></tr>
-            <tr><td>الحالة المؤهلة</td><td><code>Ready</code></td><td><b><code>Returned</code> · <code>Cancelled</code></b></td></tr>
-            <tr><td><b>الإلغاء</b></td><td>🔴 سبب رفض</td><td>🔴 <b>شرط أهلية</b></td></tr>
-            <tr><td>العهدة المقبولة قبل</td><td><code>Warehouse</code> أو فاضية</td><td><b><code>Office</code> · <code>Courier</code> · فاضية</b></td></tr>
-            <tr><td>«خلاص متعمل»</td><td>العهدة <code>Office</code></td><td>العهدة <b><code>Warehouse</code></b></td></tr>
-            <tr><td>القيمة المكتوبة</td><td><code>Office</code></td><td><b><code>Warehouse</code></b></td></tr>
-          </table>
+            الاستبدال/الاسترجاع) بقيمة <code>Office</code>.</p>
+          <p><strong>ليه الأداة موجودة:</strong> أوردرات قاهرة+جيزة والشو روم
+            <b>مابتتشحنش من المخزن على طول</b> — بتعدّي على <b>المكتب</b>، اللي فيه
+            منسّق الشحن والمناديب بيتقابلوا. ولما تسليم الدفعة مايكونش كامل، بيفضل
+            طرد في المكتب <b>ومفيش نظام بيسجّل إنه هناك</b>. الحقل ده بيقفل
+            الفجوة دي.</p>
+          <p><strong>المستخدمون المستهدفون:</strong> فريق المخزن — لحظة تجهيز دفعة
+            الانتقال للمكتب.</p>
 
           <h4>شروط الأهلية</h4>
           <ol>
-            <li><b>مش بوسطة</b> — المندوب مش <code>Bosta</code> والزون مش
-              <code>Other_Regions</code>. 🔴 مرتجعات بوسطة ليها أداتها («قسم
-              مرتجعات بوسطة»)، و<code>package_whereabouts</code> مش بيتتبع
-              لطرودها أصلاً.</li>
-            <li><b>الزون قاهرة+جيزة أو شو روم</b> — نفس نطاق أداة المكتب بالحرف.</li>
-            <li><b>مرتجع أو ملغي</b> — <code>S1 = Returned</code> أو
-              <code>Cancelled</code> (أو ملغي على شوبيفاي نفسها) فالعهدة بتتكتب على
-              <code>_s1</code>، أو <code>S2 = Returned</code> فبتتكتب على
-              <code>_s2</code>.</li>
+            <li><b>مش ملغي</b> — الأوردر الملغي بيترفض برسالة «قطع الشحنة ورجّع
+              المنتجات على الرف»، مش بيتخفي في صمت.</li>
+            <li><b>الزون قاهرة+جيزة أو شو روم</b>، والمندوب مش <code>Bosta</code> —
+              🔴 بوسطة <b>خارج النطاق بالكامل</b>: بتستلم من المخزن نفسه وتتبّع
+              طردها بييجي من بوسطة، مش من الحقل ده.</li>
+            <li><b>الحالة <code>Ready</code></b> — <code>S1 = Ready</code> فالعهدة
+              بتتكتب على <code>_s1</code>، أو <code>S1 = Delivered</code> و
+              <code>S2 = Ready</code> فبتتكتب على <code>_s2</code>.</li>
             <li><b>اتغلّف فعلاً</b> — وقت تغليف مسجّل على <b>ميتافيلد الماكينة
               بتاعتها</b>: <code>s1_packing_date_time</code> لصف S1 و
-              <code>s2_packing_date_time</code> لصف S2. ⚠️ أوردر اتلغى قبل ما
-              يتغلّف <b>مفيهوش طرد أصلاً</b> — مفيش حاجة ترجع على الرف.</li>
-            <li><b>عهدة الطرد مش <code>Warehouse</code></b> — <code>Warehouse</code>
-              بترجّع «خلاص متعمل» (محايدة)، و<code>Office</code>/<code>Courier</code>
-              <b>مقبولتين</b>: دول بالظبط الطريقان اللي الطرد بيرجع منهم.</li>
+              <code>s2_packing_date_time</code> لصف S2.</li>
+            <li><b>عهدة الطرد لسه <code>Warehouse</code> أو فاضية</b> —
+              <code>Office</code> بترجّع «خلاص متعمل» و<code>Courier</code> بترفض.</li>
           </ol>
 
           <h4>كيف تعمل — Workflow</h4>
           <ol>
             <li>الدخول بيحصل <b>مرة واحدة</b> في الشاشة الرئيسية للهب — الصفحة دي
               مالهاش شاشة دخول.</li>
-            <li>الطابور بيتحمّل تلقائيًا ويقول إيه المرتجع/الملغي اللي المفروض
-              يرجع على الرف — <b>آخر ٣٠ يوم</b>.</li>
+            <li>الطابور بيتحمّل تلقائيًا ويقول إيه اللي المفروض ينتقل النهاردة.</li>
             <li>الموظف بيسكن باركود الأوردر — <b>والتسجيل فوري</b>: مفيش دفعة
               ومفيش زرار تنفيذ.</li>
             <li>النتيجة: نجاح = توست + الصف بيختفي من الطابور · خلاص متعمل / مرفوض
@@ -583,7 +587,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <h4>الـ Endpoints الرئيسية</h4>
           <table>
             <tr><th>action</th><th>الوصف</th></tr>
-            <tr><td><code>get_ready_to_warehouse</code></td><td>المرتجع/الملغي في آخر ٣٠ يوم (تلات استعلامات) بحقوله الخام — <b>قراءة بحتة</b></td></tr>
+            <tr><td><code>get_ready_to_office</code></td><td>أوردرات <code>Ready</code> (الماكينتين) بحقولها الخام — <b>قراءة بحتة</b></td></tr>
             <tr><td><code>scan</code></td><td>قراءة الأوردر حيًّا + الحكم + <code>metafieldsSet</code> + صف D1</td></tr>
             <tr><td><code>get_logs</code> / <code>get_logs_count</code> / <code>get_logs_export</code></td><td>سجل العمليات — فلاتر server-side (<code>employees</code> · <code>types</code> · <code>results</code> · <code>machines</code> · <code>search</code> · <code>dateFrom</code>/<code>dateTo</code>) + صفحات + ترتيب، والتصدير بيرجّع <code>cap</code>/<code>total</code>/<code>truncated</code></td></tr>
             <tr><td><code>get_employees</code></td><td>تعبئة فلتر الموظف في تاب السجل</td></tr>
@@ -594,11 +598,11 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <h4>⚙️ نتيجة كل سكانة — أربع حالات</h4>
           <table>
             <tr><th>الحالة</th><th>معناها</th></tr>
-            <tr><td><span class="badge badge-green">✓ تم</span></td><td>العهدة اتكتبت <b>واتأكدت من رد شوبيفاي</b> (<code>Warehouse</code>)</td></tr>
+            <tr><td><span class="badge badge-green">✓ تم</span></td><td>العهدة اتكتبت <b>واتأكدت من رد شوبيفاي</b> (<code>Office</code>)</td></tr>
             <tr><td><span class="badge badge-amber">⚠ تم بتحذير</span></td><td>اتكتبت، بس كان فيه حاجة محتاجة مراجعة والموظف أقرّ بيها</td></tr>
             <tr><td><span class="badge badge-red">✗ فشل</span></td><td>النداء وصل لشوبيفاي واترفض — العهدة <b>ما اتكتبتش</b></td></tr>
-            <tr><td><span class="badge badge-neutral">⏭ خلاص متعمل</span></td><td>العهدة <b>هي المستهدفة أصلاً</b> (<code>Warehouse</code>) — لا نجاح ولا فشل ولا رفض: <b>مفيش حاجة كانت مطلوبة</b>. عدّاد مستقل ولون محايد</td></tr>
-            <tr><td><span class="badge badge-purple">⛔ مرفوض</span></td><td>اتوقف <b>قبل</b> أي محاولة كتابة (بوسطة · زون بره النطاق · لا مرتجع ولا ملغي · ما اتغلّفش) — الصف بيتسجّل بالسبب. ⚠️ <b>الملغي مش هنا</b> — هو مؤهل في الأداة دي</td></tr>
+            <tr><td><span class="badge badge-neutral">⏭ خلاص متعمل</span></td><td>العهدة <b>هي المستهدفة أصلاً</b> (<code>Office</code>) — لا نجاح ولا فشل ولا رفض: <b>مفيش حاجة كانت مطلوبة</b>. عدّاد مستقل ولون محايد</td></tr>
+            <tr><td><span class="badge badge-purple">⛔ مرفوض</span></td><td>اتوقف <b>قبل</b> أي محاولة كتابة (ملغي · بوسطة · ما اتغلّفش · مع المندوب · حالة مش <code>Ready</code>) — الصف بيتسجّل بالسبب</td></tr>
           </table>
         </div>
       </details>
@@ -609,12 +613,12 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <h4>FEATURE MAP</h4>
           <ul>
             <li><code>shared/shell.js</code> — الهوية والهيدر والإعدادات والتوست وحارس النسخة (نسخة واحدة مضمّنة للهب كله)</li>
-            <li><code>shared/shell.js §WAREHOUSE-GATE</code> — 🔴 <b>مصدر الأهلية الوحيد في الواجهة</b> (<code>wocWarehouseGate</code> · <code>wocWarehouseQueue</code>). الصفحة دي <b>والشاشة الرئيسية</b> بينادوا نفس الدالة على نفس الرد. ⛔ <b>وممنوع ينسخ حارس الإلغاء من §OFFICE-GATE</b> — هناك رفض وهنا أهلية</li>
+            <li><code>shared/shell.js §OFFICE-GATE</code> — 🔴 <b>مصدر الأهلية الوحيد في الواجهة</b> (<code>wocOfficeGate</code> · <code>wocOfficeQueue</code>). الصفحة دي <b>والشاشة الرئيسية</b> بينادوا نفس الدالة على نفس الرد</li>
             <li><code>§SCAN</code> — سكانر بمهلة (١٥٠ms للسكانة · ٤٠٠ms للكتابة)، نفس قيم <code>pack.html</code> بالحرف</li>
             <li><code>§TOOL-JS::scanOrder</code> — نداء <code>scan</code> فوري لكل باركود، ومعالجة الخمس نتايج</li>
             <li><code>§TOOL-JS::outcomeModal</code> — نافذة واحدة بأربع نغمات (مرفوض · خلاص متعمل · إقرار · فشل)، ومدخل واحد <code>showOutcome</code></li>
             <li><code>§TOOL-JS::session</code> — جدول سكانات الجلسة + العدّادات</li>
-            <li><code>§WAREHOUSE-QUEUE-JS</code> — الطابور بالتحديث التلقائي وحراسه التلاتة</li>
+            <li><code>§OFFICE-QUEUE-JS</code> — الطابور بالتحديث التلقائي وحراسه التلاتة</li>
             <li><code>§LOG-JS</code> — القسم الموحّد: فلاتر multi-select + فترة سريعة + جدول + صفحات + تصدير</li>
             <li><code>§LOG-JS::logParams</code> — المصدر الوحيد لفلاتر التلات نداءات</li>
             <li><code>§SHELL-JS::freezeOnScroll</code> — قفل الهيدر وشريط التابات بعتبة <b>مقيسة</b> مش رقم ثابت</li>
@@ -627,11 +631,11 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <ul>
             <li><code>currentEmployee</code> — { username, displayName } جاي من <code>sessionStorage</code> عبر <code>requireSession()</code></li>
             <li><code>TOOL_VERSION</code> (shell) — نسخة <b>الهب كله</b></li>
-            <li><code>WOC_WORKERS.warehouse.min</code> (shell) — أقل نسخة Worker مقبولة. <b>مالهاش أي علاقة بـ <code>TOOL_VERSION</code></b>، ولا بحد أداة المكتب</li>
+            <li><code>WOC_WORKERS.office.min</code> (shell) — أقل نسخة Worker مقبولة. <b>مالهاش أي علاقة بـ <code>TOOL_VERSION</code></b></li>
             <li><code>LS_SECRET = 'warehouse_ops_worker_secret'</code> (shell) — 🔴 الأداة دي <b>عضو في مجموعة <code>warehouse_ops</code> من أول يوم</b>: مفيش سر قديم خاص بيها لأنها مالهاش نسخة مستقلة</li>
             <li><code>WOC_API_TIMEOUT_MS</code> (shell) — مهلة ٩٠ ثانية على كل نداء</li>
-            <li>D1: <code>tool = "metafields_change"</code> (سجل <b>مشترك</b>) + <code>extra.sourceTool = "package_transfer_to_warehouse"</code> · <code>type = "update"</code> أو <code>"rejected"</code>. أحداث الدخول/الخروج تحت <code>warehouse_ops_center</code> (الهب)</li>
-            <li>🔴 أي استعلام خط أساس على السجل ده <b>لازم يفلتر على <code>extra.sourceTool</code></b> — من غيره بيعدّ صفوف <b>أربع</b> أدوات مع بعض (سكانرا بوسطة · تسليمات المكتب · دي)</li>
+            <li>D1: <code>tool = "metafields_change"</code> (سجل <b>مشترك</b>) + <code>extra.sourceTool = "package_transfer_to_office"</code> · <code>type = "update"</code> أو <code>"rejected"</code>. أحداث الدخول/الخروج تحت <code>warehouse_ops_center</code> (الهب)</li>
+            <li>🔴 أي استعلام خط أساس على السجل ده <b>لازم يفلتر على <code>extra.sourceTool</code></b> — من غيره بيعدّ صفوف تلات أدوات مع بعض</li>
             <li><code>extra.result</code> — <code>success</code>/<code>warning</code>/<code>error</code>/<code>rejected</code>/<code>already</code></li>
             <li><code>extra.machine</code> — <code>S1</code> أو <code>S2</code>: <b>أنهي طرد</b> اتسجّل، مش حالة الأوردر</li>
             <li><code>doneThisSession</code> — الأوردر اللي اتسجّل في الجلسة دي بيتشال من الطابور فورًا؛ الشاشة <b>لازم تتغيّر</b> بعد النجاح</li>
@@ -643,45 +647,23 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <h4>NOTES</h4>
           <ul>
             <li>🔴 <b>الأداة دي مالهاش نسخة مستقلة بقرار</b> — ريبو
-              <code>Package-Transfer-To-Warehouse</code> فيه Worker وبس، والواجهة
+              <code>Package-Transfer-To-Office</code> فيه Worker وبس، والواجهة
               الوحيدة هي الصفحة دي.</li>
-            <li>🔴 <b>الأداة دي بتقفل فجوة G-17</b> — «الطرد المنسي في المكتب».
-              قيمة <code>Office</code> كانت <b>بلا طريق رجوع</b>، فالطرد اللي
-              اترفض أو اتلغى بيفضل مكتوب عليه «في المكتب» للأبد.</li>
             <li>🔴 <b>الفلترة في الواجهة بقرار</b> — <code>package_whereabouts_s1</code>
               <b>مش قابل للفلترة</b> في بحث شوبيفاي: الفلتر عليه بيتجاهَل في صمت
               ويرجّع <b>المتجر كله</b> (١٠٬٠٠٠ صف — مقيس 15-09-2026). فالـ Worker
-              بيجيب المرتجع/الملغي بس، والأهلية بتتحسب في
-              <code>§WAREHOUSE-GATE</code> بتاع الـ shell — <b>مصدر واحد</b>
-              للصفحة وللشاشة الرئيسية.</li>
-            <li>🔴 <b>نافذة الطابور ٣٠ يوم.</b> <code>Returned</code> و
-              <code>Cancelled</code> حالتان <b>نهائيتان بتتراكم</b> — كل مرتجع وكل
-              ملغي في تاريخ المتجر بيطابق الفلتر، ومن غير النافذة الاستعلام بيرجّع
-              آلاف الصفوف والطابور يقول رقم مالوش علاقة بالطرود اللي في إيد
-              الموظف. ⚠️ <b>والنافذة عرض بس</b> — الأوردر الأقدم منها بيتسكن عادي
-              والـ Worker بيكتب عليه.</li>
-            <li>⚠️ <b>الملغي على شوبيفاي نفسها مش في الطابور</b> — الأوردر اللي
-              عليه <code>cancelledAt</code> من غير <code>manual_status =
-              Cancelled</code> مش بيطابق أي من التلات استعلامات (فلتر
-              <code>status:cancelled</code> كان هيرجّع كل ملغيات تاريخ المتجر).
-              <b>وبيتسكن عادي</b> — وده بالظبط معنى «القايمة عرض والـ Worker
-              مرجع».</li>
+              بيجيب <code>Ready</code> بس، والأهلية بتتحسب في <code>§OFFICE-GATE</code>
+              بتاع الـ shell — <b>مصدر واحد</b> للصفحة وللشاشة الرئيسية.</li>
             <li>🔴 <b>الطابور مش حارس.</b> الحارس الحقيقي في الـ Worker، وبيقرا الأوردر
               <b>حيًّا</b> وقت السكان — الجدول لقطة عمرها لحد ١٥ دقيقة، وحارس في
               الواجهة بس <b>مش حارس</b>.</li>
-            <li>⚠️ <b>الحقل لسه فاضي على أغلب الأوردرات</b> — أداة التغليف هي اللي
-              المفروض تكتب <code>Warehouse</code> وقت التغليف ولسه ما اتعدّلتش.
-              عشان كده العهدة الفاضية <b>مقبولة</b>: الطرد راجع فعلاً، وإحنا مش
-              عارفين هو كان فين. ✅ <b>والأداة دي بتصلّح ده بنفسها</b> — أول سكانة
-              بتكتب <code>Warehouse</code> صراحةً.</li>
-            <li>⚠️ <b>أول أسبوع = تنضيف.</b> الطابور هيفتح بمرتجعات وملغيات من
-              أسابيع، وبعضها رجع الرف فعلاً من غير ما يتسجّل. ده متوقّع — القايمة
-              بتنضّف نفسها مع أول دورة.</li>
-            <li>⚠️ <b><code>read_all_orders</code> مش من صلاحيات التطبيق</b>، والأداة
-              دي <b>أكتر واحدة معرّضة</b>: بتقرا أوردرات مرتجعة وملغية وهي أقدم
-              بطبيعتها. شوبيفاي بتخفي أي أوردر أقدم من <b>٦٠ يوم</b>، والرسالة
-              وقتها «الأوردر مش موجود على شوبيفاي» — وهي <b>كاذبة تمامًا</b>. بند
-              في 🩺 الفحص الذاتي بيقولها بالاسم.</li>
+            <li>⚠️ <b>الحقل لسه فاضي على كل الأوردرات</b> (15-09-2026) — أداة التغليف
+              هي اللي المفروض تكتب <code>Warehouse</code> وقت التغليف ولسه ما
+              اتعدّلتش. عشان كده العهدة الفاضية <b>مقبولة</b> في الطابور؛ لو اترفضت
+              الطابور كان هيفتح فاضي.</li>
+            <li>⚠️ <b>أول أسبوع = تنضيف.</b> الطابور هيفتح بأوردرات متغلّفة من أسابيع،
+              وبعضها راح المكتب فعلاً من غير ما يتسجّل. ده متوقّع — القايمة بتنضّف
+              نفسها مع أول دورة.</li>
             <li>مفيش دفعة ومفيش زرار تنفيذ — <b>السكان فوري</b>. عشان كده مفيش
               <code>CHUNK</code> ولا <code>MAX_BATCH</code> في الأداة دي.</li>
             <li>الأوردر اللي اتسجّل بيتشال من الطابور فورًا — <b>الشاشة لازم تتغيّر
@@ -739,7 +721,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
     <div class="card" id="scanCard" style="margin-bottom:16px;">
       <div class="card-header">
         <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-          <h2>📷 امسح باركود الأوردر الراجع</h2>
+          <h2>📷 امسح باركود الأوردر</h2>
           <div class="count-badge">
             <span class="count-num" id="doneCount">0</span>
             <span class="count-lbl">اتسجّل في الجلسة دي</span>
@@ -751,7 +733,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
       <div class="card-body" style="display:flex; flex-direction:column; gap:14px;">
         <div class="scan-row">
           <input id="scanInput" class="scan-input" type="text"
-            placeholder="امسح باركود الأوردر الراجع هنا..." autocomplete="off" autofocus
+            placeholder="امسح باركود الأوردر هنا..." autocomplete="off" autofocus
             aria-label="باركود الأوردر" />
         </div>
 
@@ -773,21 +755,19 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           </div>
         </div>
 
-        <!-- ══ §WAREHOUSE-QUEUE — «جاهز للرجوع للمخزن» ══════════════════
+        <!-- ══ §OFFICE-QUEUE — «جاهز للتسليم للمكتب» ══════════════════
              🔴 **عرض بحت** — مفيش مربعات اختيار ومفيش «أضف للدفعة».
-             🔴 **والحكم مش هنا:** الأهلية بتتحسب من `wocWarehouseGate` في
-                `shared/shell.js` §WAREHOUSE-GATE — **نفس** الدالة اللي
+             🔴 **والحكم مش هنا:** الأهلية بتتحسب من `wocOfficeGate` في
+                `shared/shell.js` §OFFICE-GATE — **نفس** الدالة اللي
                 الشاشة الرئيسية بتعدّ بيها، على **نفس** رد الـ endpoint.
                 ⛔ ممنوع أي قاعدة أهلية مكتوبة في الصفحة دي (درس R1).
-             ⚠️ والطابور **لقطة** عمرها لحد ١٥ دقيقة **وبنافذة ٣٠ يوم** —
-                الحارس الحقيقي في الـ Worker وقت السكان، وهو اللي بيقرا
-                الأوردر حيًّا. ⛔ والنافذة **مش شرط أهلية**: الأوردر الأقدم
-                منها مش في القايمة بس **بيتسكن عادي**. -->
+             ⚠️ والطابور **لقطة** عمرها لحد ١٥ دقيقة — الحارس الحقيقي في
+                الـ Worker وقت السكان، وهو اللي بيقرا الأوردر حيًّا. -->
         <div class="rq-box" id="rqBox">
           <div class="rq-head">
             <div>
-              <div class="rq-title">🏭 جاهز للرجوع للمخزن</div>
-              <div class="rq-sub" id="rqSub">مرتجع أو ملغي · مسجّل إنه في المكتب · قاهرة+جيزة وشو روم</div>
+              <div class="rq-title">🏢 جاهز للتسليم للمكتب</div>
+              <div class="rq-sub" id="rqSub">اتغلّف ولسه في المخزن · قاهرة+جيزة وشو روم</div>
             </div>
             <div class="count-badge">
               <span class="count-num" id="rqCount">—</span>
@@ -820,10 +800,13 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
                     <th>رقم الأوردر</th>
                     <th>العميل</th>
                     <th>نوع الأوردر</th>
-                    <th>الحالة</th>
                     <th>عدد القطع</th>
                     <th>موقع الشحنة</th>
                     <th>تاريخ الأوردر</th>
+                    <th>تاريخ التغليف</th>
+                    <th>وقت التغليف</th>
+                    <th>الوقت منذ التغليف</th>
+                    <th>قام بالتغليف</th>
                   </tr>
                 </thead>
                 <tbody id="rqTableBody"></tbody>
@@ -1099,8 +1082,8 @@ const session = requireSession();
 //    من `sessionStorage` عبر الهب، مش من شاشة دخول في الصفحة دي.
 const currentEmployee = { username: session.username, displayName: session.displayName };
 
-const { apiGet, apiPost } = wocApi(WOC_WORKERS.warehouse);
-const PAGE_WORKERS = ['warehouse'];
+const { apiGet, apiPost } = wocApi(WOC_WORKERS.office);
+const PAGE_WORKERS = ['office'];
 
 // ⚠️ الحلقة دي مكرّرة في كل صفحة **عن قصد**: `WOC_WORKERS` و`cmpVersion`
 //    في الـ shell، بس فحص Step 9 بيطلب وجودهم في كل صفحة، والقايمة نفسها
@@ -1380,7 +1363,7 @@ async function scanOrder(code, ack) {
       } else if (res.result === 'warning') {
         showToast(`تم تسجيل ${res.order?.orderName || ''} مع تحذير`, 'warn');
       } else {
-        showToast(`✅ ${res.order?.orderName || ''} → رجع المخزن`, 'success');
+        showToast(`✅ ${res.order?.orderName || ''} → المكتب`, 'success');
       }
       return;
     }
@@ -1391,7 +1374,7 @@ async function scanOrder(code, ack) {
       pushSession(res, code);
       rqRemove(res.order?.orderId);
       showOutcome({
-        tone: 'neutral', title: '⏭ الطرد ده مسجّل في المخزن خلاص',
+        tone: 'neutral', title: '⏭ الطرد ده في المكتب خلاص',
         order: res.order, machine: res.machine,
         lines: [res.message],
         note: 'مفيش حاجة كانت مطلوبة — مش فشل ومش رفض.',
@@ -1406,15 +1389,10 @@ async function scanOrder(code, ack) {
       tone: 'fail', title: '⛔ الأوردر ده مش هيتسجّل',
       order: res.order, machine: res.machine,
       lines: [res.message],
-      // 🔴 **مفيش فرع للملغي هنا — وده مقصود.** الملغي في الأداة دي
-      //    **مؤهل**، مش مرفوض. الفرع اللي كان في «قسم تسليمات المكتب»
-      //    (`code === 'cancelled'`) لو اتنسخ هنا بيبقى **كود ميّت بيوصف
-      //    سلوك مش موجود** — وأسوأ من كده، بيخلّي اللي بيقرا الملف يفتكر إن
-      //    الأداة بترفض الملغي.
-      note: res.code === 'bosta'
-        ? 'مرتجع بوسطة ليه أداته — «قسم مرتجعات بوسطة»، وهي بتلغي الأوردر وبترجّع المخزون.'
-        : (res.code === 'not_packed'
-            ? 'مفيش طرد يرجع أصلاً — الأوردر ده ما اتغلّفش، والمنتجات ما خرجتش من مكانها.'
+      note: res.code === 'cancelled'
+        ? 'متاخدوش للمكتب — افتح الطرد ورجّع المنتجات على الرف.'
+        : (res.code === 'bosta'
+            ? 'الطرد ده بيتسلّم لبوسطة من المخزن — مكانه «قسم تسليمات بوسطة».'
             : null),
     });
   } catch (err) {
@@ -1568,7 +1546,7 @@ const msState = {
   //    جديدة. والفصل عن سكانرَي بوسطة بيحصل في الـ Worker بـ
   //    `extra.sourceTool`، **مش** بفلتر من هنا.
   type: { items: [
-            { value: 'update',   label: 'تسجيل رجوع للمخزن' },
+            { value: 'update',   label: 'تسجيل للمكتب' },
             { value: 'rejected', label: 'مرفوض (ما اتكتبش)' },
           ], selected: new Set(), search: '' },
   result: { items: [
@@ -2082,7 +2060,7 @@ function resultBadge(result) {
   if (result === 'rejected') return '<span class="badge badge-purple" title="الأوردر مش مؤهل — ما اتكتبش أي حاجة على شوبيفاي">⛔ مرفوض</span>';
   // ⏭ "خلاص اتعمل" — لا نجاح ولا فشل ولا رفض. الحالة اللي كانت بتتقال بلغة
   //    تقنية وبلون رفض، وهي أكتر واحدة بتتكرر.
-  if (result === 'already')  return '<span class="badge badge-neutral" title="الطرد كان مسجّل في المخزن أصلاً — مفيش حاجة كانت مطلوبة">⏭ خلاص متعمل</span>';
+  if (result === 'already')  return '<span class="badge badge-neutral" title="الطرد كان في المكتب أصلاً — مفيش حاجة كانت مطلوبة">⏭ خلاص متعمل</span>';
   // ⚠️ الأداة دي **جديدة** ومفيش عندها صفوف قبل تسجيل النتيجة — الفرع ده
   //    بيمسك صف بـ`extra` تالف بس، وبيقول «معرفناش» مش «تم».
   return '<span class="badge badge-neutral" title="النتيجة غير مسجّلة على الصف ده">—</span>';
@@ -2103,10 +2081,10 @@ function renderLogTable(rows) {
       : r.machine === 'S2' ? `<span class="badge badge-purple col-num">S2</span>`
       : `<span class="badge badge-neutral">${esc(r.machine || '—')}</span>`;
 
-    // ⚠️ LTR صريح: "Office → Warehouse" جوّه خلية RTL بيتقلب ترتيبها بالـ bidi
+    // ⚠️ LTR صريح: "Warehouse → Office" جوّه خلية RTL بيتقلب ترتيبها بالـ bidi
     //    فيبان وكأن الاتجاه معكوس. الاتجاه هنا **جزء من المعنى** مش تنسيق.
     // ⚠️ وصف الرفض مالوش «إلى» — العمود بيقول العهدة اللي وقف عندها صراحةً.
-    //    لو اتعرض `Office → —` كان هيتقرا «اتكتب فاضي».
+    //    لو اتعرض `Warehouse → —` كان هيتقرا «اتكتب فاضي».
     const transition = r.isRejected
       ? `<span class="col-num">${esc(r.raw.value_before || '—')}</span>`
         + `<span style="color:var(--text-secondary);font-weight:700;"> · ما اتكتبش</span>`
@@ -2180,7 +2158,7 @@ async function exportLogXLSX() {
     a.href     = URL.createObjectURL(blob);
     // ⚠️ بتوقيت القاهرة زي باقي الأداة — `toISOString()` بيدّي UTC، فتصدير
     //    الساعة ١ صباحًا كان بيتسمّى بتاريخ إمبارح.
-    a.download = `warehouse-return-log-${cairoDateStr(cairoNow())}.xlsx`;
+    a.download = `office-transfer-log-${cairoDateStr(cairoNow())}.xlsx`;
     a.click();
     URL.revokeObjectURL(a.href);
 
@@ -2204,9 +2182,9 @@ async function exportLogXLSX() {
 }
 
 // ══════════════════════════════════════════════════════════════
-// §WAREHOUSE-QUEUE-JS — طابور «جاهز للرجوع للمخزن» (v1.28.0)
+// §OFFICE-QUEUE-JS — طابور «جاهز للتسليم للمكتب» (v1.26.0)
 // ══════════════════════════════════════════════════════════════
-// 🔴 **الأهلية بتتحسب من `wocWarehouseGate` في `shared/shell.js` §WAREHOUSE-GATE**
+// 🔴 **الأهلية بتتحسب من `wocOfficeGate` في `shared/shell.js` §OFFICE-GATE**
 //    — مش هنا، ومش في `index.html`. الصفحة والشاشة الرئيسية بينادوا **نفس**
 //    الـ endpoint و**نفس** الدالة، فمستحيل الرقمين يفترقوا (درس R1 — v1.11.0:
 //    الرئيسية قالت ٦٦ والصفحة فتحت على ٦ لأن البوابة كانت في صفحة واحدة).
@@ -2214,11 +2192,7 @@ async function exportLogXLSX() {
 //
 // ⚠️ **والفلترة في الواجهة مش اختيار معماري** — `package_whereabouts_s1` مش
 //    قابل للفلترة في بحث شوبيفاي، والفلتر عليه بيرجّع المتجر كله في صمت.
-//    فالـ Worker بيجيب المرتجع/الملغي خام والواجهة بتحكم.
-//
-// ⛔ **وأخطر حاجة ممكن تتنسخ من `office-transfer.html`: حارس الإلغاء.** هناك
-//    الملغي بيترفض؛ هنا هو **شرط أهلية** — وده كله في الـ shell أصلاً، فالبند
-//    هنا إن **الصفحة مالهاش أي شرط مكتوب فيها** أساسًا.
+//    فالـ Worker بيجيب `Ready` خام والواجهة بتحكم.
 //
 // ⚠️ **التحديث التلقائي بنفس حراس الشاشة الرئيسية التلاتة** — التسليح بعد
 //    كل جلب ناجح (مش من الدخول)، و`document.hidden` = صفر استعلام، والنبضة
@@ -2262,14 +2236,7 @@ function rqRender() {
     wrap.style.display  = 'none';
     empty.style.display = '';
     empty.innerHTML = rqState.at
-      // 🔴 **الرسالة بتسمّي شرط القايمة — مش بتقول «مفيش شغل».** الطابور
-      //    بيعرض اللي عهدته `Office` **بس**، و`Office` مابيكتبهاش غير «قسم
-      //    تسليمات المكتب». فالفاضي هنا معناه «مفيش طرد **مسجّل** في
-      //    المكتب» — مش «مفيش طرد راجع»، والفرق بينهم هو الفرق بين معلومة
-      //    وكذبة. ⛔ ممنوع ترجع لجملة عامة.
-      ? '<div class="ico">✅</div><div>مفيش طرد مسجّل إنه في المكتب مستني رجوع</div>'
-        + '<div style="margin-top:6px;font-size:12px;">الطابور بيعرض اللي عهدته «في المكتب» بس — '
-        + 'وأي طرد راجع تاني <b>بيتسكن عادي</b> والـ Worker هو اللي بيحكم.</div>'
+      ? '<div class="ico">✅</div><div>مفيش طرود مستنية تسليم للمكتب دلوقتي</div>'
       : (rqState.failed
           ? '<div class="ico">⚠️</div><div>تعذّر تحميل الطابور — اضغط «تحديث»</div>'
           : '<div class="ico">⏳</div><div>جاري تحميل الطابور…</div>');
@@ -2282,48 +2249,42 @@ function rqRender() {
   tbody.innerHTML = rows.map(o => {
     const age = wocOrderAge(o.createdAt, now);
     const qty = (o.itemsQty === null || o.itemsQty === undefined) ? '—' : o.itemsQty;
-    // ⚠️ «نوع الأوردر» — التفرقة بين الطردين **مقصودة** (بخلاف طابور بوسطة
-    //    اللي بلا علامة): الموظف بيسكن **باركود الأوردر**، وهو نفسه على
-    //    الطردين، فالسكانة لوحدها مابتقولش أنهي طرد. نفس تصميم عمود «نوع
-    //    الأوردر» في `pack.html` بالحرف — نص عادي بلون بدل بادج.
+    // ⚠️ «نوع الأوردر» — بادچ الطرد (S1/S2) القديم مهمّته هنا **مقصودة**
+    //    (بخلاف طابور بوسطة اللي بلا علامة): الموظف بيسكن **باركود
+    //    الأوردر**، وهو نفسه على الطردين، فالتفرقة لازم تتقال. دلوقتي
+    //    نفس المعنى بنفس تصميم عمود «نوع الأوردر» في `pack.html` بالحرف —
+    //    نص عادي بلون بدل بادج (§READY-JS::renderTable هناك).
     const typeClass = o.machine === 's2' ? 'type-s2' : 'type-s1';
     const typeLabel = o.machine === 's2' ? 'استبدال' : 'عادي';
-    // 🔴 **عمود «الحالة» — السبب اللي الأوردر ده في القايمة عشانه.**
-    //    «مرتجع» و«ملغي» بيتصرّف عليهم الموظف بطريقتين مختلفتين (المرتجع
-    //    بيتفتح ويتراجع · الملغي بيترجّع على الرف زي ما هو)، فجمعهم في كلمة
-    //    واحدة كان بيشيل المعلومة الوحيدة اللي بتفرّق بينهم.
-    const st = rqStatusOf(o);
-    // ⚠️ «موقع الشحنة» — العهدة **قبل** السكانة: هي اللي بتقول للموظف
-    //    الطرد جاي منين. الفاضية `—` مش `المخزن`: «مش معروف» ≠ «هنا».
+    const since = o.packedAt ? rqSincePack(o.packedAt, now) : { cls: 'tb-none', text: '— لا يوجد وقت تغليف' };
+    // ⚠️ «موقع الشحنة» — العهدة المسجّلة **قبل** السكانة.
     const wh = rqWhereaboutsText(o.whereabouts);
     return `<tr>
       <td>${orderLink(o.orderName, o.orderId)}</td>
       <td>${esc(o.customer || '—')}</td>
       <td><span class="type-text ${typeClass}">${esc(typeLabel)}</span></td>
-      <td><span class="badge ${st.cls}">${esc(st.text)}</span></td>
       <td class="col-num">${esc(String(qty))}</td>
       <td><span class="wh-text ${wh.cls}">${esc(wh.text)}</span></td>
       <td>${esc(formatDate(o.createdAt))} <span class="time-badge age-badge ${age.cls}">${esc(age.text)}</span></td>
+      <td class="col-num">${o.packedAt ? esc(formatDate(o.packedAt)) : '—'}</td>
+      <td class="col-num">${o.packedAt ? esc(formatTimeOnly(o.packedAt)) : '—'}</td>
+      <td><span class="time-badge ${since.cls}" data-rq-pack="${o.packedAt ? esc(o.packedAt) : ''}">${esc(since.text)}</span></td>
+      <td>${esc(o.packedBy || '—')}</td>
     </tr>`;
   }).join('');
 }
 
-// ─── الحالة اللي خلّت الأوردر مؤهل ───────────────────────────
-// ⚠️ **الترتيب هو الترتيب في `wocWarehouseGate` بالحرف** — S1 الأول. لو
-//    اتقلب هنا، صف بحالتين مؤهلتين بيقول حاجة والـ Worker بيكتب على حاجة
-//    تانية (درس R1).
-function rqStatusOf(o) {
-  if (o.machine === 's2') return { cls: 'badge-amber', text: 'مرتجع (استبدال/استرجاع)' };
-  if (o.s1 === 'Returned') return { cls: 'badge-amber', text: 'مرتجع' };
-  if (o.s1 === 'Cancelled' || o.cancelledAt) return { cls: 'badge-red', text: 'ملغي' };
-  return { cls: 'badge-neutral', text: '—' };
-}
-
 // ─── عهدة الطرد قبل السكانة ──────────────────────────────────
-// ⚠️ **نفس الدالة بالحرف في `office-transfer.html`** — أي تعديل في الاتنين
-//    في نفس التمريرة (درس R1). وفرع `Warehouse` هنا **حارس**: البوابة
-//    بتستبعده («في المخزن خلاص») فمفروض مايوصلش — ولو وصل يومًا، الخانة
-//    بتقول القيمة بدل ما تسكت.
+// 🔴 **القيم الممكنة هنا اتنين بس** — `Warehouse` أو فاضي. `wocOfficeGate`
+//    بتستبعد `Office` («في المكتب خلاص») و`Courier` («مع المندوب») وأي قيمة
+//    بره القايمة **قبل** ما الصف يدخل الطابور، فالفرعان التانيان هنا
+//    **حارسان** مش حالات متوقّعة: لو ظهروا يومًا معناه إن البوابة اتغيّرت،
+//    والخانة بتقول القيمة بدل ما تسكت.
+// ⚠️ **والعمود ده هيقول «— مش مسجّل» على كل الصفوف النهاردة** — أداة التغليف
+//    لسه ما بتكتبش `Warehouse` وقت التغليف (بند مفتوح)، فالحقل فاضي على كل
+//    أوردر في المتجر. بيبقى مفيد أول ما التغليف يبدأ يكتب.
+// ⚠️ **ونفس الدالة بالحرف في `Package-Transfer-To-Warehouse.html`** — أي تعديل في
+//    الاتنين في نفس التمريرة (درس R1).
 function rqWhereaboutsText(v) {
   if (v === 'Warehouse') return { cls: 'wh-home',    text: '🏬 في المخزن' };
   if (v === 'Office')    return { cls: 'wh-office',  text: '🏢 في المكتب' };
@@ -2333,6 +2294,28 @@ function rqWhereaboutsText(v) {
   //    `Warehouse` وقت التغليف، فالفاضي هو الحالة الغالبة — وتسميته «المخزن»
   //    كانت هتقول للموظف إن الطرد هنا وهو مش عارف.
   return { cls: 'wh-unknown', text: '— مش مسجّل' };
+}
+
+// «الوقت منذ التغليف» — نفس تصميم `rdySincePrint` في `pack.html` بالحرف
+// (نفس الدرجات ونفس النغمة اللفظية)، بس عن التغليف مش الطباعة: الطرد
+// اتغلّف ولسه مستني يتسلّم للمكتب، وكل يوم تقويمي زيادة معناه تأخير.
+// ⚠️ الدرجة من `wocDayDiff`/`wocDayLevel` في الـ shell — نفس مصدر بادج
+// عمر الأوردر — فمستحيل تفترق (نفس درس R1).
+function rqSincePack(iso, now = new Date()) {
+  const t = new Date(iso).getTime();
+  if (isNaN(t)) return { cls: 'tb-none', text: '— وقت غير مقروء' };
+  const days = wocDayDiff(iso, now);
+  if (days <= 0) {
+    const mins = Math.max(0, Math.floor((now.getTime() - t) / 60000));
+    const text = mins < 60
+      ? `🟢 منذ ${arMin(mins)}`
+      : `🟢 منذ ${arHour(Math.floor(mins / 60))}${mins % 60 ? ` و${arMin(mins % 60)}` : ''}`;
+    return { cls: 'tb-d0', text };
+  }
+  if (days === 1) return { cls: 'tb-d1', text: '🟡 متأخر يوم — منذ أمس' };
+  if (days === 2) return { cls: 'tb-d2', text: '🟠 متأخر يومين' };
+  if (days <  7)  return { cls: 'tb-d3', text: `🔴 متأخر ${arDay(days)}` };
+  return { cls: 'tb-d7', text: `⛔ متأخر ${arDay(days)}` };
 }
 
 // 🔴 **نزع سلاح الصف** — الأوردر اللي اتسجّل بيتشال من الطابور فورًا.
@@ -2355,9 +2338,9 @@ async function rqLoad(silent) {
   if (btn) btn.disabled = true;
 
   try {
-    const data = await apiGet('get_ready_to_warehouse');
+    const data = await apiGet('get_ready_to_office');
     // 🔴 **المصدر الوحيد للأهلية** — الـ shell، مش الصفحة.
-    rqState.orders = wocWarehouseQueue(data.orders || []);
+    rqState.orders = wocOfficeQueue(data.orders || []);
     rqState.at     = new Date();
     rqState.dirty  = false;
     rqState.failed = false;
@@ -2370,15 +2353,18 @@ async function rqLoad(silent) {
     if (data.truncated) trunc.textContent =
       '⚠️ فيه أوردرات أكتر من الحد المعروض — فيه طرود مش ظاهرة في القايمة. اسكن عادي، والـ Worker هو اللي بيحكم.';
 
-    // ⚠️ **أرضية التاريخ بتتقال على الشاشة** — الطابور بيعرض من تاريخ معيّن
-    //    فأحدث، ولو الأرضية دي مكتوبة في الـ Worker لوحده الموظف بيقرا
-    //    القايمة كأنها **كل** المرتجعات. ⛔ ممنوع تتكتب هنا بالإيد: بتييجي
-    //    من الرد نفسه، وإلا تاريخ الواجهة وتاريخ الـ Worker يفترقوا في صمت
-    //    (درس R1). وفيه بند في فحص المتصفح بيقفل ده.
+    // ⚠️ **أرضية التاريخ بتتقال على الشاشة** (v1.29.0 · قرار أحمد
+    //    19-09-2026) — الطابور بيعرض من تاريخ معيّن فأحدث، ولو الأرضية دي
+    //    مكتوبة في الـ Worker لوحده الموظف بيقرا القايمة كأنها **كل**
+    //    الجاهز. ⛔ ممنوع تتكتب هنا بالإيد: بتييجي من الرد نفسه، وإلا
+    //    تاريخ الواجهة وتاريخ الـ Worker يفترقوا في صمت (درس R1).
+    //    ⚠️ والسطر ده **نسخة طبق الأصل من `Package-Transfer-To-Warehouse.html`** —
+    //    الأرضية واحدة في الأداتين، وأي تعديل يتعمل في الاتنين في نفس
+    //    التمريرة.
     const sub = document.getElementById('rqSub');
     const since = wocYmdToDMY(data.ordersSince);
     if (sub && since) {
-      sub.textContent = `مرتجع أو ملغي · مسجّل إنه في المكتب · قاهرة+جيزة وشو روم · أوردرات من ${since}`;
+      sub.textContent = `اتغلّف ولسه في المخزن · قاهرة+جيزة وشو روم · أوردرات من ${since}`;
     }
   } catch (err) {
     // 🔴 **الفشل بيتقال، والرقم القديم بيفضل معروض لو كان فيه واحد.**
@@ -2388,7 +2374,7 @@ async function rqLoad(silent) {
     rqState.failed = true;
     const fail = document.getElementById('rqFail');
     fail.style.display = '';
-    fail.textContent = `⚠️ تعذّر تحميل طابور المرتجعات — ${err.message}. السكان شغّال عادي.`;
+    fail.textContent = `⚠️ تعذّر تحميل طابور المكتب — ${err.message}. السكان شغّال عادي.`;
   } finally {
     rqState.loading = false;
     if (btn) btn.disabled = false;
@@ -2425,13 +2411,23 @@ setInterval(() => {
     el.className   = `time-badge age-badge ${age.cls}`;
     el.textContent = age.text;
   });
+  // «الوقت منذ التغليف» — بالـ ISO المخزّن على الخلية نفسها
+  // (`data-rq-pack`) مش بترتيب الصفوف، نفس نمط `data-rdy-since` في
+  // `pack.html`.
+  document.querySelectorAll('#rqTableBody [data-rq-pack]').forEach(el => {
+    const iso = el.dataset.rqPack;
+    if (!iso) return;
+    const since = rqSincePack(iso, now);
+    el.className   = `time-badge ${since.cls}`;
+    el.textContent = since.text;
+  });
 }, RQ_TICK_MS);
 
 // ══════════════════════════════════════════════════════════════
 // §INIT — التحميل (الجلسة اتأكدت فوق)
 // ══════════════════════════════════════════════════════════════
 document.getElementById('headerMount').innerHTML = wocHeader({
-  icon: '🏭', title: 'قسم استلام المرتجعات', subtitle: 'مركز عمليات المخزن',
+  icon: '🏢', title: 'قسم تسليمات المكتب', subtitle: 'مركز عمليات المخزن',
   session,
   // ⚠️ Chip التاب الحالي — بيظهر **بس وقت الـ Sticky** (شريط التابات بيتقفل
   //    وقتها). كان جوّه الهيدر القديم، فبيتحط هنا في `extras` عشان الهيدر

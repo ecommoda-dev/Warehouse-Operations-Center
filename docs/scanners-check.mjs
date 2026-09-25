@@ -1,5 +1,5 @@
 // ══════════════════════════════════════════════════════════════
-// docs/scanners-check.mjs — فحص متصفح فعلي لـ `Bosta-Orders-Shipped-Scanner.html` و`bosta-returned.html`
+// docs/scanners-check.mjs — فحص متصفح فعلي لـ `Bosta-Orders-Shipped-Scanner.html` و`Bosta-Orders-Returned-Scanner.html`
 //
 // 🔴 **ليه ملف رابع وما اتضافش لملف قايم؟** نفس قرار `browser-check.mjs`
 //    و`sku-barcode-check.mjs` و`pack-check.mjs`: كل ملف بيشغّل Worker وهمي
@@ -191,7 +191,7 @@ async function newPage(rows, diag, { withSession = true, readyRows = [] } = {}) 
 // ══════════════════════════════════════════════════════════════
 for (const [file, title, tabLog, panelLog, rows, diag] of [
   ['Bosta-Orders-Shipped-Scanner.html', 'قسم تسليمات بوسطة', '#tabLog',       '#panelLog', SHIPPED_ROWS,  DIAG_SHIPPED],
-  ['bosta-returned.html', 'قسم مرتجعات بوسطة', '#tabBtnLog',  '#tab-log',  RETURNED_ROWS, DIAG_RETURNED],
+  ['Bosta-Orders-Returned-Scanner.html', 'قسم مرتجعات بوسطة', '#tabBtnLog',  '#tab-log',  RETURNED_ROWS, DIAG_RETURNED],
 ]) {
   console.log(`\n══ ${file} ══`);
   console.log('① الجلسة والهيدر الموحّد');
@@ -251,7 +251,7 @@ for (const [file, title, tabLog, panelLog, rows, diag] of [
 // ══════════════════════════════════════════════════════════════
 console.log('\n══ الحارس ══');
 console.log('⑤ `requireSession()` بيحوّل للرئيسية');
-for (const file of ['Bosta-Orders-Shipped-Scanner.html', 'bosta-returned.html']) {
+for (const file of ['Bosta-Orders-Shipped-Scanner.html', 'Bosta-Orders-Returned-Scanner.html']) {
   const { page, ctx } = await newPage(SHIPPED_ROWS, DIAG_SHIPPED, { withSession:false });
   await page.goto(`${BASE}/${file}`);
   await page.waitForTimeout(700);
@@ -349,12 +349,12 @@ console.log('\n══ مسار السكان — Bosta-Orders-Shipped-Scanner.htm
 }
 
 // ══════════════════════════════════════════════════════════════
-// المجموعة ④ — نافذة التأكيد قبل الإلغاء (`bosta-returned.html`)
+// المجموعة ④ — نافذة التأكيد قبل الإلغاء (`Bosta-Orders-Returned-Scanner.html`)
 // ══════════════════════════════════════════════════════════════
-console.log('\n══ التأكيد قبل فعل لا رجعة فيه — bosta-returned.html ══');
+console.log('\n══ التأكيد قبل فعل لا رجعة فيه — Bosta-Orders-Returned-Scanner.html ══');
 {
   const { page, ctx, errors } = await newPage(RETURNED_ROWS, DIAG_RETURNED);
-  await page.goto(`${BASE}/bosta-returned.html`);
+  await page.goto(`${BASE}/Bosta-Orders-Returned-Scanner.html`);
   await page.waitForTimeout(700);
 
   console.log('⑪ الثيم بني — والأحمر بقى في اللي بيحذّر بس');
