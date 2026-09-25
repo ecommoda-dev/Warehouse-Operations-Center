@@ -21,7 +21,7 @@
 | 🔎 | `journey.html` | كل اللي حصل لأوردر واحد عبر التلات أدوات |
 | 📊 | `stats.html` | إحصائيات المخزن — أرقام الفترة · الموظفين · ساعات الشغل |
 | 🏷️ | `sku-barcode.html` | طباعة ليبل باركود ٢×١ إنش — دفعة أوردرات أو SKU مباشر · **ومعاها سجل عمليات** |
-| 📦 | `bosta-shipped.html` | **قسم تسليمات بوسطة** — طابور «جاهز للتسليم» + سكان تراكينج · S1/S2 → `Shipped` + فلفلمنت |
+| 📦 | `Bosta-Orders-Shipped-Scanner.html` | **قسم تسليمات بوسطة** — طابور «جاهز للتسليم» + سكان تراكينج · S1/S2 → `Shipped` + فلفلمنت |
 | ↩️ | `bosta-returned.html` | **قسم مرتجعات بوسطة** — سكان تراكينج راجع · إلغاء الأوردر (RTO) أو استرجاع المخزون |
 | 🏢 | `office-transfer.html` | **قسم تسليمات المكتب** — طابور «جاهز للتسليم للمكتب» + سكان باركود الأوردر · بيكتب `package_whereabouts = Office` |
 | 🏭 | `warehouse-return.html` | **قسم استلام المرتجعات** — طابور «جاهز للرجوع للمخزن» (مرتجع أو ملغي) + سكان باركود الأوردر · بيكتب `package_whereabouts = Warehouse` |
@@ -75,7 +75,7 @@
 Warehouse-Operations-Center/
 ├── index.html · print.html · pack.html · remove.html
 ├── journey.html · stats.html · sku-barcode.html
-├── bosta-shipped.html · returned.html   سكانرا بوسطة
+├── Bosta-Orders-Shipped-Scanner.html · bosta-returned.html   سكانرا بوسطة
 ├── shared/
 │   ├── shell.css     التوكنز + الهيدر + المودالات + التوست
 │   └── shell.js      الجلسة + مصنع الـ API + الأدوات المشتركة

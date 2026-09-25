@@ -1,5 +1,5 @@
 // ══════════════════════════════════════════════════════════════
-// docs/scanners-check.mjs — فحص متصفح فعلي لـ `bosta-shipped.html` و`bosta-returned.html`
+// docs/scanners-check.mjs — فحص متصفح فعلي لـ `Bosta-Orders-Shipped-Scanner.html` و`bosta-returned.html`
 //
 // 🔴 **ليه ملف رابع وما اتضافش لملف قايم؟** نفس قرار `browser-check.mjs`
 //    و`sku-barcode-check.mjs` و`pack-check.mjs`: كل ملف بيشغّل Worker وهمي
@@ -190,7 +190,7 @@ async function newPage(rows, diag, { withSession = true, readyRows = [] } = {}) 
 // المجموعة ① — الهب: الجلسة والهيدر والنسخة (الصفحتين)
 // ══════════════════════════════════════════════════════════════
 for (const [file, title, tabLog, panelLog, rows, diag] of [
-  ['bosta-shipped.html', 'قسم تسليمات بوسطة', '#tabLog',       '#panelLog', SHIPPED_ROWS,  DIAG_SHIPPED],
+  ['Bosta-Orders-Shipped-Scanner.html', 'قسم تسليمات بوسطة', '#tabLog',       '#panelLog', SHIPPED_ROWS,  DIAG_SHIPPED],
   ['bosta-returned.html', 'قسم مرتجعات بوسطة', '#tabBtnLog',  '#tab-log',  RETURNED_ROWS, DIAG_RETURNED],
 ]) {
   console.log(`\n══ ${file} ══`);
@@ -251,7 +251,7 @@ for (const [file, title, tabLog, panelLog, rows, diag] of [
 // ══════════════════════════════════════════════════════════════
 console.log('\n══ الحارس ══');
 console.log('⑤ `requireSession()` بيحوّل للرئيسية');
-for (const file of ['bosta-shipped.html', 'bosta-returned.html']) {
+for (const file of ['Bosta-Orders-Shipped-Scanner.html', 'bosta-returned.html']) {
   const { page, ctx } = await newPage(SHIPPED_ROWS, DIAG_SHIPPED, { withSession:false });
   await page.goto(`${BASE}/${file}`);
   await page.waitForTimeout(700);
@@ -262,12 +262,12 @@ for (const file of ['bosta-shipped.html', 'bosta-returned.html']) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// المجموعة ③ — مسار السكان الحقيقي (`bosta-shipped.html`)
+// المجموعة ③ — مسار السكان الحقيقي (`Bosta-Orders-Shipped-Scanner.html`)
 // ══════════════════════════════════════════════════════════════
-console.log('\n══ مسار السكان — bosta-shipped.html ══');
+console.log('\n══ مسار السكان — Bosta-Orders-Shipped-Scanner.html ══');
 {
   const { page, ctx, errors } = await newPage(SHIPPED_ROWS, DIAG_SHIPPED, { readyRows: READY_ROWS });
-  await page.goto(`${BASE}/bosta-shipped.html`);
+  await page.goto(`${BASE}/Bosta-Orders-Shipped-Scanner.html`);
   await page.waitForTimeout(900);
 
   console.log('⑥ الفوكس بيروح لمربع السكان لوحده');

@@ -499,12 +499,22 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
            واحد للنسخة (Standards #24). الرقم هنا **مش** مكتوب بإيد. -->
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.33.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.34.0</span>
+          <span class="cl-ver-date">25-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>الصفحة اتنقلت من <code>bosta-shipped.html</code> لـ<code>Bosta-Orders-Shipped-Scanner.html</code></b> — اسم الملف بقى مطابق حرفيًا لاسم ريبو الـ Worker المنفصل (<code>Bosta-Orders-Shipped-Scanner</code>) بدل الاسم المختصر. ⚠️ الرابط القديم <b>ما بقاش شغّال</b> — حدّث أي بوكمارك على أجهزة المخزن.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.33.0</span>
           <span class="cl-ver-date">25-09-2026</span>
         </div>
         <ul class="cl-items">
           <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>🔴 <b>تاب السجل كان بيتقصّ بصمت.</b> <code>.tbl-body-wrap</code> كانت محدّدة بسقف بكسل ثابت (<code>max-height:4000px</code>) بـ<code>overflow:hidden</code> ومفيش scroll عمودي احتياطي — صفحة سجل بـ١٠٠ صف كانت بالكاد تحت السقف، وأي خلية بتلفّ سطرين كانت بتخطّيه فالصفوف الزيادة بتختفي من غير scrollbar ولا رسالة. الجدول بقى عنده scroll عمودي داخلي (<code>max-height:65vh</code> + هيدر <code>sticky</code>) فبيتمرّر جوّه نفسه بدل ما يتقصّ.</span></li>
-          <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>ريبو <code>Bosta-Orders-Shipped-Scanner</code> بقى Worker وبس</b> — واجهته المستقلة اتشالت بالكامل بقرار، ومفيش إعادة توجيه من رابطها القديم. <code>bosta-shipped.html</code> هنا بقت <b>الواجهة الوحيدة</b> — صفر نقطة رجوع.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>ريبو <code>Bosta-Orders-Shipped-Scanner</code> بقى Worker وبس</b> — واجهته المستقلة اتشالت بالكامل بقرار، ومفيش إعادة توجيه من رابطها القديم. <code>Bosta-Orders-Shipped-Scanner.html</code> هنا بقت <b>الواجهة الوحيدة</b> — صفر نقطة رجوع.</span></li>
         </ul>
       </div>
 
@@ -514,7 +524,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <span class="cl-ver-date">13-09-2026</span>
         </div>
         <ul class="cl-items">
-          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🔴 <b>طابور «جاهز لتسليم بوسطة»</b> — صف تالت في الشاشة الرئيسية، وقايمة جوّه <code>bosta-shipped.html</code> نفسها بدل الشاشة الفاضية. بيعدّ الأوردرات اللي <b>الطرد بتاعها موجود على الرف فعلاً</b>: مندوبه بوسطة · اتطبع <b>واتغلّف</b> · ووقت التغليف <b>بعد</b> وقت الطباعة.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🔴 <b>طابور «جاهز لتسليم بوسطة»</b> — صف تالت في الشاشة الرئيسية، وقايمة جوّه <code>Bosta-Orders-Shipped-Scanner.html</code> نفسها بدل الشاشة الفاضية. بيعدّ الأوردرات اللي <b>الطرد بتاعها موجود على الرف فعلاً</b>: مندوبه بوسطة · اتطبع <b>واتغلّف</b> · ووقت التغليف <b>بعد</b> وقت الطباعة.</span></li>
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>الفلترة بقت على المندوب (<code>custom.courier</code>) مش على الزون.</b> فيه <b>١٤٩ أوردر</b> على المتجر زونهم «قاهرة+جيزة» وبيروحوا مع بوسطة عادي — الفلترة بالزون كانت هتسقّطهم من الطابور <b>في صمت</b> والموظف واقف ماسك الطرد.</span></li>
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>وقت التغليف لازم يبقى بعد وقت الطباعة.</b> العكس معناه <b>إعادة طباعة بعد التغليف</b> — يعني الأوردر اتعدّل، والفاتورة اللي جوّه الطرد لاغية، والطرد محتاج يتفتح ويتغلّف من أول. تسليمه لبوسطة كده بيخرّج طرد بمحتوى غلط <b>بلا أي رسالة خطأ</b>.</span></li>
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>«سكانر الشحن» بقى «قسم تسليمات بوسطة»</b>، والصفحة اتنقلت من <code>shipped.html</code> لـ<code>bosta-shipped.html</code>. ⚠️ الرابط القديم <b>ما بقاش شغّال</b> — حدّث أي بوكمارك على أجهزة المخزن.</span></li>
