@@ -428,7 +428,11 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .tbl-body-wrap { max-height: 4000px; overflow: hidden; transition: max-height .3s ease;
   border-radius: 0 0 var(--radius) var(--radius); }
 .tbl-body-wrap.collapsed { max-height: 0; }
-.tbl-scroll { overflow-x: auto; border-radius: 0 0 var(--radius) var(--radius); }
+/* الجدول بياخد scroll عمودي داخلي بسقف من الشاشة (مش بكسل ثابت) — لو الصفوف
+   عدّت السقف بتتشاف بالتمرير جوّه الجدول بدل ما تتقص بصمت على حدود tbl-body-wrap
+   (raised max-height:1000px → 4000px كان لسه بيقصّ صفحة ١٠٠ صف من غير أي إشارة). */
+.tbl-scroll { max-height: 65vh; overflow-y: auto; overflow-x: auto; border-radius: 0 0 var(--radius) var(--radius); }
+.tbl-scroll thead th { position: sticky; top: 0; z-index: 1; }
 
 .sortable-th { cursor: pointer; user-select: none; transition: background .12s, color .12s; }
 .sortable-th:hover  { background: var(--accent-light); color: var(--accent-dark); }
@@ -495,7 +499,18 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
            واحد للنسخة (Standards #24). الرقم هنا **مش** مكتوب بإيد. -->
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.23.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.33.0</span>
+          <span class="cl-ver-date">25-09-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>🔴 <b>تاب السجل كان بيتقصّ بصمت.</b> <code>.tbl-body-wrap</code> كانت محدّدة بسقف بكسل ثابت (<code>max-height:4000px</code>) بـ<code>overflow:hidden</code> ومفيش scroll عمودي احتياطي — صفحة سجل بـ١٠٠ صف كانت بالكاد تحت السقف، وأي خلية بتلفّ سطرين كانت بتخطّيه فالصفوف الزيادة بتختفي من غير scrollbar ولا رسالة. الجدول بقى عنده scroll عمودي داخلي (<code>max-height:65vh</code> + هيدر <code>sticky</code>) فبيتمرّر جوّه نفسه بدل ما يتقصّ.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>ريبو <code>Bosta-Orders-Shipped-Scanner</code> بقى Worker وبس</b> — واجهته المستقلة اتشالت بالكامل بقرار، ومفيش إعادة توجيه من رابطها القديم. <code>bosta-shipped.html</code> هنا بقت <b>الواجهة الوحيدة</b> — صفر نقطة رجوع.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.23.0</span>
           <span class="cl-ver-date">13-09-2026</span>
         </div>
         <ul class="cl-items">
