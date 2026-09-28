@@ -84,6 +84,19 @@ const ORDERS = {
     profile:PROFILE({n:4,name:'#53202',s1:'Confirmed',p1:null,li:[LI(1,1,1,'RN-AD-40')]}),
     eligibility:{ level:'warn', code:'not_printed', title:'الأوردر ده ما اتطبعش',
       reason:'مفيش وقت طباعة مسجّل على المرحلة S1 — يعني الأوردر ده مش في طابور التغليف، والطرد هيتقفل من غير الفاتورة جوّاه.', hints:[] } }),
+  // ⑬ §S2-CYCLE — دورة استبدال تانية بنفس الصنف (Worker v2.8.0)
+  '55426': () => ({ ok:true, stage:'S2', stageAnalysis:{stage:'S2',conflict:false,unclear:false,signals:{}},
+    order:{ id:'9006', orderId:'9006', name:'#55426', note:'' },
+    items:[LI(1,1,1,'NC1-45')],
+    profile:PROFILE({n:6,name:'#55426',stage:'S2',s1:'Delivered',s2:'Ready',p2:'2026-09-26T10:00:00Z',li:[LI(1,1,1,'NC1-45')]}),
+    eligibility:{ level:'ok', code:'ok', title:'', reason:'', hints:[] },
+    newS2Cycle:{ packedBy:'Abo Selim', packingDateTime:'2026-09-21T15:00:00Z', storedItems:'NC1-45 ×1' } }),
+  // ⑭ اتغلّف ومفيش تغيير — نافذة «تم تغليف هذا الأوردر مسبقاً»
+  '55427': () => ({ ok:false, alreadyPacked:true, changeDetected:false, stage:'S2',
+    packedBy:'Abo Selim', storedItems:'NC1-45 ×1', packingDateTime:'2026-09-21T15:00:00Z',
+    order:{ id:'9007', orderId:'9007', name:'#55427' },
+    eligibility:{ level:'blocked', code:'already_packed', title:'', reason:'', hints:[] },
+    error:'هذا الأوردر تم تغليفه مسبقاً (S2) بواسطة Abo Selim' }),
   // ⑪ مش موجود
   '99999': () => ({ ok:false, error:'الأوردر #99999 غير موجود' }),
 };
@@ -111,7 +124,7 @@ await page.route('**/orders-packing-checker-worker.ecommoda-dev.workers.dev/**',
   const action = url.searchParams.get('action');
   const J = (o, status = 200) => route.fulfill({ status, contentType:'application/json', body:JSON.stringify(o) });
 
-  if (action === 'get_config')       return J({ ok:true, version:'2.6.0' });
+  if (action === 'get_config')       return J({ ok:true, version:'2.8.0' });
   if (action === 'get_employees')    return J({ ok:true, employees:[{ username:'Ahmed_Ibraheem', displayName:'Ahmed Ibraheem' }] });
   if (action === 'get_ready_orders') return J({ ok:true, total:0, orders:[], partial:false, s2Failed:[], s2Truncated:[] });
   if (action === 'get_logs')         return J({ ok:true, entries:[] });
@@ -238,6 +251,22 @@ await page.mouse.click(5, 5); await page.waitForTimeout(250);
 is(await modalOpen(), '🔴 النافذة **لسه مفتوحة** بعد الضغط برّه');
 await closeModal();
 is(!(await modalOpen()), 'وبتتقفل بالزرار');
+
+console.log('\n⑬ §S2-CYCLE — دورة استبدال جديدة بتفتح الشاشة وبتقول ليه');
+await scan('55426');
+is(!(await modalOpen()), 'مفيش نافذة حجب على الدورة الجديدة');
+is(await page.locator('#subscreenCheck').isVisible(), 'شاشة التشييك اتفتحت');
+const toastTxt = await page.locator('#toastContainer').innerText();
+is(toastTxt.includes('دورة استبدال جديدة') && toastTxt.includes('Abo Selim'), 'توست «دورة استبدال جديدة» باسم اللي غلّف قبل كده', toastTxt);
+await page.click('button.btn-cancel-pack'); await page.waitForTimeout(300);
+
+console.log('\n⑭ نافذة «تم تغليف هذا الأوردر مسبقاً» فيها رقم الأوردر');
+await scan('55427');
+is(await page.locator('#alreadyPackedModal:not(.hidden)').count() === 1, 'النافذة اتفتحت');
+const apTxt = await page.locator('#apPrevInfo').innerText();
+is(apTxt.includes('رقم الأوردر') && apTxt.includes('#55427'), 'رقم الأوردر معروض', apTxt);
+is(await page.locator('#apPrevInfo a.order-link[href*="/orders/9007"]').count() === 1, 'الرقم لينك لصفحة الأوردر');
+await page.click('#apCloseBtn'); await page.waitForTimeout(250);
 
 console.log('\n— الكونسول —');
 is(errors.length === 0, 'صفر خطأ JS', errors.join(' | ').slice(0, 300));

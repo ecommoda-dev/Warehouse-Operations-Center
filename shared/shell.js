@@ -85,7 +85,10 @@ const WOC_WORKERS = {
   // الهب **ما عادش بيناديهم خالص** من v1.32.0 (الدخول بقى على Worker
   // مستقل)، فالسطر ده بقى تاريخي. الأداة المستقلة `Orders-Packing-Checker`
   // لسه بتستخدمهم لدخولها هي.
-  pack:    { url: 'https://orders-packing-checker-worker.ecommoda-dev.workers.dev', min: '2.6.0', label: 'التغليف' },
+  // 🔴 2.8.0 (v1.35.1) = §S2-CYCLE — أول نسخة الحارس فيها بيفرّق بين دورات
+  //    الاستبدال. على أقدم منها دورة تانية بنفس الصنف **بتتحجب** بـ«لم يتم
+  //    اكتشاف أي تعديل» والطابور بيعرضها «جاهز» — الحارس بيسمّي السبب.
+  pack:    { url: 'https://orders-packing-checker-worker.ecommoda-dev.workers.dev', min: '2.8.0', label: 'التغليف' },
   remover: { url: 'https://order-item-remover-worker.ecommoda-dev.workers.dev',     min: '1.4.0', label: 'حذف منتج' },
   // 1.2.0 = أول نسخة فيها **سجل العمليات** (`log_print` · `get_logs` ·
   // `get_logs_count` · `get_logs_export`) و`[[d1_databases]]`.
@@ -162,7 +165,7 @@ const WOC_WORKERS = {
   warehouse:{ url: 'https://package-transfer-to-warehouse-worker.ecommoda-dev.workers.dev', min: '1.0.0', label: 'قسم استلام المرتجعات' },
 };
 
-const TOOL_VERSION = 'v1.35.0';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.35.1';                      // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const SHOP_HANDLE  = '6c7e1a-53';
 // ⚠️ `WOC_APP_ID` اتشالت في v1.32.0 — Worker الدخول المستقل (`WOC_WORKERS.auth`)

@@ -2,13 +2,13 @@
 
 # مركز عمليات المخزن — Warehouse Operations Center (`Warehouse-Operations-Center`)
 
-![version](https://img.shields.io/badge/version-v1.35.0-blue)
+![version](https://img.shields.io/badge/version-v1.35.1-blue)
 
 **بتعمل إيه:** هب واحد لمحطة المخزن. الموظف بيدخل **مرة واحدة**، وبعدين
 بيتنقّل بين الطباعة والتغليف وحذف المنتج وتسليمات بوسطة وسكانر المرتجعات
 ورحلة الأوردر من غير ما يدخل تاني ومن غير ما يفتح تبويبات متفرقة.
 **مين بيستخدمها:** المخزن
-**الإصدار:** `v1.35.0` — **واحد للهب كله** (`TOOL_VERSION` في `shared/shell.js`)
+**الإصدار:** `v1.35.1` — **واحد للهب كله** (`TOOL_VERSION` في `shared/shell.js`)
 
 > 🔴 **الهب واجهة + Worker دخول بس — من v1.32.0.** الريبو ده بقى فيه
 > `index.js` و`wrangler.toml`، **بس نطاقهم محصور في الدخول والخروج بس**
@@ -116,7 +116,7 @@ tool في D1 : warehouse_ops_center      ← login · logout بس
 |---|---|---|---|---|
 | `index.html` | الدخول + الشاشة الرئيسية | **`warehouse-operations-center-worker`** (للدخول) + التمن (للأعداد) | **`1.0.0`** | L (1400) |
 | `print.html` | قسم الطباعة — فواتير **وبوالص بوسطة (S1 و S2)** | `order-printer-worker` | **`2.8.1`** | L (1400) |
-| `pack.html` | قسم التغليف | `orders-packing-checker-worker` | **`2.5.0`** | L (1400) |
+| `pack.html` | قسم التغليف | `orders-packing-checker-worker` | **`2.8.0`** | L (1400) |
 | `remove.html` | حذف منتج من الأوردر | `order-item-remover-worker` | **`1.4.0`** | M (1200) |
 | `journey.html` | رحلة الأوردر | التلاتة (قراءة سجل) | — | M (1200) |
 | `stats.html` | إحصائيات المخزن | التلاتة (قراءة سجل) | — | L (1400) |
@@ -244,7 +244,16 @@ tool في D1 : warehouse_ops_center      ← login · logout بس
 > ⚠️ النتيجة: `PAGE_WORKERS` في كل صفحة فيهم **مفتاح واحد**، وحارس النسخة
 > بيسمّي Worker واحد بس.
 
-> ⚠️ **`pack.min = '2.6.0'` مشروع — واترفع على مرتين:**
+> 🔴 **`pack.min = '2.8.0'` (v1.35.1) — §S2-CYCLE.** حارس «اتغلّف قبل كده»
+> في Worker أقدم **بيحجب دورة الاستبدال التانية بنفس الصنف** (`#55426`):
+> `s2_packed_by` على مستوى الأوردر ومابيتفضّاش، والبصمة `SKU:الكمية` بس،
+> فالدورتين بيطلعوا نفس البصمة بالحرف — والطابور في نفس الوقت بيعرض الأوردر
+> «جاهز للتغليف». الإصلاح في الـ Worker (أحدث دورة بعد آخر تغليف S2، أو
+> `extra.returnId` مختلف = دورة جديدة)، والصفحة بتعرض توست «🔁 دورة استبدال
+> جديدة» من `newS2Cycle`. ⚠️ الفشل على Worker قديم **معلن بس غلط السبب**
+> (نافذة «لا يمكن إعادة التغليف») — الحارس هو اللي بيسمّي الـ Promote.
+
+> ⚠️ **`pack.min = '2.6.0'` كان مشروع — واترفع على مرتين قبل كده:**
 > **②** في v1.21.0 بقى معتمد على **`eligibility`** و**`profile`** في رد
 > `get_order` (Worker v2.6.0) — نافذة التشخيص بتقرا `profile` و
 > `eligibility.hints`، وبوابة الإقرار بتقرا `eligibility.level`. على Worker
@@ -2937,7 +2946,7 @@ node docs/css-check.js shared/shell.css index.html print.html pack.html remove.h
 npm i playwright postcss jsbarcode@3.11.6 --no-save
 node docs/browser-check.mjs          # print.html      — ١٤٣ بند
 node docs/sku-barcode-check.mjs      # sku-barcode.html — ٩٢ بند
-node docs/pack-check.mjs             # pack.html        — ٤٣ بند (جديد v1.21.0)
+node docs/pack-check.mjs             # pack.html        — ٤٩ بند (جديد v1.21.0 · +٦ في v1.35.1)
 node docs/scanners-check.mjs        # bosta-shipped + bosta-returned — ٧٩ بند (جديد v1.22.0)
 node docs/office-check.mjs           # Package-Transfer-To-Office.html — ٦٤ بند (جديد v1.26.0)
 node docs/warehouse-check.mjs        # Package-Transfer-To-Warehouse.html — ٨٣ بند (جديد v1.28.0)
@@ -3191,6 +3200,19 @@ bash docs/label-twin-check.sh   # pack.html ⟷ sku-barcode.html — صفر تب
 (300/310) أعلى من «محتوى ≤ 200` — السبب فوق في فخاخ الطابعة.
 
 ## مسائل مفتوحة
+
+- 🔴 **Promote لـ Worker التغليف v2.8.0 (§S2-CYCLE) — حاجز لدورات الاستبدال
+  التانية.** الإصلاح اتكتب واتدمج في `Orders-Packing-Checker`؛ من غير الـ
+  Promote البند اللي تحته لسه ساري و`pack.min = 2.8.0` بيولّع التحذير.
+- ✅ (اتصلح في Worker v2.8.0) **حارس «اتغلّف قبل كده» كان بيحجب دورة استبدال تانية بنفس الصنف (اتكشف
+  28-09-2026 على `#55426`).** `evaluatePackGuard` في Worker التغليف بيعتبر
+  الأوردر «متغلّف» لو `s2_packed_by` مش فاضي — والميتافيلد ده **مابيتصفّرش**
+  لما دورة S2 جديدة تتفتح — وبيقارن بصمة البنود بآخر صف `packed` **بلا أي
+  تمييز للدورة**. دورة تانية بنفس الـ SKU والكمية = نفس البصمة بالحرف =
+  «لم يتم اكتشاف أي تعديل — لا يمكن إعادة التغليف»، والطرد الجديد **مايتغلّفش
+  من الأداة خالص**. الإصلاح مكانه **ريبو `Orders-Packing-Checker`** (ربط
+  التغليف بالدورة: `returnId`/`createdAt` أحدث return في `extra` ومقارنته، أو
+  مقارنة وقت التغليف بوقت إنشاء أحدث return) — **القرار لأحمد**.
 
 - 🔴 **إنشاء `warehouse-operations-center-worker` وربطه وتسريره — حاجز الدخول
   بالكامل (جديد v1.32.0).** Worker الدخول الجديد مالوش أي وجود على
@@ -3580,7 +3602,14 @@ v3.5.0 وv3.6.0)** ·
 
 ---
 
-آخر تحديث: 25-09-2026 — v1.35.0 (🔴 **قاعدة رابط الأداة المدمجة اتعمّمت على
+آخر تحديث: 28-09-2026 — v1.35.1 (رقم الأوردر — لينك لشوبيفاي — بقى أول سطر
+في نافذتَي «تم تغليف هذا الأوردر مسبقاً» و«حدث تعديل بعد التغليف» في
+`pack.html` (`buildPrevPackInfo` — مصدر واحد للنافذتين). 🔴 **ومعاه §S2-CYCLE:**
+دورة استبدال تانية بنفس الصنف (`#55426`) كانت بتتحجب — الإصلاح في Worker
+التغليف v2.8.0، و`pack.min` → `2.8.0`، وتوست «🔁 دورة استبدال جديدة».
+**حاجز لحد الـ Promote**.)
+
+25-09-2026 — v1.35.0 (🔴 **قاعدة رابط الأداة المدمجة اتعمّمت على
 تلات صفحات كمان:** `bosta-returned.html → Bosta-Orders-Returned-Scanner.html`
 · `office-transfer.html → Package-Transfer-To-Office.html` ·
 `warehouse-return.html → Package-Transfer-To-Warehouse.html` — كل واحد
