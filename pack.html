@@ -858,6 +858,7 @@
           <span class="cl-ver-date">28-09-2026</span>
         </div>
         <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span><b>دورة استبدال تانية بنفس المنتج بقت بتتغلّف عادي</b> — كانت بتترفض بـ«لم يتم اكتشاف أي تعديل — لا يمكن إعادة التغليف» رغم إن الأوردر في طابور «جاهز للتغليف». الشاشة بتفتح وتوست بيقول «🔁 دورة استبدال جديدة». محتاج Worker التغليف <code>v2.8.0</code>.</span></li>
           <li class="cl-item"><span class="cl-tag new">جديد</span><span>نافذة <b>«تم تغليف هذا الأوردر مسبقاً»</b> (ونافذة «حدث تعديل بعد التغليف») بقى فيها <b>رقم الأوردر</b> أول سطر، ولينك لصفحته على شوبيفاي.</span></li>
         </ul>
       </div>
@@ -2587,6 +2588,16 @@ async function lookupOrder(raw, opts = {}) {
 
       if (!currentAnalysis?.conflict) {
         setTimeout(() => document.getElementById('barcodeScanInput').focus(), 100);
+      }
+
+      // §S2-CYCLE (Worker v2.8.0) — الأوردر اتغلّف في دورة استبدال **قديمة**،
+      // والدورة دي جديدة فالشاشة فتحت عادي. الموظف اللي فاكر إنه غلّفه لازم
+      // يعرف ليه الحارس ماوقفوش — من غير السطر ده الفتح بيتقري عطل.
+      // ⚠️ توست مش نافذة: مفيش فعل مطلوب، والشاشة نفسها هي الشغل.
+      const nc = data.newS2Cycle;
+      if (nc) {
+        const when = nc.packingDateTime ? ` يوم ${formatDateTime(nc.packingDateTime)}` : '';
+        showToast(`🔁 دورة استبدال جديدة — التغليف السابق${nc.packedBy ? ` (${nc.packedBy})` : ''}${when} كان لدورة قديمة`, 'info', 7000);
       }
     };
 

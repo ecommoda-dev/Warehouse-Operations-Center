@@ -85,7 +85,10 @@ const WOC_WORKERS = {
   // الهب **ما عادش بيناديهم خالص** من v1.32.0 (الدخول بقى على Worker
   // مستقل)، فالسطر ده بقى تاريخي. الأداة المستقلة `Orders-Packing-Checker`
   // لسه بتستخدمهم لدخولها هي.
-  pack:    { url: 'https://orders-packing-checker-worker.ecommoda-dev.workers.dev', min: '2.6.0', label: 'التغليف' },
+  // 🔴 2.8.0 (v1.35.1) = §S2-CYCLE — أول نسخة الحارس فيها بيفرّق بين دورات
+  //    الاستبدال. على أقدم منها دورة تانية بنفس الصنف **بتتحجب** بـ«لم يتم
+  //    اكتشاف أي تعديل» والطابور بيعرضها «جاهز» — الحارس بيسمّي السبب.
+  pack:    { url: 'https://orders-packing-checker-worker.ecommoda-dev.workers.dev', min: '2.8.0', label: 'التغليف' },
   remover: { url: 'https://order-item-remover-worker.ecommoda-dev.workers.dev',     min: '1.4.0', label: 'حذف منتج' },
   // 1.2.0 = أول نسخة فيها **سجل العمليات** (`log_print` · `get_logs` ·
   // `get_logs_count` · `get_logs_export`) و`[[d1_databases]]`.
