@@ -196,7 +196,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .rq-empty .ico { font-size: 26px; margin-bottom: 6px; }
 .rq-fail { margin: 12px 16px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--red-light); border: 1px solid var(--red-border); color: var(--red-dark); font-size: 12.5px; }
 .rq-warn { margin: 12px 16px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--amber-light); border: 1px solid var(--amber-border); color: var(--amber-dark); font-size: 12.5px; }
-/* بادج عمر الأوردر — **نسخة طبق الأصل من `pack.html`** بالحرف. الدرجة
+/* بادج عمر الأوردر — **نسخة طبق الأصل من `Orders-Packing-Checker.html`** بالحرف. الدرجة
    نفسها بتيجي من `wocDayLevel` في الـ shell فمستحيل تفترق؛ اللون هو
    اللي مكرّر. ⚠️ أي تعديل يتعمل في الصفحتين في نفس التمريرة. */
 .time-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; white-space: nowrap; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-secondary); }
@@ -950,7 +950,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <div id="rqTrunc" class="rq-warn" style="display:none;"></div>
           <div class="rq-body">
             <div id="rqEmpty" class="rq-empty">
-              <div class="ico">⏳</div><div>جاري تحميل الطابور…</div>
+              <div class="woc-loadbox" role="status" aria-live="polite"><span class="woc-load-spin" aria-hidden="true"></span><div class="woc-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div></div>
             </div>
             <div class="table-wrap" id="rqTableWrap" style="display:none;">
               <table class="data-table">
@@ -2835,7 +2835,7 @@ async function fetchLog() {
   const base   = logParams();
 
   document.getElementById('logTableBody').innerHTML =
-    '<tr class="empty-row"><td colspan="9"><div class="spinner spinner-dark" style="margin:0 auto 10px;"></div>جاري التحميل...</td></tr>';
+    '<tr class="empty-row"><td colspan="9">' + wocLoadingHTML('⏳ جاري تحميل السجل برجاء الانتظار ...', true) + '</td></tr>';
   document.getElementById('paginationRow').style.display = 'none';
 
   try {
@@ -3141,7 +3141,7 @@ async function exportResultsXLSX() {
 //    كل جلب ناجح (مش من الدخول)، و`document.hidden` = صفر استعلام، والنبضة
 //    بتحدّث «منذ كام» **بلا أي نداء شبكة**. من غيرهم ده بيبقى polling أعمى
 //    على استعلام شوبيفاي × عدد الأجهزة × طول اليوم.
-const RQ_AUTO_REFRESH_MS = 15 * 60 * 1000;   // نفس فترة `pack.html` والرئيسية
+const RQ_AUTO_REFRESH_MS = 15 * 60 * 1000;   // نفس فترة `Orders-Packing-Checker.html` والرئيسية
 const RQ_TICK_MS         = 30 * 1000;        // نبضة عرض — صفر شبكة
 
 const rqState = { orders: [], at: null, loading: false, dirty: false, timer: null, failed: false };
@@ -3183,7 +3183,7 @@ function rqRender() {
       ? '<div class="ico">✅</div><div>مفيش أوردرات مستنية تسليم لبوسطة دلوقتي</div>'
       : (rqState.failed
           ? '<div class="ico">⚠️</div><div>تعذّر تحميل الطابور — اضغط «تحديث»</div>'
-          : '<div class="ico">⏳</div><div>جاري تحميل الطابور…</div>');
+          : wocLoadingHTML());
     return;
   }
 
@@ -3213,7 +3213,7 @@ async function rqLoad(silent) {
   if (rqState.loading) return;
   rqState.loading = true;
   const btn = document.getElementById('rqBtn');
-  if (btn) btn.disabled = true;
+  if (btn) { btn.disabled = true; btn.classList.add('loading'); }
 
   try {
     const data = await apiGet('get_ready_to_ship');
@@ -3238,7 +3238,7 @@ async function rqLoad(silent) {
     fail.textContent = `⚠️ تعذّر تحميل طابور التسليم — ${err.message}. السكان شغّال عادي.`;
   } finally {
     rqState.loading = false;
-    if (btn) btn.disabled = false;
+    if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
     rqRender();
     rqSetFresh();
     rqArmAuto();
@@ -3261,7 +3261,7 @@ document.addEventListener('visibilitychange', () => {
 
 // النبضة عرض بحت — بتحدّث «منذ كام» وبادج العمر **بلا أي نداء شبكة**.
 // ⚠️ إعادة رسم الجدول كل نص دقيقة كانت هتصفّر التمرير تحت إيد الموظف —
-//    فالبادج بيتحدّث في مكانه زي `print.html` بالظبط.
+//    فالبادج بيتحدّث في مكانه زي `Order-Printer.html` بالظبط.
 setInterval(() => {
   rqSetFresh();
   if (!rqState.orders.length) return;
@@ -3284,7 +3284,7 @@ document.getElementById('headerMount').innerHTML = wocHeader({
   session,
   // ⚠️ Chip التاب الحالي — بيظهر **بس وقت الـ Sticky** (شريط التابات
   //    بيتقفل وقتها). كان جوّه الهيدر القديم، فبيتحط هنا في `extras`
-  //    عشان الهيدر بقى موحّد في الـ shell. نفس نمط `print.html`.
+  //    عشان الهيدر بقى موحّد في الـ shell. نفس نمط `Order-Printer.html`.
   extras: '<div class="active-tab-chip" id="activeTabChip" onclick="toggleTabChipMenu(event)">'
         +   '<span id="activeTabChipLabel">📷 السكانر</span><span class="chip-arrow">▾</span>'
         +   '<div class="tab-chip-menu" id="tabChipMenu"></div>'

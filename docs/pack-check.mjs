@@ -1,5 +1,5 @@
 // ══════════════════════════════════════════════════════════════
-// docs/pack-check.mjs — فحص متصفح فعلي لـ `pack.html`
+// docs/pack-check.mjs — فحص متصفح فعلي لـ `Orders-Packing-Checker.html`
 //
 // 🔴 **ليه ملف تالت وما اتضافش لملف قايم؟** نفس قرار `browser-check.mjs`
 //    و`sku-barcode-check.mjs`: كل ملف بيشغّل Worker وهمي بشكل رد مختلف
@@ -143,7 +143,7 @@ await page.route('**/orders-packing-checker-worker.ecommoda-dev.workers.dev/**',
   return J({ ok:true });
 });
 
-await page.goto(`${BASE}/pack.html`, { waitUntil:'networkidle' });
+await page.goto(`${BASE}/Orders-Packing-Checker.html`, { waitUntil:'networkidle' });
 
 // ⚠️ `#orderScanInput` هو مربع **دخول الأوردر** (ماسح شوبيفاي)، مش
 //    `#barcodeScanInput` اللي هو مربع سكان **بنود** الأوردر جوّه شاشة

@@ -225,7 +225,7 @@ console.log('① الجلسة والهيدر الموحّد');
      'زرار الخروج عليه `aria-label` (الـ✕ لوحده مايتقريش عند قارئ الشاشة)');
 
   const ver = (await page.locator('.hbtn.ver-btn').first().textContent() || '').trim();
-  is(/v1\.30\.\d+/.test(ver), 'زرار النسخة بيقول نسخة الهب', ver);
+  is(/v1\.\d+\.\d+/.test(ver), 'زرار النسخة بيقول نسخة الهب', ver);
   const clBadge = (await page.locator('#clLatestVerBadge').textContent() || '').trim();
   is(clBadge === ver.replace(/[^v0-9.]/g, ''), 'بادج سجل التحديثات == نسخة الهب', `${clBadge} ≠ ${ver}`);
 

@@ -11,8 +11,7 @@
   <link rel="stylesheet" href="shared/shell.css">
 <style>
 /* ⚠️ **مفيش كتلة توكنز هنا عن قصد.** Tier L (1400px) هو الافتراضي في الـ shell
-   أصلاً، والجدول هنا بثمن أعمدة — فمحتاجينه زي ما هو. `remove.html` و
-   `journey.html` بينزّلوا Tier M لأن جداولهم أضيق. */
+   أصلاً، والجدول هنا بثمن أعمدة — فمحتاجينه زي ما هو. `Order-Item-Remover.html` بينزّل Tier M لأن جدوله أضيق. */
 
 /* ── شريط النطاق + الطزاجة + التحديث ───────────────────────── */
 /* 🔴 الختم والزرار في **حاوية واحدة على سطر واحد** — قاعدة مثبّتة في
@@ -144,7 +143,7 @@
   <div class="card">
     <div class="card-title">📊 أرقام الفترة</div>
     <div class="st-kpis" id="stKpis">
-      <div class="st-state">جارٍ الجلب من التلات أدوات...</div>
+      <div class="woc-loadbox" role="status" aria-live="polite"><span class="woc-load-spin" aria-hidden="true"></span><div class="woc-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div></div>
     </div>
   </div>
 
@@ -312,7 +311,7 @@ const session = requireSession();
 const currentEmployee = { username: session.username, displayName: session.displayName };
 
 // ⚠️ الصفحة دي **قراءة سجل بس** — مفيش عقد جديد مع أي Worker، فحارس النسخة
-//    بياخد قايمة فاضية زي `journey.html`. الجدول في About بيعرض التلاتة
+//    بياخد قايمة فاضية. الجدول في About بيعرض التلاتة
 //    عشان الموظف يعرف مصدر كل رقم، مش كحارس.
 const PAGE_WORKERS = [];
 const ST_TOOLS = [
@@ -743,7 +742,7 @@ function stRenderQuality(cur) {
   const items = [];
 
   if (cur.removeFail) items.push(stQ('red', esc(stFmt(cur.removeFail)), 'حذف بند فشل',
-    'أداة هدّامة وقفت في النص — راجع رحلة الأوردر'));
+    'أداة هدّامة وقفت في النص — راجع سجل الحذف'));
   if (cur.voidCut)    items.push(stQ('red', esc(stFmt(cur.voidCut)), 'فواتير لاغية اتأكّد قطعها',
     'الحارس اشتغل صح — ارتفاع الرقم معناه التعديل بعد الطباعة بيكتر'));
   if (cur.reprintOrders) items.push(stQ('amber', esc(stFmt(cur.reprintOrders)), 'أوردرات اتطبعت أكتر من مرة',

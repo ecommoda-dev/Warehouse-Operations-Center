@@ -1251,7 +1251,7 @@ function switchMainTab(tab) {
 //    بتاعة شاشة الدخول — والشاشة دي اتشالت من الصفحة (الدخول في `index.html`).
 //    من غير النداء ده الفلتر بيفضل فاضي **بلا أي خطأ**، والفشل هنا
 //    **مايوقّفش** السجل: الجدول بيتجاب عادي والفلتر بيفضل بخيار واحد.
-//    (نفس البند بالحرف في `remove.html`.)
+//    (نفس البند بالحرف في `Order-Item-Remover.html`.)
 let logEmployeesLoaded = false;
 async function loadLogEmployees() {
   if (logEmployeesLoaded) return;
@@ -2625,7 +2625,7 @@ async function fetchLog() {
   updateFilterIconState();
 
   document.getElementById('logBody').innerHTML =
-    `<tr><td colspan="8"><div class="empty-state"><div class="spinner spinner-dark" style="margin:0 auto 8px"></div><div>جاري التحميل...</div></div></td></tr>`;
+    `<tr><td colspan="8">${wocLoadingHTML('⏳ جاري تحميل السجل برجاء الانتظار ...', true)}</td></tr>`;
 
   try {
     const [pageData, countData] = await Promise.all([
