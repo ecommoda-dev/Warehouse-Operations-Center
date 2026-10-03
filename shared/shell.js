@@ -50,7 +50,7 @@ const WOC_WORKERS = {
   //    المخزن مايبقاش هو نقطة الفشل الوحيدة لدخول الهب كله.
   auth:    { url: 'https://warehouse-operations-center-worker.ecommoda-dev.workers.dev', min: '1.0.0', label: 'الدخول' },
   // 2.7.0 = أول نسخة بترجّع `machine`/`chan` من `POST /logs` و`itemsQty` من
-  // `/orders` وبتقبل `items` — الأعمدة الجديدة في `print.html` (§LOG-CHAN
+  // `/orders` وبتقبل `items` — الأعمدة الجديدة في `Order-Printer.html` (§LOG-CHAN
   // و§COLS، هب v1.20.0) **مبنية عليها**: من غيرها عمود «نوع الفاتورة» في
   // تاب السجل بيبقى `—` على **كل** صف، وعمود «عدد القطع» في الطابور كمان.
   // ⚠️ التدهور مش صامت (الخانة بتقول `—` مش رقم)، بس عمود كامل فاضي على
@@ -64,7 +64,7 @@ const WOC_WORKERS = {
   //    في الطابور بياخد **بوليصة شحنة الشحن**: ملصق غلط على كرتونة، بلا أي
   //    خطأ — وده **مش تدهور آمن**، عشان كده الواجهة مابتكتفيش بالتحذير:
   //    بترفض طباعة أي صف S2 لو الرد ما فيهوش `machine` (§AWB-MACHINE في
-  //    `print.html`). الحارس هنا **مش رفاهية** — نفس عيلة `remover.min`.
+  //    `Order-Printer.html`). الحارس هنا **مش رفاهية** — نفس عيلة `remover.min`.
   // 🔴 **و2.8.1 هي الحد الأدنى الفعلي** — 2.8.0 لوحدها كانت بتجيب البوليصة
   //    الصح وتطبعها، وبعدين `/track` يرفضها بـ`400` من حارس S1-only فاضل
   //    عند مدخله: **ورق بيخرج من الطابعة وصفر تاج وصفر ميتافيلد وصفر صف
@@ -72,7 +72,7 @@ const WOC_WORKERS = {
   //    `#53822`). ⚠️ الفشل **معلن** (نافذة نتيجة حمرا) — بس الورق بيبقى خرج
   //    خلاص، فالحارس هنا بيوفّر الورقة مش بس الرسالة.
   printer: { url: 'https://order-printer-worker.ecommoda-dev.workers.dev',          min: '2.8.1', label: 'الطباعة' },
-  // 🔴 2.6.0 = أول نسخة فيها §ELIGIBILITY و§PROFILE — `pack.html` من هب
+  // 🔴 2.6.0 = أول نسخة فيها §ELIGIBILITY و§PROFILE — `Orders-Packing-Checker.html` من هب
   // v1.21.0 **معتمدة عليهم فعلاً** (Standards #29): نافذة التشخيص بتقرا
   // `profile` و`eligibility.hints`، وبوابة الإقرار بتقرا `eligibility.level`.
   // على Worker أقدم `eligibility` مش بترجع خالص — يعني:
@@ -92,7 +92,7 @@ const WOC_WORKERS = {
   remover: { url: 'https://order-item-remover-worker.ecommoda-dev.workers.dev',     min: '1.4.0', label: 'حذف منتج' },
   // 1.2.0 = أول نسخة فيها **سجل العمليات** (`log_print` · `get_logs` ·
   // `get_logs_count` · `get_logs_export`) و`[[d1_databases]]`.
-  // `sku-barcode.html` **معتمدة عليها فعلاً** من هب v1.15.0: تاب «سجل
+  // `Order-SKU-Barcode-Printer.html` **معتمدة عليها فعلاً** من هب v1.15.0: تاب «سجل
   // العمليات» بينادي التلات مسارات دي، وكل ضغطة طباعة بتنادي `log_print`.
   // على Worker 1.1.0 التاب بيرجّع «action غير معروف» على كل تحديث،
   // والطباعة بتشتغل **من غير أي أثر في D1**. الترفيع مشروع (Standards #29).
@@ -106,7 +106,7 @@ const WOC_WORKERS = {
   //    الاتنين معتمدين على حقلين رجعوا أول مرة في Worker `1.3.0`
   //    (`available` · `productId`). على `1.2.1` الخانة بتقول رقم مش الكمية
   //    والـ SKU بيفضل نص — يعني **رقم غلط شكله سليم**.
-  // 🔴 وقبلها `1.2.1` (هب v1.16.0): `sku-barcode.html` بقى فيها **قايمة
+  // 🔴 وقبلها `1.2.1` (هب v1.16.0): `Order-SKU-Barcode-Printer.html` بقى فيها **قايمة
   //    اقتراحات بتفتح وانت بتكتب**، وهي معتمدة على إن `search_sku`
   //    يفهم الـ SKU الكامل (`SD1 / Light grey / 45`) والجزئي منه.
   //    على `1.2.0` الاستعلام بيتقسّم لكلمات بحث عامة وبيرجّع **صفر
@@ -165,7 +165,7 @@ const WOC_WORKERS = {
   warehouse:{ url: 'https://package-transfer-to-warehouse-worker.ecommoda-dev.workers.dev', min: '1.0.0', label: 'قسم استلام المرتجعات' },
 };
 
-const TOOL_VERSION = 'v1.35.1';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.36.0';                      // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const SHOP_HANDLE  = '6c7e1a-53';
 // ⚠️ `WOC_APP_ID` اتشالت في v1.32.0 — Worker الدخول المستقل (`WOC_WORKERS.auth`)
@@ -270,7 +270,7 @@ function cacheSet(key, data) {
 // كل صفحة بتنادي Worker مختلف، فالـ api بيتبني بالـ URL بتاعه.
 //
 // ⚠️ `apiRequest` دي **نسخة `Orders-Packing-Checker`** — بتعلّق `status`
-//    و`payload` على الاستثناء. `pack.html` محتاجاهم لمسار الـ 409
+//    و`payload` على الاستثناء. `Orders-Packing-Checker.html` محتاجاهم لمسار الـ 409
 //    («اتغلّف قبل كده»). الصفحات التانية مش بتقراهم فمفيش تعارض.
 //
 // ⚠️ بتفرّق بين تلات حالات كانوا بيدّوا نفس الرسالة الغامضة:
@@ -347,6 +347,16 @@ function wocApi(worker) {
 function esc(v) {
   return String(v ?? '').replace(/[&<>"']/g, c =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// حالة «جاري الاستعلام» الموحّدة (v1.36.0) — نفس الشكل والنص في كل الأدوات.
+// ⚠️ الـ CSS (`.woc-loadbox`) في `shared/shell.css` §LOADBOX. `msg` اختياري،
+//    `small` للاستخدام جوّه خلية جدول.
+const WOC_LOADING_MSG = '⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...';
+function wocLoadingHTML(msg, small) {
+  return '<div class="woc-loadbox' + (small ? ' is-sm' : '') + '" role="status" aria-live="polite">'
+    + '<span class="woc-load-spin" aria-hidden="true"></span>'
+    + '<div class="woc-load-title">' + esc(msg || WOC_LOADING_MSG) + '</div></div>';
 }
 
 // ── Date/Time — القاهرة (UTC+3) · datetime-format.md ──────────
@@ -454,7 +464,7 @@ function agoInfo(at, now) {
 //    الساعة ١ صباحًا، وده الصح للمخزن: «عدّى اليوم» معناها **التاريخ
 //    اتغيّر**، مش إن ٢٤ ساعة عدّت. أي «تبسيط» للطرح المباشر بيكسر الدلالة.
 //
-// 🔴 **في الـ shell من v1.14.0** — `pack.html` و`print.html` بيعرضوا نفس
+// 🔴 **في الـ shell من v1.14.0** — `Orders-Packing-Checker.html` و`Order-Printer.html` بيعرضوا نفس
 //    البادج بالحرف في عمود «تاريخ الأوردر»، ونسختين معناهم إن نفس الأوردر
 //    يبان «منذ يومين» في صفحة و«منذ ٣ أيام» في التانية (درس R1).
 //    ⛔ ممنوع أي صفحة تعرّفهم تاني — تعريف في صفحة بيغلب الـ shell.
@@ -492,7 +502,7 @@ function shopifyOrderUrl(orderId) {
 //    **مايبنيش رابط صالح** — الأدمن بيرد صفحة خطأ، مش بيحوّل للمنتج.
 //    عشان كده الدالة بترجّع `null` لو أي واحد فيهم ناقص، والمستدعي بيعرض
 //    نص عادي — نفس منطق `orderLink` تحت بالحرف.
-// ⚠️ **مكانها الـ shell مش الصفحة** — `sku-barcode.html` بتستخدمها في
+// ⚠️ **مكانها الـ shell مش الصفحة** — `Order-SKU-Barcode-Printer.html` بتستخدمها في
 //    الجدول **وفي قايمة الاقتراحات**، وأي صفحة تانية هتعرض SKU هتحتاجها.
 //    نسخة تانية معناها إن شكل الرابط يفترق مع أول تغيير في الأدمن (درس R1).
 function shopifyVariantUrl(productId, variantId) {
@@ -524,7 +534,7 @@ const WOC_ICON_BARCODE = '<svg viewBox="0 0 24 24" width="1em" height="1em" '
 // 🚚 §BOSTA-GATE — قناة الطباعة ومين بيتعرض فيها
 // ══════════════════════════════════════════════════════════════
 //
-// 🔴 **في الـ shell عن قصد.** الشاشة الرئيسية و`print.html` بيقروا **نفس**
+// 🔴 **في الـ shell عن قصد.** الشاشة الرئيسية و`Order-Printer.html` بيقروا **نفس**
 //    رد `/orders` (ونفس الكاش `WOC_CACHE_PRINT`)، فلازم يعدّوا الأوردرات
 //    بنفس القاعدة بالحرف. نسخة في كل صفحة = الرئيسية تقول ٦٦ والصفحة تفتح
 //    على ٦ — وده بالظبط اللي حصل في v1.11.0 (درس R1).
@@ -585,7 +595,7 @@ function wocChannelGate(o, chan) {
 // 🚚 §COURIER-GROUP — بوسطة / مناديب (تجميع ثنائي)
 // ══════════════════════════════════════════════════════════════
 //
-// 🔴 **في الـ shell عن قصد.** الشاشة الرئيسية و`pack.html` بيقروا **نفس**
+// 🔴 **في الـ shell عن قصد.** الشاشة الرئيسية و`Orders-Packing-Checker.html` بيقروا **نفس**
 //    رد `get_ready_orders` (ونفس الكاش `WOC_CACHE_PACK`)، فلازم يجمّعوا
 //    المندوب بنفس القاعدة بالحرف. نسخة في كل صفحة = الرئيسية تقول رقم
 //    والصفحة تفتح على رقم تاني — نفس اللي حصل مع بوابة بوسطة في v1.11.0
@@ -613,8 +623,8 @@ function wocCourierGroup(courier) {
 }
 
 // مربعات «مناديب/بوسطة/شو روم» — نفس الترتيب ونفس الليبل ونفس الكلاس في
-// الرئيسية وفي `pack.html`، ومطابق لترتيب مربعات «نوع الفاتورة» في
-// `print.html` (قرار أحمد). الترتيب **ثابت** (مش بالعدد): الترتيب بالعدد
+// الرئيسية وفي `Orders-Packing-Checker.html`، ومطابق لترتيب مربعات «نوع الفاتورة» في
+// `Order-Printer.html` (قرار أحمد). الترتيب **ثابت** (مش بالعدد): الترتيب بالعدد
 // كان هيرقّص المربعات مكانها مع كل تحديث.
 const WOC_COURIER_GROUPS = [
   { key: 'other',    label: 'مناديب', cls: 'qc-courier'  },
@@ -647,7 +657,7 @@ function wocCourierCounts(orders) {
 // ⛔ **وعشان كده مكانها الـ shell مش الصفحة.** `Package-Transfer-To-Office.html`
 //    و`index.html` بينادوا **نفس الدالة** على **نفس الرد**. نسخة تانية في
 //    صفحة = درس R1 بالحرف (v1.11.0: الرئيسية قالت «بوسطة ٦٦» والصفحة فتحت
-//    على ٦، لأن البوابة كانت في `print.html` لوحدها). ممنوع أي صفحة تعرّفهم
+//    على ٦، لأن البوابة كانت في `Order-Printer.html` لوحدها). ممنوع أي صفحة تعرّفهم
 //    تاني — تعريف في صفحة بيغلب الـ shell (بيتحمّل قبلها) والقاعدتين
 //    هيفترقوا **في صمت**.
 //

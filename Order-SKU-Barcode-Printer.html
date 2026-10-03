@@ -7,11 +7,11 @@
   <title>باركود SKU — مركز عمليات المخزن</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- ⚠️ **نفس النسخة اللي `remove.html` بيحمّلها** — تصدير XLSX في تاب
+  <!-- ⚠️ **نفس النسخة اللي `Order-Item-Remover.html` بيحمّلها** — تصدير XLSX في تاب
        السجل. الأداة بقى ليها سجل من v1.15.0 (Worker v1.2.0). -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 
-  <!-- ⚠️ **نفس النسخة اللي `print.html` بيحمّلها بالظبط** (3.11.6 من jsdelivr).
+  <!-- ⚠️ **نفس النسخة اللي `Order-Printer.html` بيحمّلها بالظبط** (3.11.6 من jsdelivr).
        النموذج الأولي كان بيضمّن المكتبة حرفيًا جوّه الصفحة، والضمّ اتشال هنا
        بقرار: الهب فيه **صفحتين** بيرسموا باركود، ونسختين مختلفتين من نفس
        المكتبة في هب واحد = بالظبط نمط باج R1 (منطق واحد في مصدرين بيفترقوا
@@ -28,11 +28,11 @@
 :root { --container-max: 1200px; }
 
 /* ── §STYLES::entry — تلات مداخل جنب بعض ──────────────────────
-   🔴 **نسخة طبق الأصل من `pack.html` §STYLES::entry** — نفس أسماء
+   🔴 **نسخة طبق الأصل من `Orders-Packing-Checker.html` §STYLES::entry** — نفس أسماء
       الكلاسات ونفس القيم بالحرف. الموظف بيشوف نفس التلات مربعات بنفس
       الألوان في الصفحتين، ولوحة بشكلين مختلفين لنفس المعنى = بيتعلّمها
       مرتين (نفس منطق `.woc-fresh` / `.rdy-fresh`).
-      ⚠️ أي تعديل هنا يتعمل في `pack.html` في **نفس التمريرة** (درس R1).
+      ⚠️ أي تعديل هنا يتعمل في `Orders-Packing-Checker.html` في **نفس التمريرة** (درس R1).
    ⚠️ اللون هو التمييز الوحيد بينهم — أزرق شوبيفاي · أحمر بوسطة ·
       محايد لليدوي — فأي تغيير في الألوان دي بيضيّع التمييز ده. */
 .scan-input-wrap{display:flex;gap:8px}
@@ -40,7 +40,7 @@
 .scan-input:focus{box-shadow:0 0 0 3px var(--focus-ring)}
 /* ⚠️ **`.scan-hint` بقى بلا مستهلك في الصفحة دي من v1.16.0** — سطور الشرح
    تحت المربعات اتشالت (قرار أحمد 08-09-2026). القاعدة **بتفضل مكتوبة**
-   عشان الكتلة دي **نسخة طبق الأصل من `pack.html`** بالحرف، وشيلها من
+   عشان الكتلة دي **نسخة طبق الأصل من `Orders-Packing-Checker.html`** بالحرف، وشيلها من
    هنا لوحدها كان بيكسر التطابق اللي القاعدة فوق مبنية عليه. */
 .scan-hint{font-size:12px;color:var(--text-muted);margin-top:6px;text-align:center}
 
@@ -53,7 +53,7 @@
    عمود رابع في نفس الصف. وضعه على سطر تحتهم بيقول الفرق ده بالتخطيط بدل
    ما يقوله بالنص.
    ⚠️ **والشبكة رجعت `.entry-grid` بتلات أعمدة بالحرف** — يعني الكتلة دي
-      بقت **مطابقة `pack.html`** تمامًا تاني (كانت بتفترق في عدد الأعمدة
+      بقت **مطابقة `Orders-Packing-Checker.html`** تمامًا تاني (كانت بتفترق في عدد الأعمدة
       بس)، واللي زايد هنا سطر واحد: `grid-column` على كارت الـ SKU. */
 .entry-card.entry-sku{grid-column:1/-1}
 .entry-card.entry-sku{border-top-color:var(--green)}
@@ -324,7 +324,7 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
 /* ══════════════════════════════════════════════════════════════
    §STYLES::log — تاب سجل العمليات (v1.15.0)
    ══════════════════════════════════════════════════════════════
-   ⚠️ **نسخة من `remove.html` §LOG** — وده **مقصود** بقاعدة الأسبقية
+   ⚠️ **نسخة من `Order-Item-Remover.html` §LOG** — وده **مقصود** بقاعدة الأسبقية
       (`CLAUDE.md`): CSS الجداول والفلاتر بيفضل في صفحته، والـ shell فيه
       الـ chrome بس. توحيد جداول الصفحات تمريرة منفصلة (بند مفتوح قايم).
    ══════════════════════════════════════════════════════════════ */
@@ -368,7 +368,7 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
 
 /* ══════════════════════════════════════════════════════════════
    §LABEL-MACHINE — ماكينة الليبل المطبوع · نسخة مكرّرة عن قصد
-   التوأمان: pack.html · sku-barcode.html
+   التوأمان: Orders-Packing-Checker.html · Order-SKU-Barcode-Printer.html
    ══════════════════════════════════════════════════════════════
    🔴 الكتلة اللي بين §LABEL-MACHINE و§LABEL-END **متطابقة بايت ببايت**
       في الملفين. أي تعديل هنا لازم يتعمل في التوأم في **نفس التمريرة**
@@ -377,7 +377,7 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
    ✅ الانحراف بيتمسك بسطر واحد من جذر الريبو:
       bash docs/label-twin-check.sh
    ✅ وفحص المتصفح (docs/sku-barcode-check.mjs) بيقيس النسخة اللي في
-      sku-barcode.html — فطول ما الفحص ده عدّى **والتوأمان متطابقين**،
+      Order-SKU-Barcode-Printer.html — فطول ما الفحص ده عدّى **والتوأمان متطابقين**،
       النسخة التانية متغطية بالوراثة.
    ⛔ ممنوع أي سطر خاص بصفحة واحدة يدخل جوّه العلامتين.
    ══════════════════════════════════════════════════════════════ */
@@ -467,13 +467,13 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
   <!-- بيظهر بس لما الصفحة اتفتحت من جدول التغليف (`?from=pack`) -->
   <div class="woc-back-bar" id="backToQueueBar">
     <span>📦 جاي من طابور التغليف</span>
-    <button class="btn-ghost" onclick="location.href='pack.html'">↩ رجوع للطابور</button>
+    <button class="btn-ghost" onclick="location.href='Orders-Packing-Checker.html'">↩ رجوع للطابور</button>
   </div>
 
   <!-- ══ §TABS — شريط التابات (v1.15.0) ══
        ⚠️ الأداة بقى ليها **سجل عمليات** من Worker v1.2.0. الشريط ده لازم
           يفضل موجود مع البانل — الكتلة دي بالظبط هي اللي كانت **ناقصة**
-          من `remove.html` لحد v1.5.1، فالبانل كان موجود بالكامل ومستحيل
+          من `Order-Item-Remover.html` لحد v1.5.1، فالبانل كان موجود بالكامل ومستحيل
           يتفتح، **من غير أي خطأ في الكونسول**. -->
   <div class="main-tabs-bar">
     <button class="main-tab-btn active" id="mainTabPrint" onclick="switchMainTab('print')"><svg viewBox="0 0 24 24" width="1em" height="1em" style="vertical-align:-0.14em" fill="currentColor" aria-hidden="true"><rect x="2" y="3" width="2" height="18"/><rect x="6" y="3" width="1" height="18"/><rect x="9" y="3" width="3" height="18"/><rect x="14" y="3" width="1" height="18"/><rect x="17" y="3" width="1" height="18"/><rect x="20" y="3" width="2" height="18"/></svg> طباعة ملصق الباركود-SKU</button>
@@ -483,7 +483,7 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
 <div id="printTabContent" class="tab-panel active">
 
   <!-- ─── §TOOL::entry — أربع مداخل، كلهم بيضيفوا للدفعة نفسها ───
-       نفس تقسيمة `pack.html` بالحرف في التلاتة الأولانيين: شوبيفاي أزرق ·
+       نفس تقسيمة `Orders-Packing-Checker.html` بالحرف في التلاتة الأولانيين: شوبيفاي أزرق ·
        بوسطة أحمر · اليدوي محايد. اللون مش زينة — الموظف بيشوف قدامه ملصق
        فيه باركود أوردر أو ملصق بوسطة، والمربع الغلط معناه استعلام فاشل
        ووقت ضايع.
@@ -663,7 +663,7 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
         `body>*{display:none!important}` بتخفي أبناء الـ body المباشرين
         بس. لو العنصر ده اتحط جوّه `.container` كان هيفضل في تخطيط
         الطباعة وهو `position:fixed` — بالظبط عيلة باج «٥ ليبل = ٣٧ صفحة».
-     ⚠️ الضغط على الخلفية بيقفل (عكس نافذة نتيجة الحذف في `remove.html`):
+     ⚠️ الضغط على الخلفية بيقفل (عكس نافذة نتيجة الحذف في `Order-Item-Remover.html`):
         دي مفيهاش أي قرار ولا فعل، ومحدش بيخسر حاجة لو اتقفلت بالغلط. -->
 <div class="bc-lb" id="bcLightbox" onclick="if(event.target===this)bcCloseImage()">
   <button class="bc-lb-x" onclick="bcCloseImage()" aria-label="اقفل الصورة">✕</button>
@@ -746,7 +746,7 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
             <li><code>§TOOL-JS::bcResolveTracking</code> — تراكينج بوسطة → اسم أوردر (Worker التغليف)</li>
             <li><code>§SCAN</code> — ربط السكانر بالمربعين الأولانيين + <code>lastEntryMode</code></li>
             <li><code>§LIGHTBOX</code> — صورة المنتج بالحجم الكامل</li>
-            <li><code>§LABEL-MACHINE</code> (CSS + JS · فيها <code>§LABEL-JS</code>) — ماكينة الليبل: بناء عنصر الباركود-SKU + ضبط حجم خط الـ SKU + <code>bcRenderLabels</code> + <code>bcFirePrint</code>. 🔴 <b>نسخة مكرّرة عن قصد</b> — التوأم في <code>pack.html</code> (زرار «باركود المنتجات» في شاشة التغليف)، والكتلتان <b>متطابقتان بايت ببايت</b>؛ أي تعديل يتعمل في الاتنين في نفس التمريرة، والتحقق بـ<code>bash docs/label-twin-check.sh</code></li>
+            <li><code>§LABEL-MACHINE</code> (CSS + JS · فيها <code>§LABEL-JS</code>) — ماكينة الليبل: بناء عنصر الباركود-SKU + ضبط حجم خط الـ SKU + <code>bcRenderLabels</code> + <code>bcFirePrint</code>. 🔴 <b>نسخة مكرّرة عن قصد</b> — التوأم في <code>Orders-Packing-Checker.html</code> (زرار «باركود المنتجات» في شاشة التغليف)، والكتلتان <b>متطابقتان بايت ببايت</b>؛ أي تعديل يتعمل في الاتنين في نفس التمريرة، والتحقق بـ<code>bash docs/label-twin-check.sh</code></li>
             <li><code>§PRINT-JS</code> — بناء الدفعة والمعاينة و<code>window.print()</code> + التسجيل + المسح التلقائي</li>
             <li><code>§LOG-JS</code> — سجل العمليات (فلاتر · جدول · تصفيح · تصدير XLSX)</li>
           </ul>
@@ -1116,7 +1116,7 @@ function bcNormName(raw) {
   return t ? '#' + t : '';
 }
 // باركود الأوردر المطبوع بيشفّر الـ **ID الرقمي** (١٠ خانات فأكتر)، واسم
-// الأوردر ٥ خانات — نفس التفرقة الموجودة في `pack.html`.
+// الأوردر ٥ خانات — نفس التفرقة الموجودة في `Orders-Packing-Checker.html`.
 function bcIsOrderId(raw) { return /^\d{10,}$/.test(String(raw ?? '').trim()); }
 
 function bcFindOrder(name) { return bcOrders.findIndex(o => o.key === name); }
@@ -1641,7 +1641,7 @@ async function bcAcSuggest(term) {
 //    بيبص على الجدول ومايعرفش هو استبعد الصنف ده ولا الجلب أصلاً ما
 //    رجّعوش. الفرق بين الحالتين هو الفرق بين «مش عايزه» و«قطعة هتخرج من
 //    المخزن من غير باركود»، وده بالظبط اللي بانر الفشل والبادجات موجودين
-//    عشانه (نفس مبدأ «صف بلا قناة بيظهر ومربعه مقفول» في `print.html`).
+//    عشانه (نفس مبدأ «صف بلا قناة بيظهر ومربعه مقفول» في `Order-Printer.html`).
 // 🔴 **الضغطة قابلة للرجوع** — تانية بترجّع العدد اللي كان. من غير الرجوع
 //    ده الاستبعاد بالغلط بيتصلّح بإعادة سكان الأوردر كله.
 // ⚠️ **العدد القديم بيتحفظ في `copiesBefore`** مش بيترجع للكمية: الموظف
@@ -1923,7 +1923,7 @@ function bcRenderActions() {
 // ══════════════════════════════════════════════════════════════
 //
 // 🔴 **نسخة طبق الأصل من §SCAN::entryMode + §SCAN::scannerBinding في
-//    `pack.html`** — نفس المهل ونفس سلوك الفوكس ونفس أسماء الكلاسات.
+//    `Orders-Packing-Checker.html`** — نفس المهل ونفس سلوك الفوكس ونفس أسماء الكلاسات.
 //    الموظف بيتنقّل بين الصفحتين بنفس السكانة في إيده، وسلوك مختلف بين
 //    الصفحتين = «سكنت وماحصلش حاجة». أي تعديل يتعمل في الاتنين في نفس
 //    التمريرة (درس R1).
@@ -2057,7 +2057,7 @@ function bcSubmitSku() {
 
 // ══════════════════════════════════════════════════════════════
 // §LABEL-MACHINE — ماكينة الليبل المطبوع · نسخة مكرّرة عن قصد
-// التوأمان: pack.html · sku-barcode.html
+// التوأمان: Orders-Packing-Checker.html · Order-SKU-Barcode-Printer.html
 // ══════════════════════════════════════════════════════════════
 //
 // 🔴 الكتلة اللي بين §LABEL-MACHINE و§LABEL-END **متطابقة بايت ببايت**
@@ -2067,7 +2067,7 @@ function bcSubmitSku() {
 // ✅ الانحراف بيتمسك بسطر واحد من جذر الريبو:
 //      bash docs/label-twin-check.sh
 // ✅ وفحص المتصفح (docs/sku-barcode-check.mjs) بيقيس النسخة اللي في
-//    sku-barcode.html — فطول ما الفحص ده عدّى **والتوأمان متطابقين**،
+//    Order-SKU-Barcode-Printer.html — فطول ما الفحص ده عدّى **والتوأمان متطابقين**،
 //    النسخة التانية متغطية بالوراثة.
 // ⛔ ممنوع أي سطر خاص بصفحة واحدة يدخل جوّه العلامتين — نسخة JsBarcode
 //    في <head> **بره** العلامتين، فالفحص مابيمسكهاش: لازم تفضل
@@ -2195,7 +2195,7 @@ function bcFirePrint() {
 // 🔴 **الفشل في التسجيل مايمنعش الطباعة أبدًا.** حارس بيمنع الشغل بيتشال
 //    بعد أسبوع — والموظف واقف على الطابعة. النداء بيرمي؟ توست أصفر
 //    والورق بيطلع. (نفس مبدأ «فشل جلب السجل مايمنعش الطباعة» في بوابة
-//    المراجعة بتاعة `print.html`.)
+//    المراجعة بتاعة `Order-Printer.html`.)
 // ⚠️ والتسجيل بيحصل **قبل** `window.print()` مش بعدها — نافذة الطباعة
 //    بتوقف التنفيذ، ولو الموظف قفل التاب وهي مفتوحة الصف مايتكتبش خالص.
 async function bcLogPrint() {
@@ -2244,7 +2244,7 @@ function bcPrint() {
   if (!labels.length) { showToast('مفيش أي صنف بـ Barcode وعدد طباعة أكبر من صفر', 'warning'); return; }
 
   // 🔴 البناء والقياس **من ماكينة الليبل** (§LABEL-MACHINE فوق) — مش من
-  //    هنا. الصفحة التوأم (`pack.html`) بتنادي **نفس** الدالتين، فمستحيل
+  //    هنا. الصفحة التوأم (`Orders-Packing-Checker.html`) بتنادي **نفس** الدالتين، فمستحيل
   //    يكون فيه قياسان أو مسارا بناء يفترقوا (درس R1).
   const els = bcRenderLabels(labels);
 
@@ -2300,7 +2300,7 @@ window.addEventListener('afterprint', () => {
 // ⚠️ `fetchLog` · `renderLogTable` · `renderPagination` · `goPage` كلهم
 //    **في القايمة السودا** بتاعة `shared/shell.js` — منطقهم بيفرق فعلاً
 //    من صفحة للتانية (أعمدة مختلفة · فلاتر مختلفة · شكل `type` مختلف).
-//    بيفضلوا هنا، ونسخة `remove.html` بتفضل هناك.
+//    بيفضلوا هنا، ونسخة `Order-Item-Remover.html` بتفضل هناك.
 const LOG_PAGE_SIZE = 100;
 let logCurrentPage = 1, logTotalCount = 0, logSearchTimer = null, logLoaded = false;
 
@@ -2356,7 +2356,7 @@ function clearLogFilters() {
 async function fetchLog() {
   logLoaded = true;
   const body = document.getElementById('logBody');
-  body.innerHTML = '<tr class="empty-row"><td colspan="7"><div class="loading-spinner"></div></td></tr>';
+  body.innerHTML = '<tr class="empty-row"><td colspan="7">' + wocLoadingHTML('⏳ جاري تحميل السجل برجاء الانتظار ...', true) + '</td></tr>';
   const p = logFilterParams();
   const offset = (logCurrentPage - 1) * LOG_PAGE_SIZE;
   try {

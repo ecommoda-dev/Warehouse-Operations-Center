@@ -429,13 +429,13 @@
       الصفحة بتفتح **بلا قناة**، والجدول بيعرض القنوات كلها. اللي بيمنع
       الدفعة المختلطة بقى إن **الطباعة نفسها مقفولة** طول ما مفيش قناة
       (`updatePrintBar`) — مش إن فيه واحدة مولّعة من غير ما حد يدوس.
-   ⚠️ الألوان **نفس ألوان عمود المندوب في `pack.html`** بالحرف
+   ⚠️ الألوان **نفس ألوان عمود المندوب في `Orders-Packing-Checker.html`** بالحرف
       (`.courier-bosta` أحمر · `.courier-other` أزرق · `.courier-showroom`
       **تركواز** من v1.25.0، كان أخضر). نفس المعلومة بلونين مختلفين =
       الموظف بيتعلّمها مرتين (درس R1).
    ⚠️ والشكل بقى **نسخة كاملة من `.zchip`** — بعلامة `✕` كمان، لأن المربع
       بقى بيتقفل بضغطة تانية زي هناك بالظبط. */
-/* صندوق العدّ — **نسخة من `.count-box` في `pack.html`** بالحرف (v1.14.0).
+/* صندوق العدّ — **نسخة من `.count-box` في `Orders-Packing-Checker.html`** بالحرف (v1.14.0).
    الرقم على اليمين · المربعات في النص · لوحة «آخر تحديث» والزرار على
    الشمال. الموظف بيتنقّل بين الصفحتين طول اليوم بنفس العين. */
 .count-box {
@@ -479,7 +479,7 @@
 .chan-btn.ch-none     { background: var(--amber-light);  color: var(--amber-dark);  border-color: var(--amber-border); }
 /* المختار لازم يبان من بعيد — الموظف اللي مش فاهم ليه الجدول شكله كده
    بيدوّر على الزرار المولّع ده.
-   ⚠️ علامة `✕` **نسخة طبق الأصل من `.zchip.active` في `pack.html`** (v1.13.0):
+   ⚠️ علامة `✕` **نسخة طبق الأصل من `.zchip.active` في `Orders-Packing-Checker.html`** (v1.13.0):
       المربع بقى بيتقفل بضغطة تانية زي هناك بالظبط، والعلامة هي اللي بتقول
       إن الضغطة الجاية بترجّع الكل. من غيرها الموظف بيدوس ويستنى فلتر جديد. */
 .chan-btn.active { box-shadow: 0 0 0 2px currentColor inset; }
@@ -493,13 +493,13 @@
    ⛔ متضيفش نسخة تانية منه في صفحة تانية لو رجع — سطر واحد مشترك. */
 
 /* ── عمود «نوع الأوردر» — نص ملوّن، **نسخة من `.type-text` في
-   `pack.html`** (بند ٤، v1.14.0). البادج اتشال: اللون لوحده هو التصنيف،
+   `Orders-Packing-Checker.html`** (بند ٤، v1.14.0). البادج اتشال: اللون لوحده هو التصنيف،
    والخلفية كانت بتزوّد ضجيج في جدول عمدانه تمانية. */
 .type-text { font-weight: 800; white-space: nowrap; }
 .type-text.type-s1 { color: var(--accent-dark); }
 .type-text.type-s2 { color: var(--purple-dark); }
 
-/* ── بادج عمر الأوردر — **نسخة من `.time-badge` في `pack.html`** بالحرف
+/* ── بادج عمر الأوردر — **نسخة من `.time-badge` في `Orders-Packing-Checker.html`** بالحرف
    (نفس الدرجات ونفس التوكنز). الدرجة بتيجي من `wocDayLevel` في الـ shell،
    فمستحيل الصفحتين يفترقوا في **الدرجة**؛ الـ CSS هنا هو اللي بيلوّنها،
    وأي تعديل عليه يتعمل في الصفحتين في نفس التمريرة (درس R1). */
@@ -543,7 +543,7 @@
 .awb-fb-m { font-size: 11.5px; font-weight: 700; color: var(--text-muted); font-family: var(--font-mono); }
 
 /* بوابة المراجعة — سؤالين لأوردر بوسطة بدل سؤال واحد (قرار أحمد 07-09-2026).
-   نفس نمط التأكيدين الإلزاميين في `remove.html` — مش نمط جديد. */
+   نفس نمط التأكيدين الإلزاميين في `Order-Item-Remover.html` — مش نمط جديد. */
 .pg-checks { display: flex; flex-direction: column; gap: 5px; }
 .pg-check  { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; cursor: pointer; }
 
@@ -782,7 +782,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 <!-- بيظهر بس لما الصفحة اتفتحت من جدول التغليف (`?from=pack`) -->
 <div class="woc-back-bar" id="backToQueueBar">
   <span>📦 جاي من طابور التغليف</span>
-  <button class="btn-ghost" onclick="location.href='pack.html'">↩ رجوع للطابور</button>
+  <button class="btn-ghost" onclick="location.href='Orders-Packing-Checker.html'">↩ رجوع للطابور</button>
 </div>
 
 
@@ -791,9 +791,9 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
      ══════════════════════════════════════════════════════════════ -->
 <div class="tab-panel active" id="panelPrint">
 
-  <div id="printLoadingState" class="state-box" style="display:none;">
-    <div class="spinner"></div>
-    <p class="state-msg">جاري الاستعلام عن الأوردرات...</p>
+  <div id="printLoadingState" class="woc-loadbox" role="status" aria-live="polite" style="display:none;">
+    <span class="woc-load-spin" aria-hidden="true"></span>
+    <div class="woc-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div>
   </div>
   <div id="printErrorState" class="state-box error" style="display:none;">
     <div style="font-size:40px;">⚠️</div>
@@ -822,7 +822,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
     <!-- §ITEMS — بانر الأصناف. 🔴 القصّ بيتقال **بأسماء الأوردرات**: «فيه قص»
          من غير أسماء يعني الموظف مايعرفش يراجع فين (نفس قاعدة `itemsTruncated`
-         في `sku-barcode.html`). والفشل بيتقال كمان — خانة فاضية من غير سبب
+         في `Order-SKU-Barcode-Printer.html`). والفشل بيتقال كمان — خانة فاضية من غير سبب
          بتتقري «الأوردر مالوش أصناف». -->
     <div id="prtItemsWarn" class="export-warn" style="display:none;"></div>
 
@@ -840,7 +840,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
          ⚠️ تبديل القناة **بيمسح التحديد** — ده اللي بيمنع الدفعة المختلطة
             من أصلها بدل ما نتحقق منها بعد كده. وإطفاء القناة بيمسح برضه.
          ══════════════════════════════════════════════════════════ -->
-    <!-- ⚠️ الصندوق **نسخة من `.count-box` في `pack.html`** بالحرف: الرقم
+    <!-- ⚠️ الصندوق **نسخة من `.count-box` في `Orders-Packing-Checker.html`** بالحرف: الرقم
          على اليمين · المربعات في النص · لوحة «آخر تحديث» وزرار التحديث
          مع بعض على الشمال. الموظف بيتنقّل بين الصفحتين طول اليوم، وشكلين
          مختلفين لنفس الصندوق معناهم إنه يتعلّمه مرتين (درس R1). -->
@@ -860,7 +860,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
         <!-- ⚠️ بيظهر **بس** لما يكون فيه أوردرات بلا قناة. صفر مايتعرضش عشان
              الشاشة ماتتعوّدش على تحذير دايم فتبطّل تشوفه. -->
         <button class="chan-btn ch-none" id="chanBtn-none" style="display:none;" onclick="setChannel('none')">
-          ⚠️ بلا قناة <span class="chan-n" id="chanN-none">—</span></button>
+          ⚠️ المنطقة غير محددة <span class="chan-n" id="chanN-none">—</span></button>
       </div>
 
       <!-- ── لوحة «آخر تحديث» + زرار التحديث — **وحدة واحدة** ──
@@ -1070,7 +1070,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
               <th style="width:44px;"><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this.checked)"></th>
               <th class="sortable-th" data-sort-key="name"     onclick="toggleSort('print','name')">رقم الأوردر<span class="sort-icon" data-sort-key="name"></span></th>
               <!-- ⚠️ عمود واحد بدل «التاريخ» و«الوقت» (بند ٤، v1.14.0) —
-                   **نفس عمود `pack.html`** بالحرف: التاريخ + بادج العمر.
+                   **نفس عمود `Orders-Packing-Checker.html`** بالحرف: التاريخ + بادج العمر.
                    الوقت اتشال بقرار: ساعة إنشاء الأوردر مش معلومة المخزن
                    بيتصرّف عليها، واللي بيفرق فعلاً هو «بقاله قد إيه». -->
               <th class="sortable-th" data-sort-key="date"     onclick="toggleSort('print','date')">تاريخ الأوردر<span class="sort-icon" data-sort-key="date"></span></th>
@@ -1101,9 +1101,9 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
      ══════════════════════════════════════════════════════════════ -->
 <div class="tab-panel" id="panelLog">
 
-  <div id="logsLoadingState" class="state-box" style="display:none;">
-    <div class="spinner"></div>
-    <p class="state-msg">جاري تحميل السجل...</p>
+  <div id="logsLoadingState" class="woc-loadbox" role="status" aria-live="polite" style="display:none;">
+    <span class="woc-load-spin" aria-hidden="true"></span>
+    <div class="woc-load-title">⏳ جاري تحميل السجل برجاء الانتظار ...</div>
   </div>
   <div id="logsErrorState" class="state-box error" style="display:none;">
     <div style="font-size:40px;">⚠️</div>
@@ -2962,16 +2962,16 @@ const CHANNELS = {
   invoice:  { label: "فاتورة — مناديب",     short: "مناديب",     action: "invoice" },
   showroom: { label: "فاتورة — شو روم",     short: "شو روم",     action: "invoice" },
   awb:      { label: "بوليصة بوسطة",         short: "بوسطة",      action: "awb"     },
-  none:     { label: "بلا قناة",             short: "بلا قناة",   action: null      },
+  none:     { label: "المنطقة غير محددة",   short: "المنطقة غير محددة", action: null      },
 };
 
-// القناة النشطة — **في الذاكرة بس** زي `lastEntryMode` في `pack.html`:
+// القناة النشطة — **في الذاكرة بس** زي `lastEntryMode` في `Orders-Packing-Checker.html`:
 // موظف جديد على نفس الجهاز بيبدأ من نفس الحالة.
 //
 // 🔴 **`null` = مفيش قناة مختارة، والصفحة بتفتح كده** (قرار أحمد 07-09-2026،
 //    v1.13.0). قبل كده كانت بتفتح على `"invoice"` — مربع قاهرة+جيزة بيبقى
 //    مولّع من غير ما حد يدوس، والجدول بيعرض قناة واحدة وكأنها كل الطابور.
-//    دلوقتي الشكل والسلوك **نفس مربعَي «بوسطة/مناديب» في `pack.html`**:
+//    دلوقتي الشكل والسلوك **نفس مربعَي «بوسطة/مناديب» في `Orders-Packing-Checker.html`**:
 //    مفيش حاجة مولّعة عند الفتح · الجدول بيعرض الكل · ضغطة بتفلتر · ضغطة
 //    تانية على نفس المربع بترجّع الكل (العلامة `✕` بتقول كده).
 //
@@ -2984,7 +2984,7 @@ const CHANNELS = {
 let activeChannel = null;
 
 // ⚠️ **تبديل وقفل بنفس الضغطة.** الضغط على المربع المولّع بيطفّيه ويرجّع
-//    «الكل» — نفس `rdyCourierChipClick` في `pack.html`.
+//    «الكل» — نفس `rdyCourierChipClick` في `Orders-Packing-Checker.html`.
 function setChannel(ch) {
   if (!CHANNELS[ch]) return;
   // 🔴 مسح التحديد عند **أي** تغيير في القناة — ده اللي بيمنع الدفعة

@@ -171,7 +171,7 @@
 <!-- بيظهر بس لما الصفحة اتفتحت من جدول التغليف (`?from=pack`) -->
 <div class="woc-back-bar" id="backToQueueBar">
   <span>📦 جاي من طابور التغليف</span>
-  <button class="btn-ghost" onclick="location.href='pack.html'">↩ رجوع للطابور</button>
+  <button class="btn-ghost" onclick="location.href='Orders-Packing-Checker.html'">↩ رجوع للطابور</button>
 </div>
 
 <!-- ══ Changelog Modal ══ -->
@@ -488,7 +488,7 @@
      🔴 الكتلة دي كانت **ناقصة** من الصفحة لحد v1.5.1: `switchMainTab` والبانل
         `#logTabContent` وكل §LOG-JS كانوا موجودين، بس مفيش أي زرار بينادي
         عليهم — فتاب «سجل العمليات» كان مستحيل يتفتح. نفس عيلة الباج بتاعت
-        chip التاب في `print.html` (كتلة كانت جوّه الهيدر القديم وراحت معاه
+        chip التاب في `Order-Printer.html` (كتلة كانت جوّه الهيدر القديم وراحت معاه
         وقت التحويل لـ `wocHeader`). -->
 <div class="main-tabs-bar">
   <button class="main-tab-btn active" id="mainTabRemove" onclick="switchMainTab('remove')">🔍 البحث والحذف</button>
@@ -643,7 +643,7 @@ async function lookupOrder() {
   const area = document.getElementById('orderResultArea');
   if (!raw) { showToast('اكتب رقم الأوردر أولاً', 'error'); return; }
   const btn = document.getElementById('searchBtn'); btn.disabled = true; btn.textContent = '⏳ جارٍ البحث...';
-  area.innerHTML = '<div class="card"><div class="loading-spinner"></div></div>';
+  area.innerHTML = '<div class="card">' + wocLoadingHTML('⏳ جاري البحث عن الأوردر برجاء الانتظار ...') + '</div>';
   try {
     const data = await apiGetLookup(raw);
     currentOrder = data.order;
@@ -869,7 +869,7 @@ function clearLogFilters() {
 async function fetchLog() {
   logLoaded = true;
   const body = document.getElementById('logBody');
-  body.innerHTML = '<tr class="empty-row"><td colspan="7"><div class="loading-spinner"></div></td></tr>';
+  body.innerHTML = '<tr class="empty-row"><td colspan="7">' + wocLoadingHTML('⏳ جاري تحميل السجل برجاء الانتظار ...', true) + '</td></tr>';
   const employee = document.getElementById('logFilterEmployee').value || null;
   const search = document.getElementById('logSearch').value.trim() || null;
   const offset = (logCurrentPage - 1) * LOG_PAGE_SIZE;

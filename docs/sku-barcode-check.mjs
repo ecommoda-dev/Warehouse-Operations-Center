@@ -1,9 +1,9 @@
 // ══════════════════════════════════════════════════════════════
-// docs/sku-barcode-check.mjs — فحص متصفح فعلي لصفحة `sku-barcode.html`
+// docs/sku-barcode-check.mjs — فحص متصفح فعلي لصفحة `Order-SKU-Barcode-Printer.html`
 // ══════════════════════════════════════════════════════════════
 //
 // 🔴 **ليه ملف اختبار منفصل عن `browser-check.mjs`:** ده بيشغّل
-//    `print.html` على Worker وهمي بشكل رد مختلف تمامًا (طابور طباعة
+//    `Order-Printer.html` على Worker وهمي بشكل رد مختلف تمامًا (طابور طباعة
 //    وبوسطة). دمج الاتنين معناه Worker وهمي واحد بيرد على أداتين، وأول
 //    تعديل في رد واحدة بيكسر اختبار التانية.
 //
@@ -214,7 +214,7 @@ await page.route('**/*', route => {
   });
 });
 
-await page.goto(`${BASE}/sku-barcode.html`, { waitUntil: 'networkidle' });
+await page.goto(`${BASE}/Order-SKU-Barcode-Printer.html`, { waitUntil: 'networkidle' });
 
 // ── ① الأربع مداخل موجودة ─────────────────────────────────────
 for (const [id, label] of [['orderScanInput', 'شوبيفاي'], ['bostaScanInput', 'بوسطة'],

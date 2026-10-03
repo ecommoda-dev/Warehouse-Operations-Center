@@ -21,7 +21,7 @@
    تعارض CSS بين الأدوات التلاتة يدويًا.
 
    🔴 كتلة التوكنز معرّفة هنا **بس**. أي كتلة توكنز في صفحة = التوكنز اتفرّقت.
-      الاستثناء الوحيد المسموح: `remove.html` بتعرّف `--container-max`
+      الاستثناء الوحيد المسموح: `Order-Item-Remover.html` بتعرّف `--container-max`
       لوحدها (Tier M) وخلاص.
 
    المصدر: `Orders-Packing-Checker/index.html` v2.6.2 — أحدث نسخة وأكتر
@@ -112,11 +112,11 @@
   --shadow-md:      0 4px 12px rgba(0,0,0,.12),0 2px 4px rgba(0,0,0,.06);
   /* Tier L — الأداة فيها جدول سجل بأعمدة كتير + شاشة فحص بعمودين */
   /* Tier L — الافتراضي للهب (جداول كثيفة في الطباعة والتغليف).
-     `remove.html` و`journey.html` بينزّلوا Tier M (1200px) في ستايلهم. */
+     `Order-Item-Remover.html` بينزّلوا Tier M (1200px) في ستايلهم. */
   --container-max:  1400px;
   --font-body:      'Noto Sans Arabic', -apple-system, sans-serif;
   --font-mono:      'Noto Sans Arabic', -apple-system, sans-serif;
-  /* خط **الليبل المطبوع** في `sku-barcode.html` بس — استثناء موثّق من
+  /* خط **الليبل المطبوع** في `Order-SKU-Barcode-Printer.html` بس — استثناء موثّق من
      Standards #11 (خط واحد لكل الأدوات).
      ⚠️ ممنوع أي عنصر على الشاشة يستخدمه — الاستثناء للطباعة بس.
 
@@ -324,7 +324,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .woc-row-num{flex:0 0 auto;min-width:125px}
 .woc-row-mid{flex:1 1 230px;min-width:215px;display:flex;flex-direction:column;gap:7px}
 /* منطقة الأكشن = لوحة «آخر تحديث» + زرار التحديث **مع بعض**
-   (نفس `.rdy-actions` في `pack.html`). `align-items:stretch` بيخلّي
+   (نفس `.rdy-actions` في `Orders-Packing-Checker.html`). `align-items:stretch` بيخلّي
    الزرار بنفس ارتفاع اللوحة بالظبط. */
 .woc-row-act{flex:0 0 auto;margin-inline-start:auto;display:flex;align-items:stretch;gap:8px;flex-wrap:wrap}
 
@@ -338,7 +338,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .woc-tool:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--focus-ring)}
 .woc-tool .woc-card-ico{width:42px;height:42px;border-radius:11px;font-size:22px}
 .woc-tool .woc-card-name{font-size:13.5px}
-/* ⚠️ مربع بثيم أحمر — **للأدوات الهدّامة بس** (`remove.html` النهاردة.
+/* ⚠️ مربع بثيم أحمر — **للأدوات الهدّامة بس** (`Order-Item-Remover.html` النهاردة.
    `returned.html` كانت هنا كمان لحد v1.24.1 وبقت `.tool-return` تحت).
    الأداة دي بتحذف بند من أوردر حي وبند متحذف **مالوش رجعة**، فاللون هنا
    تحذير مش تزويق: الموظف بيدوس على المربعات دي بسرعة، ولازم يفرّق
@@ -404,13 +404,13 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .woc-chip b{font-family:var(--font-mono);font-variant-numeric:tabular-nums;direction:ltr}
 /* مربعات المندوب على صف «جاهز للتغليف» (v1.13.0 · بقوا تلاتة في v1.14.0) —
    بدّلوا `chip-s1`/`chip-s2`.
-   ⚠️ الألوان **نفس ألوان مربعات `.zchip` في `pack.html`** بالحرف: بوسطة
+   ⚠️ الألوان **نفس ألوان مربعات `.zchip` في `Orders-Packing-Checker.html`** بالحرف: بوسطة
       أحمر (`.qc-bosta`) · شو روم **تركواز** (`.qc-showroom`) · مناديب أزرق
       (`.qc-courier`). ونفس اسم الكلاس كمان — الصفحة اللي الصف بيفتح عليها
       بتعرض نفس الأرقام بنفس الألوان، فالموظف بيتعلّمهم مرة واحدة (درس R1).
    🔴 وتركواز الشو روم هنا **نفس** تركواز عمود المندوب (`.courier-showroom`
-      في `pack.html`) وتركواز مربع القناة (`.chip-ch-showroom` هنا و
-      `.chan-btn.ch-showroom` في `print.html`) — **خمس أماكن** بنفس اللون
+      في `Orders-Packing-Checker.html`) وتركواز مربع القناة (`.chip-ch-showroom` هنا و
+      `.chan-btn.ch-showroom` في `Order-Printer.html`) — **خمس أماكن** بنفس اللون
       لنفس المعنى. كان أخضر لحد v1.24.1 واتغيّر في v1.25.0، وأي تعديل
       عليه لازم يعدّي على الخمسة في نفس التمريرة (درس R1). */
 .woc-chip.qc-bosta{background:var(--red-light);color:var(--red-dark);border-color:var(--red-border)}
@@ -418,8 +418,8 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .woc-chip.qc-courier{background:var(--accent-light);color:var(--accent-dark);border-color:var(--accent-border)}
 /* مربعات قناة الشحن على الشاشة الرئيسية (v1.7.0) — طابور الطباعة بقى فيه
    تلات قنوات، والتقسيمة S1/S2 مابقتش هي السؤال المهم فيه.
-   ⚠️ الألوان **نفس ألوان عمود المندوب في `pack.html`** وعمود القناة في
-      `print.html`: بوسطة أحمر · قاهرة+جيزة أزرق · شو روم تركواز. نفس
+   ⚠️ الألوان **نفس ألوان عمود المندوب في `Orders-Packing-Checker.html`** وعمود القناة في
+      `Order-Printer.html`: بوسطة أحمر · قاهرة+جيزة أزرق · شو روم تركواز. نفس
       المعلومة بلونين مختلفين = الموظف بيتعلّمها مرتين (درس R1). */
 .woc-chip.chip-ch-invoice{background:var(--accent-light);color:var(--accent-dark);border-color:var(--accent-border)}
 .woc-chip.chip-ch-awb{background:var(--red-light);color:var(--red-dark);border-color:var(--red-border)}
@@ -428,7 +428,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .woc-chip.chip-ch-pending{background:var(--amber-light);color:var(--amber-dark);border-color:var(--amber-border)}
 .woc-chip.chip-ch-hold{background:var(--surface-2);color:var(--text-secondary);border-color:var(--border-strong)}
 
-/* لوحة «آخر تحديث» — **نفس شكل `.rdy-fresh` في `pack.html`** بالحرف:
+/* لوحة «آخر تحديث» — **نفس شكل `.rdy-fresh` في `Orders-Packing-Checker.html`** بالحرف:
    صندوق محدّد بسطرين، الأول اللافتة + عدّاد القِدَم والتاني ختم
    التاريخ والوقت، وملزوق بزرار التحديث في منطقة واحدة.
    ⚠️ الموظف بيشوف **نفس اللوحة** في الهب وفي صفحة التغليف —
@@ -469,3 +469,17 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 /* شريط الرجوع للطابور — بيظهر لما الصفحة اتفتحت من جدول التغليف */
 .woc-back-bar{display:none;align-items:center;justify-content:space-between;gap:10px;background:var(--accent-light);border:1px solid var(--accent-border);color:var(--accent-dark);border-radius:var(--radius-sm);padding:9px 14px;margin-bottom:12px;font-size:13px;font-weight:700}
 .woc-back-bar.visible{display:flex}
+
+/* ── §LOADBOX — حالة «جاري الاستعلام» الموحّدة (v1.36.0) ─────────────────
+   نفس الشكل في كل الأدوات: دايرة كبيرة بتلف + عنوان بخط تقيل. وزرار «تحديث»
+   (`.woc-rbtn` · `.rdy-refresh-btn`) بيتحوّل لـ«جاري التحديث ...» لوحده لما
+   بياخد `.loading` — من غير أي تعديل في الصفحات. */
+.woc-loadbox{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:44px 20px;margin:0 auto;width:100%;background:var(--accent-light);border:2px solid var(--accent-border);border-radius:var(--radius)}
+.woc-load-spin{display:inline-block;width:54px;height:54px;border:6px solid var(--accent-border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+.woc-load-title{font-size:20px;font-weight:800;line-height:1.6;color:var(--accent-dark)}
+.woc-loadbox.is-sm{padding:26px 16px;gap:10px}
+.woc-loadbox.is-sm .woc-load-spin{width:36px;height:36px;border-width:4px}
+.woc-loadbox.is-sm .woc-load-title{font-size:16px}
+.woc-rbtn.loading>span:nth-child(2),.rdy-refresh-btn.loading>span:nth-child(2){font-size:0}
+.woc-rbtn.loading>span:nth-child(2)::after,.rdy-refresh-btn.loading>span:nth-child(2)::after{content:"جاري التحديث ...";font-size:12px}
+.woc-rbtn.loading,.rdy-refresh-btn.loading{opacity:1;cursor:progress}

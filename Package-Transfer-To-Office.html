@@ -159,7 +159,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .rq-empty .ico { font-size: 26px; margin-bottom: 6px; }
 .rq-fail { margin: 12px 16px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--red-light); border: 1px solid var(--red-border); color: var(--red-dark); font-size: 12.5px; }
 .rq-warn { margin: 12px 16px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--amber-light); border: 1px solid var(--amber-border); color: var(--amber-dark); font-size: 12.5px; }
-/* بادج عمر الأوردر — **نسخة طبق الأصل من `pack.html`** بالحرف. الدرجة
+/* بادج عمر الأوردر — **نسخة طبق الأصل من `Orders-Packing-Checker.html`** بالحرف. الدرجة
    نفسها بتيجي من `wocDayLevel` في الـ shell فمستحيل تفترق؛ اللون هو
    اللي مكرّر. ⚠️ أي تعديل يتعمل في الصفحتين في نفس التمريرة. */
 .time-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; white-space: nowrap; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-secondary); }
@@ -170,7 +170,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .time-badge.tb-d7 { background: var(--crit);         color: var(--on-accent);   border-color: var(--crit); }
 .time-badge.tb-none { background: var(--surface-2);  color: var(--text-muted); }
 
-/* «نوع الأوردر» — نسخة طبق الأصل من `pack.html` بالحرف: نص عادي بلون
+/* «نوع الأوردر» — نسخة طبق الأصل من `Orders-Packing-Checker.html` بالحرف: نص عادي بلون
    بدل بادج (عادي = أزرق التفاعل · استبدال = بنفسجي). نفس القاعدة —
    تعديل عليها يتعمل في الصفحتين في نفس التمريرة (درس R1). */
 .type-text { font-weight: 800; white-space: nowrap; }
@@ -614,7 +614,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <ul>
             <li><code>shared/shell.js</code> — الهوية والهيدر والإعدادات والتوست وحارس النسخة (نسخة واحدة مضمّنة للهب كله)</li>
             <li><code>shared/shell.js §OFFICE-GATE</code> — 🔴 <b>مصدر الأهلية الوحيد في الواجهة</b> (<code>wocOfficeGate</code> · <code>wocOfficeQueue</code>). الصفحة دي <b>والشاشة الرئيسية</b> بينادوا نفس الدالة على نفس الرد</li>
-            <li><code>§SCAN</code> — سكانر بمهلة (١٥٠ms للسكانة · ٤٠٠ms للكتابة)، نفس قيم <code>pack.html</code> بالحرف</li>
+            <li><code>§SCAN</code> — سكانر بمهلة (١٥٠ms للسكانة · ٤٠٠ms للكتابة)، نفس قيم <code>Orders-Packing-Checker.html</code> بالحرف</li>
             <li><code>§TOOL-JS::scanOrder</code> — نداء <code>scan</code> فوري لكل باركود، ومعالجة الخمس نتايج</li>
             <li><code>§TOOL-JS::outcomeModal</code> — نافذة واحدة بأربع نغمات (مرفوض · خلاص متعمل · إقرار · فشل)، ومدخل واحد <code>showOutcome</code></li>
             <li><code>§TOOL-JS::session</code> — جدول سكانات الجلسة + العدّادات</li>
@@ -685,7 +685,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 <!-- ══ §TOOL-JS::outcomeModal — نافذة واحدة بأربع نغمات ══════════
      🔴 القاعدة: الحالة اللي بتسيب الأوردر محتاج فعل أو مراجعة → **نافذة**.
         النجاح الكامل → **توست**. «رسالة بتختفي لوحدها لحالة محتاجة فعل =
-        الفعل مش هيتعمل» (نفس §OUTCOME-MODAL في `remove.html` و`pack.html`).
+        الفعل مش هيتعمل» (نفس §OUTCOME-MODAL في `Order-Item-Remover.html` و`Orders-Packing-Checker.html`).
      🔴 **ومفيش توست ونافذة لنفس الحدث** — رسالتين في نفس اللحظة معناهم إن
         الموظف يقرا واحدة ويهمل التانية، ومش مضمون أنهي واحدة.
      🔴 **الضغط برّه مايقفلهاش** (مفيش `onclick` على الـ overlay) — الموظف
@@ -791,7 +791,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <div id="rqTrunc" class="rq-warn" style="display:none;"></div>
           <div class="rq-body">
             <div id="rqEmpty" class="rq-empty">
-              <div class="ico">⏳</div><div>جاري تحميل الطابور…</div>
+              <div class="woc-loadbox" role="status" aria-live="polite"><span class="woc-load-spin" aria-hidden="true"></span><div class="woc-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div></div>
             </div>
             <div class="table-wrap" id="rqTableWrap" style="display:none;">
               <table class="data-table">
@@ -1263,7 +1263,7 @@ document.addEventListener('click', e => {
 // ══════════════════════════════════════════════════════════════
 // §SCAN — Scanner gun input (CRITICAL pattern)
 // ══════════════════════════════════════════════════════════════
-// ⚠️ **نسخة طبق الأصل من `pack.html` و`Bosta-Orders-Shipped-Scanner.html`** — نفس المهل
+// ⚠️ **نسخة طبق الأصل من `Orders-Packing-Checker.html` و`Bosta-Orders-Shipped-Scanner.html`** — نفس المهل
 //    بالحرف (١٥٠ms للسكانة · ٤٠٠ms للكتابة اليدوي). الموظف بيتنقّل بين
 //    الصفحات بنفس السكانة في إيده، وسلوك مختلف = «سكنت وماحصلش حاجة».
 //    أي تعديل يتعمل في الصفحات كلها في نفس التمريرة (درس R1).
@@ -1438,7 +1438,7 @@ function renderSession() {
     (n.success + n.warning).toLocaleString('en-US');
 
   // ⚠️ المربعات بتظهر **بس لما يكون فيها فعلاً** — مربع بصفر بيتعوّد عليه
-  //    الموظف فبيبطّل يشوفه (نفس مبدأ مربعات «بلا قناة» في `print.html`).
+  //    الموظف فبيبطّل يشوفه (نفس مبدأ مربعات «بلا قناة» في `Order-Printer.html`).
   const pills = [];
   if (n.success + n.warning) pills.push({ cls: 'green', val: n.success + n.warning, lbl: 'اتسجّل' });
   if (n.already)             pills.push({ cls: '',      val: n.already,  lbl: 'خلاص متعمل' });
@@ -1979,7 +1979,7 @@ async function fetchLog() {
   const base   = logParams();
 
   document.getElementById('logTableBody').innerHTML =
-    '<tr class="empty-row"><td colspan="8"><div class="spinner spinner-dark" style="margin:0 auto 10px;"></div>جاري التحميل...</td></tr>';
+    '<tr class="empty-row"><td colspan="8">' + wocLoadingHTML('⏳ جاري تحميل السجل برجاء الانتظار ...', true) + '</td></tr>';
   document.getElementById('paginationRow').style.display = 'none';
 
   try {
@@ -2197,7 +2197,7 @@ async function exportLogXLSX() {
 // ⚠️ **التحديث التلقائي بنفس حراس الشاشة الرئيسية التلاتة** — التسليح بعد
 //    كل جلب ناجح (مش من الدخول)، و`document.hidden` = صفر استعلام، والنبضة
 //    بتحدّث «منذ كام» **بلا أي نداء شبكة**.
-const RQ_AUTO_REFRESH_MS = 15 * 60 * 1000;   // نفس فترة `pack.html` والرئيسية
+const RQ_AUTO_REFRESH_MS = 15 * 60 * 1000;   // نفس فترة `Orders-Packing-Checker.html` والرئيسية
 const RQ_TICK_MS         = 30 * 1000;        // نبضة عرض — صفر شبكة
 
 const rqState = { orders: [], at: null, loading: false, dirty: false, timer: null, failed: false };
@@ -2239,7 +2239,7 @@ function rqRender() {
       ? '<div class="ico">✅</div><div>مفيش طرود مستنية تسليم للمكتب دلوقتي</div>'
       : (rqState.failed
           ? '<div class="ico">⚠️</div><div>تعذّر تحميل الطابور — اضغط «تحديث»</div>'
-          : '<div class="ico">⏳</div><div>جاري تحميل الطابور…</div>');
+          : wocLoadingHTML());
     return;
   }
 
@@ -2252,7 +2252,7 @@ function rqRender() {
     // ⚠️ «نوع الأوردر» — بادچ الطرد (S1/S2) القديم مهمّته هنا **مقصودة**
     //    (بخلاف طابور بوسطة اللي بلا علامة): الموظف بيسكن **باركود
     //    الأوردر**، وهو نفسه على الطردين، فالتفرقة لازم تتقال. دلوقتي
-    //    نفس المعنى بنفس تصميم عمود «نوع الأوردر» في `pack.html` بالحرف —
+    //    نفس المعنى بنفس تصميم عمود «نوع الأوردر» في `Orders-Packing-Checker.html` بالحرف —
     //    نص عادي بلون بدل بادج (§READY-JS::renderTable هناك).
     const typeClass = o.machine === 's2' ? 'type-s2' : 'type-s1';
     const typeLabel = o.machine === 's2' ? 'استبدال' : 'عادي';
@@ -2296,7 +2296,7 @@ function rqWhereaboutsText(v) {
   return { cls: 'wh-unknown', text: '— مش مسجّل' };
 }
 
-// «الوقت منذ التغليف» — نفس تصميم `rdySincePrint` في `pack.html` بالحرف
+// «الوقت منذ التغليف» — نفس تصميم `rdySincePrint` في `Orders-Packing-Checker.html` بالحرف
 // (نفس الدرجات ونفس النغمة اللفظية)، بس عن التغليف مش الطباعة: الطرد
 // اتغلّف ولسه مستني يتسلّم للمكتب، وكل يوم تقويمي زيادة معناه تأخير.
 // ⚠️ الدرجة من `wocDayDiff`/`wocDayLevel` في الـ shell — نفس مصدر بادج
@@ -2335,7 +2335,7 @@ async function rqLoad(silent) {
   if (rqState.loading) return;
   rqState.loading = true;
   const btn = document.getElementById('rqBtn');
-  if (btn) btn.disabled = true;
+  if (btn) { btn.disabled = true; btn.classList.add('loading'); }
 
   try {
     const data = await apiGet('get_ready_to_office');
@@ -2377,7 +2377,7 @@ async function rqLoad(silent) {
     fail.textContent = `⚠️ تعذّر تحميل طابور المكتب — ${err.message}. السكان شغّال عادي.`;
   } finally {
     rqState.loading = false;
-    if (btn) btn.disabled = false;
+    if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
     rqRender();
     rqSetFresh();
     rqArmAuto();
@@ -2413,7 +2413,7 @@ setInterval(() => {
   });
   // «الوقت منذ التغليف» — بالـ ISO المخزّن على الخلية نفسها
   // (`data-rq-pack`) مش بترتيب الصفوف، نفس نمط `data-rdy-since` في
-  // `pack.html`.
+  // `Orders-Packing-Checker.html`.
   document.querySelectorAll('#rqTableBody [data-rq-pack]').forEach(el => {
     const iso = el.dataset.rqPack;
     if (!iso) return;
@@ -2431,7 +2431,7 @@ document.getElementById('headerMount').innerHTML = wocHeader({
   session,
   // ⚠️ Chip التاب الحالي — بيظهر **بس وقت الـ Sticky** (شريط التابات بيتقفل
   //    وقتها). كان جوّه الهيدر القديم، فبيتحط هنا في `extras` عشان الهيدر
-  //    بقى موحّد في الـ shell. نفس نمط `print.html` و`Bosta-Orders-Shipped-Scanner.html`.
+  //    بقى موحّد في الـ shell. نفس نمط `Order-Printer.html` و`Bosta-Orders-Shipped-Scanner.html`.
   extras: '<div class="active-tab-chip" id="activeTabChip" onclick="toggleTabChipMenu(event)">'
         +   '<span id="activeTabChipLabel">📷 السكانر</span><span class="chip-arrow">▾</span>'
         +   '<div class="tab-chip-menu" id="tabChipMenu"></div>'

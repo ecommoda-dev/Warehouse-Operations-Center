@@ -85,7 +85,7 @@
     <div class="login-top">
       <div class="login-icon">🏭</div>
       <div class="login-title">مركز عمليات المخزن</div>
-      <div class="login-desc">طباعة · تغليف · حذف منتج · رحلة الأوردر</div>
+      <div class="login-desc">طباعة · تغليف · حذف منتج · إحصائيات المخزن</div>
       <div class="login-sub" id="loginSub"></div>
     </div>
     <div class="login-body">
@@ -143,7 +143,7 @@
     <!-- ⚠️ الإيموجي **نفس** إيموجي هيدر الأداة نفسها بالحرف
          (U+1F5A8 U+FE0F للطباعة) — من غير الـ FE0F بيترسم مربع فاضي
          على أجهزة المخزن، وده فشل صامت الموظف مش هيبلّغ عنه. -->
-      <a class="woc-row" href="print.html">
+      <a class="woc-row" href="Order-Printer.html">
         <div class="woc-row-id">
           <span class="woc-card-ico ico-blue">🖨️</span>
           <div>
@@ -172,7 +172,7 @@
           </button>
         </div>
       </a>
-      <a class="woc-row" href="pack.html">
+      <a class="woc-row" href="Orders-Packing-Checker.html">
         <div class="woc-row-id">
           <span class="woc-card-ico ico-green">📦</span>
           <div>
@@ -341,7 +341,7 @@
   <!-- ══ «أدوات» = اللي الموظف بيشتغل بيه على أوردر قدامه دلوقتي ══
        🔴 القسم اتقصر على **أداتين** (قرار أحمد 08-09-2026): حذف منتج
           وباركود SKU. الأداتين دول بيتنادوا **وسط الشغل** — الموظف واقف
-          على أوردر ومحتاج يتصرّف — بينما «رحلة الأوردر» و«إحصائيات
+          على أوردر ومحتاج يتصرّف — بينما «إحصائيات
           المخزن» بيتقروا في وقت تاني خالص، فنزلوا قسم «أخرى» تحت.
           السبب مش تنظيم: صف فيه أربع مربعات متشابهة معناه إن الموظف
           المستعجل بيقرا الأربعة كل مرة عشان يلاقي واحد.
@@ -355,11 +355,11 @@
            أوردر حي، وبند متحذف **مالوش رجعة**. الاسم بقى بيقول الحالة
            اللي بتودّي ليها («عطلان؟») مش اسم الفعل المجرّد، عشان الموظف
            اللي جاي من الجدول يلاقي نفس الكلمة اللي على الزرار هناك. -->
-      <a class="woc-tool tool-danger" href="remove.html">
+      <a class="woc-tool tool-danger" href="Order-Item-Remover.html">
         <span class="woc-card-ico">🗑️</span>
         <div class="woc-card-name">عطلان؟ احذف المنتج من الأوردر</div>
       </a>
-      <a class="woc-tool" href="sku-barcode.html">
+      <a class="woc-tool" href="Order-SKU-Barcode-Printer.html">
         <span class="woc-card-ico"><svg viewBox="0 0 24 24" width="1em" height="1em" style="vertical-align:-0.14em" fill="currentColor" aria-hidden="true"><rect x="2" y="3" width="2" height="18"/><rect x="6" y="3" width="1" height="18"/><rect x="9" y="3" width="3" height="18"/><rect x="14" y="3" width="1" height="18"/><rect x="17" y="3" width="1" height="18"/><rect x="20" y="3" width="2" height="18"/></svg></span>
         <div class="woc-card-name">باركود SKU</div>
       </a>
@@ -399,11 +399,6 @@
   <div class="woc-home-sec">
     <div class="woc-home-sec-title">أخرى</div>
     <div class="woc-tools-grid">
-      <a class="woc-tool" href="journey.html">
-        <span class="woc-card-ico">🔎</span>
-        <div class="woc-card-name">رحلة الأوردر</div>
-        <div class="woc-card-desc">تاريخ أوردر واحد عبر التلات أدوات</div>
-      </a>
       <a class="woc-tool" href="stats.html">
         <span class="woc-card-ico">📊</span>
         <div class="woc-card-name">إحصائيات المخزن</div>
@@ -425,7 +420,7 @@
         <summary>الأداة بتعمل إيه</summary>
         <div class="about-sec-body">
           <p><b>هب واحد لمحطة المخزن.</b> الموظف بيدخل مرة واحدة، وبعدين بيتنقّل بين
-             الطباعة والتغليف وحذف المنتج وتسليمات بوسطة ومرتجعات بوسطة ورحلة الأوردر
+             الطباعة والتغليف وحذف المنتج وتسليمات بوسطة ومرتجعات بوسطة وإحصائيات المخزن
              من غير ما يدخل تاني ومن غير ما يفتح تبويبات متفرقة.</p>
           <p>⚠️ <b>الجدول تحت بيعرض الـ Workers اللي الشاشة دي بتناديهم</b> (طوابير
              الطباعة والتغليف). سكانرا بوسطة ليهم Workers خاصين بيهم — كل صفحة
@@ -495,7 +490,20 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.32.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.36.0</span>
+          <span class="cl-ver-date">03-10-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>روابط كل الأدوات الداخلية بقت باسم ريبو الأداة بالحرف</b>: <code>Order-Printer.html</code> · <code>Orders-Packing-Checker.html</code> · <code>Order-Item-Remover.html</code> · <code>Order-SKU-Barcode-Printer.html</code> (§5.2 في <code>ecommoda-constants</code>). الروابط القديمة (<code>print.html</code> · <code>pack.html</code> · <code>remove.html</code> · <code>sku-barcode.html</code>) بتدّي <b>404</b> بلا إعادة توجيه.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>«بلا قناة» بقت «المنطقة غير محددة»</b> و<b>«مستنية رفع على بوسطة» بقت «في انتظار الرفع على بوسطة»</b> (الشاشة الرئيسية وقسم الطباعة).</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>حالة التحميل موحّدة في كل الأدوات</b>: «⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...» بخط كبير وتقيل ودايرة بتلف، وزرار «تحديث» بيقول «جاري التحديث ...» بأيقونة بتلف. المصدر <code>.woc-loadbox</code> في <code>shared/shell.css</code> و<code>wocLoadingHTML</code> في <code>shared/shell.js</code>.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🗑️ <b>«رحلة الأوردر» اتحذفت بالكامل</b> (الصفحة ومربعها في قسم «أخرى»). ⚠️ الأوردرات لسه بتتتبّع من سجل كل أداة.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge">v1.32.0</span>
           <span class="cl-ver-date">24-09-2026</span>
         </div>
         <ul class="cl-items">
@@ -1049,7 +1057,7 @@ async function finishLogin(username, displayName, logged) {
 // 🔴 التحديث التلقائي — كل ١٥ دقيقة (قرار أحمد 06-09-2026).
 //
 //    ده **بيلغي** قاعدة «مفيش polling على الشاشة الرئيسية» اللي كانت
-//    مكتوبة هنا. القرار مبني على إن `pack.html` بتعمل نفس الشيء بالظبط
+//    مكتوبة هنا. القرار مبني على إن `Orders-Packing-Checker.html` بتعمل نفس الشيء بالظبط
 //    من v2.4.0 على **نفس** الـ endpoint — فالمبدأ اتكسر أصلاً، والرئيسية
 //    كانت الوحيدة الفاضلة على القاعدة القديمة.
 //
@@ -1072,15 +1080,15 @@ const WOC_AUTO_REFRESH_MS = 15 * 60 * 1000;
 const WOC_TICK_MS         = 30 * 1000;
 
 // تعريف كل طابور: الـ IDs بتاعته + إزاي بيتجاب.
-// ⚠️ الاتنين بيكتبوا الكاش المشترك بعد كل جلب ناجح، فـ `print.html`
-//    و`pack.html` بيفتحوا على بيانات أحدث بدل شاشة فاضية.
+// ⚠️ الاتنين بيكتبوا الكاش المشترك بعد كل جلب ناجح، فـ `Order-Printer.html`
+//    و`Orders-Packing-Checker.html` بيفتحوا على بيانات أحدث بدل شاشة فاضية.
 const HOME_QUEUES = {
   print: {
     err: 'تعذّر جلب طابور الطباعة',
     ids: { count:'cntPrint', chips:'chipsPrint', fail:'failPrint',
            ago:'agoPrint', stamp:'stampPrint', btn:'btnPrint', badge:'badgePrint' },
     async fetch() {
-      // 🔴 `allZones: true` لازم يبقى **مطابق** لللي `print.html` بيبعته —
+      // 🔴 `allZones: true` لازم يبقى **مطابق** لللي `Order-Printer.html` بيبعته —
       //    الاتنين بيكتبوا نفس الكاش (`WOC_CACHE_PRINT`)، ولو الرقم هنا
       //    قناة واحدة والصفحة تلاتة، الرئيسية تقول ١٢ والصفحة تفتح على ٤٩.
       const data = await wocApi(WOC_WORKERS.printer).apiPath('/orders', { allZones: true });
@@ -1089,7 +1097,7 @@ const HOME_QUEUES = {
       // التقسيمة بقت **بالقناة** مش S1/S2: طابور الطباعة بقى تلات قنوات
       // بتطبع حاجات مختلفة على ورق مختلف، ودي المعلومة اللي الموظف
       // بيتصرّف عليها. مربع «بلا قناة» بيظهر بس لما يكون فيه فعلاً.
-      // 🔴 العدّ بيعدّي على **نفس بوابة `print.html` بالحرف**
+      // 🔴 العدّ بيعدّي على **نفس بوابة `Order-Printer.html` بالحرف**
       //    (`wocChannelOf`/`wocChannelGate` في §BOSTA-GATE بتاع الـ shell).
       //    الرقم هنا وعد بشغل موجود: لو قال ٦٦ والصفحة تفتح على ٦، الموظف
       //    بيروح لطابور مش موجود. المستبعَد **بيتعدّ وبيتقال** في مربع
@@ -1109,9 +1117,9 @@ const HOME_QUEUES = {
       ];
       // المربعات دي بتظهر **بس لما يكون فيها فعلاً** — نفس مبدأ «بلا قناة»:
       // صفر مايتكتبش عشان الشاشة ماتتعوّدش على تحذير دايم فتبطّل تشوفه.
-      if (n.pending) chips.push({ cls: 'chip-ch-pending', label: '⏳ مستنية رفع على بوسطة', n: n.pending });
+      if (n.pending) chips.push({ cls: 'chip-ch-pending', label: '⏳ في انتظار الرفع على بوسطة', n: n.pending });
       if (n.s2Hold)  chips.push({ cls: 'chip-ch-hold',    label: '⏸️ استبدال بوسطة (مؤجّل)', n: n.s2Hold });
-      if (n.none)    chips.push({ cls: 'chip-ch-none',    label: '⚠️ بلا قناة',              n: n.none });
+      if (n.none)    chips.push({ cls: 'chip-ch-none',    label: '⚠️ المنطقة غير محددة',              n: n.none });
       // 🔴 الإجمالي = **اللي ينفع يتطبع دلوقتي**، مش طول المصفوفة. أوردر
       //    ما اترفعش على بوسطة مالوش بوليصة، فعدّه في «جاهز للطباعة» بيدّي
       //    رقم الموظف مايقدرش يشتغل عليه.
@@ -1131,9 +1139,9 @@ const HOME_QUEUES = {
       //    الموظف مابيتصرّفش عليه — الطابور بيتغلّف بنفس الطريقة في
       //    الحالتين. اللي بيفرق فعلاً هو **بوسطة ولا مندوب**: ورق مختلف
       //    وملصق مختلف ومحطة تسليم مختلفة. ودي بالظبط نفس تقسيمة مربعات
-      //    `pack.html` اللي الصفحة بتفتح عليها.
+      //    `Orders-Packing-Checker.html` اللي الصفحة بتفتح عليها.
       // 🔴 العدّ بيعدّي على `wocCourierGroup` في الـ shell §COURIER-GROUP —
-      //    **نفس** القاعدة اللي `pack.html` بتعدّ بيها بالحرف. نسخة تانية
+      //    **نفس** القاعدة اللي `Orders-Packing-Checker.html` بتعدّ بيها بالحرف. نسخة تانية
       //    هنا معناها الرئيسية تقول ٣٦ والصفحة تفتح على رقم تاني (درس R1).
       const cn = wocCourierCounts(orders);
       return { total: data.total ?? orders.length,

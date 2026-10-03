@@ -1,4 +1,4 @@
-// فحص متصفح فعلي لصفحة الطباعة — `print.html` مع Worker وهمي.
+// فحص متصفح فعلي لصفحة الطباعة — `Order-Printer.html` مع Worker وهمي.
 //
 // ليه الملف ده موجود: عطلان في `bosta-awb-print` v1.0.0 (مودال الإعدادات
 // بيفتح فوق شاشة الدخول · الفوكس بيتسحب جوّه الـ PDF) **ما اتمسكوش بمراجعة
@@ -202,7 +202,7 @@ const check = (name, cond, extra='') => {
 };
 
 console.log('\n── ① مسار بوسطة ──────────────────────────────');
-await page.goto(`http://localhost:${PORT}/print.html`);
+await page.goto(`http://localhost:${PORT}/Order-Printer.html`);
 await page.waitForSelector('#printDashboard', { state:'visible', timeout:15000 });
 await page.waitForTimeout(600);
 
@@ -230,7 +230,7 @@ check('عدّاد بلا قناة = 2',   await n('none')==='2',    await n('non
 check('زرار «بلا قناة» ظاهر', await page.isVisible('#chanBtn-none'));
 
 // ③ 🔴 مفيش قناة مختارة عند الفتح (v1.13.0) — والجدول بيعرض الكل
-//    نفس مربعَي «بوسطة/مناديب» في `pack.html`: مفيش حاجة مولّعة، والفلترة
+//    نفس مربعَي «بوسطة/مناديب» في `Orders-Packing-Checker.html`: مفيش حاجة مولّعة، والفلترة
 //    بضغطة. الفرق الإلزامي الوحيد إن الطباعة **مقفولة** لحد ما تتختار قناة.
 check('🔴 مفيش قناة مولّعة عند الفتح',
       (await page.$$('#chanBar .chan-btn.active')).length === 0,

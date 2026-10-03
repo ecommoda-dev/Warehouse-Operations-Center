@@ -2,11 +2,11 @@
 
 # مركز عمليات المخزن — Warehouse Operations Center
 
-![version](https://img.shields.io/badge/version-v1.30.0-blue)
+![version](https://img.shields.io/badge/version-v1.36.0-blue)
 
 **هب واحد لمحطة المخزن.** الموظف بيدخل مرة واحدة، وبعدين بيتنقّل بين الطباعة
 والتغليف وحذف المنتج وتسليمات بوسطة ومرتجعات بوسطة وتسليمات المكتب واستلام
-المرتجعات ورحلة الأوردر — من غير ما يدخل تاني ومن غير ما يفتح تبويبات متفرقة.
+المرتجعات وإحصائيات المخزن — من غير ما يدخل تاني ومن غير ما يفتح تبويبات متفرقة.
 
 🔗 **الواجهة:** https://ecommoda-dev.github.io/Warehouse-Operations-Center/
 
@@ -15,12 +15,11 @@
 | | الصفحة | بتعمل إيه |
 |---|---|---|
 | 🏭 | `index.html` | الدخول + الشاشة الرئيسية بعدّادَي الطوابير |
-| 🖨 | `print.html` | طباعة الفواتير — ومعاها **تحذير الطباعة المزدوجة** |
-| 📦 | `pack.html` | تشييك التغليف + طابور «جاهز للتغليف» |
-| 🗑 | `remove.html` | حذف منتج من أوردر COD غير مسدد |
-| 🔎 | `journey.html` | كل اللي حصل لأوردر واحد عبر التلات أدوات |
+| 🖨 | `Order-Printer.html` | طباعة الفواتير — ومعاها **تحذير الطباعة المزدوجة** |
+| 📦 | `Orders-Packing-Checker.html` | تشييك التغليف + طابور «جاهز للتغليف» |
+| 🗑 | `Order-Item-Remover.html` | حذف منتج من أوردر COD غير مسدد |
 | 📊 | `stats.html` | إحصائيات المخزن — أرقام الفترة · الموظفين · ساعات الشغل |
-| 🏷️ | `sku-barcode.html` | طباعة ليبل باركود ٢×١ إنش — دفعة أوردرات أو SKU مباشر · **ومعاها سجل عمليات** |
+| 🏷️ | `Order-SKU-Barcode-Printer.html` | طباعة ليبل باركود ٢×١ إنش — دفعة أوردرات أو SKU مباشر · **ومعاها سجل عمليات** |
 | 📦 | `Bosta-Orders-Shipped-Scanner.html` | **قسم تسليمات بوسطة** — طابور «جاهز للتسليم» + سكان تراكينج · S1/S2 → `Shipped` + فلفلمنت |
 | ↩️ | `Bosta-Orders-Returned-Scanner.html` | **قسم مرتجعات بوسطة** — سكان تراكينج راجع · إلغاء الأوردر (RTO) أو استرجاع المخزون |
 | 🏢 | `Package-Transfer-To-Office.html` | **قسم تسليمات المكتب** — طابور «جاهز للتسليم للمكتب» + سكان باركود الأوردر · بيكتب `package_whereabouts = Office` |
@@ -73,8 +72,8 @@
 
 ```
 Warehouse-Operations-Center/
-├── index.html · print.html · pack.html · remove.html
-├── journey.html · stats.html · sku-barcode.html
+├── index.html · Order-Printer.html · Orders-Packing-Checker.html · Order-Item-Remover.html
+├── stats.html · Order-SKU-Barcode-Printer.html
 ├── Bosta-Orders-Shipped-Scanner.html · Bosta-Orders-Returned-Scanner.html   سكانرا بوسطة
 ├── shared/
 │   ├── shell.css     التوكنز + الهيدر + المودالات + التوست

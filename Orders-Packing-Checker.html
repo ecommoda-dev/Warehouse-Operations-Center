@@ -7,7 +7,7 @@
   <title>قسم التغليف — مركز عمليات المخزن</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
-  <!-- ⚠️ **نفس المكتبة ونفس النسخة ونفس الـ CDN بتوع `sku-barcode.html`** —
+  <!-- ⚠️ **نفس المكتبة ونفس النسخة ونفس الـ CDN بتوع `Order-SKU-Barcode-Printer.html`** —
        السطر ده **بره** علامتَي §LABEL-MACHINE فـ`docs/label-twin-check.sh`
        مابيمسكهوش: نسخة مختلفة بين الصفحتين = عرض خطوط مختلف على نفس الصنف
        من غير أي فرق يبان في الـ diff. ⛔ متغيّرهاش في صفحة لوحدها.
@@ -495,7 +495,7 @@
       هتبقى ستة يفترقوا مع أول تعديل (درس R1).
    🔴 والحالات اللي بتعرضها **بتسيب الأوردر في وضع محتاج فعل أو مراجعة** —
       والتوست بيختفي لوحده. رسالة بتختفي لوحدها لحالة محتاجة فعل = الفعل
-      مش هيتعمل. نفس مبرّر §OUTCOME-MODAL في `remove.html` بالحرف.
+      مش هيتعمل. نفس مبرّر §OUTCOME-MODAL في `Order-Item-Remover.html` بالحرف.
    ⚠️ بتستخدم `.modal-overlay`/`.modal-box`/`.modal-body`/`.modal-footer`
       الموجودين فوق — عشان تطلع **شبه نافذة «اتغلّف قبل كده» بالظبط**، مش
       شكل تالت على نفس الشاشة. */
@@ -689,7 +689,7 @@
    🔴 والشو روم بقى **تركواز** في v1.25.0 (كان أخضر) — اللون ده في **خمس
    أماكن** (`.zchip` و`.courier-cell` هنا · `.woc-chip.qc-showroom` و
    `.woc-chip.chip-ch-showroom` في الـ shell · `.chan-btn`/`.chan-cell` في
-   `print.html`)، وأي تعديل عليه يتعمل في الخمسة في نفس التمريرة (درس R1). */
+   `Order-Printer.html`)، وأي تعديل عليه يتعمل في الخمسة في نفس التمريرة (درس R1). */
 .zchip.qc-bosta{background:var(--red-light);color:var(--red-dark);border-color:var(--red-border)}
 .zchip.qc-showroom{background:var(--teal-light);color:var(--teal-dark);border-color:var(--teal-border)}
 .zchip.qc-courier{background:var(--accent-light);color:var(--accent-dark);border-color:var(--accent-border)}
@@ -743,7 +743,7 @@
 
 /* ══════════════════════════════════════════════════════════════
    §LABEL-MACHINE — ماكينة الليبل المطبوع · نسخة مكرّرة عن قصد
-   التوأمان: pack.html · sku-barcode.html
+   التوأمان: Orders-Packing-Checker.html · Order-SKU-Barcode-Printer.html
    ══════════════════════════════════════════════════════════════
    🔴 الكتلة اللي بين §LABEL-MACHINE و§LABEL-END **متطابقة بايت ببايت**
       في الملفين. أي تعديل هنا لازم يتعمل في التوأم في **نفس التمريرة**
@@ -752,7 +752,7 @@
    ✅ الانحراف بيتمسك بسطر واحد من جذر الريبو:
       bash docs/label-twin-check.sh
    ✅ وفحص المتصفح (docs/sku-barcode-check.mjs) بيقيس النسخة اللي في
-      sku-barcode.html — فطول ما الفحص ده عدّى **والتوأمان متطابقين**،
+      Order-SKU-Barcode-Printer.html — فطول ما الفحص ده عدّى **والتوأمان متطابقين**،
       النسخة التانية متغطية بالوراثة.
    ⛔ ممنوع أي سطر خاص بصفحة واحدة يدخل جوّه العلامتين.
    ══════════════════════════════════════════════════════════════ */
@@ -1170,7 +1170,7 @@
           <h4>اللي اتغيّر عن الأداة المستقلة</h4>
           <ul>
             <li>زراري <b>«عطلان»</b> و<b>«إعادة»</b> في جدول الطابور بقوا صفحات
-                <b>جوّه الهب</b> (<code>remove.html</code> و<code>print.html</code>)
+                <b>جوّه الهب</b> (<code>Order-Item-Remover.html</code> و<code>Order-Printer.html</code>)
                 وبياخدوا رقم الأوردر معاهم. <code>target="_blank"</code> اتشال —
                 التنقل في نفس التاب + زرار «↩ رجوع للطابور».</li>
             <li>لسه <b>بلا أي أكشن على الأوردر ومفيش نداء للـ Worker</b> — بيفتحوا
@@ -1247,7 +1247,7 @@
             <li><code>§READY-JS::autoRefresh</code> (HTML) — <code>rdyArmAutoRefresh</code> · <code>rdyAutoRefreshTick</code> · <code>rdyQueueVisible</code> — التحديث التلقائي كل ١٥ دقيقة (النداء الدوري الوحيد في الأداة)</li>
             <li><code>§READY-JS::courier</code> (HTML) — عرض المندوب بلونه (بوسطة أحمر · شو روم أخضر · غيرهم أزرق · فاضي رمادي)</li>
             <li><code>§READY-JS::courierChips</code> (HTML) — مربعا «بوسطة/مناديب» فوق الجدول (v2.6.2، بدّلوا مربعات المنطقة اللي اتشالت): عدّ من الطابور كله وفلترة بضغطة، <b>نفس حالة</b> فلتر «المندوب»</li>
-            <li><code>§LABEL-MACHINE</code> (HTML · CSS + JS) — ماكينة الليبل المطبوع ٢×١ إنش: <code>bcBuildLabel</code> · <code>bcFitLabelText</code> · <code>bcRenderLabels</code> · <code>bcFirePrint</code>. 🔴 <b>نسخة مكرّرة عن قصد</b> — التوأم في <code>sku-barcode.html</code>، والكتلتان <b>متطابقتان بايت ببايت</b>. الانحراف بيتمسك بـ<code>bash docs/label-twin-check.sh</code></li>
+            <li><code>§LABEL-MACHINE</code> (HTML · CSS + JS) — ماكينة الليبل المطبوع ٢×١ إنش: <code>bcBuildLabel</code> · <code>bcFitLabelText</code> · <code>bcRenderLabels</code> · <code>bcFirePrint</code>. 🔴 <b>نسخة مكرّرة عن قصد</b> — التوأم في <code>Order-SKU-Barcode-Printer.html</code>، والكتلتان <b>متطابقتان بايت ببايت</b>. الانحراف بيتمسك بـ<code>bash docs/label-twin-check.sh</code></li>
             <li><code>§PACK-LABELS</code> (HTML) — <code>packPrintLabels</code>: زرار «🏷️ باركود المنتجات» في شاشة التشييك. بيطبع بنود <b>المرحلة الجارية</b> (<code>currentItems</code>) بصفر نداء للـ Worker</li>
           </ul>
 
@@ -1303,7 +1303,7 @@
             <li><b>v2.6.2</b> — نفس مبدأ v2.5.0: المربعان **حالة واحدة** مع فلتر «المندوب» التفصيلي (بقى أول فلتر بدل المنطقة) — الضغط بيحدد/يلغي كل قيم المندوب الحقيقية اللي بتقع في المجموعة دي جوّه <code>rdyMsState.courier.selected</code>، مش حالة موازية.</li>
             <li><b>فخّ v2.5.0:</b> §BOSTA اتنقل حرفيًا من ريبو <code>Bosta-Orders-Shipped-Scanner</code>، فالكود ده بقى في <b>مكانين</b>. أي إصلاح على شكل رد بوسطة أو على <code>cleanOrderName</code> لازم يتعمل في الاتنين — نفس عيلة خطر <code>classifyS2Subtype</code>.</li>
             <li><b>فخّ:</b> منطق الـ multi-select والترتيب <b>متكرر</b> بين <code>§LOG-JS</code> و<code>§READY-JS</code> (الأول server-side والتاني client-side). أي تعديل على سلوك القوايم أو الترتيب لازم يتعمل في <b>الاتنين</b>.</li>
-            <li><b>فخّ v1.27.0:</b> <code>§LABEL-MACHINE</code> <b>مكرّرة عن قصد</b> بين <code>pack.html</code> و<code>sku-barcode.html</code> (قرار أحمد 16-09-2026). الفشل لو افترقوا <b>مالوش صوت</b>: الليبل بيتقص من تحت في صمت وبياكل من خطوط الباركود، والسكانر بيبطّل يقرا. أي تعديل يتعمل في <b>الاتنين في نفس التمريرة</b>، والتحقق بـ<code>bash docs/label-twin-check.sh</code>.</li>
+            <li><b>فخّ v1.27.0:</b> <code>§LABEL-MACHINE</code> <b>مكرّرة عن قصد</b> بين <code>Orders-Packing-Checker.html</code> و<code>Order-SKU-Barcode-Printer.html</code> (قرار أحمد 16-09-2026). الفشل لو افترقوا <b>مالوش صوت</b>: الليبل بيتقص من تحت في صمت وبياكل من خطوط الباركود، والسكانر بيبطّل يقرا. أي تعديل يتعمل في <b>الاتنين في نفس التمريرة</b>، والتحقق بـ<code>bash docs/label-twin-check.sh</code>.</li>
             <li><b>v1.27.0:</b> الطباعة من هنا <b>مابتكتبش أي صف في D1</b> (قرار أحمد) — الصفحة مابتناديش <code>log_print</code> ولا Worker الباركود خالص، و<code>PAGE_WORKERS</code> فضلت <code>['pack']</code>.</li>
             <li><code>isPrintedNotPacked</code> بتسأل «اتطبع <b>بعد</b> آخر تغليف؟» مش «متملّي ولا فاضي» — ميتافيلدات التغليف مبتتصفّرش بين دورات الإرجاع، والمقارنة بـ <code>new Date()</code> مش نصوص (<code>printing_time</code> بتيجي بصيغتين).</li>
           </ul>
@@ -1382,7 +1382,7 @@
      🔴 **مفيش `onclick` على الـ overlay هنا عن قصد** — الضغط بره النافذة
         **مايقفلهاش** (قرار أحمد 09-09-2026). الموظف بيدوس على الشاشة كتير
         وهو بيغلّف، ونافذة بتقول له إن الأوردر ملغي مالهاش تتقفل بالغلط.
-        ده نفس قرار §OUTCOME-MODAL في `remove.html`.
+        ده نفس قرار §OUTCOME-MODAL في `Order-Item-Remover.html`.
      ⚠️ الهيدر والفوتر بيتبنوا من `showPackOutcome` — الأزرار بتفرق من حالة
         للتانية (إقرار · فتح من أول · إغلاق). -->
 <div class="modal-overlay hidden" id="packOutcomeModal" role="dialog" aria-modal="true" aria-labelledby="poTitle">
@@ -1448,9 +1448,9 @@
       </div>
 
     </div>
-    <div id="lookupLoading" class="loading-area" style="display:none">
-      <div class="spinner"></div>
-      <div style="margin-top:12px;font-size:13px;color:var(--text-muted)">جاري البحث...</div>
+    <div id="lookupLoading" class="woc-loadbox" role="status" aria-live="polite" style="display:none">
+      <span class="woc-load-spin" aria-hidden="true"></span>
+    <div class="woc-load-title">⏳ جاري البحث عن الأوردر برجاء الانتظار ...</div>
     </div>
   <!-- ─── §TOOL::readyQueue — طابور «جاهز للتغليف» (مدموج) ───────────────
        ⚠️ الجدول ده **عرض بس** — الضغط على صف مابيفتحش شاشة التشييك
@@ -1511,10 +1511,9 @@
       <div class="state-sub">اضغط «تحديث» للاستعلام عن الأوردرات الجاهزة</div>
     </div>
 
-    <div id="rdyStateLoading" class="state-box" style="display:none">
-      <div style="margin-bottom:12px"><span class="loading-spinner"></span></div>
-      <div class="state-title">جاري الجلب...</div>
-      <div class="state-sub">يتم الاستعلام عن شوبيفاي</div>
+    <div id="rdyStateLoading" class="woc-loadbox" role="status" aria-live="polite" style="display:none">
+      <span class="woc-load-spin" aria-hidden="true"></span>
+    <div class="woc-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div>
     </div>
 
     <div id="rdyStateEmpty" class="state-box" style="display:none">
@@ -1732,7 +1731,7 @@
               <button class="po-btn-detail" id="btnOrderDetail" onclick="showOrderDetail()">📋 تفاصيل الأوردر</button>
               <!-- 🔴 **بيطبع بنود المرحلة اللي بتتغلّف دلوقتي** (`currentItems`) —
                    مش كل بنود الأوردر. ده الفرق اللي بيخلّي الطباعة من هنا
-                   **أدق من `sku-barcode.html`** على أوردر استبدال. والبيانات
+                   **أدق من `Order-SKU-Barcode-Printer.html`** على أوردر استبدال. والبيانات
                    (`sku` · `barcode` · `quantity`) جاية في رد `get_order`
                    أصلاً، فالزرار ده **بصفر نداء للـ Worker**. -->
               <button class="po-btn-label" id="btnPrintLabels" onclick="packPrintLabels()">🏷️ باركود المنتجات</button>
@@ -1989,7 +1988,7 @@
       <div style="padding:0 16px">
         <div id="logExportWarn" class="export-warn" style="display:none;margin-top:12px"></div>
       </div>
-      <div id="logLoading" class="loading-area" style="display:none"><div class="spinner"></div></div>
+      <div id="logLoading" class="woc-loadbox is-sm" role="status" aria-live="polite" style="display:none"><span class="woc-load-spin" aria-hidden="true"></span><div class="woc-load-title">⏳ جاري تحميل السجل برجاء الانتظار ...</div></div>
       <div class="tbl-scroll">
         <table class="data-table" id="logTable">
           <thead>
@@ -2269,7 +2268,7 @@ function renderBostaSource(info) {
 // ══════════════════════════════════════════════════════════════
 // §OUTCOME-MODAL — نافذة واحدة لكل حالة محتاجة قراءة (v1.21.0)
 //
-// 🔴 **القاعدة اللي القسم ده بيطبّقها** (نفس §OUTCOME-MODAL في `remove.html`):
+// 🔴 **القاعدة اللي القسم ده بيطبّقها** (نفس §OUTCOME-MODAL في `Order-Item-Remover.html`):
 //    الحالة اللي بتسيب الأوردر محتاج فعل أو مراجعة → **نافذة**.
 //    النجاح الكامل → **توست**. رسالة بتختفي لوحدها لحالة محتاجة فعل =
 //    الفعل مش هيتعمل.
@@ -3367,8 +3366,8 @@ const RDY_PRINT_ICON = '<svg class="opt-ico" viewBox="0 0 24 24" fill="none" str
 //    كان هيشتغل برضه (الـ Worker بيطابق تمامًا)، بس الـ id **بيشيل أي
 //    التباس** ويوفّر استعلام بحث على شوبيفاي.
 const RDY_OPT_LINKS = {
-  broken: (num)      => `remove.html?order=${encodeURIComponent(num)}&from=pack`,
-  print:  (num, oid) => `print.html?order=${encodeURIComponent(num)}&from=pack` +
+  broken: (num)      => `Order-Item-Remover.html?order=${encodeURIComponent(num)}&from=pack`,
+  print:  (num, oid) => `Order-Printer.html?order=${encodeURIComponent(num)}&from=pack` +
                         (oid ? `&oid=${encodeURIComponent(oid)}` : ''),
 };
 
@@ -3379,7 +3378,7 @@ const RDY_OPT_LINKS = {
 //    بيبقى «متأخر يوم» الساعة ١ صباحًا، مش بعد ٢٤ ساعة. الحساب بيتم على
 //    توقيت القاهرة (toCairo) لأن الـ ISO الجاي من شوبيفاي بتوقيت UTC،
 //    و`iso.slice(0,10)` كان هيقفل اليوم الساعة ٣ صباحًا بتوقيتنا.
-// 🔴 **تفويض للـ shell §HELPERS من v1.14.0** — `print.html` بقت بتعرض نفس
+// 🔴 **تفويض للـ shell §HELPERS من v1.14.0** — `Order-Printer.html` بقت بتعرض نفس
 //    بادج عمر الأوردر، فالقاعدة نزلت مصدر واحد (`wocDayDiff`). نسخة هنا
 //    ونسخة هناك = نفس الأوردر يبان «منذ يومين» في صفحة و«منذ ٣ أيام» في
 //    التانية (درس R1). ⛔ ممنوع الرجوع لتعريف محلي.
@@ -4633,7 +4632,7 @@ async function exportLogXLSX() {
 
 // ══════════════════════════════════════════════════════════════
 // §LABEL-MACHINE — ماكينة الليبل المطبوع · نسخة مكرّرة عن قصد
-// التوأمان: pack.html · sku-barcode.html
+// التوأمان: Orders-Packing-Checker.html · Order-SKU-Barcode-Printer.html
 // ══════════════════════════════════════════════════════════════
 //
 // 🔴 الكتلة اللي بين §LABEL-MACHINE و§LABEL-END **متطابقة بايت ببايت**
@@ -4643,7 +4642,7 @@ async function exportLogXLSX() {
 // ✅ الانحراف بيتمسك بسطر واحد من جذر الريبو:
 //      bash docs/label-twin-check.sh
 // ✅ وفحص المتصفح (docs/sku-barcode-check.mjs) بيقيس النسخة اللي في
-//    sku-barcode.html — فطول ما الفحص ده عدّى **والتوأمان متطابقين**،
+//    Order-SKU-Barcode-Printer.html — فطول ما الفحص ده عدّى **والتوأمان متطابقين**،
 //    النسخة التانية متغطية بالوراثة.
 // ⛔ ممنوع أي سطر خاص بصفحة واحدة يدخل جوّه العلامتين — نسخة JsBarcode
 //    في <head> **بره** العلامتين، فالفحص مابيمسكهاش: لازم تفضل
@@ -4764,7 +4763,7 @@ function bcFirePrint() {
 // ══════════════════════════════════════════════════════════════
 //
 // قرار أحمد 16-09-2026: الموظف واقف على الأوردر في شاشة التغليف ومحتاج
-// ليبلات منتجاته — من غير ما يسيب الشاشة ويفتح `sku-barcode.html`.
+// ليبلات منتجاته — من غير ما يسيب الشاشة ويفتح `Order-SKU-Barcode-Printer.html`.
 //
 // ✅ **صفر نداء للـ Worker** — `currentItems` جاية من رد `get_order` أصلاً
 //    وفيها `sku` و`barcode` و`quantity` لكل بند.
@@ -4781,7 +4780,7 @@ function bcFirePrint() {
 //       فضلت `['pack']` وحارس النسخة لسه بيسمّي Worker واحد. الثمن مقبول
 //       بقرار: الطباعة من التغليف **مالهاش أثر في تاب سجل باركود SKU**.
 //    ② **مفيش أي تعديل على البنود ولا على عدد النسخ** من الشاشة دي —
-//       نسخة لكل قطعة هتخرج (`quantity`) وخلاص. عايز تعدّل؟ `sku-barcode.html`.
+//       نسخة لكل قطعة هتخرج (`quantity`) وخلاص. عايز تعدّل؟ `Order-SKU-Barcode-Printer.html`.
 //    ③ **صفر نافذة تأكيد** — الضغطة بتفتح نافذة الطابعة على طول.
 //
 // ⚠️ **وصنف بلا `barcode` بيتقال بالاسم.** أحمد أكّد إن ده مالوش وجود على
@@ -4799,7 +4798,7 @@ function packPrintLabels() {
   const rows = [], noBarcode = [];
   for (const it of currentItems) {
     if (!it.barcode) { noBarcode.push(it.sku || it.title || '—'); continue; }
-    // نسخة لكل قطعة هتخرج من المخزن — نفس قاعدة `sku-barcode.html` بالحرف.
+    // نسخة لكل قطعة هتخرج من المخزن — نفس قاعدة `Order-SKU-Barcode-Printer.html` بالحرف.
     for (let c = 0; c < (it.quantity || 0); c++) rows.push(it);
   }
 

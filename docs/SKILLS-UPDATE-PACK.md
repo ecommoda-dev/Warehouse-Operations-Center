@@ -76,7 +76,7 @@
 | فوكس السكانر | يتدار مركزيًا (خطر) | زي النهاردة بالظبط |
 
 **الأحجام الفعلية بعد التنفيذ** (تأكيد للأرقام فوق):
-`pack.html` 257 KB · `print.html` 167 KB · `remove.html` 50 KB ·
+`Orders-Packing-Checker.html` 257 KB · `Order-Printer.html` 167 KB · `Order-Item-Remover.html` 50 KB ·
 `journey.html` 20 KB · `index.html` 39 KB · `shell.css` 22 KB · `shell.js` 30 KB.
 
 ### جدول `sessionStorage` مقابل `localStorage` (يتحط في شرح الاستثناء ٢)
@@ -461,7 +461,7 @@ selector غلط.
 يتنقل للمهارة كـ template:
 
 ```bash
-node docs/css-check.js shared/shell.css index.html print.html remove.html
+node docs/css-check.js shared/shell.css index.html Order-Printer.html Order-Item-Remover.html
 ```
 
 بيطلّع: عدد كتل التوكنز لكل ملف · أي كتلة اتبلعت جوّه selector غلط ·
@@ -636,7 +636,7 @@ function diagRows(checks) {
 
 **التصنيف المقترح:** تحريري (v1.10.1) · **إلزامي 🔴**
 **المصدر:** انضمام `order-sku-barcode-printer-worker` للمجموعة مع الهب v1.6.0
-(06-09-2026) — صفحة `sku-barcode.html`.
+(06-09-2026) — صفحة `Order-SKU-Barcode-Printer.html`.
 
 **ليه إلزامي:** قاعدة ٢ في §6 نفسها بتقول «العضوية تتسجّل هنا في §6 وفي
 `CLAUDE.md` بتاع كل Worker عضو. **من غير سجل، التدوير مستحيل** — مش هتعرف
