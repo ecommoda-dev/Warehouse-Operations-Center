@@ -2,13 +2,13 @@
 
 # مركز عمليات المخزن — Warehouse Operations Center (`Warehouse-Operations-Center`)
 
-![version](https://img.shields.io/badge/version-v1.38.0-blue)
+![version](https://img.shields.io/badge/version-v1.38.1-blue)
 
 **بتعمل إيه:** هب واحد لمحطة المخزن. الموظف بيدخل **مرة واحدة**، وبعدين
 بيتنقّل بين الطباعة والتغليف وحذف المنتج وتسليمات بوسطة وسكانر المرتجعات
 ورحلة الأوردر من غير ما يدخل تاني ومن غير ما يفتح تبويبات متفرقة.
 **مين بيستخدمها:** المخزن
-**الإصدار:** `v1.38.0` — **واحد للهب كله** (`TOOL_VERSION` في `shared/shell.js`)
+**الإصدار:** `v1.38.1` — **واحد للهب كله** (`TOOL_VERSION` في `shared/shell.js`)
 
 > 🔴 **الهب واجهة + Worker دخول بس — من v1.32.0.** الريبو ده بقى فيه
 > `index.js` و`wrangler.toml`، **بس نطاقهم محصور في الدخول والخروج بس**
@@ -2011,6 +2011,14 @@ const REPRINT_WARN_MINUTES = 30;   // ثابت مسمّى — تغييره قر�
   المبكرة بتمسك لون في نص الانتقال (حصل فعلاً).
 - ✅ صفر تعديل Worker · صفر Promote · صفر ترفيع `min` — واجهة بحتة.
 
+##### 🔫⌨️ v1.38.1 — §ENTRY-HINT: pill «سكانر / كتابة يدوي» (قرار أحمد 13-10-2026)
+
+- 🔴 **pill (`#entryHint`) في آخر صف الـ chips**، بلون الوضع الفعّال: «سكانر» (فاتورة شوبيفاي · بوليصة بوسطة) · «كتابة الرقم يدوي» (رقم الأوردر) · «اكتب الـ SKU يدوي» (SKU المنتج). الأيقونة SVG ٢٠px (`#ico-scan` = مسدس + موجات + إطار باركود · `#ico-kbd` = كيبورد) بـ `currentColor` — مش إيموجي (درس 🖨).
+- ⚠️ **ده استثناء من قرار v1.16.0 «مفيش placeholder ولا سطر شرح ثابت»** — القرار اتغيّر بطلب أحمد للـ pill بس. ⛔ **ومفيش `placeholder` جوّه الحقل نفسه** لسه.
+- ⚠️ **الـ pill بيتبع المسار الفعّال (`entryView()`) مش المثبّت** — الكشف التلقائي لـ SKU بيبدّل النص. و`pointer-events:none` + `aria-hidden`: مش زرار، و`aria-label` الحقل هو الوصف لقارئ الشاشة.
+- ⚠️ **ألوانه نفس ألوان `.entry-chip.is-on`** — أي تعديل على ألوان الـ chips يتعمل عليه (درس R1).
+- ✅ +٦ بنود في `docs/sku-barcode-check.mjs`. صفر تعديل Worker · صفر Promote · صفر ترفيع `min`.
+
 ##### 🏷 v1.38.0 — أسماء الـ chips · الشريط compact · صف قايمة الـ SKU (قرار أحمد 13-10-2026)
 
 - 🔴 **أسماء الـ chips بلغة الشغل:** «فاتورة شوبيفاي» · «بوليصة بوسطة» ·
@@ -2999,7 +3007,7 @@ node docs/css-check.js shared/shell.css index.html Order-Printer.html Orders-Pac
 ```bash
 npm i playwright postcss jsbarcode@3.11.6 --no-save
 node docs/browser-check.mjs          # Order-Printer.html      — ١٤٣ بند
-node docs/sku-barcode-check.mjs      # Order-SKU-Barcode-Printer.html — ١٣٣ بند (+٢٧ في v1.37.0 · +١٤ في v1.38.0)
+node docs/sku-barcode-check.mjs      # Order-SKU-Barcode-Printer.html — ١٣٩ بند (+٢٧ في v1.37.0 · +١٤ في v1.38.0 · +٦ في v1.38.1)
 node docs/pack-check.mjs             # Orders-Packing-Checker.html        — ٤٩ بند (جديد v1.21.0 · +٦ في v1.35.1)
 node docs/scanners-check.mjs        # bosta-shipped + bosta-returned — ٧٩ بند (جديد v1.22.0)
 node docs/office-check.mjs           # Package-Transfer-To-Office.html — ٦٤ بند (جديد v1.26.0)
@@ -3664,7 +3672,9 @@ v3.5.0 وv3.6.0)** ·
 
 ---
 
-آخر تحديث: 13-10-2026 — v1.38.0 (🏷 **أسماء الـ chips بلغة الشغل** (فاتورة شوبيفاي · بوليصة بوسطة · رقم الأوردر · SKU المنتج) · عنوان قسم باركود SKU والكارت اتشالوا (compact) · **صف قايمة الـ SKU:** الـ SKU لازق في الصورة + المقاس في مربع أزرق + المتاح رقم كبير أخضر/أحمر · +١٤ بند في فحص المتصفح. واجهة بحتة.)
+آخر تحديث: 13-10-2026 — v1.38.1 (🔫⌨️ **pill «سكانر / كتابة يدوي» في شريط إدخال باركود SKU** (§ENTRY-HINT) — بلون الوضع، أيقونة SVG ٢٠px · +٦ بنود. واجهة بحتة.)
+
+13-10-2026 — v1.38.0 (🏷 **أسماء الـ chips بلغة الشغل** (فاتورة شوبيفاي · بوليصة بوسطة · رقم الأوردر · SKU المنتج) · عنوان قسم باركود SKU والكارت اتشالوا (compact) · **صف قايمة الـ SKU:** الـ SKU لازق في الصورة + المقاس في مربع أزرق + المتاح رقم كبير أخضر/أحمر · +١٤ بند في فحص المتصفح. واجهة بحتة.)
 
 13-10-2026 — v1.37.0 (🔴 **شريط إدخال واحد بدل أربع كروت** في `Order-SKU-Barcode-Printer.html` (§ENTRY-BAR): chips + حقل موحّد + كشف تلقائي محدود (١٠+ خانات ← شوبيفاي · حروف ← SKU · مقفول في بوسطة وSKU) · الارتفاع ~٣٩٠ ← ~١٤٠px · `bindScannerInput` اتشالت من الصفحة دي والتوأمة بقت على قاعدة المهلة (`docs/entry-twin-check.sh`) · +٢٧ بند في فحص المتصفح. واجهة بحتة.)
 

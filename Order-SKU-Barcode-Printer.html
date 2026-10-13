@@ -80,6 +80,13 @@
 .entry-chip[data-m=bosta].is-on  {background:var(--red-light);   border-color:var(--red);   color:var(--red-dark)}
 .entry-chip[data-m=manual].is-on {background:var(--surface-2);   border-color:var(--text-secondary);color:var(--text-mid)}
 .entry-chip[data-m=sku].is-on    {background:var(--green-light); border-color:var(--green); color:var(--green-dark)}
+.entry-hint{display:inline-flex;align-items:center;gap:7px;padding:3px 14px;border-radius:20px;border:1.5px solid;
+  margin-inline-start:auto;font-size:13px;font-weight:800;pointer-events:none;user-select:none}
+.entry-hint svg{width:20px;height:20px;flex-shrink:0}
+.entry-hint[data-m=shopify]{background:var(--accent-light);border-color:var(--accent);color:var(--accent-dark)}
+.entry-hint[data-m=bosta]  {background:var(--red-light);   border-color:var(--red);   color:var(--red-dark)}
+.entry-hint[data-m=manual] {background:var(--surface-2);   border-color:var(--text-secondary);color:var(--text-mid)}
+.entry-hint[data-m=sku]    {background:var(--green-light); border-color:var(--green); color:var(--green-dark)}
 .entry-chip-auto{padding:0 7px;line-height:17px;border-radius:20px;font-size:10px;font-weight:800;
   background:var(--accent);color:var(--on-accent)}
 .entry-chip[data-m=bosta]  .entry-chip-auto{background:var(--red)}
@@ -517,14 +524,20 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
          **صنف** مش أوردر، وبينادي `search_sku` مش `get_order`).
          🔴 **الكشف التلقائي محدود عن قصد** (§SCAN تحت): ١٠ خانات فأكتر ←
          شوبيفاي · حروف أو `/` ← SKU — ومقفول لو الوضع المثبّت بوسطة أو SKU.
-         ⛔ **مفيش `placeholder` ولا سطر شرح ثابت** (قرار v1.16.0) — الـ chip
-         المفعّل ولون الحدود هما الوصف، و`aria-label` بيتغيّر مع المسار. -->
+         ⛔ **مفيش `placeholder` جوّه الحقل** (قرار v1.16.0). ⚠️ **الاستثناء الوحيد:**
+         الـ pill (`#entryHint`) في آخر صف الـ chips (قرار أحمد 13-10-2026 · v1.38.1)
+         — سكانر/كتابة يدوي، بلون الوضع الفعّال، و`aria-label` بيتغيّر مع المسار. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="ico-scan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(-.4 -1.2) scale(.8)"><path d="M5.5 5.6 15.6 4.6Q16.6 4.5 16.3 5.5L14.3 11.3Q14.1 12 13.4 12H5.5A2.5 2.5 0 0 1 3 9.5V8.1A2.5 2.5 0 0 1 5.5 5.6Z"/><path d="M12.9 4.8 11.3 12"/><path d="M7 12 5.3 19.1Q5.1 20 6 20H9.2Q10 20 9.6 19.3L8.5 17.6 10.3 12"/></g><path d="M15.6 4.4Q16.7 5.6 15.6 6.8M17.9 3Q19.9 5.6 17.9 8.2" stroke-width="1.5"/><path d="M13.8 15.6v-2h2M20.2 13.6h2v2M22.2 19.6v2h-2M15.8 21.6h-2v-2" stroke-width="1.6"/><path d="M16 16.6v3M17.9 16.6v3M19.8 16.6v3" stroke-width="1.4"/></symbol>
+  <symbol id="ico-kbd" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2.5"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h.01M18 14h.01" stroke-width="2.4"/><path d="M9.5 14.2h5"/></symbol>
+</defs></svg>
     <div class="entry-bar" id="entryBar" data-view="shopify">
       <div class="entry-chips" id="entryChips" role="group" aria-label="مصدر الإدخال">
         <button type="button" class="entry-chip is-on" data-m="shopify" id="entryChip-shopify" aria-pressed="true">🔫 فاتورة شوبيفاي</button>
         <button type="button" class="entry-chip" data-m="bosta" id="entryChip-bosta" aria-pressed="false">🚚 بوليصة بوسطة</button>
         <button type="button" class="entry-chip" data-m="manual" id="entryChip-manual" aria-pressed="false">⌨️ رقم الأوردر</button>
         <button type="button" class="entry-chip" data-m="sku" id="entryChip-sku" aria-pressed="false"><svg viewBox="0 0 24 24" width="1em" height="1em" style="vertical-align:-0.14em" fill="currentColor" aria-hidden="true"><rect x="2" y="3" width="2" height="18"/><rect x="6" y="3" width="1" height="18"/><rect x="9" y="3" width="3" height="18"/><rect x="14" y="3" width="1" height="18"/><rect x="17" y="3" width="1" height="18"/><rect x="20" y="3" width="2" height="18"/></svg> SKU المنتج (بدون أوردر)</button>
+        <span class="entry-hint" id="entryHint" data-m="shopify" aria-hidden="true"></span>
       </div>
       <div class="scan-input-wrap sku-ac-wrap">
         <input type="text" class="scan-input" id="entryInput"
@@ -810,7 +823,17 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.38.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.38.1</span>
+          <span class="cl-ver-date">13-10-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🔫⌨️ <b>pill إرشادي في شريط الإدخال «باركود SKU»:</b> في آخر صف الـ chips، بلون الوضع الفعّال — «سكانر» (فاتورة شوبيفاي / بوليصة بوسطة) · «كتابة الرقم يدوي» (رقم الأوردر) · «اكتب الـ SKU يدوي» (SKU المنتج). أيقونة SVG بحجم ٢٠px. واجهة بحتة.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge">v1.38.0</span>
           <span class="cl-ver-date">13-10-2026</span>
         </div>
         <ul class="cl-items">
@@ -1971,6 +1994,12 @@ const ENTRY_MODES = {
   manual:  { label: 'رقم الأوردر', aria: 'أرقام الأوردرات — واحد أو أكتر مفصولين بمسافة أو فاصلة', timed: false },
   sku:     { label: 'SKU المنتج', aria: 'الـ SKU المسجّل على شوبيفاي', timed: false },
 };
+const ENTRY_HINTS = {
+  shopify: { ico: 'ico-scan', text: 'سكانر' },
+  bosta:   { ico: 'ico-scan', text: 'سكانر' },
+  manual:  { ico: 'ico-kbd',  text: 'كتابة الرقم يدوي' },
+  sku:     { ico: 'ico-kbd',  text: 'اكتب الـ SKU يدوي' },
+};
 const DEFAULT_ENTRY_MODE = 'shopify';
 let lastEntryMode = DEFAULT_ENTRY_MODE;
 
@@ -1998,6 +2027,9 @@ function renderEntryBar() {
     } else if (tag) tag.remove();
   });
   entryInput.setAttribute('aria-label', ENTRY_MODES[v].aria);
+  const hint = document.getElementById('entryHint'), h = ENTRY_HINTS[v];
+  hint.dataset.m = v;
+  hint.innerHTML = `<svg viewBox="0 0 24 24"><use href="#${h.ico}"/></svg>${h.text}`;
   document.getElementById('bcEntryBtn').textContent = v === 'sku' ? 'بحث' : 'إضافة';
   const route = document.getElementById('entryRoute');
   route.hidden = !auto;

@@ -276,6 +276,30 @@ check('الـ chip المضغوط aria-pressed',
   await page.locator('#entryChip-sku[aria-pressed="true"]').count() === 1);
 await page.click('#entryChip-shopify');
 
+// 🔴 §ENTRY-HINT (v1.38.1) — pill «سكانر / كتابة يدوي» بلون الوضع، أيقونة ٢٠px.
+const HINT_TEXT = { shopify: 'سكانر', bosta: 'سكانر', manual: 'كتابة الرقم يدوي', sku: 'اكتب الـ SKU يدوي' };
+const hints = {};
+for (const m of ['shopify', 'bosta', 'manual', 'sku']) {
+  await page.click(`#entryChip-${m}`);
+  await page.waitForTimeout(260);
+  hints[m] = await page.evaluate(() => {
+    const h = document.getElementById('entryHint'), sv = h.querySelector('svg').getBoundingClientRect(), cs = getComputedStyle(h);
+    return { text: h.textContent.trim(), use: h.querySelector('use').getAttribute('href'), w: Math.round(sv.width), h: Math.round(sv.height),
+             border: cs.borderTopColor, clickable: cs.pointerEvents !== 'none', hidden: h.getAttribute('aria-hidden') };
+  });
+}
+check('الـ pill بنصّه الصح في الأوضاع الأربعة',
+  Object.keys(HINT_TEXT).every(m => hints[m].text === HINT_TEXT[m]), JSON.stringify(Object.values(hints).map(x => x.text)));
+check('أيقونة السكانر لشوبيفاي وبوسطة · الكيبورد للرقم والـ SKU',
+  hints.shopify.use === '#ico-scan' && hints.bosta.use === '#ico-scan' && hints.manual.use === '#ico-kbd' && hints.sku.use === '#ico-kbd');
+check('الأيقونة ٢٠×٢٠px', Object.values(hints).every(x => x.w === 20 && x.h === 20), JSON.stringify(Object.values(hints).map(x => [x.w, x.h])));
+check('الـ pill ملوّن بلون الوضع (٤ ألوان مختلفة)', new Set(Object.values(hints).map(x => x.border)).size === 4);
+check('الـ pill مش بيتضغط وaria-hidden', Object.values(hints).every(x => !x.clickable && x.hidden === 'true'));
+await page.fill('#entryInput', 'RN-AD-115');
+check('الكشف التلقائي بيغيّر الـ pill مع المسار (SKU)', (await page.locator('#entryHint').innerText()).trim() === HINT_TEXT.sku);
+await page.fill('#entryInput', '');
+await page.click('#entryChip-shopify');
+
 // 🔴 الكشف التلقائي — حالتين بس، ومقفول في بوسطة وSKU.
 const typeAndView = async (txt) => {
   await page.fill('#entryInput', txt);
