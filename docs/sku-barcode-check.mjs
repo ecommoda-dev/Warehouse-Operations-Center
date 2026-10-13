@@ -228,6 +228,18 @@ check('حقل إدخال واحد بس', await page.locator('#entryInput').count
 for (const m of ['shopify', 'bosta', 'manual', 'sku']) {
   check(`chip ${m} موجود`, await page.locator(`#entryChip-${m}`).count() === 1);
 }
+// v1.38.0 — أسماء الـ chips بقت بلغة الشغل، وعنوان القسم والكارت اللي لافّه اتشالوا.
+const chipTexts = {};
+for (const m of ['shopify', 'bosta', 'manual', 'sku']) chipTexts[m] = (await page.locator(`#entryChip-${m}`).innerText()).replace(/\s+/g, ' ').trim();
+check('اسم chip شوبيفاي «فاتورة شوبيفاي»', chipTexts.shopify.includes('فاتورة شوبيفاي'), chipTexts.shopify);
+check('اسم chip بوسطة «بوليصة بوسطة»', chipTexts.bosta.includes('بوليصة بوسطة'), chipTexts.bosta);
+check('اسم chip اليدوي «رقم الأوردر»', chipTexts.manual.includes('رقم الأوردر'), chipTexts.manual);
+check('اسم chip الـ SKU «SKU المنتج (بدون أوردر)»', chipTexts.sku.includes('SKU المنتج (بدون أوردر)'), chipTexts.sku);
+check('عنوان «طباعة باركود SKU — دفعة أوردرات» اتشال',
+  !(await page.locator('#printTabContent').innerText()).includes('دفعة أوردرات') &&
+  await page.locator('#printTabContent .card-title').count() === 0);
+check('الشريط نفسه هو الكارت (مفيش `.card` لافّه)',
+  await page.locator('#printTabContent > .card:has(#entryBar)').count() === 0);
 for (const id of ['orderScanInput', 'bostaScanInput', 'orderManualInput', 'skuTermInput', 'bcManualBtn', 'bcSkuBtn']) {
   check(`الـ id القديم #${id} اتشال`, await page.locator(`#${id}`).count() === 0);
 }
@@ -262,6 +274,30 @@ check('زرار الإضافة بيبقى «بحث» في وضع SKU بس',
   colors.sku.btn === 'بحث' && colors.shopify.btn === 'إضافة' && colors.manual.btn === 'إضافة');
 check('الـ chip المضغوط aria-pressed',
   await page.locator('#entryChip-sku[aria-pressed="true"]').count() === 1);
+await page.click('#entryChip-shopify');
+
+// 🔴 §ENTRY-HINT (v1.38.1) — pill «سكانر / كتابة يدوي» بلون الوضع، أيقونة ٢٠px.
+const HINT_TEXT = { shopify: 'سكانر', bosta: 'سكانر', manual: 'كتابة الرقم يدوي', sku: 'اكتب الـ SKU يدوي' };
+const hints = {};
+for (const m of ['shopify', 'bosta', 'manual', 'sku']) {
+  await page.click(`#entryChip-${m}`);
+  await page.waitForTimeout(260);
+  hints[m] = await page.evaluate(() => {
+    const h = document.getElementById('entryHint'), sv = h.querySelector('svg').getBoundingClientRect(), cs = getComputedStyle(h);
+    return { text: h.textContent.trim(), use: h.querySelector('use').getAttribute('href'), w: Math.round(sv.width), h: Math.round(sv.height),
+             border: cs.borderTopColor, clickable: cs.pointerEvents !== 'none', hidden: h.getAttribute('aria-hidden') };
+  });
+}
+check('الـ pill بنصّه الصح في الأوضاع الأربعة',
+  Object.keys(HINT_TEXT).every(m => hints[m].text === HINT_TEXT[m]), JSON.stringify(Object.values(hints).map(x => x.text)));
+check('أيقونة السكانر لشوبيفاي وبوسطة · الكيبورد للرقم والـ SKU',
+  hints.shopify.use === '#ico-scan' && hints.bosta.use === '#ico-scan' && hints.manual.use === '#ico-kbd' && hints.sku.use === '#ico-kbd');
+check('الأيقونة ٢٠×٢٠px', Object.values(hints).every(x => x.w === 20 && x.h === 20), JSON.stringify(Object.values(hints).map(x => [x.w, x.h])));
+check('الـ pill ملوّن بلون الوضع (٤ ألوان مختلفة)', new Set(Object.values(hints).map(x => x.border)).size === 4);
+check('الـ pill مش بيتضغط وaria-hidden', Object.values(hints).every(x => !x.clickable && x.hidden === 'true'));
+await page.fill('#entryInput', 'RN-AD-115');
+check('الكشف التلقائي بيغيّر الـ pill مع المسار (SKU)', (await page.locator('#entryHint').innerText()).trim() === HINT_TEXT.sku);
+await page.fill('#entryInput', '');
 await page.click('#entryChip-shopify');
 
 // 🔴 الكشف التلقائي — حالتين بس، ومقفول في بوسطة وSKU.
@@ -456,6 +492,31 @@ const pickTxt = await page.locator('#skuAcBox .bc-pick-row').first().innerText()
 check('صف النتيجة فيه الـ SKU', pickTxt.includes('RN-AD-115 / Black / 45'), pickTxt);
 check('اسم المنتج اتشال من صف النتيجة', !pickTxt.includes('Adidas Terrex'), pickTxt);
 check('رقم الباركود اتشال من صف النتيجة', !pickTxt.includes('41202242'), pickTxt);
+// ── v1.38.0 — صف القايمة: الـ SKU جنب الصورة · المقاس في مربع أزرق · المتاح رقم كبير بلون ──
+const pickInfo = await page.evaluate(() => [...document.querySelectorAll('#skuAcBox .bc-pick-row')].map(r => {
+  const img  = r.querySelector('.bc-thumb, .bc-thumb-ph').getBoundingClientRect();
+  const sku  = r.querySelector('.bc-pick-sku').getBoundingClientRect();
+  const size = r.querySelector('.bc-pick-size');
+  const n    = r.querySelector('.bc-pick-n');
+  const cs   = el => getComputedStyle(el);
+  return {
+    gap: Math.round(img.left - sku.right), size: size?.textContent || null,
+    sizeBorder: size ? cs(size).borderTopColor : null, n: n.textContent, nColor: cs(n).color,
+    nPx: parseFloat(cs(n).fontSize), skuPx: parseFloat(cs(r.querySelector('.bc-pick-sku')).fontSize),
+    qtyLeft: Math.round(r.querySelector('.bc-pick-qty').getBoundingClientRect().left - r.getBoundingClientRect().left),
+  };
+}));
+const rgb = c => c.match(/\d+/g).map(Number);
+const [pA, pB, pC] = pickInfo;   // Black/45 (4) · Beige/43 (0) · Blue/43 (null + بلا باركود)
+check('الـ SKU لازق في الصورة (الفرق أقل من 20px)', pickInfo.every(r => r.gap >= 0 && r.gap < 20), JSON.stringify(pickInfo.map(r => r.gap)));
+check('المقاس في مربع (45 · 43 · 43)', pA.size === '45' && pB.size === '43' && pC.size === '43', JSON.stringify(pickInfo.map(r => r.size)));
+check('مربع المقاس أزرق', (([r, g, b]) => b > r + 60 && b > g)(rgb(pA.sizeBorder)), pA.sizeBorder);
+check('المتاح أكبر من خط الـ SKU', pA.nPx > pA.skuPx, `${pA.nPx} مقابل ${pA.skuPx}`);
+check('المتاح > 0 أخضر', (([r, g, b]) => g > r + 40 && g > b)(rgb(pA.nColor)), pA.nColor);
+check('المتاح = 0 أحمر', (([r, g, b]) => r > g + 80 && r > b + 80)(rgb(pB.nColor)), pB.nColor);
+check('المتاح مش معروف «—» محايد (مش أحمر ولا أخضر)',
+  pC.n === '—' && (([r, g, b]) => Math.abs(r - g) < 30 && Math.abs(g - b) < 30)(rgb(pC.nColor)), `${pC.n} ${pC.nColor}`);
+check('المتاح في آخر الصف (طرف الشمال)', pickInfo.every(r => r.qtyLeft < 40), JSON.stringify(pickInfo.map(r => r.qtyLeft)));
 // «مفيش Barcode» **لازم يفضل** — هو اللي بيقول إن الصنف مش هيتطبع خالص.
 check('«مفيش Barcode» لسه ظاهر في القايمة',
   (await page.locator('#skuAcBox .bc-pick-row.no-bar').innerText()).includes('مفيش Barcode'));
