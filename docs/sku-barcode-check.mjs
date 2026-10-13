@@ -192,6 +192,9 @@ await page.addInitScript(() => {
     v: 1, username: 'Tester', displayName: 'Tester', loginAt: new Date().toISOString() }));
   localStorage.setItem('warehouse_ops_worker_secret', 'x');
 });
+// 🔴 عدّاد نداءات الـ Workers — بند «كتابة SKU في وضع سكانر ماتنفّذش» بيقيس
+//    **غياب** نداء `get_order`، والغياب مايتقاسش من الـ DOM.
+const CALLS = [];
 await page.route('**/*', route => {
   const url = route.request().url();
   // الـ CDN مقفول في بيئة الاختبار — بنرد بالنسخة المحلية.
@@ -201,6 +204,7 @@ await page.route('**/*', route => {
   const isWorker = url.includes('order-sku-barcode-printer-worker')
                 || url.includes('orders-packing-checker-worker');
   if (!isWorker) return route.continue();
+  if (route.request().method() !== 'OPTIONS') CALLS.push(url);
   if (route.request().method() === 'OPTIONS') {
     return route.fulfill({ status: 204, headers: CORS });
   }
@@ -216,13 +220,102 @@ await page.route('**/*', route => {
 
 await page.goto(`${BASE}/Order-SKU-Barcode-Printer.html`, { waitUntil: 'networkidle' });
 
-// ── ① الأربع مداخل موجودة ─────────────────────────────────────
-for (const [id, label] of [['orderScanInput', 'شوبيفاي'], ['bostaScanInput', 'بوسطة'],
-                           ['orderManualInput', 'يدوي'], ['skuTermInput', 'SKU']]) {
-  check(`مربع ${label} موجود`, await page.locator(`#${id}`).count() === 1);
+// ── ① شريط إدخال واحد + أربع chips (v1.37.0) ───────────────────
+//
+// 🔴 الأربع كروت اتشالت — حقل واحد والـ chips هي اختيار المصدر. بنود
+//    الإدخال تحت بتعدّي على الحقل الموحّد بعد ما تدوس الـ chip المناسب.
+check('حقل إدخال واحد بس', await page.locator('#entryInput').count() === 1);
+for (const m of ['shopify', 'bosta', 'manual', 'sku']) {
+  check(`chip ${m} موجود`, await page.locator(`#entryChip-${m}`).count() === 1);
 }
-check('المربع النشط الافتراضي = شوبيفاي',
-  await page.locator('#entryCard-shopify.is-active').count() === 1);
+for (const id of ['orderScanInput', 'bostaScanInput', 'orderManualInput', 'skuTermInput', 'bcManualBtn', 'bcSkuBtn']) {
+  check(`الـ id القديم #${id} اتشال`, await page.locator(`#${id}`).count() === 0);
+}
+check('`.entry-grid` و`.entry-card` اتشالوا',
+  await page.locator('.entry-grid, .entry-card').count() === 0);
+check('الـ chip المفعّل الافتراضي = شوبيفاي',
+  await page.locator('#entryChip-shopify.is-on').count() === 1 &&
+  await page.locator('#entryBar[data-view="shopify"]').count() === 1);
+
+// 🔴 اللون هو التمييز — بيتقرا **محسوب** من حدود الشريط، مش من التوكن.
+const bar = async () => page.evaluate(() => {
+  const b = document.getElementById('entryBar');
+  return { view: b.dataset.view, border: getComputedStyle(b).borderTopColor,
+           label: document.getElementById('entryInput').getAttribute('aria-label'),
+           btn: document.getElementById('bcEntryBtn').textContent };
+});
+const colors = {};
+for (const m of ['shopify', 'bosta', 'manual', 'sku']) {
+  await page.click(`#entryChip-${m}`);
+  // ⚠️ الحدود عليها `transition: .15s` — القراءة المبكرة بتمسك لون في نص الانتقال.
+  await page.waitForTimeout(260);
+  const b = await bar();
+  colors[m] = b;
+  check(`chip ${m} بيغيّر المسار المفعّل`, b.view === m, b.view);
+}
+check('أربع ألوان حدود مختلفة',
+  new Set(Object.values(colors).map(c => c.border)).size === 4,
+  JSON.stringify(Object.values(colors).map(c => c.border)));
+check('aria-label بيتغيّر مع المسار (٤ قيم مختلفة)',
+  new Set(Object.values(colors).map(c => c.label)).size === 4);
+check('زرار الإضافة بيبقى «بحث» في وضع SKU بس',
+  colors.sku.btn === 'بحث' && colors.shopify.btn === 'إضافة' && colors.manual.btn === 'إضافة');
+check('الـ chip المضغوط aria-pressed',
+  await page.locator('#entryChip-sku[aria-pressed="true"]').count() === 1);
+await page.click('#entryChip-shopify');
+
+// 🔴 الكشف التلقائي — حالتين بس، ومقفول في بوسطة وSKU.
+const typeAndView = async (txt) => {
+  await page.fill('#entryInput', txt);
+  const v = await bar();
+  const tag = await page.locator('.entry-chip-auto').count();
+  const route = await page.locator('#entryRoute:not([hidden])').count();
+  return { ...v, tag, route };
+};
+await page.click('#entryChip-manual');
+let d = await typeAndView('RN-AD');
+check('حروف ← SKU (والوضع المثبّت يدوي)', d.view === 'sku' && d.tag === 1 && d.route === 1, JSON.stringify(d));
+check('سطر «اتحوّل تلقائيًا» بيظهر عند الكشف فقط',
+  (await page.locator('#entryRoute').textContent()).includes('SKU'));
+d = await typeAndView('6349412345678');
+check('١٠ خانات فأكتر ← شوبيفاي', d.view === 'shopify' && d.tag === 1, JSON.stringify(d));
+d = await typeAndView('41822077');
+check('أرقام قصيرة: مفيش تخمين — الوضع المثبّت هو اللي بيحكم', d.view === 'manual' && d.tag === 0, JSON.stringify(d));
+check('مفيش سطر «اتحوّل» والكشف ما حصلش', await page.locator('#entryRoute:not([hidden])').count() === 0);
+await page.click('#entryChip-bosta');
+d = await typeAndView('BOSTA123');
+check('بوسطة مثبّتة: الحروف ما بتحوّلش لـ SKU (الكشف مقفول)', d.view === 'bosta' && d.tag === 0, JSON.stringify(d));
+d = await typeAndView('6349412345678');
+check('بوسطة مثبّتة: ١٠+ خانات ما بتحوّلش لشوبيفاي', d.view === 'bosta', JSON.stringify(d));
+await page.click('#entryChip-sku');
+d = await typeAndView('6349412345678');
+check('SKU مثبّت: باركود صنف طويل (EAN) ما بيتحوّلش لأوردر', d.view === 'sku', JSON.stringify(d));
+await page.fill('#entryInput', '');
+// ضغطة chip بتفضّي الحقل (نص قديم تحت مصدر جديد = مسار غلط).
+await page.fill('#entryInput', 'abc');
+await page.click('#entryChip-manual');
+check('ضغطة chip بتفضّي الحقل', await page.locator('#entryInput').inputValue() === '');
+check('الفوكس رجع للحقل بعد ضغطة chip',
+  await page.evaluate(() => document.activeElement?.id === 'entryInput'));
+
+// 🔴 أخطر بند في التمريرة: كتابة SKU وانت واقف في وضع سكانر ماتتنفّذش
+//    كرقم أوردر عند أول وقفة ٤٠٠ms. بنقيس **غياب** نداء `get_order`.
+await page.click('#entryChip-shopify');
+const before = CALLS.length;
+await page.locator('#entryInput').pressSequentially('RN-AD-115', { delay: 130 });
+await page.waitForTimeout(700);
+check('كتابة SKU في وضع سكانر: صفر نداء get_order',
+  !CALLS.slice(before).some(u => u.includes('action=get_order')), CALLS.slice(before).join(' | '));
+check('وفتحت قايمة الـ SKU بدلاً من كده',
+  await page.locator('#skuAcBox:not([hidden])').count() === 1);
+await page.fill('#entryInput', '');
+await page.press('#entryInput', 'Escape');
+check('مفيش placeholder في الحقل',
+  await page.locator('#entryInput[placeholder]:not([placeholder=""])').count() === 0);
+// 🔴 الارتفاع هو سبب التمريرة كلها: الشريط تحت ~١٥٠px (كانت ~٣٩٠).
+const barH = await page.evaluate(() => document.getElementById('entryBar').getBoundingClientRect().height);
+check('ارتفاع الشريط أقل من 160px (كانت الأربع كروت ~390px)', barH < 160, `${Math.round(barH)}px`);
+await page.click('#entryChip-shopify');
 // v1.14.0 — كارت «اسكن باركود…» اتشال، والزراير التلاتة اتشالوا معاه.
 for (const [id, label] of [['bcIdle', 'كارت «اسكن باركود…»'], ['bcClearBtn', 'زرار «مسح الدفعة»'],
                            ['bcOneEachBtn', 'زرار «نسخة لكل صنف»'], ['bcByQtyBtn', 'زرار «بالكمية»']]) {
@@ -235,23 +328,14 @@ check('اسم التاب بقى «طباعة ملصق الباركود-SKU»',
 check('كلمة «ليبل» اتشالت من واجهة تاب الطباعة',
   !/ليبل/.test(await page.locator('#printTabContent').innerText()));
 // 🔴 مفيش `placeholder` ولا سطر شرح تحت أي مربع — العنوان واللون هما التعريف.
-check('مفيش أي placeholder في المربعات الأربعة',
+check('مفيش أي placeholder في تاب الطباعة',
   await page.locator('#printTabContent input[placeholder]:not([placeholder=""])').count() === 0);
 check('سطور «Scanner Gun…» اتشالت', await page.locator('.scan-hint').count() === 0);
-// 🔴 المدخل الرابع بياخد صف لوحده بعرض الشبكة — مش عمود رابع.
-const skuWide = await page.evaluate(() => {
-  const g = document.querySelector('.entry-grid').getBoundingClientRect();
-  const c = document.getElementById('entryCard-sku').getBoundingClientRect();
-  const a = document.getElementById('entryCard-shopify').getBoundingClientRect();
-  return { same: Math.abs(g.width - c.width) < 2, below: c.top > a.bottom - 1 };
-});
-check('كارت الـ SKU بعرض الصفحة', skuWide.same);
-check('كارت الـ SKU تحت باقي المربعات', skuWide.below);
-check('`.entry-grid-4` اتشالت', await page.locator('.entry-grid-4').count() === 0);
 
 // ── ② إضافة أوردر بالاسم (الإدخال اليدوي) ─────────────────────
-await page.fill('#orderManualInput', '53768');
-await page.click('#bcManualBtn');
+await page.click('#entryChip-manual');
+await page.fill('#entryInput', '53768');
+await page.click('#bcEntryBtn');
 await page.waitForFunction(() => document.querySelectorAll('tr.bc-grp').length === 1);
 check('الأوردر اتضاف للدفعة', await page.locator('tr.bc-grp').count() === 1);
 check('٣ أصناف اتعرضوا', await page.locator('tr.bc-item').count() === 3);
@@ -271,22 +355,24 @@ check('الجدول أربع أعمدة (المنتج والـ Barcode اتشا�
   await page.locator('.bc-table thead th').count() === 4);
 
 // ── ③ الأوردر المكرّر بيترفض ──────────────────────────────────
-await page.fill('#orderManualInput', '#53768');
-await page.click('#bcManualBtn');
+await page.fill('#entryInput', '#53768');
+await page.click('#bcEntryBtn');
 await page.waitForTimeout(400);
 check('الأوردر المكرّر ما اتضافش', await page.locator('tr.bc-grp').count() === 1);
 
 // ── ④ ماسح شوبيفاي بالـ ID الرقمي ─────────────────────────────
-await page.fill('#orderScanInput', '5678901234568');
-await page.press('#orderScanInput', 'Enter');
+await page.click('#entryChip-shopify');
+await page.fill('#entryInput', '5678901234568');
+await page.press('#entryInput', 'Enter');
 await page.waitForFunction(() => document.querySelectorAll('tr.bc-grp').length === 2);
 check('الأوردر التاني اتضاف بالـ ID', await page.locator('tr.bc-grp').count() === 2);
 check('عدد النسخ بقى 5 (3 + 2)',
   /طباعة 5 باركود-SKU/.test(await page.locator('#bcPrintBtn').textContent()));
 
 // ── ⑤ الأوردر الفاشل بيفضل معروض باسمه (بانر مش شيلة) ─────────
-await page.fill('#orderManualInput', '99999');
-await page.click('#bcManualBtn');
+await page.click('#entryChip-manual');
+await page.fill('#entryInput', '99999');
+await page.click('#bcEntryBtn');
 await page.waitForFunction(() => document.querySelectorAll('#bcFails .bc-fail-row').length === 1);
 check('الأوردر الفاشل معروض باسمه في البانر',
   (await page.locator('#bcFails .bc-fail-row').textContent()).includes('99999'));
@@ -328,8 +414,9 @@ await page.locator('tr.bc-item .bc-row-x').first().click();
 await page.waitForSelector('tr.bc-item.is-off');
 
 // ── ⑦ مربع بوسطة: تراكينج → أوردر عن طريق Worker التغليف ──────
-await page.fill('#bostaScanInput', 'BOSTA123');
-await page.press('#bostaScanInput', 'Enter');
+await page.click('#entryChip-bosta');
+await page.fill('#entryInput', 'BOSTA123');
+await page.press('#entryInput', 'Enter');
 await page.waitForFunction(() => document.querySelectorAll('tr.bc-grp').length === 3);
 check('تراكينج بوسطة اتحوّل لأوردر',
   (await page.locator('#bcBody').textContent()).includes('#53770'));
@@ -348,7 +435,8 @@ check('بادجات PENDING/UNFULFILLED اتشالت',
 //    ما حد يدوس «بحث». والصفوف بقت **مربعات اختيار** مش زراير بتضيف على
 //    طول: البحث الجزئي بيرجّع كل المقاسات، والموظف بياخد منهم كذا واحد.
 check('مودال اختيار الصنف اتشال', await page.locator('#skuPickOverlay').count() === 0);
-await page.locator('#skuTermInput').type('RN-AD-115', { delay: 20 });
+await page.click('#entryChip-sku');
+await page.locator('#entryInput').pressSequentially('RN-AD-115', { delay: 20 });
 // نص الانتظار بقى «جاري البحث عن…» (كان «بيدوّر على…») — v1.17.0.
 // ⚠️ **بيتفحص بنداء `bcAcBusy` مباشرةً مش بانتظار الـ DOM** — الـ Worker
 //    الوهمي بيرد في نفس اللحظة، فحالة الانتظار بتظهر وتختفي في إطار
@@ -362,7 +450,7 @@ check('الجزئي بيطلّع تلات نتايج', await page.locator('#skuA
 check('الصنف بلا باركود مربعه مقفول',
   await page.locator('#skuAcBox .bc-pick-cb:disabled').count() === 1);
 check('المربع ما اتفضّاش وانت بتكتب',
-  await page.locator('#skuTermInput').inputValue() === 'RN-AD-115');
+  await page.locator('#entryInput').inputValue() === 'RN-AD-115');
 // 🔴 v1.17.0 — الصف بقى الـ SKU وبس: اسم المنتج ورقم الباركود اتشالوا.
 const pickTxt = await page.locator('#skuAcBox .bc-pick-row').first().innerText();
 check('صف النتيجة فيه الـ SKU', pickTxt.includes('RN-AD-115 / Black / 45'), pickTxt);
@@ -414,7 +502,7 @@ check('الدفعة اتضافت بنفس ترتيب القايمة',
     'RN-AD-115 / Black / 45 | RN-AD-115 / Beige / 43',
   await page.evaluate(() => bcOrders[0].rows.map(r => r.sku).join(' | ')));
 check('القايمة بتتقفل بعد الإضافة', await page.locator('#skuAcBox:not([hidden])').count() === 0);
-check('المربع بيتفضّى بعد الإضافة', await page.locator('#skuTermInput').inputValue() === '');
+check('المربع بيتفضّى بعد الإضافة', await page.locator('#entryInput').inputValue() === '');
 check('مجموعة «بدون أوردر» مش محسوبة في بادج الأوردرات',
   await page.locator('#bcStatOrders').textContent() === '3',
   await page.locator('#bcStatOrders').textContent());
@@ -448,8 +536,8 @@ check('اللينك عليه rel="noopener"', skuLink.rel.includes('noopener'));
 // 🔴 الاستعلام القديم كان بيقسّم `RN-AD-115 / Beige / 43` لكلمات بحث
 //    عامة ويرجّع **صفر** على صنف موجود. الـ Worker الوهمي بيطابق بنفس
 //    منطق `buildSkuQuery` بالظبط.
-await page.fill('#skuTermInput', 'RN-AD-115 / Black / 45');
-await page.press('#skuTermInput', 'Enter');
+await page.fill('#entryInput', 'RN-AD-115 / Black / 45');
+await page.press('#entryInput', 'Enter');
 await page.waitForTimeout(500);
 check('التطابق التام على صنف موجود بالفعل بيقول كده',
   !(await page.locator('#skuAcBox:not([hidden])').count()));
