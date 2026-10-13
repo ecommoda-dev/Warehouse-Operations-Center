@@ -69,17 +69,25 @@
 .entry-bar[data-view=manual] .scan-input-wrap .btn-primary{background:var(--text-secondary)}
 .entry-bar[data-view=sku]    .scan-input-wrap .btn-primary{background:var(--green)}
 .entry-bar .scan-input-wrap .btn-primary:disabled{opacity:.55;cursor:not-allowed}
-.entry-chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.entry-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;
-  border:1.5px solid var(--border-strong);background:var(--surface);color:var(--text-secondary);
-  font-family:var(--font-body);font-size:13px;font-weight:800;cursor:pointer;
-  transition:background .15s,border-color .15s,color .15s}
+.entry-chips{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+/* §ENTRY-SEG (v1.38.2 · قرار أحمد 13-10-2026): الأربع chips بقوا شريط مقسّم
+   (segmented control) واحد. الفاصل بين الأجزاء `gap:1px` على خلفية لون الحدود
+   (مش `border-inline-start`) عشان الفواصل تفضل سليمة لما الشريط يلفّ على سطرين. */
+.entry-segs{display:inline-flex;flex-wrap:wrap;gap:1px;max-width:100%;
+  background:var(--border-strong);border:1.5px solid var(--border-strong);border-radius:10px;overflow:hidden}
+.entry-chip{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:0;border-radius:0;
+  background:var(--surface);color:var(--text-secondary);
+  font-family:var(--font-body);font-size:14px;font-weight:800;cursor:pointer;white-space:nowrap;
+  transition:background .15s,color .15s}
 .entry-chip:hover{background:var(--surface-2)}
-.entry-chip:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.entry-chip[data-m=shopify].is-on{background:var(--accent-light);border-color:var(--accent);color:var(--accent-dark)}
-.entry-chip[data-m=bosta].is-on  {background:var(--red-light);   border-color:var(--red);   color:var(--red-dark)}
-.entry-chip[data-m=manual].is-on {background:var(--surface-2);   border-color:var(--text-secondary);color:var(--text-mid)}
-.entry-chip[data-m=sku].is-on    {background:var(--green-light); border-color:var(--green); color:var(--green-dark)}
+.entry-chip:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
+.entry-chip[data-m=shopify].is-on{background:var(--accent);color:var(--on-accent)}
+.entry-chip[data-m=bosta].is-on  {background:var(--red);   color:var(--on-accent)}
+.entry-chip[data-m=manual].is-on {background:var(--text-secondary);color:var(--on-accent)}
+.entry-chip[data-m=sku].is-on    {background:var(--green); color:var(--on-accent)}
+/* الحقل أقصر من حقل التغليف (٥٢px) — الزرار بيتمدّد لارتفاعه بـ stretch. التعديل محصور في
+   `.entry-bar` عشان `.scan-input` الأصلي (توأم التغليف) يفضل زي ما هو. */
+.entry-bar .scan-input{padding-block:0;min-height:52px}
 .entry-hint{display:inline-flex;align-items:center;gap:7px;padding:3px 14px;border-radius:20px;border:1.5px solid;
   margin-inline-start:auto;font-size:13px;font-weight:800;pointer-events:none;user-select:none}
 .entry-hint svg{width:20px;height:20px;flex-shrink:0}
@@ -88,10 +96,10 @@
 .entry-hint[data-m=manual] {background:var(--surface-2);   border-color:var(--text-secondary);color:var(--text-mid)}
 .entry-hint[data-m=sku]    {background:var(--green-light); border-color:var(--green); color:var(--green-dark)}
 .entry-chip-auto{padding:0 7px;line-height:17px;border-radius:20px;font-size:10px;font-weight:800;
-  background:var(--accent);color:var(--on-accent)}
-.entry-chip[data-m=bosta]  .entry-chip-auto{background:var(--red)}
-.entry-chip[data-m=manual] .entry-chip-auto{background:var(--text-secondary)}
-.entry-chip[data-m=sku]    .entry-chip-auto{background:var(--green)}
+  background:var(--on-accent);color:var(--accent)}
+.entry-chip[data-m=bosta]  .entry-chip-auto{color:var(--red)}
+.entry-chip[data-m=manual] .entry-chip-auto{color:var(--text-secondary)}
+.entry-chip[data-m=sku]    .entry-chip-auto{color:var(--green)}
 /* سطر «اتحوّل تلقائيًا» **حالة مش شرح** — بيظهر لما الكشف يغيّر المسار بس. */
 .entry-route{font-size:12px;font-weight:700;color:var(--text-secondary)}
 .entry-route[hidden]{display:none}
@@ -533,10 +541,12 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
 </defs></svg>
     <div class="entry-bar" id="entryBar" data-view="shopify">
       <div class="entry-chips" id="entryChips" role="group" aria-label="مصدر الإدخال">
-        <button type="button" class="entry-chip is-on" data-m="shopify" id="entryChip-shopify" aria-pressed="true">🔫 فاتورة شوبيفاي</button>
-        <button type="button" class="entry-chip" data-m="bosta" id="entryChip-bosta" aria-pressed="false">🚚 بوليصة بوسطة</button>
-        <button type="button" class="entry-chip" data-m="manual" id="entryChip-manual" aria-pressed="false">⌨️ رقم الأوردر</button>
-        <button type="button" class="entry-chip" data-m="sku" id="entryChip-sku" aria-pressed="false"><svg viewBox="0 0 24 24" width="1em" height="1em" style="vertical-align:-0.14em" fill="currentColor" aria-hidden="true"><rect x="2" y="3" width="2" height="18"/><rect x="6" y="3" width="1" height="18"/><rect x="9" y="3" width="3" height="18"/><rect x="14" y="3" width="1" height="18"/><rect x="17" y="3" width="1" height="18"/><rect x="20" y="3" width="2" height="18"/></svg> SKU المنتج (بدون أوردر)</button>
+        <div class="entry-segs">
+          <button type="button" class="entry-chip is-on" data-m="shopify" id="entryChip-shopify" aria-pressed="true">🔫 فاتورة شوبيفاي</button>
+          <button type="button" class="entry-chip" data-m="bosta" id="entryChip-bosta" aria-pressed="false">🚚 بوليصة بوسطة</button>
+          <button type="button" class="entry-chip" data-m="manual" id="entryChip-manual" aria-pressed="false">⌨️ رقم الأوردر</button>
+          <button type="button" class="entry-chip" data-m="sku" id="entryChip-sku" aria-pressed="false"><svg viewBox="0 0 24 24" width="1em" height="1em" style="vertical-align:-0.14em" fill="currentColor" aria-hidden="true"><rect x="2" y="3" width="2" height="18"/><rect x="6" y="3" width="1" height="18"/><rect x="9" y="3" width="3" height="18"/><rect x="14" y="3" width="1" height="18"/><rect x="17" y="3" width="1" height="18"/><rect x="20" y="3" width="2" height="18"/></svg> SKU المنتج (بدون أوردر)</button>
+        </div>
         <span class="entry-hint" id="entryHint" data-m="shopify" aria-hidden="true"></span>
       </div>
       <div class="scan-input-wrap sku-ac-wrap">
@@ -823,7 +833,17 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.38.1</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.38.2</span>
+          <span class="cl-ver-date">13-10-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">تحسين</span><span>🎛️ <b>شريط إدخال «باركود SKU» بقى شريط مقسّم واحد:</b> الأربع أوضاع (فاتورة شوبيفاي · بوليصة بوسطة · رقم الأوردر · SKU المنتج) متلاصقين، والوضع الفعّال مصمت بلونه. حقل الإدخال أقصر (٥٢px) والـ pill (سكانر / كتابة يدوي) في أقصى الشمال فوق زرار الإضافة. واجهة بحتة.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge">v1.38.1</span>
           <span class="cl-ver-date">13-10-2026</span>
         </div>
         <ul class="cl-items">
