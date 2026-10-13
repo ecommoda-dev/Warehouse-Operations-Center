@@ -286,7 +286,7 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
 .bc-pick-row.no-bar{border-color:var(--red-border);background:var(--red-light);cursor:not-allowed}
 .bc-pick-cb{width:18px;height:18px;flex-shrink:0;accent-color:var(--green);cursor:pointer}
 .bc-pick-cb:disabled{cursor:not-allowed}
-.bc-pick-main{flex:1;min-width:0}
+.bc-pick-main{flex:0 1 auto;min-width:0}
 /* الـ SKU **هو** الصف — ١٥px وسميك ومقروء من على بُعد ذراع على شاشة المحطة. */
 .bc-pick-sku{display:block;font-family:var(--font-mono);font-size:15px;font-weight:800;
   direction:ltr;text-align:left;color:var(--text-primary);
@@ -295,8 +295,20 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
   direction:rtl;text-align:right}
 /* عدد المتاح جنب الـ SKU — رقم صغير محايد، مش بادج ملوّن: ده **معلومة
    مخزون** مش حالة تحتاج تحذير. */
-.bc-pick-qty{flex-shrink:0;font-family:var(--font-mono);font-size:12px;font-weight:700;
-  color:var(--text-secondary);direction:ltr;white-space:nowrap}
+.bc-pick-qty{flex-shrink:0;margin-inline-start:auto;display:inline-flex;align-items:baseline;gap:6px;
+  direction:rtl;white-space:nowrap;font-size:12px;font-weight:700;color:var(--text-secondary)}
+/* 🔴 **المقاس في مربع أزرق بجنب الـ SKU** (v1.38.0 · قرار أحمد 13-10-2026) —
+   الموظف بيدوّر على المقاس بالذات وسط ٢٩ صف بنفس الموديل واللون، فالـ SKU
+   لوحده بيخلّيه يقرا كل سطر لآخره. */
+.bc-pick-size{flex-shrink:0;min-width:34px;text-align:center;padding:2px 9px;border-radius:var(--radius-sm);
+  border:1.5px solid var(--accent);background:var(--accent-light);color:var(--accent-dark);
+  font-family:var(--font-mono);font-size:15px;font-weight:800;direction:ltr}
+/* 🔴 **المتاح رقم كبير بلون معنى:** صفر أو أقل ← أحمر · أكتر من صفر ← أخضر.
+   ⚠️ **مش معروف (`—`) محايد رمادي — مش أحمر:** «الرقم مش معروف» ≠ «مفيش في
+   المخزن» (الـ Worker بيرجّع `null` لو `read_inventory` ناقصة). */
+.bc-pick-n{font-family:var(--font-mono);font-size:20px;font-weight:800;line-height:1;direction:ltr;color:var(--text-muted)}
+.bc-pick-n.is-pos{color:var(--green-dark)}
+.bc-pick-n.is-zero{color:var(--red)}
 
 /* 🔴 شريط التحديد المتعدد — **فوق القايمة، ملزوق تحت مربع الإدخال**
    (v1.19.0 · قرار أحمد 09-09-2026). كان تحت النتايج، والنتيجة إن «إضافة
@@ -496,10 +508,9 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
           غير أوردر — فهو بيعدّي على `bcAddSkuTerm` مش على `bcAddOrder`،
           وبينادي `search_sku` مش `get_order`. مسار منفصل لأن المدخل
           نفسه منفصل، مش تكرار لمسار قايم. ────────────────────── -->
-  <div class="card">
-    <div class="card-title"><svg viewBox="0 0 24 24" width="1em" height="1em" style="vertical-align:-0.14em" fill="currentColor" aria-hidden="true"><rect x="2" y="3" width="2" height="18"/><rect x="6" y="3" width="1" height="18"/><rect x="9" y="3" width="3" height="18"/><rect x="14" y="3" width="1" height="18"/><rect x="17" y="3" width="1" height="18"/><rect x="20" y="3" width="2" height="18"/></svg> طباعة باركود SKU — دفعة أوردرات</div>
-
     <!-- 🔴 **شريط إدخال واحد** (v1.37.0 · قرار أحمد 13-10-2026) بدل أربع كروت.
+         🔴 **v1.38.0:** عنوان القسم («طباعة باركود SKU — دفعة أوردرات») والكارت اللي
+         كان لافّه اتشالوا — الشريط نفسه هو الكارت، والقسم كله compact.
          الـ chips هي اختيار المصدر، والحقل واحد والفوكس ثابت فيه — فمفيش
          «سكنت في المربع الغلط». **مسار الإضافة لسه واحد لكل نوع:**
          شوبيفاي/بوسطة/يدوي ← `bcAddOrder`، والـ SKU ← `bcAddSkuTerm` (يضيف
@@ -510,10 +521,10 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
          المفعّل ولون الحدود هما الوصف، و`aria-label` بيتغيّر مع المسار. -->
     <div class="entry-bar" id="entryBar" data-view="shopify">
       <div class="entry-chips" id="entryChips" role="group" aria-label="مصدر الإدخال">
-        <button type="button" class="entry-chip is-on" data-m="shopify" id="entryChip-shopify" aria-pressed="true">🔫 شوبيفاي</button>
-        <button type="button" class="entry-chip" data-m="bosta" id="entryChip-bosta" aria-pressed="false">🚚 بوسطة</button>
-        <button type="button" class="entry-chip" data-m="manual" id="entryChip-manual" aria-pressed="false">⌨️ يدوي</button>
-        <button type="button" class="entry-chip" data-m="sku" id="entryChip-sku" aria-pressed="false"><svg viewBox="0 0 24 24" width="1em" height="1em" style="vertical-align:-0.14em" fill="currentColor" aria-hidden="true"><rect x="2" y="3" width="2" height="18"/><rect x="6" y="3" width="1" height="18"/><rect x="9" y="3" width="3" height="18"/><rect x="14" y="3" width="1" height="18"/><rect x="17" y="3" width="1" height="18"/><rect x="20" y="3" width="2" height="18"/></svg> SKU (بدون أوردر)</button>
+        <button type="button" class="entry-chip is-on" data-m="shopify" id="entryChip-shopify" aria-pressed="true">🔫 فاتورة شوبيفاي</button>
+        <button type="button" class="entry-chip" data-m="bosta" id="entryChip-bosta" aria-pressed="false">🚚 بوليصة بوسطة</button>
+        <button type="button" class="entry-chip" data-m="manual" id="entryChip-manual" aria-pressed="false">⌨️ رقم الأوردر</button>
+        <button type="button" class="entry-chip" data-m="sku" id="entryChip-sku" aria-pressed="false"><svg viewBox="0 0 24 24" width="1em" height="1em" style="vertical-align:-0.14em" fill="currentColor" aria-hidden="true"><rect x="2" y="3" width="2" height="18"/><rect x="6" y="3" width="1" height="18"/><rect x="9" y="3" width="3" height="18"/><rect x="14" y="3" width="1" height="18"/><rect x="17" y="3" width="1" height="18"/><rect x="20" y="3" width="2" height="18"/></svg> SKU المنتج (بدون أوردر)</button>
       </div>
       <div class="scan-input-wrap sku-ac-wrap">
         <input type="text" class="scan-input" id="entryInput"
@@ -525,7 +536,6 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
       </div>
       <div class="entry-route" id="entryRoute" aria-live="polite" hidden></div>
     </div>
-  </div>
 
   <!-- ─── §TOOL::results — دفعة واحدة، كل الأوردرات في جدول واحد ─── -->
   <div class="card" id="bcResultCard" style="display:none">
@@ -800,7 +810,18 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.37.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.38.0</span>
+          <span class="cl-ver-date">13-10-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🏷 <b>أسماء الـ chips بقت بلغة الشغل:</b> «فاتورة شوبيفاي» · «بوليصة بوسطة» · «رقم الأوردر» · «SKU المنتج (بدون أوردر)». وعنوان القسم اتشال — الشريط compact.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>قايمة نتايج الـ SKU:</b> الـ SKU جنب الصورة، والمقاس في مربع أزرق، والمتاح برقم أكبر (أخضر/أحمر).</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge">v1.37.0</span>
           <span class="cl-ver-date">13-10-2026</span>
         </div>
         <ul class="cl-items">
@@ -1496,6 +1517,7 @@ function bcAcOpen(term, list, res = {}) {
         <span class="bc-pick-sku">${esc(v.sku || '—')}</span>
         ${ok ? '' : '<span class="bc-pick-sub">⚠️ مفيش Barcode — مش هيتطبع</span>'}
       </span>
+      ${bcSizeBox(v)}
       ${bcAvailText(v.available)}
     </label>`;
   }).join('');
@@ -1523,7 +1545,22 @@ function bcAcOpen(term, list, res = {}) {
 // بيرجّع `null` لو `read_inventory` ناقصة أو التتبّع مقفول، و«صفر» ساعتها
 // **كذب**: بيتقري «مفيش في المخزن» بدل «الرقم مش معروف».
 function bcAvailText(n) {
-  return `<span class="bc-pick-qty">المتاح: ${(typeof n === 'number') ? n.toLocaleString('en-US') : '—'}</span>`;
+  const known = typeof n === 'number';
+  const cls   = !known ? '' : (n > 0 ? ' is-pos' : ' is-zero');
+  return `<span class="bc-pick-qty">المتاح <span class="bc-pick-n${cls}">${known ? n.toLocaleString('en-US') : '—'}</span></span>`;
+}
+
+// المقاس = **آخر جزء** من الـ SKU (`MODEL / Color / Size`)، وبيرجع لـ
+// `variantTitle` لو الـ SKU مالوش `/`. ⚠️ لو مفيش ولا واحد منهم **مفيش مربع**
+// — مربع فاضي بيتقري «المقاس مش موجود» وهو مش ده المعنى.
+function bcSizeOf(v) {
+  const last = t => String(t ?? '').split('/').map(x => x.trim()).filter(Boolean).pop() || '';
+  const sku = String(v.sku ?? '');
+  return (sku.includes('/') ? last(sku) : '') || last(v.variantTitle);
+}
+function bcSizeBox(v) {
+  const sz = bcSizeOf(v);
+  return sz ? `<span class="bc-pick-size">${esc(sz)}</span>` : '';
 }
 
 function bcAcToggle(i) {
@@ -1929,10 +1966,10 @@ function bcRenderActions() {
 //    بس، مش في التخزين المحلي (المفتاح الوحيد في التخزين هو السر · Standards
 //    #28). والكشف مابيغيّروش: بيغيّر **المسار** لمدخل واحد بس.
 const ENTRY_MODES = {
-  shopify: { label: 'شوبيفاي', aria: 'باركود أوردر شوبيفاي',  timed: true  },
-  bosta:   { label: 'بوسطة',   aria: 'رقم تتبع بوسطة',         timed: true  },
-  manual:  { label: 'يدوي',    aria: 'أرقام الأوردرات — واحد أو أكتر مفصولين بمسافة أو فاصلة', timed: false },
-  sku:     { label: 'SKU',     aria: 'الـ SKU المسجّل على شوبيفاي', timed: false },
+  shopify: { label: 'فاتورة شوبيفاي', aria: 'باركود أوردر شوبيفاي',  timed: true  },
+  bosta:   { label: 'بوليصة بوسطة', aria: 'رقم تتبع بوسطة',         timed: true  },
+  manual:  { label: 'رقم الأوردر', aria: 'أرقام الأوردرات — واحد أو أكتر مفصولين بمسافة أو فاصلة', timed: false },
+  sku:     { label: 'SKU المنتج', aria: 'الـ SKU المسجّل على شوبيفاي', timed: false },
 };
 const DEFAULT_ENTRY_MODE = 'shopify';
 let lastEntryMode = DEFAULT_ENTRY_MODE;
