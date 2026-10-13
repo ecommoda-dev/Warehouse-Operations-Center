@@ -300,6 +300,43 @@ check('الكشف التلقائي بيغيّر الـ pill مع المسار (S
 await page.fill('#entryInput', '');
 await page.click('#entryChip-shopify');
 
+// 🔴 §ENTRY-SEG (v1.38.2) — الـ chips بقوا شريط مقسّم واحد، والـ pill في أقصى الشمال فوق زرار الإضافة.
+check('الأوضاع الأربعة جوّه `.entry-segs` واحد',
+  await page.locator('#entryChips > .entry-segs > .entry-chip').count() === 4);
+check('الـ pill برّه الشريط المقسّم وفي نفس صف الـ chips',
+  await page.locator('#entryChips > #entryHint').count() === 1);
+const segFill = {};
+for (const m of ['shopify', 'bosta', 'manual', 'sku']) {
+  await page.click(`#entryChip-${m}`);
+  await page.waitForTimeout(260);
+  segFill[m] = await page.evaluate((id) => { const cs = getComputedStyle(document.getElementById(id)); return { bg: cs.backgroundColor, fg: cs.color }; }, `entryChip-${m}`);
+}
+check('الجزء المفعّل مصمت بلون الوضع (٤ ألوان مختلفة)',
+  new Set(Object.values(segFill).map(x => x.bg)).size === 4, JSON.stringify(Object.values(segFill).map(x => x.bg)));
+check('نص الجزء المفعّل مختلف عن خلفيته',
+  Object.values(segFill).every(x => x.bg !== x.fg));
+await page.click('#entryChip-shopify');
+await page.waitForTimeout(260);
+const geo = await page.evaluate(() => {
+  const r = id => document.getElementById(id).getBoundingClientRect();
+  const inp = r('entryInput'), btn = r('bcEntryBtn'), hint = r('entryHint'), segs = document.querySelector('.entry-segs').getBoundingClientRect();
+  return { inpH: Math.round(inp.height), btnH: Math.round(btn.height), hintLeft: Math.round(hint.left), btnLeft: Math.round(btn.left),
+           hintAbove: hint.bottom <= btn.top, segsRight: Math.round(segs.right), hintRight: Math.round(hint.right) };
+});
+check('حقل الإدخال أقصر (٤٨-٥٦px) والزرار بنفس ارتفاعه',
+  geo.inpH >= 48 && geo.inpH <= 56 && Math.abs(geo.inpH - geo.btnH) <= 1, JSON.stringify(geo));
+check('الـ pill فوق زرار الإضافة ومحاذية لحافته (قرار أحمد)',
+  geo.hintAbove && Math.abs(geo.hintLeft - geo.btnLeft) <= 4, JSON.stringify(geo));
+check('الـ pill في أقصى الشمال بعد الشريط المقسّم', geo.hintRight < geo.segsRight, JSON.stringify(geo));
+await page.click('#entryChip-manual');
+await page.fill('#entryInput', 'RN-AD');
+await page.waitForTimeout(260);   // ⚠️ `transition: .15s` على الخلفية
+const tagVis = await page.evaluate(() => { const t = document.querySelector('.entry-chip-auto'), c = t && t.closest('.entry-chip');
+  return t ? { tag: getComputedStyle(t).backgroundColor, chip: getComputedStyle(c).backgroundColor } : null; });
+check('بادج «تلقائي» ظاهر داخل الجزء المفعّل (لونه مختلف عن خلفيته)', !!tagVis && tagVis.tag !== tagVis.chip, JSON.stringify(tagVis));
+await page.fill('#entryInput', '');
+await page.click('#entryChip-shopify');
+
 // 🔴 الكشف التلقائي — حالتين بس، ومقفول في بوسطة وSKU.
 const typeAndView = async (txt) => {
   await page.fill('#entryInput', txt);

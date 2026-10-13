@@ -2,13 +2,13 @@
 
 # مركز عمليات المخزن — Warehouse Operations Center (`Warehouse-Operations-Center`)
 
-![version](https://img.shields.io/badge/version-v1.38.1-blue)
+![version](https://img.shields.io/badge/version-v1.38.2-blue)
 
 **بتعمل إيه:** هب واحد لمحطة المخزن. الموظف بيدخل **مرة واحدة**، وبعدين
 بيتنقّل بين الطباعة والتغليف وحذف المنتج وتسليمات بوسطة وسكانر المرتجعات
 ورحلة الأوردر من غير ما يدخل تاني ومن غير ما يفتح تبويبات متفرقة.
 **مين بيستخدمها:** المخزن
-**الإصدار:** `v1.38.1` — **واحد للهب كله** (`TOOL_VERSION` في `shared/shell.js`)
+**الإصدار:** `v1.38.2` — **واحد للهب كله** (`TOOL_VERSION` في `shared/shell.js`)
 
 > 🔴 **الهب واجهة + Worker دخول بس — من v1.32.0.** الريبو ده بقى فيه
 > `index.js` و`wrangler.toml`، **بس نطاقهم محصور في الدخول والخروج بس**
@@ -2011,6 +2011,15 @@ const REPRINT_WARN_MINUTES = 30;   // ثابت مسمّى — تغييره قر�
   المبكرة بتمسك لون في نص الانتقال (حصل فعلاً).
 - ✅ صفر تعديل Worker · صفر Promote · صفر ترفيع `min` — واجهة بحتة.
 
+##### 🎛️ v1.38.2 — §ENTRY-SEG: الـ chips بقوا شريط مقسّم واحد (قرار أحمد 13-10-2026)
+
+- 🔴 **الأربع chips جوّه `.entry-segs` واحد** (segmented control): الجزء المفعّل مصمت بلون الوضع (أزرق · أحمر · رمادي · أخضر) والباقي أبيض. الـ ids (`entryChip-*`) والـ classes (`.entry-chip` · `.is-on`) والـ JS **ما اتغيّروش** — تغيير CSS وغلاف HTML بس.
+- ⚠️ **الفاصل `gap:1px` على خلفية لون الحدود** مش `border-inline-start` — عشان الفواصل تفضل سليمة لما الشريط يلفّ على سطرين في الشاشة الضيقة.
+- 🔴 **الـ pill (`#entryHint`) فضلت في آخر صف الـ chips** (أقصى الشمال، فوق زرار الإضافة ومحاذية لحافته) — الصف `flex-wrap` و`margin-inline-start:auto` على الـ pill.
+- ⚠️ **حقل الإدخال ٥٢px** (كان ~٧٨px) والزرار بيتمدّد لارتفاعه بـ stretch. ⛔ **التعديل محصور في `.entry-bar .scan-input`** — `.scan-input` الأصلي توأم `Orders-Packing-Checker.html` فيفضل زي ما هو.
+- ⚠️ **بادج «تلقائي» بقى أبيض بلون الوضع** داخل الجزء المفعّل (كان بلون الوضع على خلفية فاتحة، وكان هيختفي على خلفية مصمتة).
+- ✅ +٨ بنود في `docs/sku-barcode-check.mjs` (بقى ١٤٧). صفر تعديل Worker · صفر Promote · صفر ترفيع `min`.
+
 ##### 🔫⌨️ v1.38.1 — §ENTRY-HINT: pill «سكانر / كتابة يدوي» (قرار أحمد 13-10-2026)
 
 - 🔴 **pill (`#entryHint`) في آخر صف الـ chips**، بلون الوضع الفعّال: «سكانر» (فاتورة شوبيفاي · بوليصة بوسطة) · «كتابة الرقم يدوي» (رقم الأوردر) · «اكتب الـ SKU يدوي» (SKU المنتج). الأيقونة SVG ٢٠px (`#ico-scan` = مسدس + موجات + إطار باركود · `#ico-kbd` = كيبورد) بـ `currentColor` — مش إيموجي (درس 🖨).
@@ -3007,7 +3016,7 @@ node docs/css-check.js shared/shell.css index.html Order-Printer.html Orders-Pac
 ```bash
 npm i playwright postcss jsbarcode@3.11.6 --no-save
 node docs/browser-check.mjs          # Order-Printer.html      — ١٤٣ بند
-node docs/sku-barcode-check.mjs      # Order-SKU-Barcode-Printer.html — ١٣٩ بند (+٢٧ في v1.37.0 · +١٤ في v1.38.0 · +٦ في v1.38.1)
+node docs/sku-barcode-check.mjs      # Order-SKU-Barcode-Printer.html — ١٤٧ بند (+٢٧ في v1.37.0 · +١٤ في v1.38.0 · +٦ في v1.38.1 · +٨ في v1.38.2)
 node docs/pack-check.mjs             # Orders-Packing-Checker.html        — ٤٩ بند (جديد v1.21.0 · +٦ في v1.35.1)
 node docs/scanners-check.mjs        # bosta-shipped + bosta-returned — ٧٩ بند (جديد v1.22.0)
 node docs/office-check.mjs           # Package-Transfer-To-Office.html — ٦٤ بند (جديد v1.26.0)
@@ -3671,6 +3680,8 @@ v3.5.0 وv3.6.0)** ·
 مراجعة `print`/`pack`/`remove`/`stats` على html-builder v6.6.0
 
 ---
+
+آخر تحديث: 13-10-2026 — v1.38.2 (🎛️ **الـ chips بقوا شريط مقسّم واحد في شريط إدخال باركود SKU** (§ENTRY-SEG) — الجزء المفعّل مصمت بلونه، الحقل ٥٢px، والـ pill فوق زرار الإضافة · +٨ بنود. واجهة بحتة.)
 
 آخر تحديث: 13-10-2026 — v1.38.1 (🔫⌨️ **pill «سكانر / كتابة يدوي» في شريط إدخال باركود SKU** (§ENTRY-HINT) — بلون الوضع، أيقونة SVG ٢٠px · +٦ بنود. واجهة بحتة.)
 
