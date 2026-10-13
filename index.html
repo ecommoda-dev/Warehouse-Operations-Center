@@ -404,6 +404,14 @@
         <div class="woc-card-name">إحصائيات المخزن</div>
         <div class="woc-card-desc">أرقام اليوم · الموظفين · ساعات الشغل</div>
       </a>
+      <!-- جرد المخزون (v1.39.0) — مالوش طابور فمحتاج مربع. بيتقرا ويتعمل على الرف في
+           وقت لوحده، مش وسط أوردر قدام الموظف — فمكانه «أخرى» مش «أدوات». ⚠️ بس هو
+           **بيكتب** (تعديل رصيد على شوبيفاي)، فالسطر التوضيحي بيقول الأقسام التلاتة. -->
+      <a class="woc-tool" href="Inventory-Audit-Updater.html">
+        <span class="woc-card-ico">📋</span>
+        <div class="woc-card-name">جرد المخزون</div>
+        <div class="woc-card-desc">جرد فردي · أولويات الجرد · جرد جماعي بالسكانر</div>
+      </a>
     </div>
   </div>
 </div>
@@ -470,11 +478,11 @@
         <summary>السر والإعدادات</summary>
         <div class="about-sec-body">
           <ul>
-            <li>سر واحد لمجموعة <code>warehouse_ops</code> — نفس القيمة على <b>تسعة
+            <li>سر واحد لمجموعة <code>warehouse_ops</code> — نفس القيمة على <b>عشرة
                 Workers</b> (الطباعة · التغليف · حذف منتج · باركود SKU · تسليمات بوسطة ·
-                مرتجعات بوسطة · تسليمات المكتب · استلام المرتجعات · <b>الدخول</b>).</li>
+                مرتجعات بوسطة · تسليمات المكتب · استلام المرتجعات · <b>جرد المخزون</b> · <b>الدخول</b>).</li>
             <li>مفتاح التخزين <code>warehouse_ops_worker_secret</code>، وهو <b>الحاجة
-                الوحيدة</b> في التخزين المحلي (<code>warehouse_ops_worker_secret</code>) في الهب كله.</li>
+                الوحيدة</b> في التخزين المحلي (<code>warehouse_ops_worker_secret</code>) في الهب كله — فيما عدا تفضيل عرض أعمدة جداول «جرد المخزون» (<code>stockaudit_col_widths_*</code>)، وده تفضيل واجهة مش هوية ولا سر.</li>
             <li>روابط الـ Workers <b>ثوابت في الكود</b> — مش حقول إعدادات (Standards #28).</li>
           </ul>
         </div>
@@ -490,7 +498,19 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.38.2</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.39.0</span>
+          <span class="cl-ver-date">13-10-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>📋 <b>«جرد المخزون» دخلت الهب</b> — <code>Inventory-Audit-Updater.html</code>، ومربعها في قسم «أخرى». الأقسام التلاتة (جرد فردي · أولويات الجرد · جرد جماعي) وسجل العمليات زي ما هم، والـ Worker (<code>inventory-audit-updater-worker</code>) <b>ما اتلمسش</b>. الدخول مرة واحدة من هنا، ومفيش شاشة دخول ولا خروج تلقائي في الصفحة.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>لازم <code>WORKER_SECRET</code> على <code>inventory-audit-updater-worker</code> يتحط بقيمة مجموعة <code>warehouse_ops</code> + Promote</b> — كان له سر خاص. من غيره الصفحة بتفتح وكل نداء فيها بيرجّع <code>401</code> (وحارس النسخة والفحص الذاتي بيقولوا).</span></li>
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>🔴 <b>التحويل بعد انتهاء الجلسة كان بيرفض كل صفحات الهب</b> — فحص <code>?next=</code> كان <code>[a-z]+\.html</code> فبيرفض <code>Order-Printer.html</code> وأخواتها (حروف كبيرة وشرطة) من v1.36.0. اتصلّح، وبقى بيرجّعك لصفحتك.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.38.2</span>
           <span class="cl-ver-date">13-10-2026</span>
         </div>
         <ul class="cl-items">
@@ -1082,7 +1102,11 @@ document.addEventListener('keydown', e => {
 // 🔴 `next` بيتفحص بـ regex **قبل** التحويل. من غير الفحص،
 //    `?next=https://evil…` بيحوّل الموظف لبرّه الهب.
 //    الـ regex بيسمح باسم ملف محلي + query بس.
-const NEXT_RE = /^[a-z]+\.html(\?[^#]*)?$/;
+// ⚠️ `[A-Za-z0-9_-]` مش `[a-z]` (v1.39.0): من v1.36.0 كل أسماء الصفحات بقت
+//    `Order-Printer.html` وأخواتها (حروف كبيرة وشرطة)، والـ regex القديم كان
+//    **بيرفضها كلها في صمت** — موظف جلسته ماتت وهو على صفحة بيدخل من جديد وبيلاقي
+//    نفسه في الرئيسية بدل صفحته. مفيش مخاطرة أمنية: لسه اسم ملف محلي بدون `/` ولا `:`.
+const NEXT_RE = /^[A-Za-z0-9_-]+\.html(\?[^#]*)?$/;
 
 async function finishLogin(username, displayName, logged) {
   setSession(username, displayName);
