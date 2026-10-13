@@ -163,9 +163,22 @@ const WOC_WORKERS = {
   //    راجع (مرتجع/ملغي)، بينما دي بتكتب `Office` على طرد خارج. الاتنين
   //    Workers مستقلين وحدّين أدنى مستقلين — ⛔ ممنوع يتربطوا برقم واحد.
   warehouse:{ url: 'https://package-transfer-to-warehouse-worker.ecommoda-dev.workers.dev', min: '1.0.0', label: 'قسم استلام المرتجعات' },
+  // 🔴 جرد المخزون — انضم للهب في v1.39.0 (الأداة المستقلة `Inventory-Audit-Updater`).
+  // `6.2.1` = نفس `MIN_WORKER_VERSION` اللي كانت في الأداة المستقلة بالحرف — الصفحة
+  // **معتمدة عليه فعلاً** (Standards #29): تاب الجرد الجماعي بيقرا `bulk_compare`
+  // (اتضاف في 6.1.0 وحلّ محل `bulk_shelf_check`) و`dupBarcodes`، و6.2.1 هي أول نسخة
+  // بتستبعد الصنف الموقوف (`custom.suspended`) من البحث والأولويات والجماعي. على Worker
+  // أقدم الصفحة بتشتغل **وبتعرض أصناف موقوفة أو بترجّع «Unknown action»** — فالحارس
+  // بيسمّي الأداة بدل ما الموظف يدوّر.
+  // ⚠️ الـ Worker ده **ليه endpoints دخول** (`check_employee`/`verify_employee`…) لدخول
+  //    الأداة المستقلة، والهب **مابينادش عليها خالص** — الدخول في `index.html` بس.
+  // ⚠️ `WORKER_SECRET` عليه لازم يبقى **قيمة مجموعة `warehouse_ops`** — كان له سر خاص
+  //    (`stockaudit_worker_secret`)، والهب بيبعت سر المجموعة من مفتاح واحد (#39).
+  //    من غير الخطوة اليدوية دي كل نداء من الصفحة بيرجّع `401`.
+  audit:    { url: 'https://inventory-audit-updater-worker.ecommoda-dev.workers.dev', min: '6.2.1', label: 'جرد المخزون' },
 };
 
-const TOOL_VERSION = 'v1.38.2';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.39.0';                      // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const SHOP_HANDLE  = '6c7e1a-53';
 // ⚠️ `WOC_APP_ID` اتشالت في v1.32.0 — Worker الدخول المستقل (`WOC_WORKERS.auth`)
@@ -296,12 +309,19 @@ function wocApi(worker) {
   async function apiRequest(url, opts) {
     const secret = getSecret();
     if (!secret) { openSettings(); throw new Error('الإعدادات غير مكتملة — أدخل الـ WORKER SECRET'); }
+    // `cancelSignal` اختياري: إلغاء يدوي من الموظف (زرار «إلغاء» في تحميل الباركودات
+    // بجرد المخزون). مفيش مستهلك تاني — باقي الصفحات مابتبعتهوش فالسلوك زي ما هو.
+    const { cancelSignal, ...fetchOpts } = opts || {};
     let resp;
     const ctrl  = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), WOC_API_TIMEOUT_MS);
+    if (cancelSignal) {
+      if (cancelSignal.aborted) ctrl.abort();
+      else cancelSignal.addEventListener('abort', () => ctrl.abort(), { once: true });
+    }
     try {
       resp = await fetch(url, {
-        ...opts,
+        ...fetchOpts,
         signal: ctrl.signal,
         headers: {
           'Content-Type':  'application/json',
@@ -310,6 +330,9 @@ function wocApi(worker) {
         },
       });
     } catch (e) {
+      if (e.name === 'AbortError' && cancelSignal && cancelSignal.aborted) {
+        const ce = new Error('اتلغى'); ce.cancelled = true; throw ce;
+      }
       if (e.name === 'AbortError')
         throw new Error(`Worker ${worker.label} ما ردّش خلال ${WOC_API_TIMEOUT_MS / 1000} ثانية — راجع السجل قبل ما تعيد المحاولة، ممكن تكون العملية تمّت`);
       throw new Error(`تعذّر الوصول لـ Worker ${worker.label} — راجع الاتصال أو حالة الـ Worker: ${e.message}`);
@@ -330,7 +353,7 @@ function wocApi(worker) {
   }
 
   return {
-    apiGet:  (action, params = {}) => apiRequest(`${base}/?${new URLSearchParams({ action, ...params })}`, { method: 'GET' }),
+    apiGet:  (action, params = {}, cancelSignal) => apiRequest(`${base}/?${new URLSearchParams({ action, ...params })}`, { method: 'GET', cancelSignal }),
     apiPost: (action, body = {})   => apiRequest(`${base}/?action=${encodeURIComponent(action)}`, { method: 'POST', body: JSON.stringify(body) }),
     // ⚠️ الطابعة بترّوت بالـ path كمان (`/orders` · `/invoice` · `/track` ·
     //    `/logs`) — شكل تاريخي متساب **عمدًا**، مش غلط يتصلّح.
@@ -888,6 +911,21 @@ function playBeep(type) {
   try {
     if (!wocAudioCtx) wocAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const ctx = wocAudioCtx;
+    if (type === 'alarm') {
+      // 🔴 إنذار عالي ومميّز — ثلاث دقّات مربّعة (900→450). منقول بالحرف من
+      //    `Inventory-Audit-Updater` (جرد المخزون): بيتنادى على باركود مجهول أو متكرر
+      //    وقت المسح الجماعي، وبيقفل التنفيذ — لازم يتميّز عن نغمة الفشل العادية.
+      const t0 = ctx.currentTime;
+      for (let i = 0; i < 3; i++) {
+        const o = ctx.createOscillator(), g = ctx.createGain(), t = t0 + i * 0.28;
+        o.type = 'square'; o.connect(g); g.connect(ctx.destination);
+        o.frequency.setValueAtTime(900, t); o.frequency.setValueAtTime(450, t + 0.13);
+        g.gain.setValueAtTime(0.9, t); g.gain.setValueAtTime(0.9, t + 0.23);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.27);
+        o.start(t); o.stop(t + 0.27);
+      }
+      return;
+    }
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain); gain.connect(ctx.destination);
@@ -1117,6 +1155,9 @@ function showWorkerStale() {
 // ⚠️ الجلسة والكاش بيتمسحوا **حتى لو** نداء التسجيل فشل — الخروج فعل
 //    محلي، ومانسيبش موظف داخل عشان D1 ما ردّتش.
 async function doLogout() {
+  // خطّاف اختياري: صفحة عندها شغل جاري (جرد جماعي بيتنفّذ) ترجّع `false` من
+  // `onBeforeLogout()` فالخروج يتوقّف. الخروج وسط كتابة جماعية بيقطع الدفعة.
+  if (typeof onBeforeLogout === 'function' && onBeforeLogout() === false) return;
   const s = getSession();
   try {
     if (s?.username) {
@@ -1195,11 +1236,11 @@ function wocSharedModals() {
                  الحقل بيختفي أول ما الموظف يكتب حرف.
                  ⚠️ التعليق ده جوّه template literal — ممنوع أي backtick فيه. -->
             <input type="password" class="settings-input" id="cfgSecret" autocomplete="off">
-            <div class="settings-static">السر المشترك لمجموعة <code>warehouse_ops</code> — قيمة واحدة للست Workers</div>
+            <div class="settings-static">السر المشترك لمجموعة <code>warehouse_ops</code> — قيمة واحدة لكل الـ Workers</div>
           </div>
           <div class="settings-field">
             <label class="settings-label">الـ Workers</label>
-            <div class="settings-static">order-printer-worker · orders-packing-checker-worker · order-item-remover-worker · order-sku-barcode-printer-worker · bosta-orders-shipped-scanner · bosta-orders-returned-scanner</div>
+            <div class="settings-static">order-printer-worker · orders-packing-checker-worker · order-item-remover-worker · order-sku-barcode-printer-worker · bosta-orders-shipped-scanner · bosta-orders-returned-scanner · package-transfer-to-office-worker · package-transfer-to-warehouse-worker · inventory-audit-updater-worker</div>
           </div>
           <div class="settings-field">
             <label class="settings-label">فحص النظام</label>

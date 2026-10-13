@@ -2,13 +2,13 @@
 
 # مركز عمليات المخزن — Warehouse Operations Center (`Warehouse-Operations-Center`)
 
-![version](https://img.shields.io/badge/version-v1.38.2-blue)
+![version](https://img.shields.io/badge/version-v1.39.0-blue)
 
 **بتعمل إيه:** هب واحد لمحطة المخزن. الموظف بيدخل **مرة واحدة**، وبعدين
 بيتنقّل بين الطباعة والتغليف وحذف المنتج وتسليمات بوسطة وسكانر المرتجعات
 ورحلة الأوردر من غير ما يدخل تاني ومن غير ما يفتح تبويبات متفرقة.
 **مين بيستخدمها:** المخزن
-**الإصدار:** `v1.38.2` — **واحد للهب كله** (`TOOL_VERSION` في `shared/shell.js`)
+**الإصدار:** `v1.39.0` — **واحد للهب كله** (`TOOL_VERSION` في `shared/shell.js`)
 
 > 🔴 **الهب واجهة + Worker دخول بس — من v1.32.0.** الريبو ده بقى فيه
 > `index.js` و`wrangler.toml`، **بس نطاقهم محصور في الدخول والخروج بس**
@@ -106,7 +106,7 @@
 ```
 الواجهة : https://ecommoda-dev.github.io/Warehouse-Operations-Center/
 tool في D1 : warehouse_ops_center      ← login · logout بس
-مجموعة السر : warehouse_ops            ← ٩ Workers + الهب (عشرة مستهلكين)
+مجموعة السر : warehouse_ops            ← ١٠ Workers + الهب (أحد عشر مستهلكًا)
 مفتاح localStorage : warehouse_ops_worker_secret   ← Standards #39
 ```
 
@@ -124,8 +124,9 @@ tool في D1 : warehouse_ops_center      ← login · logout بس
 | `Bosta-Orders-Returned-Scanner.html` | **قسم مرتجعات بوسطة** — استلام راجع | `bosta-orders-returned-scanner` | **`3.4.0`** | M (1200) |
 | `Package-Transfer-To-Office.html` | **قسم تسليمات المكتب** — نقل الطرد من المخزن للمكتب | `package-transfer-to-office-worker` | **`1.1.0`** | M (1200) |
 | `Package-Transfer-To-Warehouse.html` | **قسم استلام المرتجعات** — رجوع الطرد الراجع للمخزن | `package-transfer-to-warehouse-worker` | **`1.0.0`** | M (1200) |
+| `Inventory-Audit-Updater.html` | **جرد المخزون** — جرد فردي · أولويات الجرد · جرد جماعي بالسكانر · سجل | `inventory-audit-updater-worker` | **`6.2.1`** | L (1400) |
 
-> ⚠️ **تسعة `min` مستقلة تمامًا** — مالهمش أي علاقة ببعض ولا بـ
+> ⚠️ **عشرة `min` مستقلة تمامًا** — مالهمش أي علاقة ببعض ولا بـ
 > `TOOL_VERSION`. `min` مايترفعش إلا لما الهب **يعتمد فعلاً** على حاجة جديدة
 > في الـ Worker ده (Standards #29). ترفيعه بلا سبب = تحذير كاذب على أي
 > rollback مشروع.
@@ -817,7 +818,8 @@ polling أعمى على أتقل endpoint في الستاك × عدد الأجه
 
 > 🔴 **`next` بيتفحص بـ regex قبل التحويل** (`NEXT_RE`). من غير الفحص
 > `?next=https://evil…` بيحوّل الموظف لبرّه الهب. الـ regex بيسمح باسم ملف
-> محلي + query بس.
+> محلي + query بس — `[A-Za-z0-9_-]+\.html` من v1.39.0 (كان `[a-z]+` فبيرفض
+> `Order-Printer.html` وأخواتها من v1.36.0 **في صمت**، والموظف بيرجع للرئيسية بدل صفحته).
 
 ## فخاخ كل صفحة — منقولة من الأدوات القديمة
 
@@ -2812,6 +2814,82 @@ metafields.custom.package_whereabouts_s1:'Warehouse'  →  ١٠٬٠٠٠ صف (15
 ⚠️ **والأحمر فاضل للي بيحذّر فعلاً** — نافذة الرفض (`.res-modal.fail`) وبادج
 الفشل، زي باقي الهب.
 
+### `Inventory-Audit-Updater.html` (جرد المخزون — **جديدة v1.39.0**)
+
+الأداة المستقلة `Inventory-Audit-Updater` اتحوّلت لصفحة في الهب. **الـ Worker
+(`inventory-audit-updater-worker`) ما اتلمسش ولا سطر** — التفاصيل الكاملة
+(الجرد الجماعي · §BULK · معادلة الرف · الـ CAS) في `CLAUDE.md` بتاع ريبو الأداة،
+واللي هنا هو **اللي اتغيّر بالدمج** زائد اللي الهب لازم يحميه.
+
+> 🔴 **الريبو المستقل لسه شغّال كنقطة رجوع** (على عكس `Bosta-Orders-Shipped-Scanner`
+> اللي اتحوّل Worker وبس) — بسره الخاص `stockaudit_worker_secret`. ⛔ متشيلوش قبل ما
+> التجربة الحيّة تنجح، وأي تعديل على منطق الأداة يتعمل **في الاتنين** لحد ساعتها (درس R1).
+> ⚠️ والاسم: `Inventory-Audit-Updater.html` = اسم ريبو الـ Worker بالحرف (قاعدة v1.34.0).
+
+**اللي اتغيّر بالدمج:**
+
+- **شاشة الدخول و§AUTH-JS و§IDLE-JS اتشالوا بالكامل** — الدخول في `index.html`،
+  والهوية من `sessionStorage` عبر `requireSession()` → `currentEmployee`.
+  🔴 `currentEmployee.username` هو اللي بيتبعت في `employee` بتاع كل كتابة
+  (`adjust_inventory` · `set_audit_date` · `bulk_adjust`) — وفيه بند في
+  `docs/audit-check.mjs` بيقرا **جسم الطلب** فعلاً.
+- 🔴 **الخروج التلقائي بعد ٦٠ دقيقة اتشال بقرار الهب** («مفيش انتهاء صلاحية
+  بالوقت»). **والبديل مش اختياري:** جلسة الجرد الجماعي كلها في الذاكرة، وفي الأداة
+  المستقلة اللي كان بيضيّعها هو الريفريش بس — في الهب «🏠 الرئيسية» و✕ بنفس
+  السهولة. فـ`onBeforeLogout()` (خطّاف اختياري في `doLogout` بالـ shell) بيرفض
+  الخروج أثناء `isUpdatingBulk` وبيسأل لو فيه مسحات ما اتنفّذتش، و`beforeunload`
+  بيسأل عند قفل التاب أو الانتقال. ⚠️ **و«🏠 الرئيسية» نفسها ما بقتش بتسأل بسؤالنا** (هي
+  `location.href` في الـ shell) — بتتغطّى بـ`beforeunload` (سؤال المتصفح العام) بس.
+- 🔴 **السر = `warehouse_ops_worker_secret` من الـ shell** (`stockaudit_worker_secret`
+  مابقاش بيتقري). `WORKER_SECRET` على الـ Worker لازم يبقى **بقيمة مجموعة
+  `warehouse_ops`** + Promote — من غيره الصفحة بتفتح وكل نداء `401`. (الخطوات اليدوية تحت.)
+- **`apiGet`/`apiPost` فوق `wocApi(WOC_WORKERS.audit)`** بدل `apiRequest` المحلية.
+  فرقين اتحافظ عليهم: ① `cancelSignal` (زرار «إلغاء» في تحميل الباركودات) —
+  **اتضاف للـ shell** كباراميتر ثالث اختياري لـ`apiGet`؛ ② `{ ok:false }` على HTTP 200
+  بيتعامل كخطأ (`_auditOk` في الصفحة، مش في الـ shell عشان مايتغيّرش سلوك باقي الأدوات).
+- **`shared/shell.js` اتعدّل ٤ تعديلات** (كلها تراجعية-آمنة): `WOC_WORKERS.audit` ·
+  `cancelSignal` في `wocApi` · نغمة **`alarm`** في `playBeep` (الأداة بتنادي
+  `playBeep('alarm')` على باركود مجهول/متكرر في الجماعي — بتقفل التنفيذ فلازم تتميّز) ·
+  خطّاف `onBeforeLogout`. و`shell.css` اتزوّد بـ`--yellow-light` · `--red-lighter/-darker/-darkest`
+  · `--th-*` · `--td-*` (توكنز الصفحة اللي مالهاش مقابل — كتلة التوكنز في الـ shell بس).
+- **فلتر الموظف في تاب السجل بقى ليه نداء خاص (`loadLogEmployees`)** من `get_employees`
+  على Worker الأداة — كان أثر جانبي لـ`loadEmployeesList` بتاعة شاشة الدخول (نفس بند
+  `Order-Item-Remover.html` بالحرف). فشله مايوقّفش السجل.
+- **توكنز الهب هي المعتمدة:** النص الثانوي `#6b7280` (كان `#4b5563` في الأداة المستقلة)،
+  وشارة P2 اتثبّتت على `--orange-dark` لأن `--orange` في الـ shell أفتح (`#ea580c`) وكان
+  هيخسّر التباين على `--orange-light`. و`--danger` (متغيّر ما كانش معرّف أصلاً، وكان
+  شغّال بفضل fallback بـhex حرفي) بقى `--red`.
+- 🟡 **دوال التوقيت (`formatDateTime` · `formatDate` · `formatTimeOnly` · `*ForExport`) مكرّرة
+  في الصفحة عن قصد** وبتغلب نسخ الـ shell (قاعدة الأسبقية). السبب: نسخة الأداة
+  على `Intl` + `Africa/Cairo` (صح مع التوقيت الصيفي)، ونسخة الـ shell **إزاحة ثابتة +٣**
+  (`toCairo`) — غلط ساعة بعد انتهاء التوقيت الصيفي (29-10-2026 حسب تعليق `CONFIG` في الأداة).
+  وتنسيق التصدير مختلف (`DD/MM/YYYY` هنا · `DD-MM-YYYY` في الـ shell). ⚠️ **ده مش حل — ده
+  عزل:** باقي الهب لسه على الإزاحة الثابتة (بند مفتوح تحت).
+- **مفيش `--container-max` في الصفحة** — Tier L (1400px) = افتراضي الـ shell، زي ما كانت الأداة.
+- **المربع في «أخرى» مش «أدوات»** (قرار مؤقت — محتاج تأكيد أحمد): الأداة مالهاش طابور فمحتاجة
+  مربع (قاعدة «أي أداة مالهاش صف طابور لازم يفضل لها مربع»)، وبتتعمل على الرف في وقت لوحده مش وسط أوردر.
+  ⚠️ بس هي **بتكتب** (تعديل رصيد على شوبيفاي) — لو اتنقلت لـ«أدوات» بتاخد صف تالت (مش زوج الشحنة).
+
+**فخاخ بتفضل من الأداة (ملخّص — التفاصيل في ريبوها):**
+
+- 🔴 **الأرقام بتتقرا لحظة المقارنة (`bulk_compare`) مش لحظة الفهرس** — الصف اللي ما اتقارنش
+  بعلامة «؟» ومقفول. ⛔ ممنوع أي تعديل في الصفحة يخلّي رقم الفهرس يتحسب أساس تنفيذ.
+- 🔴 **الكتابة الجماعية مطلقة بـCAS** (`inventorySetQuantities` + `changeFromQuantity`)؛ الفردية
+  نسبية (`inventoryAdjustQuantities`) و**إعادة تنفيذها بتضاعفها** — نتيجة `warning` معناها «متعيدش».
+- 🔴 **`getShelfBreakdown` (الجماعي) و`getUnfulfilledOrders` (الفردي) توأم في الـ Worker** — أي تعديل
+  على منطق التغليف يتعمل في الاتنين.
+- ⚠️ **الموقوف (`custom.suspended = true`) مش موجود في الأداة** — بيتفلتر في الـ Worker (`min = 6.2.1`).
+- ⚠️ **جلسة الجماعي في الذاكرة** — الريفريش بيضيّعها (مقصود). تفضيل عرض الأعمدة (`stockaudit_col_widths_*_v*`)
+  هو **الاستثناء الوحيد** في `localStorage` غير السر — تفضيل واجهة مش هوية (ارفع `_v` لو الأعمدة اتغيّرت).
+
+**D1:** الأداة بتكتب تحت `tool = inventory_audit` · `type = ok | adjustment` (الجماعي بنفس القيم +
+`extra.mode = 'bulk'`) — **صفر قيمة جديدة**. صفوف الدخول/الخروج بقت تحت `warehouse_ops_center`
+(الهب)، والـ Worker لسه عنده `login`/`logout` تحت `inventory_audit` للأداة المستقلة بس.
+
+**الخطوات اليدوية — حاجزة (الصفحة نفسها بتفتح من غيرها بس كل نداء `401`):**
+`WORKER_SECRET` على `inventory-audit-updater-worker` = قيمة `warehouse_ops` → Promote.
+`?action=diag` بيثبّتها (البصمة القصيرة تطابق باقي الـ Workers) وحارس النسخة بيسمّي الأداة.
+
 ## `?order=` — التنقل بين الصفحات
 
 ```
@@ -2841,6 +2919,7 @@ Orders-Packing-Checker.html  →  Order-Printer.html?order=<num>&from=pack
 | **سكانر المرتجعات** | `get_config` · `diag` · `get_employees` · **`lookup` (POST)** · **`update` (POST)** · `get_logs*` |
 | **تسليمات المكتب** | `get_config` · `diag` · `get_employees` · **`get_ready_to_office`** · **`scan` (POST)** · `get_logs*` |
 | **استلام المرتجعات** | `get_config` · `diag` · `get_employees` · **`get_ready_to_warehouse`** · **`scan` (POST)** · `get_logs*` |
+| **جرد المخزون** | `get_config` · `diag` · `get_employees` (فلتر السجل بس) · `list_skus` · `lookup_barcode` · `get_details` · `get_audit_date` · `get_audit_priorities` · **`get_bulk_index`** · **`bulk_compare` (POST)** · **`bulk_adjust` (POST)** · **`adjust_inventory` (POST)** · **`set_audit_date` (POST)** · `get_logs*` — **والهب مابينادش `check_employee`/`register_pin`/`verify_employee`/`log_logout` عليه** |
 
 > ⚠️ **الطابعة بترّوت بالـ path كمان** (`/orders` · `/invoice` · `/track` ·
 > `/logs`) — شكل تاريخي متساب **عمدًا**، مش غلط يتصلّح. عشان كده `wocApi`
@@ -3008,10 +3087,10 @@ localStorage.setItem('warehouse_ops_worker_secret',
 ## 🔴 فحص CSS بـ parser — إلزامي، وgrep مش بديل عنه
 
 ```bash
-node docs/css-check.js shared/shell.css index.html Order-Printer.html Orders-Packing-Checker.html Order-Item-Remover.html stats.html Order-SKU-Barcode-Printer.html Bosta-Orders-Shipped-Scanner.html Bosta-Orders-Returned-Scanner.html Package-Transfer-To-Office.html Package-Transfer-To-Warehouse.html
+node docs/css-check.js shared/shell.css index.html Order-Printer.html Orders-Packing-Checker.html Order-Item-Remover.html stats.html Order-SKU-Barcode-Printer.html Bosta-Orders-Shipped-Scanner.html Bosta-Orders-Returned-Scanner.html Package-Transfer-To-Office.html Package-Transfer-To-Warehouse.html Inventory-Audit-Updater.html
 ```
 
-## 🔴 فحص متصفح فعلي — أربع ملفات
+## 🔴 فحص متصفح فعلي — سبع ملفات
 
 ```bash
 npm i playwright postcss jsbarcode@3.11.6 --no-save
@@ -3021,6 +3100,7 @@ node docs/pack-check.mjs             # Orders-Packing-Checker.html        — ٤
 node docs/scanners-check.mjs        # bosta-shipped + bosta-returned — ٧٩ بند (جديد v1.22.0)
 node docs/office-check.mjs           # Package-Transfer-To-Office.html — ٦٤ بند (جديد v1.26.0)
 node docs/warehouse-check.mjs        # Package-Transfer-To-Warehouse.html — ٨٣ بند (جديد v1.28.0)
+node docs/audit-check.mjs            # Inventory-Audit-Updater.html — ٧٥ بند (جديد v1.39.0)
 ```
 
 ## 🔴 فحص توأم مهلة السكانر — إلزامي مع أي تعديل على المهلة
@@ -3310,6 +3390,19 @@ bash docs/label-twin-check.sh   # Orders-Packing-Checker.html ⟷ Order-SKU-Barc
   `warehouse_ops` في `ecommoda-constants` → `references/secret-groups.md`**
   (قاعدة ٢) — المجموعة بقت تسعة Workers + الهب. عضو غير مسجّل = تدوير السر
   مستقبلاً بيتكسر بصمت.
+
+- 🔴 **`inventory-audit-updater-worker` لسه بسره الخاص — حاجز للصفحة الجديدة (v1.39.0).**
+  المطلوب: `WORKER_SECRET` = قيمة مجموعة `warehouse_ops` → **Promote** (من Settings → Variables
+  and Secrets). **من غيره** `Inventory-Audit-Updater.html` بتفتح وكل نداء فيها `401`.
+  وبعدها **تسجيل انضمامه للمجموعة** في `ecommoda-constants` → `references/secret-groups.md`
+  (بقت **عشرة Workers** + الهب). ⚠️ **ولسه الأداة المستقلة بتقرا `stockaudit_worker_secret`**
+  بالسر القديم — لو السر اتغيّر على الـ Worker لازم القيمة الجديدة تتلزق هناك كمان طول ما هي نقطة رجوع.
+
+- 🟡 **التوقيت الصيفي: `toCairo` في `shared/shell.js` إزاحة ثابتة `+٣`** — غلط ساعة بعد انتهاء التوقيت
+  الصيفي (**29-10-2026** حسب تعليق `CONFIG` في `Inventory-Audit-Updater/index.html`). أثره على كل بادج
+  «منذ كام» وعمر الأوردر وحدود اليوم في `stats.html` وفلاتر السجل. جرد المخزون عازلة نفسها (دوالها
+  على `Intl`). الحل المقترح: `toCairo` على `Intl` + `Africa/Cairo` في الـ shell مرة واحدة (درس R1) —
+  **تمريرة منفصلة وقرار لأحمد.**
 
 - 🔴 **إنشاء `package-transfer-to-warehouse-worker` وربطه وتسريره — حاجز
   بالكامل (جديد v1.28.0).** الأداة الجديدة Worker مالوش أي وجود على
@@ -3680,6 +3773,8 @@ v3.5.0 وv3.6.0)** ·
 مراجعة `print`/`pack`/`remove`/`stats` على html-builder v6.6.0
 
 ---
+
+آخر تحديث: 13-10-2026 — v1.39.0 (📋 **«جرد المخزون» دخلت الهب** — `Inventory-Audit-Updater.html` (القسم فوق): شاشة الدخول والخروج التلقائي اتشالوا، السر = سر المجموعة، `cancelSignal` + نغمة `alarm` + خطّاف `onBeforeLogout` اتضافوا للـ shell، ومربع في «أخرى». 🔴 **ومعاه إصلاح:** فحص `?next=` كان `[a-z]+` فبيرفض كل الصفحات المسمّاة بحروف كبيرة وشرطة (من v1.36.0) — اتصلّح. **حاجز:** `WORKER_SECRET` على `inventory-audit-updater-worker` = سر `warehouse_ops` + Promote. `docs/audit-check.mjs` بـ٧٥ بند.)
 
 آخر تحديث: 13-10-2026 — v1.38.2 (🎛️ **الـ chips بقوا شريط مقسّم واحد في شريط إدخال باركود SKU** (§ENTRY-SEG) — الجزء المفعّل مصمت بلونه، الحقل ٥٢px، والـ pill فوق زرار الإضافة · +٨ بنود. واجهة بحتة.)
 
