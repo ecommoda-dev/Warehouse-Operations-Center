@@ -1241,7 +1241,7 @@ async function fetchDoneCountsFromLogs(key) {
   const today = cairoDayStr(new Date());
   const yest  = wocAddDays(today, -1);
   const dateFrom = wocAddDays(yest, -1);                           // يوم UTC زيادة
-  const startMs  = Date.parse(`${yest}T00:00:00Z`) - 3 * 3600 * 1000;   // بداية يوم القاهرة لأمس
+  const startMs  = cairoDayStartMs(yest);   // بداية يوم القاهرة لأمس (Intl — مش +٣ ثابتة)
   const seen = { [today]: new Set(), [yest]: new Set() };
   for (let page = 0; page < DONE_MAX_PAGES; page++) {
     const res = await api.apiGet('get_logs', {

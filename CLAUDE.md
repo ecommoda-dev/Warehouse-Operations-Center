@@ -3454,11 +3454,7 @@ bash docs/label-twin-check.sh   # Orders-Packing-Checker.html ⟷ Order-SKU-Barc
   (بقت **عشرة Workers** + الهب). ⚠️ **ولسه الأداة المستقلة بتقرا `stockaudit_worker_secret`**
   بالسر القديم — لو السر اتغيّر على الـ Worker لازم القيمة الجديدة تتلزق هناك كمان طول ما هي نقطة رجوع.
 
-- 🟡 **التوقيت الصيفي: `toCairo` في `shared/shell.js` إزاحة ثابتة `+٣`** — غلط ساعة بعد انتهاء التوقيت
-  الصيفي (**29-10-2026** حسب تعليق `CONFIG` في `Inventory-Audit-Updater/index.html`). أثره على كل بادج
-  «منذ كام» وعمر الأوردر وحدود اليوم في `stats.html` وفلاتر السجل. جرد المخزون عازلة نفسها (دوالها
-  على `Intl`). الحل المقترح: `toCairo` على `Intl` + `Africa/Cairo` في الـ shell مرة واحدة (درس R1) —
-  **تمريرة منفصلة وقرار لأحمد.**
+- ✅ **التوقيت الصيفي اتصلّح في الواجهة (21-10-2026):** `toCairo` في `shared/shell.js` بقت محسوبة بـ`Intl` على `Africa/Cairo` (`cairoOffsetMs`)، و`cairoDayStartMs` بدل `T00:00:00Z - ٣ ساعات` في `index.html` (شريط «خلص») و`stats.html`، و`cairoNow` في `Bosta-Orders-Returned-Scanner.html`. اتقاس على 29-10-2026 (قبل: +٣، بعد: +٢). 🔴 **باقي مفتوح:** الـ Workers اللي بتعدّ «خلص اليوم» بـ`date(timestamp,'+3 hours')` (ريبوهات الطباعة والتغليف وتسليمات بوسطة) ودوال التاريخ المحلية في `Inventory-Audit-Updater.html` (دي على `Intl` أصلًا).
 
 - 🔴 **إنشاء `package-transfer-to-warehouse-worker` وربطه وتسريره — حاجز
   بالكامل (جديد v1.28.0).** الأداة الجديدة Worker مالوش أي وجود على

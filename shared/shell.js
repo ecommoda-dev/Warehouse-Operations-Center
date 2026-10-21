@@ -382,8 +382,42 @@ function wocLoadingHTML(msg, small) {
     + '<div class="woc-load-title">' + esc(msg || WOC_LOADING_MSG) + '</div></div>';
 }
 
-// ── Date/Time — القاهرة (UTC+3) · datetime-format.md ──────────
-function toCairo(iso) { return new Date(new Date(iso).getTime() + 3 * 60 * 60 * 1000); }
+// ── Date/Time — القاهرة · datetime-format.md ──────────────────
+//
+// 🔴 **الإزاحة محسوبة بـ`Intl` على `Africa/Cairo` — مش `+3` ثابتة.** مصر بترجع
+//    UTC+2 يوم 29-10-2026، والإزاحة الثابتة كانت هتغلّط كل وقت معروض وكل
+//    «منذ كام» وكل حد يوم بساعة **من غير أي خطأ ظاهر**. (نفس نهج هب الشحن.)
+// ⚠️ `toCairo` اتساب بنفس توقيعه وشكل رده (`Date` تتقرا بـ`getUTC*`) عشان
+//    ~٢٠ مستدعي في الصفحات يفضلوا شغّالين بلا تعديل. تاريخ باظ بيرجّع
+//    `Invalid Date` زي زمان (والمستدعي بيعرض اللي كان بيعرضه).
+const _wocCairoFmt = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Africa/Cairo', hourCycle: 'h23',
+  year: 'numeric', month: '2-digit', day: '2-digit',
+  hour: '2-digit', minute: '2-digit', second: '2-digit',
+});
+
+// فرق القاهرة عن UTC بالملّي ثانية عند اللحظة `t` (ms) — ٧٢٠٠٠٠٠ شتاءً · ١٠٨٠٠٠٠٠ صيفًا.
+function cairoOffsetMs(t) {
+  const o = {};
+  for (const p of _wocCairoFmt.formatToParts(new Date(t))) if (p.type !== 'literal') o[p.type] = p.value;
+  const h = o.hour === '24' ? 0 : +o.hour;     // حارس: بعض المحركات بترجّع 24
+  const wall = Date.UTC(+o.year, +o.month - 1, +o.day, h, +o.minute, +o.second);
+  return wall - Math.floor(t / 1000) * 1000;
+}
+
+function toCairo(iso) {
+  const t = new Date(iso).getTime();
+  if (isNaN(t)) return new Date(NaN);
+  return new Date(t + cairoOffsetMs(t));
+}
+
+// بداية يوم القاهرة (`YYYY-MM-DD`) كلحظة UTC بالملّي — بدل `T00:00:00Z - ٣ ساعات`.
+function cairoDayStartMs(dayStr) {
+  const guess = Date.parse(`${dayStr}T00:00:00Z`);
+  if (isNaN(guess)) return NaN;
+  const t0 = guess - cairoOffsetMs(guess);
+  return guess - cairoOffsetMs(t0);
+}
 
 function formatDateTime(iso) {
   const d = toCairo(iso), pad = n => String(n).padStart(2, '0');
