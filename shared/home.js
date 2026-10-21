@@ -116,8 +116,19 @@ function homeToolHTML(t) {
       </a>`;
 }
 
+// 🎨 §HOME-TILES — الملخّص وهو مطوي = **بلاطات موصولة في كبسولة واحدة** (قرار أحمد 22-10-2026 من مختبر
+//    الأقسام المطوية): الطابور = الرقم فوق والاسم تحته وشارة العمر (بلون عمرها) تحت، والباقي (أداة بلا عدّاد)
+//    = أيقونة + الاسم. 🔴 **كل بلاطة لينك** لصفحة الأداة مباشرة — الضغطة عليها مابتفتحش القسم (راجع الـ click تحت).
+const TILE_TC = { 'ico-blue': 'tc-blue', 'ico-green': 'tc-green', 'ico-amber': 'tc-amber', 'ico-purple': 'tc-purple', 'tool-danger': 'tc-red' };
+function homeToolTilesHTML(tools) {
+  return `<span class="eco-sumg">${tools.map(t => {
+    const tc = TILE_TC[t.theme] || TILE_TC[t.ico] || 'tc-blue';
+    return `<a class="eco-sm ${tc}" href="${esc(t.href)}" title="${esc(t.name)}"><span class="eco-sm-ic">${t.svg}</span><span class="eco-sm-n">${esc(t.name)}</span></a>`;
+  }).join('')}</span>`;
+}
+
 function homeSectionHTML(s) {
-  const sum = !!s.summary;
+  const sum = true;   // 🎨 كل الأقسام ليها كبسولات وهي مطوية (بلاطات) — الطوابير بأعدادها، والأدوات بأسمائها
   const body = s.queues
     ? `<div class="eco-rows">${s.queues.map(homeQueueRowHTML).join('')}\n    </div>`
     : `<div class="eco-tools-grid">${(s.tools || []).map(homeToolHTML).join('')}\n    </div>`;
@@ -130,7 +141,7 @@ function homeSectionHTML(s) {
         <div class="eco-sec-tx">
           <div class="eco-home-sec-title">${esc(s.title)}</div>
           <div class="eco-home-sec-sub">${esc(s.sub)}</div>${sum ? `
-          <div class="eco-sum" id="sum${s.id}"></div>` : ''}
+          <div class="eco-sum" id="sum${s.id}">${s.tools ? homeToolTilesHTML(s.tools) : ''}</div>` : ''}
         </div>
       </div>
       <i class="eco-sec-ln" aria-hidden="true"></i>
@@ -153,7 +164,7 @@ function ecoHomeMount(root = document.getElementById('homeRoot')) {
       HOME_QUEUES[key] = { ...d, ids: homeIds(key) };
       if (!d.link) homeQ[key] = { at: null, loading: false };
     }
-    if (s.summary && s.queues) HOME_SECS['sum' + s.id] = s.queues.filter(k => !ECO_HOME.queues[k].link);
+    if (s.queues) HOME_SECS['sum' + s.id] = s.queues.slice();   // 🎨 بما فيهم صفوف «فتح الأداة» (بلاطة بلا رقم)
   }
   root.innerHTML = ECO_HOME.sections.map(homeSectionHTML).join('');
 }
@@ -240,13 +251,28 @@ function setCount(key, r) {
   c.classList.remove('pending', 'failed');
   // 🔴 `ch.row` (اختياري) بيحط المربع في سطر لوحده — «In-Return» تحت مربعات المحاولات. من غيره
   //    كل المربعات في سطر واحد بيلفّ لوحده.
-  const chipHtml = ch => `<span class="eco-chip ${esc(ch.cls)}">${esc(ch.label)} <b>${ch.n}</b></span>`;
+  // 🎨 `ch.grp` (اختياري) = المربع من «مجموعة موصولة» (§HOME-CHIPS · قرار أحمد 22-10-2026): كل مربعات
+  //    `grp` في السطر بتتلزق في كبسولة واحدة بفواصل (الرقم يمين والاسم يسار)، والصفر باهت. المربعات
+  //    بلا `grp` بتفضل كبسولات لوحدها جنبها. 🔴 الألوان من نفس `cls` (`qc-*` · `chip-ch-*`) — مصدر واحد.
+  // 🎨 `ch.att` (اختياري · `{ n, title }`) = بادج ⏳ على المربع (مثال: «في انتظار الرفع» على بوسطة) —
+  //    ⚠️ ما بيبهتش حتى والمربع صفر: ده تحذير، وتبهيته بيخبّيه لما يتحتاج.
+  const ATT_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12M6 21h12"/><path d="M7 3c0 5 5 6 5 9s-5 4-5 9M17 3c0 5-5 6-5 9s5 4 5 9"/></svg>';
+  const attHtml = ch => ch.att && ch.att.n
+    ? `<span class="eco-att" title="${esc(ch.att.title)}" aria-label="${esc(ch.att.title)}: ${ch.att.n}">${ATT_SVG}${ch.att.n}</span>` : '';
+  const chipHtml = ch => ch.grp
+    ? `<span class="eco-chip ${esc(ch.cls)}${ch.n ? '' : ' z0'}"><b>${ch.n}</b><span>${esc(ch.label)}</span>${attHtml(ch)}</span>`
+    : `<span class="eco-chip ${esc(ch.cls)}">${esc(ch.label)} <b>${ch.n}</b></span>`;
+  const chipsHtml = list => {
+    const g = list.filter(c => c.grp);
+    return (g.length ? `<span class="eco-cgroup">${g.map(chipHtml).join('')}</span>` : '')
+      + list.filter(c => !c.grp).map(chipHtml).join('');
+  };
   const chipRows = {};
   (r.chips || []).forEach(ch => (chipRows[ch.row || 0] = chipRows[ch.row || 0] || []).push(ch));
   const rowKeys = Object.keys(chipRows).sort((a, b) => a - b);
   document.getElementById(ids.chips).innerHTML = rowKeys.length > 1
-    ? rowKeys.map(k => `<div class="eco-chips-line">${chipRows[k].map(chipHtml).join('')}</div>`).join('')
-    : (r.chips || []).map(chipHtml).join('');
+    ? rowKeys.map(k => `<div class="eco-chips-line">${chipsHtml(chipRows[k])}</div>`).join('')
+    : chipsHtml(r.chips || []);
   // ⚠️ تحذير «القايمة مقطوعة» — ده عن الطابور مش عن الفلوس (الفلوس اتشالت من الرئيسية).
   document.getElementById(ids.money).innerHTML = r.truncated
     ? `<span class="eco-chip qc-flag">⚠️ القايمة مقطوعة — فيه أكتر من المعروض</span>` : '';
@@ -404,18 +430,21 @@ function renderSummary(now) {
   Object.keys(HOME_SECS).forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
-    el.innerHTML = HOME_SECS[id].map(key => {
-      const q = homeQ[key], row = document.getElementById(HOME_QUEUES[key].ids.row);
+    const tiles = HOME_SECS[id].map(key => {
+      const d = HOME_QUEUES[key], q = homeQ[key];
+      // صف بلا عدّاد (`link`): بلاطة أيقونة + اسم زي الأدوات
+      if (d.link) return `<a class="eco-sm ${esc(d.idCls)}" href="${esc(d.href)}" title="${esc(d.name)}"><span class="eco-sm-ic">${d.svg}</span><span class="eco-sm-n">${esc(d.name)}</span></a>`;
+      const row = document.getElementById(d.ids.row);
       if (!row) return '';
-      const name = row.querySelector('.eco-card-name').textContent.trim();
-      const idCls = [...row.classList].find(c => c.startsWith('id-')) || '';
       const lvl = q.at ? agoInfo(q.at, now).cls.replace('ago-', '') : 'none';
       const mins = q.at ? Math.max(0, Math.floor((now - q.at.getTime()) / 60000)) : 0;
       const failed = !!row.querySelector('.eco-count.failed');
       const n = failed ? 'تعذّر' : typeof q.total === 'number' ? String(q.total) : '—';
       const cap = q.loading ? 'جاري التحديث…' : q.at ? sumAgeText(mins) : 'لسه ما اتحدّثش';
-      return `<span class="eco-smw"><span class="eco-sm ${idCls}"><span class="eco-sm-n">${esc(name)}</span><em>${esc(n)}</em></span><i class="eco-smcap age-${lvl}">${esc(cap)}</i></span>`;
+      const zero = n === '0' ? ' z0' : '';
+      return `<a class="eco-sm ${esc(d.idCls)}${zero}" href="${esc(d.href)}" title="${esc(d.name)}"><b class="eco-sm-nn">${esc(n)}</b><span class="eco-sm-n">${esc(d.name)}</span><i class="eco-smcap age-${lvl}">${esc(cap)}</i></a>`;
     }).join('');
+    el.innerHTML = tiles ? `<span class="eco-sumg">${tiles}</span>` : '';
   });
 }
 function renderFreshness(now = Date.now()) {
@@ -462,6 +491,7 @@ function toggleHomeSec(h) {
   h.setAttribute('aria-expanded', String(!c));
 }
 document.addEventListener('click', e => {
+  if (e.target.closest && e.target.closest('.eco-sm')) return;   // 🎨 بلاطة الملخّص = لينك للأداة — مايفتحش/يقفلش القسم
   const h = e.target.closest && e.target.closest('[data-sec-toggle]');
   if (h) { toggleHomeSec(h); return; }
   // زرار «تحديث» جوّه الصف (الصف نفسه لينك) — `preventDefault` عشان مايفتحش الصفحة.
@@ -470,6 +500,7 @@ document.addEventListener('click', e => {
   if (b) { e.preventDefault(); e.stopPropagation(); loadQueue(b.dataset.refresh, false); }
 });
 document.addEventListener('keydown', e => {
+  if (e.target.closest && e.target.closest('.eco-sm')) return;   // Enter على البلاطة = فتح الأداة
   const h = e.target.closest && e.target.closest('[data-sec-toggle]');
   if (h && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggleHomeSec(h); }
 });

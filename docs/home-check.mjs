@@ -224,24 +224,35 @@ console.log('① شريط «خلص» — الأرقام والتعريفات');
   await ctx.close();
 }
 
-console.log('② chips — منفصلة (زي الشحن · قرار أحمد 22-10-2026)');
+console.log('② chips — «مجموعة موصولة» (G · قرار أحمد 22-10-2026 من مختبر الـ chips)');
+// نص كل خانة داخل الكبسولة: الرقم ثم الاسم (من غير بادج الانتظار) + هل هي باهتة
+const segs = (page, id) => page.locator(`#${id} .eco-cgroup .eco-chip`).evaluateAll(els => els.map(e => ({
+  t: e.querySelector('b').textContent + ' ' + e.querySelector('span:not(.eco-att)').textContent.trim(),
+  dim: Number(getComputedStyle(e.querySelector('b')).opacity) < 0.6, att: e.querySelector('.eco-att')?.textContent.trim() || null,
+})));
 {
   const { page, ctx } = await openHome({});
-  const cp = page.locator('#chipsPrint .eco-chip');
-  const texts = (await cp.allTextContents()).map(s => s.replace(/\s+/g, ' ').trim());
-  is(await page.locator('#chipsPrint .eco-cgroup, #chipsPrint .eco-seg').count() === 0, '⛔ مفيش كبسولة موصولة ولا خانات (اتشالت)');
-  is(texts.slice(0, 3).join('|') === 'مناديب 3|بوسطة 1|شو روم 0', 'الطباعة: chips منفصلة بالترتيب الثابت (مناديب · بوسطة · شو روم)', texts.join('|'));
-  is(texts.some(s => s.includes('في انتظار الرفع على بوسطة') && s.endsWith('2')), 'chip «⏳ في انتظار الرفع على بوسطة» (٢) لوحده — بيظهر لما يكون فيه فعلاً', texts.join('|'));
-  is(await page.locator('#chipsPrint .eco-att').count() === 0, 'ومفيش بادج على خانة بوسطة (اتشال مع الكبسولة)');
-  const pk = (await page.locator('#chipsPack .eco-chip').allTextContents()).map(s => s.replace(/\s+/g, ' ').trim());
-  is(pk.join('|') === 'مناديب 2|بوسطة 1|شو روم 0', 'التغليف: نفس التقسيمة (٢ · ١ · ٠) chips منفصلة', pk.join('|'));
+  is(await page.locator('#chipsPrint .eco-cgroup').count() === 1, 'الطباعة: كبسولة موصولة واحدة');
+  const g = await segs(page, 'chipsPrint');
+  is(g.map(x => x.t).join('|') === '3 مناديب|1 بوسطة|0 شو روم', 'الطباعة: الخانات بالترتيب الثابت والرقم قبل الاسم (يمين → يسار)', g.map(x => x.t).join('|'));
+  is(g[2].dim && !g[0].dim && !g[1].dim, 'الصفر (شو روم) باهت والباقي لأ');
+  is(g[1].att === '2' && g[0].att === null, '🔴 «في انتظار الرفع على بوسطة» بادج ⏳ (٢) على خانة بوسطة بس', JSON.stringify(g));
+  is(await page.locator('#chipsPrint .eco-att').getAttribute('title') === 'في انتظار الرفع على بوسطة', 'والبادج بيقول معناه في الـ title');
+  is((await page.locator('#chipsPrint .eco-chip:not(.eco-cgroup .eco-chip)').count()) === 0, 'ولا مربع لوحده برّه الكبسولة (الانتظار بقى بادج)');
+  const pk = await segs(page, 'chipsPack');
+  is(pk.map(x => x.t).join('|') === '2 مناديب|1 بوسطة|0 شو روم', 'التغليف: نفس التقسيمة (٢ · ١ · ٠) في كبسولة موصولة', pk.map(x => x.t).join('|'));
+  const al = await page.locator('#chipsPrint').evaluate(e => getComputedStyle(e).justifyContent);
+  is(al === 'center', 'الـ chips في النص');
   await ctx.close();
 }
 {
-  // chip الانتظار بيظهر لما يكون فيه معلّق بس
+  // بادج الانتظار مايبهتش حتى وخانة بوسطة صفر (ده تحذير)
   const { page, ctx } = await openHome({ pendingOnly: true });
-  const texts = (await page.locator('#chipsPrint .eco-chip').allTextContents()).map(s => s.replace(/\s+/g, ' ').trim());
-  is(texts.some(s => s.includes('في انتظار الرفع على بوسطة')) && texts.some(s => s.startsWith('بوسطة 0')), 'بوسطة صفر + معلّق: الصفر ظاهر وchip الانتظار ظاهر', texts.join('|'));
+  const g = await segs(page, 'chipsPrint');
+  const bo = g.find(x => x.t.endsWith('بوسطة'));
+  is(bo && bo.t.startsWith('0 ') && bo.att === '2', 'بوسطة صفر + معلّق: الصفر ظاهر والبادج ⏳ على الخانة', JSON.stringify(g));
+  const attOp = await page.locator('#chipsPrint .eco-att').evaluate(e => { let o = 1; for (let n = e; n; n = n.parentElement) o *= Number(getComputedStyle(n).opacity); return o; });
+  is(attOp === 1, 'البادج مابيبهتش مع الصفر (بالورث كمان)', String(attOp));
   await ctx.close();
 }
 
@@ -348,7 +359,17 @@ console.log('⑦ التصميم الموحّد — الأقسام الخمسة �
      'الصفوف في أقسامها: (طباعة · تغليف) · (بوسطة · مكتب) · (رجوع للمخزن · مرتجعات بوسطة)', JSON.stringify(secs.map(s => s.rows)));
   is(secs[3].tools.join() === 'Order-Item-Remover.html,Order-SKU-Barcode-Printer.html' && secs[4].tools.join() === 'Inventory-Audit-Updater.html,stats.html',
      'الأدوات: مساعدة (عطلان · باركود) · أخرى (الجرد · الإحصائيات) — **كروت** مش pills', JSON.stringify([secs[3].tools, secs[4].tools]));
-  is(secs.every(s => s.open) && secs.slice(0, 3).every(s => s.sum) && !secs[3].sum && !secs[4].sum, 'كلها مفتوحة عند الفتح، وأقسام الطوابير بس ليها ملخّص مطوي');
+  is(secs.every(s => s.open && s.sum), 'كلها مفتوحة عند الفتح، وكلها ليها ملخّص مطوي (بلاطات — الأدوات كمان)');
+  // 🎨 المطوي: العنوان على اليمين في **كل** الأقسام (أقسام الأدوات كانت في النص) — طلب أحمد 22-10-2026
+  for (const id of ['secPrep', 'secHelper', 'secOther']) await page.locator(`#${id} [data-sec-toggle] .eco-sec-chev`).click();
+  await page.waitForTimeout(400);
+  if (process.env.ECO_SHOT3) await page.screenshot({ path: process.env.ECO_SHOT3, fullPage: true });
+  const pos = await page.evaluate(() => ['secPrep', 'secHelper', 'secOther'].map(id => {
+    const h = document.querySelector(`#${id} .eco-home-sec-hd`).getBoundingClientRect(), t = document.querySelector(`#${id} .eco-home-sec-ico`).getBoundingClientRect();
+    return Math.round(h.right - t.right);
+  }));
+  is(pos.every(x => Math.abs(x - pos[0]) <= 2), '🎨 المطوي: أيقونة/عنوان كل الأقسام على اليمين بنفس البُعد (الأدوات مش في النص)', pos.join(','));
+  for (const id of ['secPrep', 'secHelper', 'secOther']) await page.locator(`#${id} [data-sec-toggle] .eco-sec-chev`).click();
   // مرتجعات بوسطة = صف بلا طابور
   const link = await page.evaluate(() => { const r = document.getElementById('rowBostaReturns');
     return { tag: r.tagName, href: r.getAttribute('href'), link: r.classList.contains('is-link'), num: r.querySelector('.eco-count').textContent.trim(),
@@ -371,9 +392,9 @@ console.log('⑦ التصميم الموحّد — الأقسام الخمسة �
   const lines = await page.evaluate(() => [...document.querySelectorAll('.eco-home-sec')].every(s => { const c = getComputedStyle(s.querySelector('.eco-home-sec-title')).color;
     return [...s.querySelectorAll('.eco-sec-ln')].every(l => getComputedStyle(l).backgroundColor === c); }));
   is(lines, 'خطين العنوان على الجانبين بنفس لون العنوان');
-  await page.click('#secDeliver .eco-home-sec-hd'); await page.waitForTimeout(450);
+  await page.click('#secDeliver .eco-sec-chev'); await page.waitForTimeout(450);
   const fr = await page.evaluate(() => { const hd = document.querySelector('#secDeliver .eco-home-sec-hd'); return { bc: getComputedStyle(hd).borderTopColor, bw: getComputedStyle(hd).borderTopWidth,
-    tc: getComputedStyle(document.querySelector('#secDeliver .eco-home-sec-title')).color, pills: [...document.querySelectorAll('#secDeliver .eco-smw')].map(w => w.querySelector('.eco-sm-n').textContent.trim()) }; });
+    tc: getComputedStyle(document.querySelector('#secDeliver .eco-home-sec-title')).color, pills: [...document.querySelectorAll('#secDeliver .eco-sm')].map(w => w.querySelector('.eco-sm-n').textContent.trim()) }; });
   is(fr.bc === fr.tc && parseFloat(fr.bw) >= 2 && fr.pills.join('|') === 'جاهز لتسليم بوسطة|جاهز للتسليم للمكتب', '🎨 المطوي: إطار بنفس لون العنوان + ملخّص بأسماء الصفوف', JSON.stringify(fr));
   // عطلان = الثيم الأحمر الوحيد
   const dng = await page.evaluate(() => [...document.querySelectorAll('.eco-tool.tool-danger')].map(a => a.getAttribute('href')));
