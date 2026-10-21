@@ -501,7 +501,17 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.40.1</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.41.0</span>
+          <span class="cl-ver-date">21-10-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>⚡ <b>«اللي خلص النهارده / أمس» بقى بييجي جاهز من الـ Workers</b> (<code>get_done_counts</code>) بدل ما الشاشة تصفّح السجل بنفسها — أسرع وأخف على الشبكة. لو Worker لسه ما اتحدّثش، الشاشة بترجع للطريقة القديمة بنفس الأرقام.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge">v1.40.1</span>
           <span class="cl-ver-date">21-10-2026</span>
         </div>
         <ul class="cl-items">
@@ -1208,7 +1218,24 @@ function donePickShip(e) {
   return e.type === 'update' && ['success', 'warning'].includes(doneExtra(e).result);
 }
 
+// §HOME-DONE — المصدر الأساسي: العدّ جاهز من الـ Worker (get_done_counts · v1.41.0).
+// ⚠️ مفيش ترفيع `min` عن قصد (Standards #29): لو الـ Worker لسه ما اتعملش له Promote أو
+// الرد مش بالشكل المتوقع (أو يوم القاهرة عند الـ Worker غير عند الجهاز)، بنرجع لتصفيح
+// get_logs القديم — نفس الأرقام بتكلفة أعلى، مش رقم غلط ومش «تعذّر» بلا لزوم.
 async function fetchDoneCounts(key) {
+  const d = HOME_QUEUES[key].done;
+  try {
+    const res = await wocApi(WOC_WORKERS[d.worker]).apiGet('get_done_counts');
+    const c = res && res.counts;
+    if (res && res.ok !== false && c && Number.isInteger(c.today) && Number.isInteger(c.yesterday)
+        && res.today === cairoDayStr(new Date())) {
+      return { today: c.today, yest: c.yesterday };
+    }
+  } catch { /* Worker قديم / تعذّر — الاحتياطي تحت */ }
+  return fetchDoneCountsFromLogs(key);
+}
+
+async function fetchDoneCountsFromLogs(key) {
   const d = HOME_QUEUES[key].done;
   const api = wocApi(WOC_WORKERS[d.worker]);
   const today = cairoDayStr(new Date());
