@@ -440,9 +440,10 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .woc-chip.chip-ch-pending{background:var(--amber-light);color:var(--amber-dark);border-color:var(--amber-border)}
 .woc-chip.chip-ch-hold{background:var(--surface-2);color:var(--text-secondary);border-color:var(--border-strong)}
 
-/* ══ §HOME-CHIPS — «مجموعة موصولة بخانات رقم» (v1.40.0 · قرار أحمد) ══
+/* ══ §HOME-CHIPS — «مجموعة موصولة» (G) (v1.40.1 · قرار أحمد) ══
    المجموعات (مناديب · بوسطة · شو روم) في كبسولة واحدة بفواصل، وكل مجموعة
-   خانة رقم مصمتة بلون المجموعة + اسمها. الرقم على اليمين والاسم على اليسار
+   بخلفية فاتحة بلون المجموعة ورقمها بخط بلونها (**مفيش خانة رقم مصمتة** — دي
+   كانت GS في v1.40.0 واتشالت). الرقم على اليمين والاسم على اليسار
    (ترتيب الـ DOM: الرقم الأول — RTL). مقاس صغير، والصفر **باهت**.
    ⚠️ الألوان **نفس** ألوان `.woc-chip` فوق بالحرف (درس R1) — الكلاسين
       `qc-*` (التغليف) و`chip-ch-*` (الطباعة) الاتنين متعرّفين هنا.
@@ -450,17 +451,14 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
       على خانة بوسطة صفر تحذير، وتبهيته بيخبّيه بالظبط لما يتحتاج. */
 .woc-chips{align-items:center;justify-content:center}
 .woc-cgroup{display:inline-flex;border:1px solid var(--border-strong);border-radius:999px;overflow:hidden;max-width:100%}
-.woc-seg{display:inline-flex;align-items:stretch;font-size:11px;font-weight:800;white-space:nowrap;background:var(--surface-2);color:var(--text-secondary)}
+.woc-seg{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;font-size:11px;font-weight:800;white-space:nowrap;background:var(--surface-2);color:var(--text-secondary)}
 .woc-seg+.woc-seg{border-inline-start:1px solid var(--border)}
-.woc-seg-n{display:grid;place-items:center;min-width:2.4em;padding-inline:8px;background:var(--text-secondary);color:var(--on-accent);font-family:var(--font-mono);font-variant-numeric:tabular-nums;direction:ltr}
-.woc-seg-l{display:inline-flex;align-items:center;gap:6px;padding:2px 9px}
+.woc-seg-n{font-family:var(--font-mono);font-variant-numeric:tabular-nums;direction:ltr}
+.woc-seg-l{display:inline-flex;align-items:center;gap:6px}
 .woc-seg.z0 .woc-seg-n,.woc-seg.z0 .woc-seg-t{opacity:.42}
 .woc-seg.qc-courier,.woc-seg.chip-ch-invoice{background:var(--accent-light);color:var(--accent-dark)}
-.woc-seg.qc-courier .woc-seg-n,.woc-seg.chip-ch-invoice .woc-seg-n{background:var(--accent)}
 .woc-seg.qc-bosta,.woc-seg.chip-ch-awb{background:var(--red-light);color:var(--red-dark)}
-.woc-seg.qc-bosta .woc-seg-n,.woc-seg.chip-ch-awb .woc-seg-n{background:var(--red)}
 .woc-seg.qc-showroom,.woc-seg.chip-ch-showroom{background:var(--teal-light);color:var(--teal-dark)}
-.woc-seg.qc-showroom .woc-seg-n,.woc-seg.chip-ch-showroom .woc-seg-n{background:var(--teal)}
 .woc-att{display:inline-flex;align-items:center;gap:3px;padding:0 7px;border-radius:999px;font-size:10.5px;font-weight:800;background:var(--amber-light);color:var(--amber-dark);border:1px solid var(--amber-border);font-family:var(--font-mono);font-variant-numeric:tabular-nums;direction:ltr}
 
 /* ══ §HOME-DONE — شريط «اللي خلص النهارده / أمس» (v1.40.0 · قرار أحمد) ══
