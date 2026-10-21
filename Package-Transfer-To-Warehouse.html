@@ -18,7 +18,7 @@
 
 /* ⚠️ الـ chrome (الهيدر · التابات · الإعدادات · شِل المودالات · التوست ·
    الـ changelog · الـ about · روابط الأوردر · السبينر) اتشال من هنا — كله
-   في `shared/shell.css`. اللي فاضل هنا **خاص بالأداة دي بس**.
+   في `shared/core.css`. اللي فاضل هنا **خاص بالأداة دي بس**.
    ⚠️ `.card` و`.btn-*` و`.spinner` معرّفين هنا **بشكل مختلف** عن الـ shell
       عن قصد — قاعدة الأسبقية بتخلّي نسخة الصفحة تغلب. */
 /* ── Result Modal — ملخّص ما بعد التحديث ─────────────────────── */
@@ -619,8 +619,8 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
         <div class="about-sec-body">
           <h4>FEATURE MAP</h4>
           <ul>
-            <li><code>shared/shell.js</code> — الهوية والهيدر والإعدادات والتوست وحارس النسخة (نسخة واحدة مضمّنة للهب كله)</li>
-            <li><code>shared/shell.js §WAREHOUSE-GATE</code> — 🔴 <b>مصدر الأهلية الوحيد في الواجهة</b> (<code>ecoWarehouseGate</code> · <code>ecoWarehouseQueue</code>). الصفحة دي <b>والشاشة الرئيسية</b> بينادوا نفس الدالة على نفس الرد. ⛔ <b>وممنوع ينسخ حارس الإلغاء من §OFFICE-GATE</b> — هناك رفض وهنا أهلية</li>
+            <li><code>shared/core.js</code> — الهوية والهيدر والإعدادات والتوست وحارس النسخة (نسخة واحدة مضمّنة للهب كله)</li>
+            <li><code>shared/gates.js §WAREHOUSE-GATE</code> — 🔴 <b>مصدر الأهلية الوحيد في الواجهة</b> (<code>ecoWarehouseGate</code> · <code>ecoWarehouseQueue</code>). الصفحة دي <b>والشاشة الرئيسية</b> بينادوا نفس الدالة على نفس الرد. ⛔ <b>وممنوع ينسخ حارس الإلغاء من §OFFICE-GATE</b> — هناك رفض وهنا أهلية</li>
             <li><code>§SCAN</code> — سكانر بمهلة (١٥٠ms للسكانة · ٤٠٠ms للكتابة)، نفس قيم <code>Orders-Packing-Checker.html</code> بالحرف</li>
             <li><code>§TOOL-JS::scanOrder</code> — نداء <code>scan</code> فوري لكل باركود، ومعالجة الخمس نتايج</li>
             <li><code>§TOOL-JS::outcomeModal</code> — نافذة واحدة بأربع نغمات (مرفوض · خلاص متعمل · إقرار · فشل)، ومدخل واحد <code>showOutcome</code></li>
@@ -787,7 +787,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
         <!-- ══ §WAREHOUSE-QUEUE — «جاهز للرجوع للمخزن» ══════════════════
              🔴 **عرض بحت** — مفيش مربعات اختيار ومفيش «أضف للدفعة».
              🔴 **والحكم مش هنا:** الأهلية بتتحسب من `ecoWarehouseGate` في
-                `shared/shell.js` §WAREHOUSE-GATE — **نفس** الدالة اللي
+                `shared/gates.js` §WAREHOUSE-GATE — **نفس** الدالة اللي
                 الشاشة الرئيسية بتعدّ بيها، على **نفس** رد الـ endpoint.
                 ⛔ ممنوع أي قاعدة أهلية مكتوبة في الصفحة دي (درس R1).
              ⚠️ والطابور **لقطة** عمرها لحد ١٥ دقيقة **وبنافذة ٣٠ يوم** —
@@ -2221,7 +2221,7 @@ async function exportLogXLSX() {
 // ══════════════════════════════════════════════════════════════
 // §WAREHOUSE-QUEUE-JS — طابور «جاهز للرجوع للمخزن» (v1.28.0)
 // ══════════════════════════════════════════════════════════════
-// 🔴 **الأهلية بتتحسب من `ecoWarehouseGate` في `shared/shell.js` §WAREHOUSE-GATE**
+// 🔴 **الأهلية بتتحسب من `ecoWarehouseGate` في `shared/gates.js` §WAREHOUSE-GATE**
 //    — مش هنا، ومش في `index.html`. الصفحة والشاشة الرئيسية بينادوا **نفس**
 //    الـ endpoint و**نفس** الدالة، فمستحيل الرقمين يفترقوا (درس R1 — v1.11.0:
 //    الرئيسية قالت ٦٦ والصفحة فتحت على ٦ لأن البوابة كانت في صفحة واحدة).

@@ -73,6 +73,13 @@
 > 🔴 **الأدوات القديمة التلاتة لسه منشورة وشغّالة** كنقطة رجوع طول التجربة
 > الحية. تحويلها لصفحات تحويل = قرار منفصل بعد نجاح التجربة.
 
+> 🔄 **أسماء قديمة في الملف ده (تاريخية):** قبل المرحلة ٣/٤ (هب المخزن v1.45.0 · هب الشحن v1.49.0) كان فيه `shared/shell.js` و`shared/shell.css` والبادئات `woc*`/`dco*`. دلوقتي:
+> `shell.js` ← **`core.js`** (المشترك) + **`hub-config.js`** (`ECO_WORKERS` · `TOOL_VERSION` · مفاتيح الجلسة والسر) + **`gates.js`**، و`shell.css` ← **`core.css`** (المشترك) + **`hub.css`** (ألوان الهب)، والبادئات ← **`eco*`** / `eco-` (`wocApi`←`ecoApi` · `WOC_WORKERS`/`DCO_WORKERS`←`ECO_WORKERS` · `.woc-*`/`.dco-*`←`.eco-*`). **قيم مفاتيح التخزين ما اتغيّرتش** (`woc_session` · `dco_session` · `*_worker_secret`). أي نص تحت بيقول «في الـ shell» معناه الملف المناسب من دول.
+
+## 🧩 النواة المشتركة — المرجع في هب الشحن
+
+`core.js` · `core.css` · `home.js` **نسختين متطابقتين بالبايت** مع `Delivery-COD-Operations-Center` (`bash docs/core-twin-check.sh`)، والشرح الكامل (جدول الملفات · ترتيب التحميل · المولّدات · الفحوصات) في قسم **«النواة المشتركة بين الهبّين»** في `CLAUDE.md` بتاعه — ما بيتكررش هنا. اللي خاص بالمخزن: `shared/hub-config.js` · `hub.css` · `home-config.js` · **`gates.js`** (بوابات القنوات والمكتب والمرتجعات §BOSTA-GATE · §OFFICE-GATE · §WAREHOUSE-GATE؛ و§COURIER-GROUP بقى في `core.js`). ⛔ هب المخزن مالوش مولّدات (صفحاته مكتوبة بإيد).
+
 ## 🔎 تمريرة v1.46.0 — §TABLE: فلاتر رأس العمود + عناوين ثابتة + سحب العرض (المرحلة ٥ · طلب أحمد 22-10-2026)
 
 **مكوّن مشترك في `shared/core.js` + `core.css` (§TABLE) — نسخة متطابقة في هب الشحن.** بيشتغل على **الـ DOM الجاهز**: قمع ▽ ومقبض سحب في كل `<th>`، وإخفاء `<tr>` حسب قيمة الخلية، من غير ما يلمس رسم أي صفحة.
@@ -466,26 +473,17 @@ tool في D1 : warehouse_ops_center      ← login · logout بس
 > ⚠️ **`--font-mono` لازم يفضل معرّف** بنفس قيمة `--font-body` — كلاسات
 > (`.order-link` · `.col-num` · `.settings-input`) بتستخدمه (Standards #16).
 
-## 🔴 `shared/shell.js` — نسخة واحدة مضمّنة
+## 🔴 النواة (`core.js`) وملفات الهب — **نسخة واحدة مضمّنة**
 
-**ممنوع الملف ده يتنسخ في أي صفحة.** نسخة تانية معناها إن الصفحتين هيفترقوا
-مع أول تعديل، وده بالظبط الوضع اللي أنتج باج R1 بين `Ready-to-Pack`
-و`Orders-Packing-Checker` (منطق واحد في ملفين، اتصلح في واحد وفضل مكسور في
-التاني **لشهور**).
+**ممنوع `core.js` يتنسخ في أي صفحة** (نسخة تانية = الصفحات تفترق مع أول تعديل — درس R1). أقسامه وأماكنها دلوقتي:
 
-| القسم | المحتوى |
+| الملف | الأقسام |
 |---|---|
-| §CONFIG | `WOC_WORKERS` (فيها `auth`) · `TOOL_VERSION` · `LS_SECRET` · `getSecret`/`setSecret`/`isConfigured` |
-| §SESSION | `getSession` · `setSession` · `clearSession` · `requireSession` · `cacheGet` · `cacheSet` |
-| §API | `wocApi(worker)` — **مصنع** بدل دوال عامة · **`WOC_API_TIMEOUT_MS`** |
-| §HELPERS | `esc` · `toCairo` · `cairoDayStr` · `cairoDayIndex` · `formatDate*` · `arMin`/`arHour`/`arDay` · `sinceText` · **`agoInfo`** · **`wocDayDiff`/`wocDayLevel`/`wocOrderAge`** · `orderLink` · `shopifyOrderUrl` · **`shopifyVariantUrl`** · `cmpVersion` · `playBeep` |
-| §BOSTA-GATE | **`BOSTA_UPLOADED_TAGS`** (تاج لكل ماكينة) · **`wocMachineOf`** · `wocBostaUploaded` · `wocChannelOf` · `wocChannelGate` |
-| §OFFICE-GATE | **`wocOfficeGate`** · **`wocOfficeQueue`** · `WOC_WHEREABOUTS` · `WOC_OFFICE_ZONES` — أهلية «جاهز للتسليم للمكتب». `index.html` و`Package-Transfer-To-Office.html` بيعدّوا منهم الاتنين |
-| §HELPERS (تكملة) | **`wocYmdToDMY`** — `YYYY-MM-DD` → `DD/MM/YYYY` لأرضية تاريخ الأوردر. `Package-Transfer-To-Office.html` و`Package-Transfer-To-Warehouse.html` بيعرضوا منها الاتنين (§ORDERS-SINCE) |
-| §WAREHOUSE-GATE | **`wocWarehouseGate`** · **`wocWarehouseQueue`** · `WOC_WH_S1_ELIGIBLE`/`WOC_WH_S2_ELIGIBLE` · `WOC_WAREHOUSE_ZONES` — أهلية «جاهز للرجوع للمخزن». `index.html` و`Package-Transfer-To-Warehouse.html` بيعدّوا منهم الاتنين |
-| §COURIER-GROUP | **`wocCourierGroup`** · **`WOC_COURIER_GROUPS`** · **`wocCourierCounts`** — بوسطة/**شو روم**/مناديب (تلاتة من v1.14.0). `index.html` و`Orders-Packing-Checker.html` بيعدّوا منهم الاتنين |
-| §UI | `showToast` · الإعدادات · `wocRunDiag` · `renderVersionUI` · `checkWorkerVersion` · `showWorkerStale` · About/Changelog · `doLogout` |
-| §HEADER | `wocHeader(opts)` · `wocSharedModals()` |
+| `hub-config.js` | §CONFIG — `ECO_WORKERS` (فيها `auth`) · `TOOL_VERSION` · `LS_SECRET` · مفاتيح الجلسة والكاش |
+| `core.js` | §SESSION (`requireSession` · `cacheGet/Set`) · §API (`ecoApi(worker)` + `ECO_API_TIMEOUT_MS`) · §HELPERS (`esc` · `toCairo` · `agoInfo` · `ecoDayDiff/DayLevel/OrderAge` · `ecoYmdToDMY` · `shopifyVariantUrl` · `cmpVersion` · `playBeep`) · §UI · §IDLE · §HEADER (`ecoHeader` · `ecoSharedModals`) · §MACHINE · COURIER (`ecoMachineByType` · `ecoCourierGroup` · `ECO_COURIER_GROUPS` · `ecoCourierCounts`) · §TABLE |
+| `gates.js` | §BOSTA-GATE (`BOSTA_UPLOADED_TAGS` · `ecoChannelOf` · `ecoChannelGate`) · §OFFICE-GATE (`ecoOfficeGate/Queue`) · §WAREHOUSE-GATE (`ecoWarehouseGate/Queue`) |
+| `home.js` + `home-config.js` | الرئيسية من `ECO_HOME` |
+
 
 > 🔴 **`WOC_API_TIMEOUT_MS = 90000` اتضافت في v1.22.0 — مهلة صريحة على كل
 > نداء (`AbortController`).** قبلها الـ shell ماكانش فيه أي مهلة خالص: الـ

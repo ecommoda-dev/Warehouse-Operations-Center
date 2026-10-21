@@ -50,7 +50,7 @@
 .scan-hint{font-size:12px;color:var(--text-muted);margin-top:6px;text-align:center}
 
 /* ⚠️ **صفر متغيّرات محلية (`--x` جوّه selector)** — فحص `docs/css-check.js`
-   بيعدّ التعريف في `:root` بس، وكتلة التوكنز في `shared/shell.css` وحدها.
+   بيعدّ التعريف في `:root` بس، وكتلة التوكنز في `shared/core.css` وحدها.
    فاللون بيتكتب لكل مسار صراحةً بدل متغيّر بيتبدّل. */
 .entry-bar{display:flex;flex-direction:column;gap:10px;margin-bottom:12px;
   background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--accent);
@@ -387,7 +387,7 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
 .page-btn{padding:6px 14px;border-radius:7px;border:1px solid var(--border);background:var(--surface);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);color:var(--text-primary)}
 .page-btn:hover:not(:disabled){background:var(--accent-light);border-color:var(--accent);color:var(--accent)}
 .page-btn:disabled{opacity:.4;cursor:not-allowed}
-/* ⚠️ `@keyframes spin` **مش هنا** — معرّفة في `shared/shell.css` مرة واحدة. */
+/* ⚠️ `@keyframes spin` **مش هنا** — معرّفة في `shared/core.css` مرة واحدة. */
 .loading-spinner{width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
 
 /* ── المعاينة على الشاشة ──────────────────────────────────── */
@@ -423,12 +423,12 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
       **من غير أوردر أصلاً** (مدخل الـ SKU المباشر)، فالسطر ماكانش هيبقى
       موجود على كل ليبل حتى لو اتساب.
 
-   🔴 `--font-label` معرّف في `shared/shell.css` مع باقي التوكنز (كتلة
+   🔴 `--font-label` معرّف في `shared/core.css` مع باقي التوكنز (كتلة
       التوكنز مصدر واحد). وهو **استثناء موثّق من Standards #11** (خط واحد
       Noto Sans Arabic): الاستثناء متحدّد بالليبل **المطبوع** بس — مفيش أي
       عنصر على الشاشة بيستخدمه.
       ⚠️ **قيمته اتغيّرت في v1.15.0** من سيريف (Georgia) لـ grotesque
-         محايد (Arial/Helvetica). السبب والتفاصيل في `shared/shell.css`
+         محايد (Arial/Helvetica). السبب والتفاصيل في `shared/core.css`
          جنب التوكن نفسه — **مش هنا**، عشان مايبقاش فيه مصدرين.
    ══════════════════════════════════════════════════════════════ */
 #printArea{display:none}
@@ -467,7 +467,7 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
      ⛔ ممنوع الرجوع لـ `visibility:hidden` هنا. */
   body>*{display:none !important}
   #printArea{display:block !important}
-  /* ⚠️ `shell.css` بيحط `padding:12px` على `body` — من غير التصفير ده
+  /* ⚠️ `core.css` بيحط `padding:12px` على `body` — من غير التصفير ده
      الليبل بينزاح داخل الورقة الصغيرة (٢×١ إنش مفيهاش هامش يستحمّل).
      🔴 و`min-height:100vh` عليه كمان، وده **مساهم تاني في الصفحات
      البيضا**: بيفرض على الـ body ارتفاع صفحة كاملة على الأقل حتى لو
@@ -2168,7 +2168,7 @@ const BC_PX_PER_IN      = 96;   // 96 CSS px ≈ إنش
 // §LABEL-JS — SKU فوق · باركود تحته. **سطران وبس** (v1.15.0)
 // ══════════════════════════════════════════════════════════════
 //
-// 2in × 1in، خط grotesque محايد للنص (`--font-label` في `shell.css`)،
+// 2in × 1in، خط grotesque محايد للنص (`--font-label` في `core.css`)،
 // وبدون أي نص تحت الباركود نفسه.
 //
 // 🔴 **سطر رقم الأوردر اتشال** (قرار أحمد 08-09-2026). كان اتضاف في
@@ -2384,7 +2384,7 @@ window.addEventListener('afterprint', () => {
 // ══════════════════════════════════════════════════════════════
 //
 // ⚠️ `fetchLog` · `renderLogTable` · `renderPagination` · `goPage` كلهم
-//    **في القايمة السودا** بتاعة `shared/shell.js` — منطقهم بيفرق فعلاً
+//    **في القايمة السودا** بتاعة `shared/core.js` — منطقهم بيفرق فعلاً
 //    من صفحة للتانية (أعمدة مختلفة · فلاتر مختلفة · شكل `type` مختلف).
 //    بيفضلوا هنا، ونسخة `Order-Item-Remover.html` بتفضل هناك.
 const LOG_PAGE_SIZE = 100;

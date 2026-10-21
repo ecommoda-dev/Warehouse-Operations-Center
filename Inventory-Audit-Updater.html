@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="shared/hub.css">
 <style>
 /* ⚠️ Tier L (1400px) = افتراضي الـ shell، فمفيش `--container-max` هنا. كتلة التوكنز اتشالت
-   بالكامل: الألوان والمقاسات كلها من `shared/shell.css` (ومعاها اللي الصفحة دي احتاجته:
+   بالكامل: الألوان والمقاسات كلها من `shared/core.css` (ومعاها اللي الصفحة دي احتاجته:
    --yellow-light · --red-lighter/-darker/-darkest · --th-* · --td-*).
    ⚠️ الـ chrome (الهيدر · التابات · الإعدادات · شِل المودالات · التوست · الـ changelog ·
    الـ about · شاشة الدخول · الخروج التلقائي) اتشال من هنا — كله في الـ shell أو اتشال
@@ -1047,7 +1047,7 @@ col.hl{background:var(--accent-light);}
           <h4>FEATURE MAP</h4>
           <ul>
             <li><code>§CONFIG</code> — <code>requireSession()</code> · <code>currentEmployee</code> · <code>apiGet</code>/<code>apiPost</code> فوق <code>ecoApi(ECO_WORKERS.audit)</code> (مهلة ٩٠ ث + إلغاء يدوي) · <code>onBeforeLogout</code> · دوال التوقيت (Intl)</li>
-            <li><code>shared/shell.js</code> — الإعدادات · التوست · النسخة · الفحص الذاتي (<code>ecoRunDiag</code>) · الهيدر · الخروج · <code>playBeep</code> (ومعاه نغمة <code>alarm</code>) — نسخة واحدة مضمّنة للهب كله</li>
+            <li><code>shared/core.js</code> — الإعدادات · التوست · النسخة · الفحص الذاتي (<code>ecoRunDiag</code>) · الهيدر · الخروج · <code>playBeep</code> (ومعاه نغمة <code>alarm</code>) — نسخة واحدة مضمّنة للهب كله</li>
             <li><code>§AUTH-JS</code> / <code>§IDLE-JS</code> — <b>اتشالوا</b>: الدخول في <code>index.html</code> بس، ومفيش خروج تلقائي بالوقت في الهب</li>
             <li><code>§SCAN</code> — <code>handleBarcodeScan</code> · <code>handleScanCountInput</code> · <code>§SCAN::plausibility</code></li>
             <li><code>§TOOL-JS</code> — الأولويات · بطاقة المنتج · لوحة التعديل · العد بالسكانر · كارت الأوردرات غير المشحونة (<b>عرض فقط</b> — مفيش أي فعل عليها من الأداة دي)</li>
@@ -1246,7 +1246,7 @@ async function renderAboutWorkers() {
 
 // ══════════════════════════════════════════════════════
 // §SHELL-JS — اتشال: الإعدادات · التوست · النسخة · الفحص الذاتي · الخروج كلهم في
-// `shared/shell.js`. اللي فاضل هنا هو تبديل التابات (خاص بالصفحة — القايمة السودا).
+// `shared/core.js`. اللي فاضل هنا هو تبديل التابات (خاص بالصفحة — القايمة السودا).
 // ══════════════════════════════════════════════════════
 function switchMainTab(tab){
   // تاب «الجرد» الرئيسي = شاشة الاختيار (hub) + الأقسام التلاتة (audit · priority · bulk)

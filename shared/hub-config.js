@@ -11,7 +11,7 @@
 // ══════════════════════════════════════════════════════════════
 
 // ══════════════════════════════════════════════════════════════
-// shared/shell.js — مركز عمليات المخزن (Warehouse-Operations-Center)
+// shared/hub-config.js — إعداد هب المخزن (Warehouse-Operations-Center) — كان جزء من shell.js قبل v1.45.0
 // skills: html-builder v6.6.0 · worker-builder v2.1.0 · constants v1.10.0 · order-lifecycle v1.2.0 — 06-09-2026
 // ══════════════════════════════════════════════════════════════
 //

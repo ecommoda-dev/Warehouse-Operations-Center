@@ -77,8 +77,9 @@ Warehouse-Operations-Center/
 ├── stats.html · Order-SKU-Barcode-Printer.html
 ├── Bosta-Orders-Shipped-Scanner.html · Bosta-Orders-Returned-Scanner.html   سكانرا بوسطة
 ├── shared/
-│   ├── shell.css     التوكنز + الهيدر + المودالات + التوست
-│   └── shell.js      الجلسة + مصنع الـ API + الأدوات المشتركة
+│   ├── core.css · core.js · home.js   النواة المشتركة — 🔴 متطابقة بايت ببايت مع هب الشحن (bash docs/core-twin-check.sh)
+│   ├── hub-config.js · hub.css · home-config.js   خاص بهب المخزن (الـ Workers · النسخة · الألوان · أقسام الرئيسية)
+│   └── gates.js     بوابات القنوات والمكتب والمرتجعات (مجال المخزن)
 ├── CLAUDE.md         التوثيق الكامل — القواعد والفخاخ
 └── README.md
 ```
@@ -90,9 +91,9 @@ Warehouse-Operations-Center/
 
 اقرا **`CLAUDE.md`** قبل أي تعديل. أهم تلات قواعد:
 
-1. **قاعدة الأسبقية** — `shell.css` أولاً وستايل الصفحة بعده وبيغلب.
-2. **`shared/shell.js` نسخة واحدة مضمّنة** — ممنوع تتنسخ في صفحة.
-3. **القايمة السودا** — ١٥ دالة منطقها مختلف بين الأدوات، ممنوع تدخل الـ shell.
+1. **قاعدة الأسبقية** — `core.css` أولاً وستايل الصفحة بعده وبيغلب.
+2. **`shared/core.js` نسخة واحدة مضمّنة** — ممنوع تتنسخ في صفحة، وهو **نسختين متطابقتين** بين الهبّين (أي تعديل في الاتنين).
+3. **القايمة السودا** — ١٥ دالة منطقها مختلف بين الأدوات، ممنوع تدخل الـ core.
 
 ---
 

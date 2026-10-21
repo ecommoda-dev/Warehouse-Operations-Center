@@ -717,7 +717,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
 
 /* ═══ §REPRINT — كارت إعادة طباعة أوردر مش في الطابور (v1.6.0) ═══
-   ⚠️ كلاسات الصفحة — مش في `shell.css`. الكارت ده خاص بالطابعة لوحدها. */
+   ⚠️ كلاسات الصفحة — مش في `core.css`. الكارت ده خاص بالطابعة لوحدها. */
 .rp-card {
   display: none; background: var(--amber-light); border: 1.5px solid var(--amber-border);
   border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; margin-bottom: 14px;
@@ -866,7 +866,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
       <!-- ── لوحة «آخر تحديث» + زرار التحديث — **وحدة واحدة** ──
            🔴 الكلاسات (`.eco-fresh` · `.eco-ago` · `.eco-stamp-chip` ·
-              `.eco-rbtn`) من `shared/shell.css` — **مش نسخة هنا**. اللوحة
+              `.eco-rbtn`) من `shared/core.css` — **مش نسخة هنا**. اللوحة
               دي موجودة في تلات شاشات دلوقتي (الرئيسية · التغليف · الطباعة)،
               ونسخة CSS رابعة معناها إن الشكل يفترق مع أول تعديل (درس R1).
            ⚠️ `align-items:stretch` على `.prt-actions` هو اللي بيخلّي الزرار
@@ -2859,7 +2859,7 @@ async function loadOrders(forceRefresh = false) {
 //    شكله بالظبط زي واحد اتجاب من دقيقة، والموظف بياخد قرار طباعة على
 //    الرقم ده. اللوحة الجديدة بتقول العمر وبتلوّن نفسه، والزرار بيبقى
 //    كهرماني بعد ١٥ دقيقة.
-// 🔴 `agoInfo` من `shared/shell.js` §HELPERS — **ممنوع نسخة هنا**. نفس
+// 🔴 `agoInfo` من `shared/core.js` §HELPERS — **ممنوع نسخة هنا**. نفس
 //    السلّم بالحرف في الرئيسية والتغليف والإحصائيات (درس R1).
 // ⚠️ الختم بيتسجّل حتى لو الطابور رجع فاضي، و**مايتغيّرش في الفشل** —
 //    ما نقولش للموظف إن القايمة دي جديدة وهي مش جديدة.
@@ -2956,7 +2956,7 @@ function rebuildPrintFilterItems() {
 //    ممنوع أي تخمين ومنوع أي اشتقاق من العنوان (قاعدة ١٦)، وممنوع الإخفاء —
 //    الإخفاء هو اللي أنتج «الأوردر مش ظاهر» مع `ZONE_FILTER`.
 // 🔴 `ZONE_SHOWROOM` و`BOSTA_UPLOADED_TAGS` و`ecoChannelOf` و`ecoChannelGate`
-//    كلهم في `shared/shell.js` §BOSTA-GATE — **مش هنا**. الشاشة الرئيسية
+//    كلهم في `shared/gates.js` §BOSTA-GATE — **مش هنا**. الشاشة الرئيسية
 //    بتعدّ من نفس رد `/orders` بالظبط، ونسخة تانية من أي قاعدة فيهم معناها
 //    إن الرئيسية تقول رقم والصفحة تفتح على رقم تاني (اللي حصل في v1.11.0:
 //    بادج ٦٦ وجدول ٦). ⛔ ممنوع أي صفحة تعرّفهم تاني — تعريف في صفحة بيغلب
