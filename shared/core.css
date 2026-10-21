@@ -402,6 +402,11 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .eco-home-sec.is-collapsed .eco-sec-ln{display:none}
 .eco-home-sec.is-collapsed .eco-sec-mid{margin-inline:auto}
 .eco-home-sec.is-collapsed.has-sum .eco-home-sec-sub{display:none}
+/* مطوي بملخّص: الأيقونة ثم العنوان على اليمين، والكبسولات بعدهم في نفس الصف (v1.46.0 · طلب أحمد) */
+.eco-home-sec.is-collapsed.has-sum .eco-sec-mid{flex:1 1 auto;margin-inline:0;gap:12px;flex-wrap:wrap}
+.eco-home-sec.is-collapsed.has-sum .eco-sec-tx{display:contents}
+.eco-home-sec.is-collapsed.has-sum .eco-home-sec-title{white-space:nowrap}
+.eco-home-sec.is-collapsed.has-sum .eco-sum{margin-top:0;flex:1 1 auto;align-items:center}
 /* ملخّص الصفوف وهو مطوي: كبسولة (اسم + رقم) بلون هوية الصف، وتحتها المدة بلون عمره */
 .eco-sum{display:none;align-items:flex-start;gap:6px;flex-wrap:wrap;margin-top:4px}
 .eco-home-sec.is-collapsed .eco-sum{display:flex}
@@ -684,3 +689,37 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .eco-qrow.is-link .eco-count{border-bottom-color:var(--border-strong);color:var(--text-muted)}
 .eco-open{display:inline-flex;align-items:center;justify-content:center;padding:9px 14px;border-radius:var(--radius-sm);border:1px solid var(--idc-border);background:var(--surface);color:var(--idc);font-family:var(--font-body);font-size:12.5px;font-weight:800;white-space:nowrap}
 .eco-qrow.is-link:hover .eco-open{background:var(--idc-light)}
+
+/* ══ §TABLE — فلاتر رأس العمود + عناوين ثابتة + سحب العرض (v1.46.0) ══
+   🔴 الغلاف `.eco-tbl-wrap` بيحجز ارتفاع ٦٨vh وبيمرّر جوّه نفسه — من غيره `position:sticky` على العناوين
+   ماليهوش حاوية تمرير. ⚠️ `background` على `th` إلزامي: العنوان الثابت من غيره شفاف والصفوف بتعدّي تحته. */
+.eco-tbl-wrap{max-height:68vh;overflow:auto;position:relative}
+.eco-tbl-on>thead>tr>th{position:sticky;top:0;z-index:20;background:var(--surface-2);box-shadow:inset 0 -2px 0 var(--border-strong)}
+.eco-tbl-on.eco-fixed{table-layout:fixed}
+.eco-tbl-on.eco-fixed th,.eco-tbl-on.eco-fixed td{overflow:hidden;overflow-wrap:anywhere}
+.eco-tbl-on.eco-measure th,.eco-tbl-on.eco-measure td{white-space:nowrap}
+.eco-tf-hide{display:none!important}
+.eco-tbl-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:6px 12px;margin:0 0 6px;background:var(--accent-light);border:1px solid var(--accent);border-radius:var(--radius-sm,8px);font-size:12.5px;font-weight:700;color:var(--accent-dark)}
+.eco-tbl-bar[hidden]{display:none}
+.eco-tbl-clear{font:inherit;font-size:12px;font-weight:700;border:1px solid var(--border-strong);background:var(--surface);color:var(--text-mid);border-radius:99px;padding:2px 12px;cursor:pointer}
+.eco-hf{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;margin-inline:4px 6px;padding:0;vertical-align:middle;border:1px solid transparent;border-radius:5px;background:transparent;color:var(--text-muted);cursor:pointer}
+.eco-hf:hover{background:var(--surface);border-color:var(--border-strong)}
+.eco-hf.on{color:var(--on-accent);background:var(--accent);border-color:var(--accent)}
+.eco-hf:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.eco-rz{position:absolute;top:0;bottom:0;inset-inline-end:0;width:8px;cursor:col-resize;touch-action:none;z-index:3}
+.eco-rz::after{content:'';position:absolute;top:24%;bottom:24%;inset-inline-end:3px;width:2px;border-radius:2px;background:var(--border-strong);transition:background .12s,top .12s,bottom .12s}
+.eco-rz:hover::after,.eco-rz.active::after{background:var(--accent);top:8%;bottom:8%}
+body.eco-col-resizing,body.eco-col-resizing *{cursor:col-resize!important;user-select:none!important}
+.eco-w-badge{position:fixed;z-index:620;bottom:14px;left:50%;transform:translateX(-50%);background:var(--neutral-dark);color:var(--on-accent);font-size:12.5px;font-weight:700;padding:6px 14px;border-radius:20px;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.25)}
+.eco-hpop{position:fixed;z-index:310;width:250px;background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--radius-sm,8px);box-shadow:0 8px 24px rgba(0,0,0,.18);font-family:var(--font-body)}
+.eco-hpop-hd{padding:9px 12px;font-weight:800;font-size:12.5px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+.eco-hpop-top{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border)}
+.eco-hpop-top button,.eco-hpop-clr{font:inherit;font-size:12px;font-weight:700;border:0;background:none;color:var(--accent-dark);cursor:pointer;padding:0}
+.eco-hpop-list{max-height:260px;overflow:auto}
+.eco-hpop-item{display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;font-size:13px;font-weight:600}
+.eco-hpop-item:hover{background:var(--surface-2)}
+.eco-hpop-item.on{background:var(--accent-light)}
+.eco-hpop-item span{flex:1;min-width:0;overflow-wrap:anywhere}
+.eco-hpop-item em{font-style:normal;font-size:11.5px;color:var(--text-muted);font-variant-numeric:tabular-nums}
+.eco-hpop-body{padding:10px 12px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.eco-hpop-inp{width:100%;padding:8px 10px;border:1.5px solid var(--border-strong);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--text-primary)}

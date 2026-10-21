@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>fixture</title>
+<link rel="stylesheet" href="../shared/core.css">
+<style>body{padding:20px}</style></head><body>
+<div id="host"><table id="t1" class="data-table"><thead><tr><th><input type="checkbox"></th><th onclick="window.sorted=(window.sorted||0)+1">رقم الأوردر</th><th>المندوب</th><th>العنوان</th><th>إجراء</th></tr></thead><tbody id="b1"></tbody></table></div>
+<script src="../shared/hub-config.js"></script>
+<script src="../shared/core.js"></script>
+<script>
+const R=[['#1','Bosta','القاهرة - مدينة نصر - الحي السابع - شارع مصطفى النحاس - عمارة 1'],['#2','Mohamed','الجيزة - الهرم - شارع فيصل - برج النيل - الدور الخامس شقة 22'],['#3','Bosta','الإسكندرية - سموحة - شارع فوزي معاذ - بجوار المدرسة - عمارة 5'],['#4','Ali','القاهرة - المعادي - شارع 9 - بجوار محطة المترو - عمارة 12 شقة 3']];
+window.render=function(n){document.getElementById('b1').innerHTML=R.slice(0,n||R.length).map(r=>`<tr><td><input type="checkbox"></td><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td><button>عرض</button></td></tr>`).join('')+'<tr class="none"><td colspan="5">فاصل</td></tr>';};
+render();
+document.addEventListener('DOMContentLoaded', ecoTablesAuto);
+</script></body></html>
