@@ -269,8 +269,8 @@ check('لوحة «آخر تحديث» ظاهرة', await page.isVisible('#prtUpd
 check('🔴 عدّاد القِدَم اتملّى بعد الجلب (مش «لسه ما اتحدّثش»)',
       !(await page.textContent('#prtUpdatedAgo')).includes('لسه ما اتحدّثش'),
       await page.textContent('#prtUpdatedAgo'));
-check('ختم التاريخ والوقت اتكتب', (await page.$$('#prtUpdatedAt .woc-stamp-chip')).length === 2,
-      String((await page.$$('#prtUpdatedAt .woc-stamp-chip')).length));
+check('ختم التاريخ والوقت اتكتب', (await page.$$('#prtUpdatedAt .eco-stamp-chip')).length === 2,
+      String((await page.$$('#prtUpdatedAt .eco-stamp-chip')).length));
 check('زرار التحديث في الصندوق موجود', await page.isVisible('#prtRefreshBtn'));
 // 🔴 مصدر واحد للختم — الهيدر مابقاش فيه نسخة تانية منه ولا زرار تحديث تاني.
 check('🔴 ختم الهيدر القديم اتشال', (await page.$$('#lastUpdated')).length === 0);

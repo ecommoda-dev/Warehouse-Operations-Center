@@ -16,7 +16,8 @@
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 
   <!-- 🔴 قاعدة الأسبقية: الـ shell أولاً، وستايل الصفحة بعده وبيغلب -->
-  <link rel="stylesheet" href="shared/shell.css">
+  <link rel="stylesheet" href="shared/core.css">
+  <link rel="stylesheet" href="shared/hub.css">
 
 <!-- ══════════════════════════════════════════════════════════════
      §STYLES
@@ -687,8 +688,8 @@
    أخضر في العمود وواقع في المربع الأزرق، وده كان بيخلّي الموظف يدوّر على
    الصفوف الخضرا في مربع مش بتاعها.
    🔴 والشو روم بقى **تركواز** في v1.25.0 (كان أخضر) — اللون ده في **خمس
-   أماكن** (`.zchip` و`.courier-cell` هنا · `.woc-chip.qc-showroom` و
-   `.woc-chip.chip-ch-showroom` في الـ shell · `.chan-btn`/`.chan-cell` في
+   أماكن** (`.zchip` و`.courier-cell` هنا · `.eco-chip.qc-showroom` و
+   `.eco-chip.chip-ch-showroom` في الـ shell · `.chan-btn`/`.chan-cell` في
    `Order-Printer.html`)، وأي تعديل عليه يتعمل في الخمسة في نفس التمريرة (درس R1). */
 .zchip.qc-bosta{background:var(--red-light);color:var(--red-dark);border-color:var(--red-border)}
 .zchip.qc-showroom{background:var(--teal-light);color:var(--teal-dark);border-color:var(--teal-border)}
@@ -1447,9 +1448,9 @@
       </div>
 
     </div>
-    <div id="lookupLoading" class="woc-loadbox" role="status" aria-live="polite" style="display:none">
-      <span class="woc-load-spin" aria-hidden="true"></span>
-    <div class="woc-load-title">⏳ جاري البحث عن الأوردر برجاء الانتظار ...</div>
+    <div id="lookupLoading" class="eco-loadbox" role="status" aria-live="polite" style="display:none">
+      <span class="eco-load-spin" aria-hidden="true"></span>
+    <div class="eco-load-title">⏳ جاري البحث عن الأوردر برجاء الانتظار ...</div>
     </div>
   <!-- ─── §TOOL::readyQueue — طابور «جاهز للتغليف» (مدموج) ───────────────
        ⚠️ الجدول ده **عرض بس** — الضغط على صف مابيفتحش شاشة التشييك
@@ -1510,9 +1511,9 @@
       <div class="state-sub">اضغط «تحديث» للاستعلام عن الأوردرات الجاهزة</div>
     </div>
 
-    <div id="rdyStateLoading" class="woc-loadbox" role="status" aria-live="polite" style="display:none">
-      <span class="woc-load-spin" aria-hidden="true"></span>
-    <div class="woc-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div>
+    <div id="rdyStateLoading" class="eco-loadbox" role="status" aria-live="polite" style="display:none">
+      <span class="eco-load-spin" aria-hidden="true"></span>
+    <div class="eco-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div>
     </div>
 
     <div id="rdyStateEmpty" class="state-box" style="display:none">
@@ -1987,7 +1988,7 @@
       <div style="padding:0 16px">
         <div id="logExportWarn" class="export-warn" style="display:none;margin-top:12px"></div>
       </div>
-      <div id="logLoading" class="woc-loadbox is-sm" role="status" aria-live="polite" style="display:none"><span class="woc-load-spin" aria-hidden="true"></span><div class="woc-load-title">⏳ جاري تحميل السجل برجاء الانتظار ...</div></div>
+      <div id="logLoading" class="eco-loadbox is-sm" role="status" aria-live="polite" style="display:none"><span class="eco-load-spin" aria-hidden="true"></span><div class="eco-load-title">⏳ جاري تحميل السجل برجاء الانتظار ...</div></div>
       <div class="tbl-scroll">
         <table class="data-table" id="logTable">
           <thead>

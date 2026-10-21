@@ -9,7 +9,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 
   <!-- 🔴 قاعدة الأسبقية: الـ shell أولاً، وستايل الصفحة بعده وبيغلب -->
-  <link rel="stylesheet" href="shared/shell.css">
+  <link rel="stylesheet" href="shared/core.css">
+  <link rel="stylesheet" href="shared/hub.css">
 <style>
 /* ⚠️ الاستثناء الوحيد المسموح لكتلة توكنز في صفحة: `--container-max` لوحدها.
    الصفحة دي Tier M — مفيهاش جدول كثيف، والعرض الكامل بيبعّد الحقول عن بعض. */
@@ -17,7 +18,7 @@
 
 /* 🔴 **ثيم الصفحة أحمر من v1.25.0** (قرار أحمد 14-09-2026). الأداة دي
    **هدّامة**: بتحذف بند من أوردر حي و**البند المتحذف مالوش رجعة**.
-   مربعها في الشاشة الرئيسية أحمر من الأصل (`.woc-tool.tool-danger`)،
+   مربعها في الشاشة الرئيسية أحمر من الأصل (`.eco-tool.tool-danger`)،
    والصفحة نفسها كانت بتفتح **زرقا زي أي صفحة عادية** — يعني الموظف
    بيدوس على مربع أحمر وبيلاقي نفسه في شاشة شكلها عادي. اللون هنا
    بيقول «انت فين» **قبل** ما يقرا.
@@ -169,7 +170,7 @@
 <div id="headerMount"></div>
 
 <!-- بيظهر بس لما الصفحة اتفتحت من جدول التغليف (`?from=pack`) -->
-<div class="woc-back-bar" id="backToQueueBar">
+<div class="eco-back-bar" id="backToQueueBar">
   <span>📦 جاي من طابور التغليف</span>
   <button class="btn-ghost" onclick="location.href='Orders-Packing-Checker.html'">↩ رجوع للطابور</button>
 </div>

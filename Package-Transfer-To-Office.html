@@ -9,7 +9,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 
   <!-- 🔴 قاعدة الأسبقية: الـ shell أولاً، وستايل الصفحة بعده وبيغلب -->
-  <link rel="stylesheet" href="shared/shell.css">
+  <link rel="stylesheet" href="shared/core.css">
+  <link rel="stylesheet" href="shared/hub.css">
 <style>
 /* ⚠️ الاستثناء الوحيد المسموح لكتلة توكنز في صفحة: `--container-max` لوحدها.
    الصفحة دي Tier M — تاب السجل جدول، فمايجوزش تفضل Tier S. */
@@ -145,8 +146,8 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
 /* ══ §READY-QUEUE — طابور «جاهز للتسليم لبوسطة» (v1.23.0) ══
    🔴 كلاسات الصفحة، مش الـ shell (قاعدة الأسبقية). اللي جاي من الـ shell
-      هو لوحة «آخر تحديث» بس (`.woc-fresh` · `.woc-ago` · `.woc-stamp-chip`
-      · `.woc-rbtn`) — اللوحة دي في **أربع** شاشات دلوقتي (الرئيسية ·
+      هو لوحة «آخر تحديث» بس (`.eco-fresh` · `.eco-ago` · `.eco-stamp-chip`
+      · `.eco-rbtn`) — اللوحة دي في **أربع** شاشات دلوقتي (الرئيسية ·
       التغليف · الطباعة · هنا)، ونسخة CSS خامسة معناها إن الشكل يفترق مع
       أول تعديل (درس R1). */
 .rq-box { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); overflow: hidden; }
@@ -774,16 +775,16 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
               <span class="count-lbl">أوردر</span>
             </div>
             <div class="rq-act">
-              <div class="woc-fresh">
-                <div class="woc-fresh-row">
-                  <span class="woc-fresh-lbl">آخر تحديث</span>
-                  <span class="woc-ago" id="rqAgo">لسه ما اتحدّثش</span>
+              <div class="eco-fresh">
+                <div class="eco-fresh-row">
+                  <span class="eco-fresh-lbl">آخر تحديث</span>
+                  <span class="eco-ago" id="rqAgo">لسه ما اتحدّثش</span>
                 </div>
-                <div class="woc-fresh-row" id="rqStamp"><span class="woc-stamp-chip">—</span></div>
+                <div class="eco-fresh-row" id="rqStamp"><span class="eco-stamp-chip">—</span></div>
               </div>
-              <button class="woc-rbtn" id="rqBtn" type="button" onclick="rqLoad(false)">
-                <span class="woc-rbtn-ico">↺</span><span>تحديث</span>
-                <span class="woc-rbtn-badge" id="rqBadge">—</span>
+              <button class="eco-rbtn" id="rqBtn" type="button" onclick="rqLoad(false)">
+                <span class="eco-rbtn-ico">↺</span><span>تحديث</span>
+                <span class="eco-rbtn-badge" id="rqBadge">—</span>
               </button>
             </div>
           </div>
@@ -791,7 +792,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <div id="rqTrunc" class="rq-warn" style="display:none;"></div>
           <div class="rq-body">
             <div id="rqEmpty" class="rq-empty">
-              <div class="woc-loadbox" role="status" aria-live="polite"><span class="woc-load-spin" aria-hidden="true"></span><div class="woc-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div></div>
+              <div class="eco-loadbox" role="status" aria-live="polite"><span class="eco-load-spin" aria-hidden="true"></span><div class="eco-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div></div>
             </div>
             <div class="table-wrap" id="rqTableWrap" style="display:none;">
               <table class="data-table">
@@ -2208,14 +2209,14 @@ function rqSetFresh() {
   const info  = agoInfo(rqState.at, Date.now());
   const agoEl = document.getElementById('rqAgo');
   const btn   = document.getElementById('rqBtn');
-  if (agoEl) { agoEl.className = 'woc-ago ' + info.cls; agoEl.textContent = info.text; }
+  if (agoEl) { agoEl.className = 'eco-ago ' + info.cls; agoEl.textContent = info.text; }
   if (btn)   btn.classList.toggle('is-stale', info.stale);
   const stamp = document.getElementById('rqStamp');
   if (stamp) {
     stamp.innerHTML = rqState.at
-      ? `<span class="woc-stamp-chip">${esc(formatDate(rqState.at.toISOString()))}</span>` +
-        `<span class="woc-stamp-chip">${esc(formatTimeOnly(rqState.at.toISOString()))}</span>`
-      : '<span class="woc-stamp-chip">—</span>';
+      ? `<span class="eco-stamp-chip">${esc(formatDate(rqState.at.toISOString()))}</span>` +
+        `<span class="eco-stamp-chip">${esc(formatTimeOnly(rqState.at.toISOString()))}</span>`
+      : '<span class="eco-stamp-chip">—</span>';
   }
 }
 

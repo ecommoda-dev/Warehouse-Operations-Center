@@ -10,7 +10,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 
   <!-- 🔴 قاعدة الأسبقية: الـ shell أولاً، وستايل الصفحة بعده وبيغلب -->
-  <link rel="stylesheet" href="shared/shell.css">
+  <link rel="stylesheet" href="shared/core.css">
+  <link rel="stylesheet" href="shared/hub.css">
 <style>
 .main { padding: 0 20px 24px; }
 
@@ -451,7 +452,7 @@
 /* 🔴 `flex:1` **على المربعات هي** — دي اللي بتتمدّد فتتوسّط في المساحة
    الفاضية، والأكشن بيتزحلق للطرف من `margin-inline-start:auto`. لو حد حط
    `flex:1` على منطقة تانية، الأكشن بيقع في نص الصندوق (نفس فخّ
-   `.woc-row-mid` في الشاشة الرئيسية). */
+   `.eco-row-mid` في الشاشة الرئيسية). */
 .chan-chips {
   display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
   flex: 1; min-width: 0; justify-content: center;
@@ -780,7 +781,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 <main class="main">
 
 <!-- بيظهر بس لما الصفحة اتفتحت من جدول التغليف (`?from=pack`) -->
-<div class="woc-back-bar" id="backToQueueBar">
+<div class="eco-back-bar" id="backToQueueBar">
   <span>📦 جاي من طابور التغليف</span>
   <button class="btn-ghost" onclick="location.href='Orders-Packing-Checker.html'">↩ رجوع للطابور</button>
 </div>
@@ -791,9 +792,9 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
      ══════════════════════════════════════════════════════════════ -->
 <div class="tab-panel active" id="panelPrint">
 
-  <div id="printLoadingState" class="woc-loadbox" role="status" aria-live="polite" style="display:none;">
-    <span class="woc-load-spin" aria-hidden="true"></span>
-    <div class="woc-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div>
+  <div id="printLoadingState" class="eco-loadbox" role="status" aria-live="polite" style="display:none;">
+    <span class="eco-load-spin" aria-hidden="true"></span>
+    <div class="eco-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div>
   </div>
   <div id="printErrorState" class="state-box error" style="display:none;">
     <div style="font-size:40px;">⚠️</div>
@@ -864,22 +865,22 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
       </div>
 
       <!-- ── لوحة «آخر تحديث» + زرار التحديث — **وحدة واحدة** ──
-           🔴 الكلاسات (`.woc-fresh` · `.woc-ago` · `.woc-stamp-chip` ·
-              `.woc-rbtn`) من `shared/shell.css` — **مش نسخة هنا**. اللوحة
+           🔴 الكلاسات (`.eco-fresh` · `.eco-ago` · `.eco-stamp-chip` ·
+              `.eco-rbtn`) من `shared/shell.css` — **مش نسخة هنا**. اللوحة
               دي موجودة في تلات شاشات دلوقتي (الرئيسية · التغليف · الطباعة)،
               ونسخة CSS رابعة معناها إن الشكل يفترق مع أول تعديل (درس R1).
            ⚠️ `align-items:stretch` على `.prt-actions` هو اللي بيخلّي الزرار
-              بنفس ارتفاع اللوحة بالظبط — زي `.rdy-actions` و`.woc-row-act`. -->
+              بنفس ارتفاع اللوحة بالظبط — زي `.rdy-actions` و`.eco-row-act`. -->
       <div class="prt-actions">
-        <div class="woc-fresh">
-          <div class="woc-fresh-row">
-            <span class="woc-fresh-lbl">آخر تحديث</span>
-            <span class="woc-ago" id="prtUpdatedAgo">لسه ما اتحدّثش</span>
+        <div class="eco-fresh">
+          <div class="eco-fresh-row">
+            <span class="eco-fresh-lbl">آخر تحديث</span>
+            <span class="eco-ago" id="prtUpdatedAgo">لسه ما اتحدّثش</span>
           </div>
-          <div class="woc-fresh-row" id="prtUpdatedAt"><span class="woc-stamp-chip">—</span></div>
+          <div class="eco-fresh-row" id="prtUpdatedAt"><span class="eco-stamp-chip">—</span></div>
         </div>
-        <button class="woc-rbtn" id="prtRefreshBtn" onclick="handleRefresh()">
-          <span class="woc-rbtn-ico">↺</span><span>تحديث</span><span class="woc-rbtn-badge" id="prtRefreshBadge">—</span>
+        <button class="eco-rbtn" id="prtRefreshBtn" onclick="handleRefresh()">
+          <span class="eco-rbtn-ico">↺</span><span>تحديث</span><span class="eco-rbtn-badge" id="prtRefreshBadge">—</span>
         </button>
       </div>
     </div>
@@ -1101,9 +1102,9 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
      ══════════════════════════════════════════════════════════════ -->
 <div class="tab-panel" id="panelLog">
 
-  <div id="logsLoadingState" class="woc-loadbox" role="status" aria-live="polite" style="display:none;">
-    <span class="woc-load-spin" aria-hidden="true"></span>
-    <div class="woc-load-title">⏳ جاري تحميل السجل برجاء الانتظار ...</div>
+  <div id="logsLoadingState" class="eco-loadbox" role="status" aria-live="polite" style="display:none;">
+    <span class="eco-load-spin" aria-hidden="true"></span>
+    <div class="eco-load-title">⏳ جاري تحميل السجل برجاء الانتظار ...</div>
   </div>
   <div id="logsErrorState" class="state-box error" style="display:none;">
     <div style="font-size:40px;">⚠️</div>
@@ -2874,13 +2875,13 @@ function prtRenderFreshness(now = Date.now()) {
   const btn   = document.getElementById("prtRefreshBtn");
   if (!agoEl || !atEl) return;
   const info = agoInfo(prtLastLoadedAt, now);
-  agoEl.className   = `woc-ago ${info.cls}`;
+  agoEl.className   = `eco-ago ${info.cls}`;
   agoEl.textContent = info.text;
   const iso = prtLastLoadedAt ? prtLastLoadedAt.toISOString() : null;
   atEl.innerHTML = iso
-    ? `<span class="woc-stamp-chip">${escHtml(formatDate(iso))}</span>`
-      + `<span class="woc-stamp-chip">${escHtml(formatTimeOnly(iso))}</span>`
-    : '<span class="woc-stamp-chip">—</span>';
+    ? `<span class="eco-stamp-chip">${escHtml(formatDate(iso))}</span>`
+      + `<span class="eco-stamp-chip">${escHtml(formatTimeOnly(iso))}</span>`
+    : '<span class="eco-stamp-chip">—</span>';
   if (btn) btn.classList.toggle("is-stale", info.stale);
 }
 

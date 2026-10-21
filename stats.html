@@ -8,7 +8,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- 🔴 قاعدة الأسبقية: الـ shell أولاً، وستايل الصفحة بعده وبيغلب -->
-  <link rel="stylesheet" href="shared/shell.css">
+  <link rel="stylesheet" href="shared/core.css">
+  <link rel="stylesheet" href="shared/hub.css">
 <style>
 /* ⚠️ **مفيش كتلة توكنز هنا عن قصد.** Tier L (1400px) هو الافتراضي في الـ shell
    أصلاً، والجدول هنا بثمن أعمدة — فمحتاجينه زي ما هو. `Order-Item-Remover.html` بينزّل Tier M لأن جدوله أضيق. */
@@ -123,15 +124,15 @@
         </div>
       </div>
       <div class="st-act">
-        <div class="woc-fresh">
-          <div class="woc-fresh-row">
-            <span class="woc-fresh-lbl">آخر تحديث</span>
-            <span class="woc-ago" id="stAgo">لسه ما اتحدّثش</span>
+        <div class="eco-fresh">
+          <div class="eco-fresh-row">
+            <span class="eco-fresh-lbl">آخر تحديث</span>
+            <span class="eco-ago" id="stAgo">لسه ما اتحدّثش</span>
           </div>
-          <div class="woc-fresh-row" id="stStamp"><span class="woc-stamp-chip">—</span></div>
+          <div class="eco-fresh-row" id="stStamp"><span class="eco-stamp-chip">—</span></div>
         </div>
-        <button class="woc-rbtn" id="stRefreshBtn" onclick="stLoad()" title="تحديث الأرقام">
-          <span class="woc-rbtn-ico">↺</span><span>تحديث</span>
+        <button class="eco-rbtn" id="stRefreshBtn" onclick="stLoad()" title="تحديث الأرقام">
+          <span class="eco-rbtn-ico">↺</span><span>تحديث</span>
         </button>
       </div>
     </div>
@@ -143,7 +144,7 @@
   <div class="card">
     <div class="card-title">📊 أرقام الفترة</div>
     <div class="st-kpis" id="stKpis">
-      <div class="woc-loadbox" role="status" aria-live="polite"><span class="woc-load-spin" aria-hidden="true"></span><div class="woc-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div></div>
+      <div class="eco-loadbox" role="status" aria-live="polite"><span class="eco-load-spin" aria-hidden="true"></span><div class="eco-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div></div>
     </div>
   </div>
 
@@ -909,13 +910,13 @@ function stRenderFreshness(now = Date.now()) {
   const info = agoInfo(stState.at, now);
   const ago  = document.getElementById('stAgo');
   if (!ago) return;
-  ago.className   = `woc-ago ${info.cls}`;
+  ago.className   = `eco-ago ${info.cls}`;
   ago.textContent = info.text;
   const iso = stState.at ? stState.at.toISOString() : null;
   document.getElementById('stStamp').innerHTML = iso
-    ? `<span class="woc-stamp-chip">${esc(formatDate(iso))}</span>`
-      + `<span class="woc-stamp-chip">${esc(formatTimeOnly(iso))}</span>`
-    : '<span class="woc-stamp-chip">—</span>';
+    ? `<span class="eco-stamp-chip">${esc(formatDate(iso))}</span>`
+      + `<span class="eco-stamp-chip">${esc(formatTimeOnly(iso))}</span>`
+    : '<span class="eco-stamp-chip">—</span>';
   document.getElementById('stRefreshBtn').classList.toggle('is-stale', info.stale);
 }
 

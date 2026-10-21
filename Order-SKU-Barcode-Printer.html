@@ -21,7 +21,8 @@
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 
   <!-- 🔴 قاعدة الأسبقية: الـ shell أولاً، وستايل الصفحة بعده وبيغلب -->
-  <link rel="stylesheet" href="shared/shell.css">
+  <link rel="stylesheet" href="shared/core.css">
+  <link rel="stylesheet" href="shared/hub.css">
 <style>
 /* ⚠️ الاستثناء الوحيد المسموح لكتلة توكنز في صفحة: `--container-max` لوحدها.
    Tier M — جدول واحد بسيط (٥ أعمدة)، مفيش فلاتر ومفيش تاب سجل. */
@@ -493,7 +494,7 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
   <div id="headerMount"></div>
 
   <!-- بيظهر بس لما الصفحة اتفتحت من جدول التغليف (`?from=pack`) -->
-  <div class="woc-back-bar" id="backToQueueBar">
+  <div class="eco-back-bar" id="backToQueueBar">
     <span>📦 جاي من طابور التغليف</span>
     <button class="btn-ghost" onclick="location.href='Orders-Packing-Checker.html'">↩ رجوع للطابور</button>
   </div>

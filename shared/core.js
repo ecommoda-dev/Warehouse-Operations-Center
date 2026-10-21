@@ -222,13 +222,13 @@ function esc(v) {
 }
 
 // حالة «جاري الاستعلام» الموحّدة (v1.36.0) — نفس الشكل والنص في كل الأدوات.
-// ⚠️ الـ CSS (`.woc-loadbox`) في `shared/shell.css` §LOADBOX. `msg` اختياري،
+// ⚠️ الـ CSS (`.eco-loadbox`) في `shared/shell.css` §LOADBOX. `msg` اختياري،
 //    `small` للاستخدام جوّه خلية جدول.
 const ECO_LOADING_MSG = '⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...';
 function ecoLoadingHTML(msg, small) {
-  return '<div class="woc-loadbox' + (small ? ' is-sm' : '') + '" role="status" aria-live="polite">'
-    + '<span class="woc-load-spin" aria-hidden="true"></span>'
-    + '<div class="woc-load-title">' + esc(msg || ECO_LOADING_MSG) + '</div></div>';
+  return '<div class="eco-loadbox' + (small ? ' is-sm' : '') + '" role="status" aria-live="polite">'
+    + '<span class="eco-load-spin" aria-hidden="true"></span>'
+    + '<div class="eco-load-title">' + esc(msg || ECO_LOADING_MSG) + '</div></div>';
 }
 
 // ── التوقيت — `Africa/Cairo` **يتحسب**، مايتكتبش ثابت ─────────
