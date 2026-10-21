@@ -407,6 +407,25 @@ console.log('\n⑪ الرئيسية — المربع والرابط');
   await ctx.close();
 }
 
+// ══════════════════════════════════════════════════════════════
+console.log('\n⑫ تنسيق التصدير = الـ core (قرار أحمد 22-10-2026)');
+{
+  const { ctx, page } = await makePage();
+  await page.goto(`${BASE}/${PAGE}`);
+  await page.waitForSelector('.app-header h1');
+  const r = await page.evaluate(() => ({
+    d: formatDateForExport('2026-10-22T10:00:00Z'),
+    t: formatTimeForExport('2026-10-22T10:30:00Z'),
+    e: formatDateForExport(null), et: formatTimeForExport(''),
+    local: /function\s+formatDateForExport/.test([...document.scripts].map(x => x.textContent).join('\n')),
+  }));
+  is(r.d === '22-10-2026', 'التاريخ DD-MM-YYYY زي الـ core', r.d);
+  is(/^\d{2}:\d{2} (صباحاً|مساءً)$/.test(r.t), 'الوقت hh:mm صباحاً/مساءً', r.t);
+  is(r.e === '' && r.et === '', 'الفاضي = خانة فاضية مش «—»');
+  is(!r.local, 'مفيش نسخة محلية بتغلب الـ core في الصفحة');
+  await ctx.close();
+}
+
 await browser.close().catch(() => {});
 server.close();
 console.log(`\n${fail ? '❌' : '✅'} ${pass} عدّى · ${fail} فشل`);
