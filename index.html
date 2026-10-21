@@ -39,6 +39,8 @@
 .login-status.info{color:var(--accent)}.login-status.warn{color:var(--amber)}.login-status.error{color:var(--red)}
 .login-alert{display:none;min-height:38px;border-radius:10px;border:1px solid var(--red-border);background:var(--red-light);color:var(--red);padding:9px 12px;font-size:12px;font-weight:800;text-align:center;line-height:1.6}
 .login-alert.visible{display:block}
+.login-notice{display:none;min-height:38px;border-radius:10px;border:1px solid var(--amber-border);background:var(--amber-light);color:var(--amber-dark);padding:9px 12px;font-size:12px;font-weight:800;text-align:center;line-height:1.6}
+.login-notice.visible{display:block}
 .pin-zone{display:none;flex-direction:column;gap:12px;animation:pinZoneIn .16s ease}
 .pin-zone.visible{display:flex}
 @keyframes pinZoneIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
@@ -95,6 +97,7 @@
         </select>
         <div class="login-status warn" id="loginStatus">الإعدادات غير مكتملة — افتح الإعدادات أولًا.</div>
       </div>
+      <div class="login-notice" id="loginNotice" role="status"></div>
       <!-- ⚠️ loginAlert بره pin-zone — عشان أخطاء تحميل القائمة تبان في الخطوة الأولى -->
       <div class="login-alert" id="loginAlert"></div>
       <div class="pin-zone" id="pinZone">
@@ -133,8 +136,8 @@
   <div id="headerMount"></div>
 
   <div class="home-hint">
-    اختر المحطة اللي هتشتغل عليها. الأعداد بتتحدّث <b>تلقائيًا كل ١٥ دقيقة</b>
-    وبعد كل تحديث يدوي — والعدّاد في كل صف بيقول الرقم ده عمره قد إيه.
+    اختر المحطة اللي هتشتغل عليها. الأعداد بتتحدّث <b>بزرار «تحديث»</b> أو لما تفتح
+    الرئيسية والرقم أقدم من ١٠ دقايق — والعدّاد في كل صف بيقول الرقم ده عمره قد إيه.
   </div>
 
   <div class="woc-home-sec">
@@ -440,11 +443,12 @@
           <div id="aboutWorkers"></div>
           <h4>الأعداد في الشاشة الرئيسية</h4>
           <ul>
-            <li>بتتجاب بعد الدخول والاتنين <b>بالتوازي</b>، وبعد كده <b>بتتحدّث تلقائيًا
-                كل ١٥ دقيقة</b> — نفس فترة طابور التغليف بالظبط.</li>
-            <li>التحديث التلقائي <b>بيقف والتاب مقفول</b> ويكمّل أول ما ترجع.
-                <code>get_ready_orders</code> بيصفّح كل الأوردرات ويصنّف S2 لكل واحد،
+            <li>الرئيسية بتترسم من <b>الكاش</b> لو عمره أقل من ١٠ دقايق (بصفر نداء)، والأقدم بس هو
+                اللي بيتجاب — والخمسة بالتوازي. <b>مفيش تحديث تلقائي</b>: التحديث بزرار «تحديث» في
+                الصف. <code>get_ready_orders</code> بيصفّح كل الأوردرات ويصنّف S2 لكل واحد،
                 فاستعلام على شاشة محدش شايفها تكلفته حقيقية على الـ Worker وعلى شوبيفاي.</li>
+            <li><b>خروج تلقائي بعد ٦٠ دقيقة بلا نشاط</b> (قبلها بدقيقة بانر «أنا موجود»). موقوف طول ما
+                فيه جرد جماعي شغّال أو فيه مسحات ما اتنفّذتش، أو سكانة بتتسجّل.</li>
             <li>عدّاد «آخر تحديث» في كل صف <b>بيلوّن نفسه</b>: أخضر أقل من ٥ دقايق ·
                 أزرق أقل من ١٥ · كهرماني بعدها (والزرار كمان) · أحمر بعد ساعة.
                 والعدّاد بيتحدّث كل نص دقيقة <b>بلا أي نداء شبكة</b>.</li>
@@ -501,7 +505,18 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.42.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.43.0</span>
+          <span class="cl-ver-date">21-10-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🔒 <b>خروج تلقائي لعدم النشاط — ٦٠ دقيقة</b> (Standards #52) زي مركز الشحن والتحصيل بالظبط: بانر تحذير قبلها بدقيقة بزرار «أنا موجود»، وإشعار على شاشة الدخول. النشاط = ضغط مفتاح (السكانر بيتحسب) · ضغط · سكرول · لمس. <b>موقوف</b> أثناء الجرد الجماعي (شغّال أو فيه مسحات ما اتنفّذتش) وأثناء تسجيل سكانة في المكتب/المرتجعات.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>⏸️ <b>اتلغى التحديث التلقائي كل ١٥ دقيقة</b> (الرئيسية · التغليف · تسليمات بوسطة · المكتب · استلام المرتجعات) لتخفيف الضغط على الـ Workers وحد استعلامات شوبيفاي. الرئيسية بترسم من الكاش لو أحدث من <b>١٠ دقايق</b> بصفر نداء، والتحديث بزرار «تحديث».</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge">v1.42.0</span>
           <span class="cl-ver-date">21-10-2026</span>
         </div>
         <ul class="cl-items">
@@ -1167,29 +1182,12 @@ async function finishLogin(username, displayName, logged) {
 // §HOME-JS — الشاشة الرئيسية
 // ══════════════════════════════════════════════════════════════
 
-// 🔴 التحديث التلقائي — كل ١٥ دقيقة (قرار أحمد 06-09-2026).
-//
-//    ده **بيلغي** قاعدة «مفيش polling على الشاشة الرئيسية» اللي كانت
-//    مكتوبة هنا. القرار مبني على إن `Orders-Packing-Checker.html` بتعمل نفس الشيء بالظبط
-//    من v2.4.0 على **نفس** الـ endpoint — فالمبدأ اتكسر أصلاً، والرئيسية
-//    كانت الوحيدة الفاضلة على القاعدة القديمة.
-//
-//    ⚠️ الحراس التلاتة دول **مش تفاصيل تنفيذ** — من غيرهم ده بيبقى
-//       polling أعمى على أتقل endpoint في الستاك × عدد الأجهزة × طول
-//       اليوم، وده بالظبط اللي القاعدة القديمة اتكتبت عشانه:
-//
-//       ① التسليح بعد **كل جلب ناجح** (`armAuto` جوّه `loadQueue`) —
-//          فالعدّاد معناه «١٥ دقيقة من آخر تحديث فعلي» مش من الدخول.
-//       ② `document.hidden` = التاب مقفول/الجهاز مقفول = **مفيش
-//          استعلام**. بيتعلّم `dirty` بس، والجلب بيحصل أول ما الموظف
-//          يرجع للتاب. ده المكافئ المباشر لـ `rdyQueueVisible()`
-//          في صفحة التغليف — «مفيش استعلام على قايمة محدش شايفها».
-//       ③ النبضة (٣٠ ثانية) بتحدّث «منذ كام» **بلا أي نداء شبكة**.
-//
-//    ⚠️ تايمر **لكل طابور لوحده** مش تايمر واحد للاتنين: Workers
-//       مستقلين، وواحد ممكن يقع والتاني ينجح (قاعدة ٤). تايمر موحّد
-//       كان هيربط تسليح الناجح بفشل التاني.
-const WOC_AUTO_REFRESH_MS = 15 * 60 * 1000;
+// ⛔ **مفيش تحديث تلقائي** (v1.43.0 · قرار أحمد 21-10-2026 — نفس سياسة `Delivery-COD-Operations-Center`
+//    من v1.38.0). الجلب عند «تحديث» أو فتح الرئيسية والكاش **أقدم من ١٠ دقايق**.
+//    السبب: تخفيف الضغط على الـ Workers ووراهم حد استعلامات شوبيفاي المشترك (٥ Workers على
+//    نفس الـ Custom App). `armAuto` · `autoTick` · `visibilitychange` · `dirty` اتشالوا.
+//    ✅ اللي فضل: النبضة (٣٠ ثانية) بتحدّث «منذ كام» **بلا أي نداء شبكة**، وهي اللي
+//    بتلوّن الصف بعمره.
 const WOC_TICK_MS         = 30 * 1000;
 
 // ══════════════════════════════════════════════════════════════
@@ -1280,6 +1278,7 @@ async function loadDone(key) {
   try {
     q.done = await fetchDoneCounts(key);
     q.doneErr = null;
+    cacheSet(WOC_CACHE_DONE + key, { day: cairoDayStr(new Date()), counts: q.done });
   } catch (err) {
     q.doneErr = err.message || 'تعذّر تحميل «خلص»';   // الرقم القديم (لو فيه) بيفضل
   } finally {
@@ -1320,12 +1319,13 @@ const HOME_QUEUES = {
     ids: { count:'cntPrint', chips:'chipsPrint', fail:'failPrint',
            ago:'agoPrint', stamp:'stampPrint', btn:'btnPrint', badge:'badgePrint' },
     done: { id: 'donePrint', verb: 'اتطبع', worker: 'printer', pick: donePickPrint },
-    async fetch() {
-      // 🔴 `allZones: true` لازم يبقى **مطابق** لللي `Order-Printer.html` بيبعته —
-      //    الاتنين بيكتبوا نفس الكاش (`WOC_CACHE_PRINT`)، ولو الرقم هنا
-      //    قناة واحدة والصفحة تلاتة، الرئيسية تقول ١٢ والصفحة تفتح على ٤٩.
-      const data = await wocApi(WOC_WORKERS.printer).apiPath('/orders', { allZones: true });
-      cacheSet(WOC_CACHE_PRINT, data);
+    cache: WOC_CACHE_PRINT,
+    // 🔴 `allZones: true` لازم يبقى **مطابق** لللي `Order-Printer.html` بيبعته —
+    //    الاتنين بيكتبوا نفس الكاش (`WOC_CACHE_PRINT`)، ولو الرقم هنا
+    //    قناة واحدة والصفحة تلاتة، الرئيسية تقول ١٢ والصفحة تفتح على ٤٩.
+    fetchRaw() { return wocApi(WOC_WORKERS.printer).apiPath('/orders', { allZones: true }); },
+    // 🔴 `derive` واحدة للشبكة وللكاش — نسختين كانوا هيخلّوا رقم الكاش يخالف رقم الشبكة لنفس الرد.
+    derive(data) {
       const orders = data.orders || [];
       // التقسيمة بقت **بالقناة** مش S1/S2: طابور الطباعة بقى تلات قنوات
       // بتطبع حاجات مختلفة على ورق مختلف، ودي المعلومة اللي الموظف
@@ -1368,9 +1368,9 @@ const HOME_QUEUES = {
     ids: { count:'cntPack', chips:'chipsPack', fail:'failPack',
            ago:'agoPack', stamp:'stampPack', btn:'btnPack', badge:'badgePack' },
     done: { id: 'donePack', verb: 'اتغلّف', worker: 'pack', pick: e => e.type === 'packed' },
-    async fetch() {
-      const data = await wocApi(WOC_WORKERS.pack).apiGet('get_ready_orders');
-      cacheSet(WOC_CACHE_PACK, data);
+    cache: WOC_CACHE_PACK,
+    fetchRaw() { return wocApi(WOC_WORKERS.pack).apiGet('get_ready_orders'); },
+    derive(data) {
       const orders = data.orders || [];
       // 🔴 التقسيمة **بالمندوب** مش بالنوع (قرار أحمد 07-09-2026). السبب
       //    نفس سبب تقسيمة الطباعة بالقناة: «عادي/استبدال» رقم صحيح بس
@@ -1401,8 +1401,9 @@ const HOME_QUEUES = {
     // `types`/`results` فلاتر server-side بتقلّل الصفحات بس — الحكم النهائي في `pick` (فلتر مجهول في الـ Worker بيتجاهَل في صمت).
     done: { id: 'doneBosta', verb: 'اتسلّم لبوسطة', worker: 'shipped',
             params: { types: 'update', results: 'success,warning' }, pick: donePickShip },
-    async fetch() {
-      const data = await wocApi(WOC_WORKERS.shipped).apiGet('get_ready_to_ship');
+    cache: WOC_CACHE_BOSTA,
+    fetchRaw() { return wocApi(WOC_WORKERS.shipped).apiGet('get_ready_to_ship'); },
+    derive(data) {
       const orders = data.orders || [];
       return { total: data.counts?.total ?? orders.length, chips: [] };
     },
@@ -1420,8 +1421,9 @@ const HOME_QUEUES = {
     err: 'تعذّر جلب طابور تسليمات المكتب',
     ids: { count:'cntOffice', chips:'chipsOffice', fail:'failOffice',
            ago:'agoOffice', stamp:'stampOffice', btn:'btnOffice', badge:'badgeOffice' },
-    async fetch() {
-      const data = await wocApi(WOC_WORKERS.office).apiGet('get_ready_to_office');
+    cache: WOC_CACHE_OFFICE,
+    fetchRaw() { return wocApi(WOC_WORKERS.office).apiGet('get_ready_to_office'); },
+    derive(data) {
       return { total: wocOfficeQueue(data.orders || []).length, chips: [] };
     },
   },
@@ -1439,19 +1441,20 @@ const HOME_QUEUES = {
     err: 'تعذّر جلب طابور استلام المرتجعات',
     ids: { count:'cntWarehouse', chips:'chipsWarehouse', fail:'failWarehouse',
            ago:'agoWarehouse', stamp:'stampWarehouse', btn:'btnWarehouse', badge:'badgeWarehouse' },
-    async fetch() {
-      const data = await wocApi(WOC_WORKERS.warehouse).apiGet('get_ready_to_warehouse');
+    cache: WOC_CACHE_WAREHOUSE,
+    fetchRaw() { return wocApi(WOC_WORKERS.warehouse).apiGet('get_ready_to_warehouse'); },
+    derive(data) {
       return { total: wocWarehouseQueue(data.orders || []).length, chips: [] };
     },
   },
 };
 
 const homeQ = {
-  print: { at: null, dirty: false, timer: null, loading: false },
-  pack:  { at: null, dirty: false, timer: null, loading: false },
-  bosta: { at: null, dirty: false, timer: null, loading: false },
-  office:{ at: null, dirty: false, timer: null, loading: false },
-  warehouse:{ at: null, dirty: false, timer: null, loading: false },
+  print: { at: null, loading: false },
+  pack:  { at: null, loading: false },
+  bosta: { at: null, loading: false },
+  office:{ at: null, loading: false },
+  warehouse:{ at: null, loading: false },
 };
 let homeTickTimer = null;
 
@@ -1496,15 +1499,14 @@ function loadCounts() {
   renderFreshness();
   Object.keys(homeQ).forEach(renderDone);   // «—» لحد أول جلب
   startHomeTicker();
-  // ⚠️ التسليح **من الدخول** كمان مش من أول نجاح بس: لو أول جلب فشل،
-  //    تفضل فيه محاولة تلقائية بدل ما الكارت يقف على ⚠️ للأبد.
-  Object.keys(homeQ).forEach(armAuto);
-  // 🔴 **القايمة بتتبني من `homeQ` نفسه — مش مكتوبة بالإيد** (v1.26.0).
-  //    القايمة اليدوية هي اللي بتنسى طابور جديد **في صمت**: الصف بيترسم،
-  //    والعدّاد بيفضل `—` للأبد، ومفيش أي خطأ في الكونسول — الموظف بيقرا
-  //    «ما اتحدّثش» على طابور شغّال. اتمسك في `docs/office-check.mjs` وقت
-  //    إضافة صف المكتب، مش بمراجعة كود.
-  loadQueuesStaggered(Object.keys(homeQ));
+  // 🔴 **الرئيسية بتترسم من الكاش لو عمره < ١٠ دقايق — بصفر نداء** (v1.43.0 · نفس
+  //    سياسة DCO). الأقدم بس هو اللي بيتجاب، والختم = **وقت الكاش** مش وقت الفتح.
+  // 🔴 **القايمة بتتبني من `homeQ` نفسه — مش مكتوبة بالإيد** (v1.26.0). القايمة
+  //    اليدوية هي اللي بتنسى طابور جديد **في صمت**: الصف بيترسم، والعدّاد بيفضل
+  //    `—` للأبد، ومفيش أي خطأ في الكونسول. اتمسك في `docs/office-check.mjs`.
+  const stale = Object.keys(homeQ).filter(k => !homeFromCache(k));
+  renderFreshness();                       // الختم = وقت الكاش، والعدّاد من أول لحظة
+  loadQueuesStaggered(stale);
 }
 
 // المسار الوحيد للجلب — الضغطة اليدوية والنبضة التلقائية الاتنين
@@ -1518,14 +1520,14 @@ async function loadQueue(key, silent = true) {
   //    `loadDone` مابترميش أبدًا — بتخزّن الخطأ وبترسمه.
   const donePromise = def.done ? loadDone(key) : null;
   try {
-    const r = await def.fetch();
+    const raw = await def.fetchRaw();
+    cacheSet(def.cache, raw);         // خام — الاشتقاق بنفس `derive` للشبكة وللكاش
+    const r = def.derive(raw);
     clearFail(def.ids.fail);
     setCount(key, r.total, r.chips);
     // ⚠️ الختم بيتسجّل **حتى لو الطابور رجع فاضي** — «اتحدّث ورجع صفر»
     //    معلومة، و«ما اتحدّثش» معلومة تانية خالص.
     q.at = new Date();
-    q.dirty = false;
-    armAuto(key);                     // العدّاد بيبدأ من آخر تحديث ناجح
   } catch (err) {
     // ⚠️ الختم **مايتغيّرش** في الفشل — ما نقولش للموظف إن القايمة دي
     //    جديدة وهي مش جديدة. والدخول للأداة **لسه شغّال** (قاعدة ٧).
@@ -1628,32 +1630,30 @@ function startHomeTicker() {
   homeTickTimer = setInterval(() => renderFreshness(), WOC_TICK_MS);
 }
 
-// ─── التحديث التلقائي ───
-function armAuto(key) {
-  stopAuto(key);
-  homeQ[key].timer = setInterval(() => autoTick(key), WOC_AUTO_REFRESH_MS);
+// ─── من الكاش (v1.43.0) ───
+// بترجّع `true` لو الطابور اترسم من كاش أحدث من ١٠ دقايق (وكاش «خلص» كمان — لو
+// ناقص بنجيب «خلص» لوحده من غير ما نجيب الطابور). ⚠️ وضع الطابور اللي نجح بيتكتب
+// حتى لو غيره فشل — رقمه صح، والصف التاني لسه بيقول فشل (قاعدة ٤).
+function homeFromCache(key) {
+  const def = HOME_QUEUES[key], q = homeQ[key];
+  const c = cacheGet(def.cache);
+  if (!c || c.ageMs >= WOC_CACHE_TTL_MS) return false;
+  let r;
+  try { r = def.derive(c.data); } catch { return false; }
+  clearFail(def.ids.fail);
+  setCount(key, r.total, r.chips);
+  q.at = new Date(c.at);
+  if (def.done) {
+    const d = cacheGet(WOC_CACHE_DONE + key);
+    // 🔴 يوم القاهرة جوّه الكاش: كاش اتكتب ١١:٥٧م مايتعرضش «النهارده» بعد نص الليل
+    if (d && d.ageMs < WOC_CACHE_TTL_MS && d.data && d.data.day === cairoDayStr(new Date())) {
+      q.done = d.data.counts; q.doneErr = null; renderDone(key);
+    } else {
+      loadDone(key);                  // «خلص» لوحده — الطابور من الكاش
+    }
+  }
+  return true;
 }
-function stopAuto(key) {
-  const q = homeQ[key];
-  if (q.timer) { clearInterval(q.timer); q.timer = null; }
-}
-function autoTick(key) {
-  if (!getSession()) { stopAuto(key); return; }
-  // ② التاب مخفي = القايمة دي محدش شايفها. علّم بس، والجلب عند الرجوع.
-  if (document.hidden) { homeQ[key].dirty = true; return; }
-  loadQueue(key);
-}
-
-// الرجوع للتاب — بيجيب اللي اتأجّل بس. `dirty` **مابيتصفّرش غير بعد
-// جلب ناجح**، فلو الجلب فشل أول رجوع تاني بيحاول.
-// 🔴 **مفرّقة بنفس `loadQueuesStaggered` (§٨①)** — لو أكتر من طابور اتعلّم
-// `dirty` أثناء التاب مخفي (مثلاً بعد غيبة أطول من ١٥ دقيقة)، الرجوع كان
-// هيطلق نفس عدد النداءات المتزامنة اللي التأخير ده اتعمل عشان يمنعها.
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden || !getSession()) return;
-  const dirtyKeys = Object.keys(homeQ).filter(k => homeQ[k].dirty);
-  if (dirtyKeys.length) loadQueuesStaggered(dirtyKeys);
-});
 
 // ⚠️ الحلقة دي مكرّرة في الخمس صفحات **عن قصد**: `WOC_WORKERS` و`cmpVersion`
 //    في الـ shell، بس فحص Step 9 بيطلب وجودهم في كل صفحة، والقايمة نفسها
@@ -1681,6 +1681,12 @@ async function renderAboutWorkers() {
 // ══════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
   renderVersionUI();
+  // الخروج التلقائي لعدم النشاط (Standards #52) — إشعار على شاشة الدخول.
+  // الخروج اليدوي: بلا إشعار.
+  if (new URLSearchParams(location.search).get('reason') === 'idle' && !getSession()) {
+    const n = document.getElementById('loginNotice');
+    if (n) { n.textContent = 'تم تسجيل خروج تلقائي لعدم النشاط'; n.classList.add('visible'); }
+  }
   // جلسة شغّالة؟ يبقى الريفريش مايطلّعش — ودي الوجهة لو جاي من `next`
   if (getSession()) {
     const next = new URLSearchParams(location.search).get('next');
