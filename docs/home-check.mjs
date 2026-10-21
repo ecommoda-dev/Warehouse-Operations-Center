@@ -119,6 +119,15 @@ function makeStub(mode = {}) {
     if (action === 'get_ready_to_office')    return json({ ok: true, orders: [] });
     if (action === 'get_ready_to_warehouse') return json({ ok: true, orders: [] });
 
+    if (action === 'get_done_counts') {
+      calls.done = (calls.done || 0) + 1;
+      if (mode.serverCounts) {
+        const k = host.startsWith('order-printer-worker') ? 'print' : host.startsWith('orders-packing-checker-worker') ? 'pack' : 'ship';
+        const [a, b] = mode.serverCounts[k];
+        return json({ ok: true, today: mode.serverDay || TODAY, yesterday: 'x', counts: { today: a, yesterday: b } });
+      }
+      return json({ error: 'action غير معروف: get_done_counts' }, 400);   // Worker قديم
+    }
     if (action === 'get_logs') {
       calls.logs.push({ host, params: Object.fromEntries(url.searchParams) });
       // تأخير اختياري — من غيره الرد فوري والزرار بيخلّص «جاري التحديث» قبل ما الاختبار يلحق يقيسه
@@ -143,7 +152,7 @@ async function openHome(mode) {
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  page.on('console', m => { if (m.type() === 'error' && !/net::ERR_|status of 500/.test(m.text())) errors.push(m.text()); });
+  page.on('console', m => { if (m.type() === 'error' && !/net::ERR_|status of (500|400)/.test(m.text())) errors.push(m.text()); });
   await page.addInitScript(() => {
     try {
       localStorage.setItem('warehouse_ops_worker_secret', 'test-secret-0123456789');
@@ -272,6 +281,29 @@ console.log('④ التحديث اليدوي');
   const after = calls.logs.filter(c => c.host.startsWith('order-printer-worker')).length;
   is(after > before, 'ضغطة تحديث الصف جابت «خلص» تاني مع الطابور', `${before} → ${after}`);
   is((await txt(page, '#donePrint .woc-done-today')) === '5', 'الرقم لسه ٥ بعد التحديث');
+  await ctx.close();
+}
+
+console.log('⑤ العدّ جاهز من الـ Worker (get_done_counts) + الرجوع للتصفيح');
+{
+  const { page, ctx, calls, errors } = await openHome({ serverCounts: { print: [41, 17], pack: [29, 12], ship: [8, 3] } });
+  is((await txt(page, '#donePrint .woc-done-today')) === '41' && (await txt(page, '#donePrint .woc-done-yest')) === '17', 'الطباعة: الرقم من الـ Worker (41 / 17)');
+  is((await txt(page, '#donePack .woc-done-today')) === '29' && (await txt(page, '#doneBosta .woc-done-today')) === '8', 'التغليف وتسليم بوسطة كمان من الـ Worker');
+  is(calls.logs.length === 0, 'صفر نداء get_logs لما الـ Worker رجّع العدّ', `get_logs × ${calls.logs.length}`);
+  is((calls.done || 0) >= 3, 'نادى get_done_counts على التلات Workers', String(calls.done));
+  is(errors.length === 0, 'صفر خطأ في الكونسول', errors.join(' | '));
+  await ctx.close();
+}
+{
+  // يوم القاهرة عند الـ Worker غير عند الجهاز → رقم مش موثوق → الرجوع للتصفيح (مش رقم غلط)
+  const { page, ctx, calls } = await openHome({ serverCounts: { print: [41, 17], pack: [29, 12], ship: [8, 3] }, serverDay: D2 });
+  is((await txt(page, '#donePrint .woc-done-today')) === '5' && calls.logs.length > 0, 'يوم مختلف في الرد → رجع للتصفيح والرقم من السجل (5)');
+  await ctx.close();
+}
+{
+  // Worker قديم (get_done_counts → 400): التصفيح هو اللي بيشتغل — هو الوضع الافتراضي في ①–④
+  const { page, ctx, calls } = await openHome({});
+  is((calls.done || 0) >= 3 && (await txt(page, '#donePrint .woc-done-today')) === '5', 'Worker قديم (400) → الرجوع للتصفيح بنفس الأرقام');
   await ctx.close();
 }
 
