@@ -36,8 +36,8 @@
   --border:         #e5e7eb;
   --border-strong:  #d1d5db;
   --text-primary:   #111827;
-  --text-secondary: #6b7280;
-  --text-muted:     #6b7280;
+  --text-secondary: #4b5563;   /* v1.44.0 — نفس DCO (تباين أحسن · معيار #48). كان #6b7280 */
+  --text-muted:     #4b5563;
   --text-mid:       #374151;
   --accent:         #2563eb;
   --accent-light:   #eff6ff;
