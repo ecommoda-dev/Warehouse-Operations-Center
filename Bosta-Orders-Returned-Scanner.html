@@ -9,7 +9,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 
   <!-- 🔴 قاعدة الأسبقية: الـ shell أولاً، وستايل الصفحة بعده وبيغلب -->
-  <link rel="stylesheet" href="shared/shell.css">
+  <link rel="stylesheet" href="shared/core.css">
+  <link rel="stylesheet" href="shared/hub.css">
 <style>
 /* ⚠️ الاستثناء الوحيد المسموح لكتلة توكنز في صفحة: `--container-max` لوحدها.
    الصفحة دي Tier M — تاب السجل جدول حقيقي، فمايجوزش تفضل Tier S. */
@@ -869,9 +870,9 @@ input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-colo
             <li><code>extra.result</code> — <code>success</code> / <code>warning</code> / <code>error</code> / <code>rejected</code> / <code>already</code></li>
             <li><code>extra.stage</code> — للصف المرفوض: <code>lookup</code> أو <code>write</code> (كان متوافق واتوقف وقت التنفيذ — سباق بين موظفين)</li>
             <li><code>TN_MIN_LEN</code> / <code>TN_MAX_LEN</code> — حدود طول رقم التتبع (٨–١٣)</li>
-            <li><code>WOC_API_TIMEOUT_MS</code> (shell) — مهلة ٩٠ ثانية على كل نداء (AbortController)</li>
-            <li><code>WOC_WORKERS.returned.min</code> (shell) — أقل نسخة Worker الواجهة بتشتغل معاها. <b>مالهاش أي علاقة بـ <code>TOOL_VERSION</code></b></li>
-            <li><code>WOC_WORKERS.returned.url</code> (shell) — ثابت في الكود، مش حقل إعدادات ولا <code>localStorage</code></li>
+            <li><code>ECO_API_TIMEOUT_MS</code> (shell) — مهلة ٩٠ ثانية على كل نداء (AbortController)</li>
+            <li><code>ECO_WORKERS.returned.min</code> (shell) — أقل نسخة Worker الواجهة بتشتغل معاها. <b>مالهاش أي علاقة بـ <code>TOOL_VERSION</code></b></li>
+            <li><code>ECO_WORKERS.returned.url</code> (shell) — ثابت في الكود، مش حقل إعدادات ولا <code>localStorage</code></li>
             <li><code>LS_SECRET = 'warehouse_ops_worker_secret'</code> (shell) — مفتاح <b>مجموعة <code>warehouse_ops</code></b>، قيمة واحدة للست Workers</li>
           </ul>
 
@@ -1139,8 +1140,10 @@ input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-colo
 <div id="sharedMount"></div>
 
 <!-- 🔴 نسخة واحدة مضمّنة — ممنوع محتوى الملف ده يتنسخ هنا -->
-<script src="shared/shell.js"></script>
-<script>document.getElementById('sharedMount').innerHTML = wocSharedModals();</script>
+<script src="shared/hub-config.js"></script>
+<script src="shared/core.js"></script>
+<script src="shared/gates.js"></script>
+<script>document.getElementById('sharedMount').innerHTML = ecoSharedModals();</script>
 <script>
 
 // ══════════════════════════════════════════════════════════════
@@ -1156,7 +1159,7 @@ const session = requireSession();
 //    `currentEmployee.username` بيتبعت في جسم كل `update`.
 const currentEmployee = { username: session.username, displayName: session.displayName };
 
-const { apiGet, apiPost } = wocApi(WOC_WORKERS.returned);
+const { apiGet, apiPost } = ecoApi(ECO_WORKERS.returned);
 const PAGE_WORKERS = ['returned'];
 
 // 🔴 `checks` في الـ Worker ده **كائن بمفاتيح إنجليزية** — الشكل التالت
@@ -1175,15 +1178,15 @@ const PAGE_DIAG_LABELS = {
 };
 
 // ⚠️ الحلقة دي مكرّرة في كل صفحة **عن قصد** — فحص Step 9 بيطلب وجود
-//    `WOC_WORKERS` و`cmpVersion` في كل صفحة، والقايمة بتفرق من صفحة للتانية.
+//    `ECO_WORKERS` و`cmpVersion` في كل صفحة، والقايمة بتفرق من صفحة للتانية.
 async function renderAboutWorkers() {
   const box = document.getElementById('aboutWorkers');
   if (!box) return;
   const rows = await Promise.all(PAGE_WORKERS.map(async k => {
-    const w = WOC_WORKERS[k];
+    const w = ECO_WORKERS[k];
     let got = '—', mark = '❌';
     try {
-      const cfg = await wocApi(w).apiGet('get_config');
+      const cfg = await ecoApi(w).apiGet('get_config');
       got = cfg.version || cfg.WORKER_VERSION || '—';
       mark = cmpVersion(got, w.min) < 0 ? '⚠️' : '✅';
     } catch { got = 'تعذّر الوصول'; }
@@ -2625,7 +2628,7 @@ async function fetchLog() {
   updateFilterIconState();
 
   document.getElementById('logBody').innerHTML =
-    `<tr><td colspan="8">${wocLoadingHTML('⏳ جاري تحميل السجل برجاء الانتظار ...', true)}</td></tr>`;
+    `<tr><td colspan="8">${ecoLoadingHTML('⏳ جاري تحميل السجل برجاء الانتظار ...', true)}</td></tr>`;
 
   try {
     const [pageData, countData] = await Promise.all([
@@ -2870,7 +2873,7 @@ document.addEventListener('click', e => {
 // ══════════════════════════════════════════════════════════════
 // §INIT — التحميل (الجلسة اتأكدت فوق)
 // ══════════════════════════════════════════════════════════════
-document.getElementById('headerMount').innerHTML = wocHeader({
+document.getElementById('headerMount').innerHTML = ecoHeader({
   icon: '↩️', title: 'قسم مرتجعات بوسطة', subtitle: 'مركز عمليات المخزن',
   session,
   // ⚠️ Chip التاب الحالي — بيظهر **بس وقت الـ Sticky** (شريط التابات

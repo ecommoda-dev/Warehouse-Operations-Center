@@ -279,9 +279,9 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
   is(badge === cnt, 'بادج زرار التحديث == العدّاد', `${badge} ≠ ${cnt}`);
 
   // 🔴 البند اللي بيقفل درس R1: الصفحة بتعدّ من **نفس** دالة الـ shell
-  const gateCount = await page.evaluate((raw) => wocOfficeQueue(raw).length, RAW);
+  const gateCount = await page.evaluate((raw) => ecoOfficeQueue(raw).length, RAW);
   is(gateCount === ELIGIBLE_NAMES.length,
-     '`wocOfficeQueue` في الـ shell بترجّع نفس الرقم بالظبط', String(gateCount));
+     '`ecoOfficeQueue` في الـ shell بترجّع نفس الرقم بالظبط', String(gateCount));
 
   // ⚠️ بادج الطرد مقصود هنا (بخلاف طابور بوسطة) — باركود الأوردر واحد للطردين
   const s2row = await page.$$eval('#rqTableBody tr', trs =>
@@ -299,7 +299,7 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
      '🔴 عمود «موقع الشحنة» موجود — بنفس اسمه في `Package-Transfer-To-Warehouse.html`', heads.join(' | '));
   const cells = await page.$$eval('#rqTableBody tr:first-child td', td => td.length);
   is(cells === heads.length, 'خلايا الصف == أعمدة الهيدر', `${cells} ≠ ${heads.length}`);
-  // 🔴 والقيمة جاية من `wocOfficeQueue` — لو السطر اتشال من الـ shell، الخانة
+  // 🔴 والقيمة جاية من `ecoOfficeQueue` — لو السطر اتشال من الـ shell، الخانة
   //    بتقول «مش مسجّل» على **كل** صف حتى اللي عليه `Warehouse` فعلاً، **بلا
   //    أي خطأ في الكونسول**. البند ده بيقفل الحفرة دي بصف عليه القيمة فعلاً.
   const rowTxt = (n) => page.$$eval('#rqTableBody tr', (trs, nm) =>
@@ -311,7 +311,7 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
 
   // 🔴 أرضية تاريخ الأوردر (v1.29.0) — **جاية من الرد مش مكتوبة في الصفحة**
   const subTxt  = (await page.locator('#rqSub').textContent() || '');
-  const wantDay = await page.evaluate((d) => wocYmdToDMY(d), ORDERS_SINCE);
+  const wantDay = await page.evaluate((d) => ecoYmdToDMY(d), ORDERS_SINCE);
   is(subTxt.includes(wantDay),
      '🔴 أرضية تاريخ الأوردر مكتوبة على الشاشة — والتاريخ جاي من رد الـ Worker',
      `${subTxt} ⊅ ${wantDay}`);

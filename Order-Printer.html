@@ -10,7 +10,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 
   <!-- 🔴 قاعدة الأسبقية: الـ shell أولاً، وستايل الصفحة بعده وبيغلب -->
-  <link rel="stylesheet" href="shared/shell.css">
+  <link rel="stylesheet" href="shared/core.css">
+  <link rel="stylesheet" href="shared/hub.css">
 <style>
 .main { padding: 0 20px 24px; }
 
@@ -451,7 +452,7 @@
 /* 🔴 `flex:1` **على المربعات هي** — دي اللي بتتمدّد فتتوسّط في المساحة
    الفاضية، والأكشن بيتزحلق للطرف من `margin-inline-start:auto`. لو حد حط
    `flex:1` على منطقة تانية، الأكشن بيقع في نص الصندوق (نفس فخّ
-   `.woc-row-mid` في الشاشة الرئيسية). */
+   `.eco-row-mid` في الشاشة الرئيسية). */
 .chan-chips {
   display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
   flex: 1; min-width: 0; justify-content: center;
@@ -500,7 +501,7 @@
 .type-text.type-s2 { color: var(--purple-dark); }
 
 /* ── بادج عمر الأوردر — **نسخة من `.time-badge` في `Orders-Packing-Checker.html`** بالحرف
-   (نفس الدرجات ونفس التوكنز). الدرجة بتيجي من `wocDayLevel` في الـ shell،
+   (نفس الدرجات ونفس التوكنز). الدرجة بتيجي من `ecoDayLevel` في الـ shell،
    فمستحيل الصفحتين يفترقوا في **الدرجة**؛ الـ CSS هنا هو اللي بيلوّنها،
    وأي تعديل عليه يتعمل في الصفحتين في نفس التمريرة (درس R1). */
 .time-badge {
@@ -780,7 +781,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 <main class="main">
 
 <!-- بيظهر بس لما الصفحة اتفتحت من جدول التغليف (`?from=pack`) -->
-<div class="woc-back-bar" id="backToQueueBar">
+<div class="eco-back-bar" id="backToQueueBar">
   <span>📦 جاي من طابور التغليف</span>
   <button class="btn-ghost" onclick="location.href='Orders-Packing-Checker.html'">↩ رجوع للطابور</button>
 </div>
@@ -791,9 +792,9 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
      ══════════════════════════════════════════════════════════════ -->
 <div class="tab-panel active" id="panelPrint">
 
-  <div id="printLoadingState" class="woc-loadbox" role="status" aria-live="polite" style="display:none;">
-    <span class="woc-load-spin" aria-hidden="true"></span>
-    <div class="woc-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div>
+  <div id="printLoadingState" class="eco-loadbox" role="status" aria-live="polite" style="display:none;">
+    <span class="eco-load-spin" aria-hidden="true"></span>
+    <div class="eco-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div>
   </div>
   <div id="printErrorState" class="state-box error" style="display:none;">
     <div style="font-size:40px;">⚠️</div>
@@ -864,22 +865,22 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
       </div>
 
       <!-- ── لوحة «آخر تحديث» + زرار التحديث — **وحدة واحدة** ──
-           🔴 الكلاسات (`.woc-fresh` · `.woc-ago` · `.woc-stamp-chip` ·
-              `.woc-rbtn`) من `shared/shell.css` — **مش نسخة هنا**. اللوحة
+           🔴 الكلاسات (`.eco-fresh` · `.eco-ago` · `.eco-stamp-chip` ·
+              `.eco-rbtn`) من `shared/shell.css` — **مش نسخة هنا**. اللوحة
               دي موجودة في تلات شاشات دلوقتي (الرئيسية · التغليف · الطباعة)،
               ونسخة CSS رابعة معناها إن الشكل يفترق مع أول تعديل (درس R1).
            ⚠️ `align-items:stretch` على `.prt-actions` هو اللي بيخلّي الزرار
-              بنفس ارتفاع اللوحة بالظبط — زي `.rdy-actions` و`.woc-row-act`. -->
+              بنفس ارتفاع اللوحة بالظبط — زي `.rdy-actions` و`.eco-row-act`. -->
       <div class="prt-actions">
-        <div class="woc-fresh">
-          <div class="woc-fresh-row">
-            <span class="woc-fresh-lbl">آخر تحديث</span>
-            <span class="woc-ago" id="prtUpdatedAgo">لسه ما اتحدّثش</span>
+        <div class="eco-fresh">
+          <div class="eco-fresh-row">
+            <span class="eco-fresh-lbl">آخر تحديث</span>
+            <span class="eco-ago" id="prtUpdatedAgo">لسه ما اتحدّثش</span>
           </div>
-          <div class="woc-fresh-row" id="prtUpdatedAt"><span class="woc-stamp-chip">—</span></div>
+          <div class="eco-fresh-row" id="prtUpdatedAt"><span class="eco-stamp-chip">—</span></div>
         </div>
-        <button class="woc-rbtn" id="prtRefreshBtn" onclick="handleRefresh()">
-          <span class="woc-rbtn-ico">↺</span><span>تحديث</span><span class="woc-rbtn-badge" id="prtRefreshBadge">—</span>
+        <button class="eco-rbtn" id="prtRefreshBtn" onclick="handleRefresh()">
+          <span class="eco-rbtn-ico">↺</span><span>تحديث</span><span class="eco-rbtn-badge" id="prtRefreshBadge">—</span>
         </button>
       </div>
     </div>
@@ -1101,9 +1102,9 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
      ══════════════════════════════════════════════════════════════ -->
 <div class="tab-panel" id="panelLog">
 
-  <div id="logsLoadingState" class="woc-loadbox" role="status" aria-live="polite" style="display:none;">
-    <span class="woc-load-spin" aria-hidden="true"></span>
-    <div class="woc-load-title">⏳ جاري تحميل السجل برجاء الانتظار ...</div>
+  <div id="logsLoadingState" class="eco-loadbox" role="status" aria-live="polite" style="display:none;">
+    <span class="eco-load-spin" aria-hidden="true"></span>
+    <div class="eco-load-title">⏳ جاري تحميل السجل برجاء الانتظار ...</div>
   </div>
   <div id="logsErrorState" class="state-box error" style="display:none;">
     <div style="font-size:40px;">⚠️</div>
@@ -1914,8 +1915,10 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 <div id="sharedMount"></div>
 
 <!-- 🔴 نسخة واحدة مضمّنة — ممنوع محتوى الملف ده يتنسخ هنا -->
-<script src="shared/shell.js"></script>
-<script>document.getElementById('sharedMount').innerHTML = wocSharedModals();</script>
+<script src="shared/hub-config.js"></script>
+<script src="shared/core.js"></script>
+<script src="shared/gates.js"></script>
+<script>document.getElementById('sharedMount').innerHTML = ecoSharedModals();</script>
 <script>
 
 // ══════════════════════════════════════════════════════════════
@@ -1927,20 +1930,20 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 //    التحويل لشاشة الدخول شغّال. نداءات ضايعة ووميض شاشة.
 const session = requireSession();
 const currentEmployee = { username: session.username, displayName: session.displayName };
-const { apiGet, apiPost, apiPath } = wocApi(WOC_WORKERS.printer);
+const { apiGet, apiPost, apiPath } = ecoApi(ECO_WORKERS.printer);
 const PAGE_WORKERS = ['printer'];
 
-// ⚠️ الحلقة دي مكرّرة في الخمس صفحات **عن قصد**: `WOC_WORKERS` و`cmpVersion`
+// ⚠️ الحلقة دي مكرّرة في الخمس صفحات **عن قصد**: `ECO_WORKERS` و`cmpVersion`
 //    في الـ shell، بس فحص Step 9 بيطلب وجودهم في كل صفحة، والقايمة نفسها
 //    بتفرق من صفحة للتانية.
 async function renderAboutWorkers() {
   const box = document.getElementById('aboutWorkers');
   if (!box) return;
   const rows = await Promise.all(PAGE_WORKERS.map(async k => {
-    const w = WOC_WORKERS[k];
+    const w = ECO_WORKERS[k];
     let got = '—', mark = '❌';
     try {
-      const cfg = await wocApi(w).apiGet('get_config');
+      const cfg = await ecoApi(w).apiGet('get_config');
       got = cfg.version || cfg.WORKER_VERSION || '—';
       mark = cmpVersion(got, w.min) < 0 ? '⚠️' : '✅';
     } catch { got = 'تعذّر الوصول'; }
@@ -2048,10 +2051,10 @@ async function openReprintFor(cleanNum, oid) {
   row.printedBy = vi.printedBy;
   row.printedAt = vi.printedAt || (o.type === 'S2' ? o.printingTimeS2 : o.printingTimeS1)
                   || (printLastS1Map[cleanNum]?.timestamp || null);
-  // 🔴 القناة — من غيرها `wocChannelOf` بترجّع "none" وأوردر بوسطة بيتطبعله
+  // 🔴 القناة — من غيرها `ecoChannelOf` بترجّع "none" وأوردر بوسطة بيتطبعله
   //    **فاتورة شوبيفاي بدل البوليصة**. الحقل بييجي من `/lookup` (Worker
   //    v2.5.0) بنفس شكل صف `/orders` بالحرف.
-  row.chan = wocChannelOf(o);
+  row.chan = ecoChannelOf(o);
   // §LAST-DOC — نفس شارة الطابور: «الورقة اللي في المخزن فاتورة ولا بوليصة؟»
   row.lastDoc = (printLastDocMap[cleanNum] || {}).doc || null;
   reprintRow = row;
@@ -2828,7 +2831,7 @@ async function loadOrders(forceRefresh = false) {
     //    هتفضل على عدد قديم.
     // ⚠️ الكاش بيتكتب **مفلتر** — الشاشة الرئيسية بتقرا منه، وعدّاد فيه
     //    أوردر اتطبع خلاص بيخلّي الرئيسية تقول رقم والصفحة تفتح على رقم تاني.
-    cacheSet(WOC_CACHE_PRINT, { ...ordersData, orders: allOrders, total: allOrders.length });
+    cacheSet(ECO_CACHE_PRINT, { ...ordersData, orders: allOrders, total: allOrders.length });
 
     rebuildPrintFilterItems();
     applyPrintFilters();
@@ -2872,13 +2875,13 @@ function prtRenderFreshness(now = Date.now()) {
   const btn   = document.getElementById("prtRefreshBtn");
   if (!agoEl || !atEl) return;
   const info = agoInfo(prtLastLoadedAt, now);
-  agoEl.className   = `woc-ago ${info.cls}`;
+  agoEl.className   = `eco-ago ${info.cls}`;
   agoEl.textContent = info.text;
   const iso = prtLastLoadedAt ? prtLastLoadedAt.toISOString() : null;
   atEl.innerHTML = iso
-    ? `<span class="woc-stamp-chip">${escHtml(formatDate(iso))}</span>`
-      + `<span class="woc-stamp-chip">${escHtml(formatTimeOnly(iso))}</span>`
-    : '<span class="woc-stamp-chip">—</span>';
+    ? `<span class="eco-stamp-chip">${escHtml(formatDate(iso))}</span>`
+      + `<span class="eco-stamp-chip">${escHtml(formatTimeOnly(iso))}</span>`
+    : '<span class="eco-stamp-chip">—</span>';
   if (btn) btn.classList.toggle("is-stale", info.stale);
 }
 
@@ -2902,7 +2905,7 @@ function prtTick() {
   const nowMs = Date.now(), now = new Date(nowMs);
   prtRenderFreshness(nowMs);
   document.querySelectorAll("#printTableBody [data-prt-age]").forEach(el => {
-    const info = wocOrderAge(el.dataset.prtAge || null, now);
+    const info = ecoOrderAge(el.dataset.prtAge || null, now);
     el.className   = `time-badge age-badge ${info.cls}`;
     el.textContent = info.text;
   });
@@ -2951,7 +2954,7 @@ function rebuildPrintFilterItems() {
 // 🔴 القناة `null` = **مش عارفين**. الصف بيظهر والطباعة مقفولة برسالة.
 //    ممنوع أي تخمين ومنوع أي اشتقاق من العنوان (قاعدة ١٦)، وممنوع الإخفاء —
 //    الإخفاء هو اللي أنتج «الأوردر مش ظاهر» مع `ZONE_FILTER`.
-// 🔴 `ZONE_SHOWROOM` و`BOSTA_UPLOADED_TAGS` و`wocChannelOf` و`wocChannelGate`
+// 🔴 `ZONE_SHOWROOM` و`BOSTA_UPLOADED_TAGS` و`ecoChannelOf` و`ecoChannelGate`
 //    كلهم في `shared/shell.js` §BOSTA-GATE — **مش هنا**. الشاشة الرئيسية
 //    بتعدّ من نفس رد `/orders` بالظبط، ونسخة تانية من أي قاعدة فيهم معناها
 //    إن الرئيسية تقول رقم والصفحة تفتح على رقم تاني (اللي حصل في v1.11.0:
@@ -3005,13 +3008,13 @@ function renderChannelCounts() {
   const rows   = decoratePrintRows();
   const counts = { invoice: 0, showroom: 0, awb: 0, none: 0 };
   // 🔴 البادج بيعدّ **اللي بيتعرض في القناة فعلاً** — بنفس بوابة الجدول
-  //    بالحرف (`wocChannelGate`). قبل v1.11.1 كان بيعدّ القناة كلها،
+  //    بالحرف (`ecoChannelGate`). قبل v1.11.1 كان بيعدّ القناة كلها،
   //    فبادج بوسطة كان بيقول ٦٦ والجدول تحته فيه ٦: الفرق كان متفسَّر في
   //    الملاحظة، بس **رقم على زرار مش بيتقرا كحاشية** — بيتقرا كوعد بشغل
   //    موجود. المستبعَد بيتقال بعدده في الملاحظة، مش في العدّاد.
   for (const r of rows) {
     const chan = r.chan;
-    if (wocChannelGate(r, chan) === null) counts[chan] = (counts[chan] || 0) + 1;
+    if (ecoChannelGate(r, chan) === null) counts[chan] = (counts[chan] || 0) + 1;
   }
 
   for (const key of Object.keys(CHANNELS)) {
@@ -3209,7 +3212,7 @@ function prtSinceText(iso) {
 function decoratePrintRows() {
   return allOrders.map(o => {
     const vi   = voidInvoiceInfo(o);
-    const chan = wocChannelOf(o);
+    const chan = ecoChannelOf(o);
     return {
       ...o,
       chan,
@@ -3221,7 +3224,7 @@ function decoratePrintRows() {
         : null,
       // §BOSTA-GATE — `tags` بترجع من `/orders` أصلاً (نفس المصدر بتاع
       //    `isPrinted`)، فمفيش نداء زيادة ومفيش تعديل Worker للبند ده.
-      bostaUploaded: wocBostaUploaded(o),
+      bostaUploaded: ecoBostaUploaded(o),
       count: getPrintCount(o),
       // ⚠️ `time` اتشال من صفوف الطابور (v1.14.0) — عمود «الوقت» بقى جزء من
       //    عمود «تاريخ الأوردر». `sortConfig.time` **بيفضل** لأن تاب السجل
@@ -3256,7 +3259,7 @@ function applyPrintFilters() {
     //    **قناته هو** بالحرف — مش بوابة مفتوحة. يعني أوردر بوسطة لسه
     //    ما اترفعش يفضل مستبعَد زي ما هو، ومجموع مربعات القنوات يفضل
     //    مساوي لعدد صفوف الجدول بالظبط (نفس البند في فحص المتصفح).
-    if (wocChannelGate(o, activeChannel === null ? o.chan : activeChannel)) return false;
+    if (ecoChannelGate(o, activeChannel === null ? o.chan : activeChannel)) return false;
     if (q && !(String(o.name).toLowerCase().includes(q) || String(o.customer).toLowerCase().includes(q))) return false;
     if (msState.pType.selected.size   && !msState.pType.selected.has(o.type))     return false;
     if (msState.pStatus.selected.size && !msState.pStatus.selected.has(o.status)) return false;
@@ -3284,7 +3287,7 @@ function renderPrintTable(rows) {
       // ⚠️ الـ ISO بيتحط في `data-prt-age` عشان النبضة تحدّث البادج **في
       //    مكانه** كل ٣٠ ثانية من غير إعادة رسم الجدول — إعادة الرسم
       //    بتصفّر تمرير الجدول تحت إيد الموظف (نفس `data-rdy-age`).
-      const age = wocOrderAge(o.createdAt, now);
+      const age = ecoOrderAge(o.createdAt, now);
       // ⛔ صف بلا قناة: مربع التحديد **متعطّل** والسبب مكتوب جنبه. الصف
       //    بيظهر عشان الموظف يعرف إن فيه أوردر مستني قرار، مش عشان يطبعه.
       const lock = !o.printable;
@@ -4847,7 +4850,7 @@ function renderFooter() {
 // ══════════════════════════════════════════════════════════════
 window.addEventListener("load", () => {
   renderVersionUI();
-  document.getElementById("headerMount").innerHTML = wocHeader({
+  document.getElementById("headerMount").innerHTML = ecoHeader({
     icon: '🖨️', title: 'قسم الطباعة', subtitle: 'مركز عمليات المخزن',
     session,
     // ⚠️ Chip التاب الحالي — بيظهر **بس وقت الـ Sticky** (شريط التابات
@@ -4880,9 +4883,9 @@ window.addEventListener("load", () => {
 
   // ⚠️ كاش الطابور — الشاشة **مابتفضلش فاضية**. القديم بيترسم فورًا
   //    ومختوم بوقته، والجلب بيحصل في الخلفية لو عدّى الـ TTL.
-  const cached = cacheGet(WOC_CACHE_PRINT);
+  const cached = cacheGet(ECO_CACHE_PRINT);
   if (cached) { renderOrdersFrom(cached.data); markFreshness(cached.at); }
-  const queueReady = (!cached || cached.ageMs > WOC_CACHE_TTL_MS) ? loadOrders() : Promise.resolve();
+  const queueReady = (!cached || cached.ageMs > ECO_CACHE_TTL_MS) ? loadOrders() : Promise.resolve();
 
   const logsReady = loadLogs();   // عدّاد «مرات الطباعة» + خريطة آخر طباعة
 

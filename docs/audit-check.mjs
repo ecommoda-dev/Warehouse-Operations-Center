@@ -309,7 +309,7 @@ console.log('\n⑦ تاب السجل — فلتر الموظف بيتملّى م
 }
 
 // ══════════════════════════════════════════════════════════════
-console.log('\n⑧ الجرد الجماعي — إلغاء تحميل الباركودات (cancelSignal في wocApi)');
+console.log('\n⑧ الجرد الجماعي — إلغاء تحميل الباركودات (cancelSignal في ecoApi)');
 {
   const { ctx, page, calls, errors } = await makePage({ bulkDelayMs: 4000 });
   await page.goto(`${BASE}/${PAGE}`);
@@ -394,11 +394,11 @@ console.log('\n⑪ الرئيسية — المربع والرابط');
 {
   const { ctx, page } = await makePage();
   await page.goto(`${BASE}/index.html`);
-  await page.waitForSelector('.woc-tool');
-  const tile = page.locator(`a.woc-tool[href="${PAGE}"]`);
+  await page.waitForSelector('.eco-tool');
+  const tile = page.locator(`a.eco-tool[href="${PAGE}"]`);
   is(await tile.count() === 1, 'مربع «جرد المخزون» موجود في الرئيسية');
   is((await tile.innerText()).includes('جرد المخزون'), 'اسم المربع');
-  is(await page.locator('.woc-home-sec', { hasText: 'أخرى' }).locator(`a[href="${PAGE}"]`).count() === 1, 'المربع في قسم «أخرى»');
+  is(await page.locator('.eco-home-sec', { hasText: 'أخرى' }).locator(`a[href="${PAGE}"]`).count() === 1, 'المربع في قسم «أخرى»');
   await tile.click();
   await page.waitForURL(`**/${PAGE}`, { timeout: 5000 });
   ok('الضغط بيفتح الصفحة بالجلسة (من غير دخول تاني)');

@@ -16,7 +16,8 @@
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 
   <!-- 🔴 قاعدة الأسبقية: الـ shell أولاً، وستايل الصفحة بعده وبيغلب -->
-  <link rel="stylesheet" href="shared/shell.css">
+  <link rel="stylesheet" href="shared/core.css">
+  <link rel="stylesheet" href="shared/hub.css">
 
 <!-- ══════════════════════════════════════════════════════════════
      §STYLES
@@ -687,8 +688,8 @@
    أخضر في العمود وواقع في المربع الأزرق، وده كان بيخلّي الموظف يدوّر على
    الصفوف الخضرا في مربع مش بتاعها.
    🔴 والشو روم بقى **تركواز** في v1.25.0 (كان أخضر) — اللون ده في **خمس
-   أماكن** (`.zchip` و`.courier-cell` هنا · `.woc-chip.qc-showroom` و
-   `.woc-chip.chip-ch-showroom` في الـ shell · `.chan-btn`/`.chan-cell` في
+   أماكن** (`.zchip` و`.courier-cell` هنا · `.eco-chip.qc-showroom` و
+   `.eco-chip.chip-ch-showroom` في الـ shell · `.chan-btn`/`.chan-cell` في
    `Order-Printer.html`)، وأي تعديل عليه يتعمل في الخمسة في نفس التمريرة (درس R1). */
 .zchip.qc-bosta{background:var(--red-light);color:var(--red-dark);border-color:var(--red-border)}
 .zchip.qc-showroom{background:var(--teal-light);color:var(--teal-dark);border-color:var(--teal-border)}
@@ -1447,9 +1448,9 @@
       </div>
 
     </div>
-    <div id="lookupLoading" class="woc-loadbox" role="status" aria-live="polite" style="display:none">
-      <span class="woc-load-spin" aria-hidden="true"></span>
-    <div class="woc-load-title">⏳ جاري البحث عن الأوردر برجاء الانتظار ...</div>
+    <div id="lookupLoading" class="eco-loadbox" role="status" aria-live="polite" style="display:none">
+      <span class="eco-load-spin" aria-hidden="true"></span>
+    <div class="eco-load-title">⏳ جاري البحث عن الأوردر برجاء الانتظار ...</div>
     </div>
   <!-- ─── §TOOL::readyQueue — طابور «جاهز للتغليف» (مدموج) ───────────────
        ⚠️ الجدول ده **عرض بس** — الضغط على صف مابيفتحش شاشة التشييك
@@ -1510,9 +1511,9 @@
       <div class="state-sub">اضغط «تحديث» للاستعلام عن الأوردرات الجاهزة</div>
     </div>
 
-    <div id="rdyStateLoading" class="woc-loadbox" role="status" aria-live="polite" style="display:none">
-      <span class="woc-load-spin" aria-hidden="true"></span>
-    <div class="woc-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div>
+    <div id="rdyStateLoading" class="eco-loadbox" role="status" aria-live="polite" style="display:none">
+      <span class="eco-load-spin" aria-hidden="true"></span>
+    <div class="eco-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div>
     </div>
 
     <div id="rdyStateEmpty" class="state-box" style="display:none">
@@ -1987,7 +1988,7 @@
       <div style="padding:0 16px">
         <div id="logExportWarn" class="export-warn" style="display:none;margin-top:12px"></div>
       </div>
-      <div id="logLoading" class="woc-loadbox is-sm" role="status" aria-live="polite" style="display:none"><span class="woc-load-spin" aria-hidden="true"></span><div class="woc-load-title">⏳ جاري تحميل السجل برجاء الانتظار ...</div></div>
+      <div id="logLoading" class="eco-loadbox is-sm" role="status" aria-live="polite" style="display:none"><span class="eco-load-spin" aria-hidden="true"></span><div class="eco-load-title">⏳ جاري تحميل السجل برجاء الانتظار ...</div></div>
       <div class="tbl-scroll">
         <table class="data-table" id="logTable">
           <thead>
@@ -2030,8 +2031,10 @@
 <div id="sharedMount"></div>
 
 <!-- 🔴 نسخة واحدة مضمّنة — ممنوع محتوى الملف ده يتنسخ هنا -->
-<script src="shared/shell.js"></script>
-<script>document.getElementById('sharedMount').innerHTML = wocSharedModals();</script>
+<script src="shared/hub-config.js"></script>
+<script src="shared/core.js"></script>
+<script src="shared/gates.js"></script>
+<script>document.getElementById('sharedMount').innerHTML = ecoSharedModals();</script>
 <script>
 // ══════════════════════════════════════════════════════════════
 // §INIT — الجلسة أولاً، قبل أي حاجة تانية
@@ -2042,20 +2045,20 @@
 //    التحويل لشاشة الدخول شغّال.
 const session = requireSession();
 const currentEmployee = { username: session.username, displayName: session.displayName };
-const { apiGet, apiPost } = wocApi(WOC_WORKERS.pack);
+const { apiGet, apiPost } = ecoApi(ECO_WORKERS.pack);
 const PAGE_WORKERS = ['pack'];
 
-// ⚠️ الحلقة دي مكرّرة في الخمس صفحات **عن قصد**: `WOC_WORKERS` و`cmpVersion`
+// ⚠️ الحلقة دي مكرّرة في الخمس صفحات **عن قصد**: `ECO_WORKERS` و`cmpVersion`
 //    في الـ shell، بس فحص Step 9 بيطلب وجودهم في كل صفحة، والقايمة نفسها
 //    بتفرق من صفحة للتانية.
 async function renderAboutWorkers() {
   const box = document.getElementById('aboutWorkers');
   if (!box) return;
   const rows = await Promise.all(PAGE_WORKERS.map(async k => {
-    const w = WOC_WORKERS[k];
+    const w = ECO_WORKERS[k];
     let got = '—', mark = '❌';
     try {
-      const cfg = await wocApi(w).apiGet('get_config');
+      const cfg = await ecoApi(w).apiGet('get_config');
       got = cfg.version || cfg.WORKER_VERSION || '—';
       mark = cmpVersion(got, w.min) < 0 ? '⚠️' : '✅';
     } catch { got = 'تعذّر الوصول'; }
@@ -2322,7 +2325,7 @@ function poProfileHTML(pr) {
     : esc(pr.name || '—');
   rows.push(poRow('الأوردر', nameHTML));
   rows.push(poRow('تاريخ الأوردر', pr.createdAt
-    ? `${esc(formatDate(pr.createdAt))} · ${esc(wocOrderAge(pr.createdAt).text)}` : poVal(null)));
+    ? `${esc(formatDate(pr.createdAt))} · ${esc(ecoOrderAge(pr.createdAt).text)}` : poVal(null)));
   rows.push(poRow('المرحلة المحسوبة', esc(pr.stage === 'S2' ? 'استبدال / استرجاع (S2)' : 'عادي (S1)')));
   rows.push(poRow('حالة الأوردر (S1)', poVal(pr.s1Status, pr.s1Status === 'Cancelled' ? 'po-bad' : '')));
   rows.push(poRow('حالة الاستبدال (S2)', poVal(pr.s2Status)));
@@ -3287,12 +3290,12 @@ function rdyCourierClass(display) {
 //    رقم تاني — بالظبط اللي حصل مع بوابة بوسطة في v1.11.0 (درس R1).
 //    ⛔ ممنوع تعريفهم تاني في أي صفحة: تعريف في صفحة بيغلب الـ shell
 //    (بيتحمّل قبلها) والقاعدتين هيفترقوا في صمت.
-// ⚠️ `wocCourierGroup` بتقبل الخام والمعروض الاتنين، فتمرير
+// ⚠️ `ecoCourierGroup` بتقبل الخام والمعروض الاتنين، فتمرير
 //    `rdyFormatCourier`-ed value آمن: «غير محدد» بتقع في «مناديب» زي
 //    الفاضي بالظبط.
-const RDY_COURIER_GROUPS = WOC_COURIER_GROUPS;
+const RDY_COURIER_GROUPS = ECO_COURIER_GROUPS;
 function rdyCourierGroupOf(courierDisplay) {
-  return wocCourierGroup(courierDisplay);
+  return ecoCourierGroup(courierDisplay);
 }
 
 // الضغط عليه = تحديد/إلغاء **كل** قيم المندوب الحقيقية اللي بتقع في المجموعة
@@ -3308,11 +3311,11 @@ function rdyCourierGroupValues(group) {
 // ⚠️ العدّ من `rdyAllOrders` (الطابور كله) مش من المفلتر — لو اتحسب على
 //    المفلتر، أول ضغطة كانت هتصفّر باقي المربع فما حدش يقدر يرجّع.
 function rdyCourierChipRows() {
-  // 🔴 العدّ نفسه من `wocCourierCounts` في الـ shell — **مش خريطة محلية**.
+  // 🔴 العدّ نفسه من `ecoCourierCounts` في الـ shell — **مش خريطة محلية**.
   //    خريطة بمفاتيح مكتوبة بالإيد هنا معناها إن مجموعة جديدة (زي «شو روم»
-  //    في v1.14.0) بتدخل `WOC_COURIER_GROUPS` وتطلع مربع **عدّاده undefined**
+  //    في v1.14.0) بتدخل `ECO_COURIER_GROUPS` وتطلع مربع **عدّاده undefined**
   //    من غير أي خطأ في الكونسول.
-  const counts = wocCourierCounts(rdyAllOrders);
+  const counts = ecoCourierCounts(rdyAllOrders);
   return RDY_COURIER_GROUPS.map(g => ({ ...g, n: counts[g.key] }));
 }
 
@@ -3378,11 +3381,11 @@ const RDY_OPT_LINKS = {
 //    توقيت القاهرة (toCairo) لأن الـ ISO الجاي من شوبيفاي بتوقيت UTC،
 //    و`iso.slice(0,10)` كان هيقفل اليوم الساعة ٣ صباحًا بتوقيتنا.
 // 🔴 **تفويض للـ shell §HELPERS من v1.14.0** — `Order-Printer.html` بقت بتعرض نفس
-//    بادج عمر الأوردر، فالقاعدة نزلت مصدر واحد (`wocDayDiff`). نسخة هنا
+//    بادج عمر الأوردر، فالقاعدة نزلت مصدر واحد (`ecoDayDiff`). نسخة هنا
 //    ونسخة هناك = نفس الأوردر يبان «منذ يومين» في صفحة و«منذ ٣ أيام» في
 //    التانية (درس R1). ⛔ ممنوع الرجوع لتعريف محلي.
 function rdyDayDiff(iso, now) {
-  return wocDayDiff(iso, now);
+  return ecoDayDiff(iso, now);
 }
 
 // صيغ الجمع العربية — «٢ دقيقة» و«٣ يوم» غلط لغويًا وبتقلّل الثقة في الشاشة
@@ -3417,12 +3420,12 @@ function rdySincePrint(iso, now = new Date()) {
 // «الوقت منذ الطباعة» و«عمر الأوردر» بياخدوا نفس الدرجة؛ النص هو اللي
 // بيفرق بينهم مش اللون.
 function rdyDayLevel(days) {
-  return wocDayLevel(days);          // 🔴 تفويض للـ shell — زي `rdyDayDiff` فوق
+  return ecoDayLevel(days);          // 🔴 تفويض للـ shell — زي `rdyDayDiff` فوق
 }
 
 // عمر الأوردر — بالأيام **بس** (جوّه عمود تاريخ الأوردر، بدون ساعات)
 function rdyOrderAge(iso, now = new Date()) {
-  return wocOrderAge(iso, now);      // 🔴 تفويض للـ shell — زي `rdyDayDiff` فوق
+  return ecoOrderAge(iso, now);      // 🔴 تفويض للـ shell — زي `rdyDayDiff` فوق
 }
 
 // ─── §READY-JS::msState — كل الفلاتر multi-select (بند ٢١) ───
@@ -4012,7 +4015,7 @@ async function rdyLoadOrders({ silent = false } = {}) {
     const data = await apiGet('get_ready_orders');
     // ⚠️ الكاش لازم يتكتب بعد **كل** جلب ناجح، وإلا الشاشة الرئيسية
     //    هتفضل على عدد قديم.
-    cacheSet(WOC_CACHE_PACK, data);
+    cacheSet(ECO_CACHE_PACK, data);
     rdyDirty = false;                // ⚠️ بيتصفّر بعد **نجاح** الجلب بس
     rdyRenderFrom(data, new Date().toISOString());
 
@@ -4797,7 +4800,7 @@ window.addEventListener('afterprint', () => {
 // Init
 // ══════════════════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('headerMount').innerHTML = wocHeader({
+  document.getElementById('headerMount').innerHTML = ecoHeader({
     // ⚠️ الاسم المعروض بس — قيمة `tool` في D1 لسه `pack_checker`
     //    والـ Worker ما اتلمسش (قرار أحمد 06-09-2026).
     icon: '📦', title: 'قسم التغليف', subtitle: 'مركز عمليات المخزن', session,
@@ -4820,9 +4823,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // ⚠️ كاش الطابور — الشاشة **مابتفضلش فاضية**. القديم بيترسم فورًا
   //    ومختوم بوقته، والجلب بيحصل في الخلفية لو عدّى الـ TTL.
-  const cached = cacheGet(WOC_CACHE_PACK);
+  const cached = cacheGet(ECO_CACHE_PACK);
   if (cached) { rdyRenderFrom(cached.data, cached.at); }
-  if (!cached || cached.ageMs > WOC_CACHE_TTL_MS) rdyLoadOrders();
+  if (!cached || cached.ageMs > ECO_CACHE_TTL_MS) rdyLoadOrders();
 
   setTimeout(() => focusEntryInput(), 100);   // المربع النشط — الافتراضي
 });

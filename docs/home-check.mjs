@@ -190,16 +190,16 @@ console.log('① شريط «خلص» — الأرقام والتعريفات');
 {
   const { page, ctx, calls, errors } = await openHome({});
   for (const [k, id, verb] of [['print', 'Print', 'اتطبع'], ['pack', 'Pack', 'اتغلّف'], ['ship', 'Bosta', 'اتسلّم لبوسطة']]) {
-    const t = await txt(page, `#done${id} .woc-done-today`), y = await txt(page, `#done${id} .woc-done-yest`);
+    const t = await txt(page, `#done${id} .eco-done-today`), y = await txt(page, `#done${id} .eco-done-yest`);
     is(t === String(EXPECT[k][0]) && y === String(EXPECT[k][1]),
        `${verb}: النهارده ${EXPECT[k][0]} · أمس ${EXPECT[k][1]}`, `طلع ${t} / ${y}`);
-    is((await txt(page, `#done${id} .woc-done-lbl`)).includes(verb), `الفعل «${verb}» مكتوب`);
+    is((await txt(page, `#done${id} .eco-done-lbl`)).includes(verb), `الفعل «${verb}» مكتوب`);
   }
-  is(await page.locator('#doneBosta .woc-done-arr svg').count() === 1 && await page.locator('#donePrint .woc-ck svg').count() === 1,
+  is(await page.locator('#doneBosta .eco-done-arr svg').count() === 1 && await page.locator('#donePrint .eco-ck svg').count() === 1,
      '✓ في دايرة + سهم بعد الاسم');
-  is(await page.locator('.woc-done').count() === 3, 'الشريط في التلات صفوف بس (المكتب والمرتجعات ما دخلوش)');
+  is(await page.locator('.eco-done').count() === 3, 'الشريط في التلات صفوف بس (المكتب والمرتجعات ما دخلوش)');
   is(await page.locator('#doneOffice, #doneWarehouse').count() === 0, 'مفيش شريط في المكتب والمرتجعات');
-  is(await page.locator('.woc-unit').count() === 0, 'كلمة «أوردر» اتشالت من الخمس صفوف');
+  is(await page.locator('.eco-unit').count() === 0, 'كلمة «أوردر» اتشالت من الخمس صفوف');
 
   const first = calls.logs.find(c => c.host.startsWith('order-printer-worker'));
   is(first && first.params.dateFrom === addDays(YEST, -1) && first.params.dateTo === TODAY,
@@ -209,78 +209,61 @@ console.log('① شريط «خلص» — الأرقام والتعريفات');
 
   // اللون: رقم «اليوم» محايد ≠ الرقم الكبير
   const big = await page.locator('#cntPrint').evaluate(e => getComputedStyle(e).color);
-  const today = await page.locator('#donePrint .woc-done-today').evaluate(e => getComputedStyle(e).color);
+  const today = await page.locator('#donePrint .eco-done-today').evaluate(e => getComputedStyle(e).color);
   is(big !== today && today === 'rgb(55, 65, 81)', '🔴 رقم «اليوم» رمادي غامق ومختلف عن لون الرقم الكبير', `${big} ↔ ${today}`);
-  const yest = await page.locator('#donePrint .woc-done-yest').evaluate(e => getComputedStyle(e).color);
+  const yest = await page.locator('#donePrint .eco-done-yest').evaluate(e => getComputedStyle(e).color);
   is(yest !== today, '«أمس» أخف من «اليوم»');
 
   // الشريط جوّه الكارت وملزوق بحافته السفلية
-  const rb = await page.locator('a.woc-row').first().boundingBox(), sb = await page.locator('#donePrint').boundingBox();
+  const rb = await page.locator('a.eco-row').first().boundingBox(), sb = await page.locator('#donePrint').boundingBox();
   is(sb.x >= rb.x - 1 && sb.x + sb.width <= rb.x + rb.width + 1 && Math.abs((sb.y + sb.height) - (rb.y + rb.height)) <= 3,
      'الشريط جوّه الكارت بعرضه كله وملزوق بحافته السفلية', `${JSON.stringify(sb)} ↔ ${JSON.stringify(rb)}`);
-  is(await page.locator('a.woc-row').first().evaluate(e => e.tagName) === 'A', 'الصف كله لينك (الشريط جزء منه)');
+  is(await page.locator('a.eco-row').first().evaluate(e => e.tagName) === 'A', 'الصف كله لينك (الشريط جزء منه)');
   is(errors.length === 0, 'صفر خطأ في الكونسول', errors.join(' | '));
+  if (process.env.ECO_SHOT) await page.screenshot({ path: process.env.ECO_SHOT, fullPage: true });   // لقطة للمراجعة بالعين
   await ctx.close();
 }
 
-console.log('② chips — مجموعة موصولة بخانات رقم');
+console.log('② chips — منفصلة (زي الشحن · قرار أحمد 22-10-2026)');
 {
   const { page, ctx } = await openHome({});
-  const segs = page.locator('#chipsPrint .woc-cgroup .woc-seg');
-  is(await segs.count() === 3, 'الطباعة: ٣ خانات في كبسولة واحدة');
-  const nums = await page.locator('#chipsPrint .woc-seg-n').allTextContents();
-  is(nums.join(',') === '3,1,0', 'أرقام الخانات (مناديب · بوسطة · شو روم) = 3,1,0', nums.join(','));
-  const labels = await page.locator('#chipsPrint .woc-seg-t').allTextContents();
-  is(labels.join('|') === 'مناديب|بوسطة|شو روم', 'الأسماء بالترتيب الثابت', labels.join('|'));
-
-  // 🔴 الرقم على اليمين والاسم على اليسار
-  const nb = await page.locator('#chipsPrint .woc-seg-n').first().boundingBox();
-  const lb = await page.locator('#chipsPrint .woc-seg-t').first().boundingBox();
-  is(nb.x > lb.x, '🔴 الرقم على **يمين** الاسم', `${nb.x} ↔ ${lb.x}`);
-
-  const att = page.locator('#chipsPrint .woc-att');
-  is(await att.count() === 1 && (await att.textContent()).includes('2'), 'بادج «في انتظار الرفع» (٢) على خانة بوسطة');
-  is(await page.locator('#chipsPrint .woc-seg-t:text("بوسطة")').evaluate(e => !!e.closest('.woc-seg').querySelector('.woc-att')), 'البادج جوّه خانة بوسطة نفسها');
-  is(await page.locator('#chipsPrint .chip-ch-pending').count() === 0, 'مفيش chip «في انتظار الرفع» لوحده');
-  is(await page.locator('#chipsPrint .woc-seg.z0').count() === 1, 'الصفر (شو روم) باهت — خانة واحدة بس');
-  const op = await page.locator('#chipsPrint .woc-seg.z0 .woc-seg-n').evaluate(e => getComputedStyle(e).opacity);
-  is(Number(op) < 0.6, 'خانة الصفر opacity < .6', op);
-
-  const pnums = await page.locator('#chipsPack .woc-seg-n').allTextContents();
-  is(pnums.join(',') === '2,1,0', 'التغليف: 2,1,0 (نفس الكبسولة)', pnums.join(','));
-  is(await page.locator('#chipsPack .woc-att').count() === 0, 'التغليف: مفيش بادج');
+  const cp = page.locator('#chipsPrint .eco-chip');
+  const texts = (await cp.allTextContents()).map(s => s.replace(/\s+/g, ' ').trim());
+  is(await page.locator('#chipsPrint .eco-cgroup, #chipsPrint .eco-seg').count() === 0, '⛔ مفيش كبسولة موصولة ولا خانات (اتشالت)');
+  is(texts.slice(0, 3).join('|') === 'مناديب 3|بوسطة 1|شو روم 0', 'الطباعة: chips منفصلة بالترتيب الثابت (مناديب · بوسطة · شو روم)', texts.join('|'));
+  is(texts.some(s => s.includes('في انتظار الرفع على بوسطة') && s.endsWith('2')), 'chip «⏳ في انتظار الرفع على بوسطة» (٢) لوحده — بيظهر لما يكون فيه فعلاً', texts.join('|'));
+  is(await page.locator('#chipsPrint .eco-att').count() === 0, 'ومفيش بادج على خانة بوسطة (اتشال مع الكبسولة)');
+  const pk = (await page.locator('#chipsPack .eco-chip').allTextContents()).map(s => s.replace(/\s+/g, ' ').trim());
+  is(pk.join('|') === 'مناديب 2|بوسطة 1|شو روم 0', 'التغليف: نفس التقسيمة (٢ · ١ · ٠) chips منفصلة', pk.join('|'));
   await ctx.close();
 }
 {
-  // 🔴 خانة بوسطة صفر + معلّق: الخانة باهتة **والبادج لا**
+  // chip الانتظار بيظهر لما يكون فيه معلّق بس
   const { page, ctx } = await openHome({ pendingOnly: true });
-  const seg = page.locator('#chipsPrint .woc-seg', { hasText: 'بوسطة' });
-  const isZero = await seg.evaluate(e => e.classList.contains('z0'));
-  const opN = await seg.locator('.woc-seg-n').evaluate(e => getComputedStyle(e).opacity);
-  const opB = await seg.locator('.woc-att').evaluate(e => getComputedStyle(e).opacity);
-  is(isZero && Number(opN) < 0.6 && opB === '1', '🔴 بوسطة صفر: الرقم باهت **والبادج مابيبهتش**', `${isZero} · ${opN} · ${opB}`);
+  const texts = (await page.locator('#chipsPrint .eco-chip').allTextContents()).map(s => s.replace(/\s+/g, ' ').trim());
+  is(texts.some(s => s.includes('في انتظار الرفع على بوسطة')) && texts.some(s => s.startsWith('بوسطة 0')), 'بوسطة صفر + معلّق: الصفر ظاهر وchip الانتظار ظاهر', texts.join('|'));
   await ctx.close();
 }
 
 console.log('③ الاستقلال والفشل');
 {
   const { page, ctx, errors } = await openHome({ logsFail: true });
-  const t = await txt(page, '#donePrint .woc-done-today'), w = await txt(page, '#donePrint .woc-done-warn');
+  const t = await txt(page, '#donePrint .eco-done-today'), w = await txt(page, '#donePrint .eco-done-warn');
   is(t === '—' && w.includes('تعذّر'), '🔴 فشل سجل الطباعة: «—» وعلامة «تعذّر» (مش صفر)', `${t} · ${w}`);
   is((await txt(page, '#cntPrint')) === '4', '🔴 والطابور شغّال (٤) — فشل «خلص» ما خفاهوش', await txt(page, '#cntPrint'));
-  is((await txt(page, '#donePack .woc-done-today')) === '2', 'وباقي الأدوات ما اتأثرتش');
+  is((await txt(page, '#donePack .eco-done-today')) === '2', 'وباقي الأدوات ما اتأثرتش');
   is(errors.length === 0, 'صفر خطأ JS', errors.join(' | '));
   await ctx.close();
 }
 {
   const { page, ctx } = await openHome({ printQueueFail: true });
   is((await txt(page, '#cntPrint')) === 'تعذّر', 'فشل الطابور: «تعذّر» مش صفر');
-  is((await txt(page, '#donePrint .woc-done-today')) === '5', '🔴 و«خلص» لسه معروض (٥) — فشل الطابور ما خفاهوش');
+  is((await txt(page, '#donePrint .eco-done-today')) === '5', '🔴 و«خلص» لسه معروض (٥) — فشل الطابور ما خفاهوش');
   await ctx.close();
 }
 {
   const { page, ctx, calls } = await openHome({ endless: true });
-  const t = await txt(page, '#donePrint .woc-done-today'), w = await txt(page, '#donePrint .woc-done-warn');
+  const t = await txt(page, '#donePrint .eco-done-today'), w = await txt(page, '#donePrint .eco-done-warn');
   const n = calls.logs.filter(c => c.host.startsWith('order-printer-worker')).length;
   is(t === '—' && w.includes('تعذّر'), '🔴 سجل أطول من الحد = «تعذّر» مش رقم ناقص', `${t} · ${w}`);
   is(n === 15, 'حارس الحلقة وقف عند ١٥ صفحة بالظبط', String(n));
@@ -292,19 +275,19 @@ console.log('④ التحديث اليدوي');
   const { page, ctx, calls } = await openHome({ delay: 500 });
   const before = calls.logs.filter(c => c.host.startsWith('order-printer-worker')).length;
   await page.click('#btnPrint');
-  is(await page.locator('#btnPrint').evaluate(e => e.classList.contains('loading')), 'الزرار «بيتحدّث» لحد ما الاتنين يخلصوا');
-  await page.waitForFunction(() => !document.querySelector('#btnPrint').classList.contains('loading'), null, { timeout: 8000 });
+  is(await page.locator('#btnPrint').evaluate(e => e.disabled && e.getAttribute('aria-busy') === 'true') && await page.locator('#rowPrint').evaluate(e => e.classList.contains('is-loading')), 'الزرار «بيتحدّث» (جاري) والصف `is-loading` لحد ما الاتنين يخلصوا');
+  await page.waitForFunction(() => !document.querySelector('#btnPrint').disabled, null, { timeout: 8000 });
   const after = calls.logs.filter(c => c.host.startsWith('order-printer-worker')).length;
   is(after > before, 'ضغطة تحديث الصف جابت «خلص» تاني مع الطابور', `${before} → ${after}`);
-  is((await txt(page, '#donePrint .woc-done-today')) === '5', 'الرقم لسه ٥ بعد التحديث');
+  is((await txt(page, '#donePrint .eco-done-today')) === '5', 'الرقم لسه ٥ بعد التحديث');
   await ctx.close();
 }
 
 console.log('⑤ العدّ جاهز من الـ Worker (get_done_counts) + الرجوع للتصفيح');
 {
   const { page, ctx, calls, errors } = await openHome({ serverCounts: { print: [41, 17], pack: [29, 12], ship: [8, 3] } });
-  is((await txt(page, '#donePrint .woc-done-today')) === '41' && (await txt(page, '#donePrint .woc-done-yest')) === '17', 'الطباعة: الرقم من الـ Worker (41 / 17)');
-  is((await txt(page, '#donePack .woc-done-today')) === '29' && (await txt(page, '#doneBosta .woc-done-today')) === '8', 'التغليف وتسليم بوسطة كمان من الـ Worker');
+  is((await txt(page, '#donePrint .eco-done-today')) === '41' && (await txt(page, '#donePrint .eco-done-yest')) === '17', 'الطباعة: الرقم من الـ Worker (41 / 17)');
+  is((await txt(page, '#donePack .eco-done-today')) === '29' && (await txt(page, '#doneBosta .eco-done-today')) === '8', 'التغليف وتسليم بوسطة كمان من الـ Worker');
   is(calls.logs.length === 0, 'صفر نداء get_logs لما الـ Worker رجّع العدّ', `get_logs × ${calls.logs.length}`);
   is((calls.done || 0) >= 3, 'نادى get_done_counts على التلات Workers', String(calls.done));
   is(errors.length === 0, 'صفر خطأ في الكونسول', errors.join(' | '));
@@ -313,13 +296,13 @@ console.log('⑤ العدّ جاهز من الـ Worker (get_done_counts) + ال
 {
   // يوم القاهرة عند الـ Worker غير عند الجهاز → رقم مش موثوق → الرجوع للتصفيح (مش رقم غلط)
   const { page, ctx, calls } = await openHome({ serverCounts: { print: [41, 17], pack: [29, 12], ship: [8, 3] }, serverDay: D2 });
-  is((await txt(page, '#donePrint .woc-done-today')) === '5' && calls.logs.length > 0, 'يوم مختلف في الرد → رجع للتصفيح والرقم من السجل (5)');
+  is((await txt(page, '#donePrint .eco-done-today')) === '5' && calls.logs.length > 0, 'يوم مختلف في الرد → رجع للتصفيح والرقم من السجل (5)');
   await ctx.close();
 }
 {
   // Worker قديم (get_done_counts → 400): التصفيح هو اللي بيشتغل — هو الوضع الافتراضي في ①–④
   const { page, ctx, calls } = await openHome({});
-  is((calls.done || 0) >= 3 && (await txt(page, '#donePrint .woc-done-today')) === '5', 'Worker قديم (400) → الرجوع للتصفيح بنفس الأرقام');
+  is((calls.done || 0) >= 3 && (await txt(page, '#donePrint .eco-done-today')) === '5', 'Worker قديم (400) → الرجوع للتصفيح بنفس الأرقام');
   await ctx.close();
 }
 
@@ -339,7 +322,7 @@ console.log('⑥ بلا تحديث تلقائي + الرئيسية من الكا
   await page.waitForTimeout(1500);
   const after = snap();
   is(JSON.stringify(before) === JSON.stringify(after), '🔴 الفتح التاني خلال ١٠ دقايق = صفر نداء (طابور ولا «خلص»)', `${JSON.stringify(before)} → ${JSON.stringify(after)}`);
-  is((await txt(page, '#cntPrint')) === '4' && (await txt(page, '#donePrint .woc-done-today')) === '5', 'والأرقام معروضة من الكاش (٤ · ٥)');
+  is((await txt(page, '#cntPrint')) === '4' && (await txt(page, '#donePrint .eco-done-today')) === '5', 'والأرقام معروضة من الكاش (٤ · ٥)');
   is((await txt(page, '#agoPrint')).length > 0 && (await txt(page, '#stampPrint')) !== '—', 'والصف بيقول عمره وبختم وقت الكاش');
   // كاش الطباعة أقدم من ١٠ دقايق → الطباعة بس هي اللي بتتجاب
   await page.evaluate(() => { const c = JSON.parse(sessionStorage.getItem('woc_queue_print')); c.at = new Date(Date.now() - 11 * 60000).toISOString(); sessionStorage.setItem('woc_queue_print', JSON.stringify(c)); });
@@ -350,6 +333,52 @@ console.log('⑥ بلا تحديث تلقائي + الرئيسية من الكا
   is(after2.orders === after.orders + 1, 'كاش الطباعة ١١ دقيقة → اتجاب هو بس (+١ على /orders)', `${after.orders} → ${after2.orders}`);
   const packCalls = calls.logs.filter(c => c.host.startsWith('orders-packing-checker-worker')).length;
   is(packCalls === 1, 'والتغليف فضل من الكاش (صفر نداء جديد)', String(packCalls));
+  await ctx.close();
+}
+
+console.log('⑦ التصميم الموحّد — الأقسام الخمسة والهوية والإطار (قرار أحمد 22-10-2026)');
+{
+  const { page, ctx, errors } = await openHome({});
+  const secs = await page.evaluate(() => [...document.querySelectorAll('.eco-home-sec')].map(s => ({
+    id: s.id, title: s.querySelector('.eco-home-sec-title').textContent.trim(),
+    rows: [...s.querySelectorAll('.eco-qrow')].map(r => r.id), tools: [...s.querySelectorAll('.eco-tool')].map(a => a.getAttribute('href')),
+    open: !s.classList.contains('is-collapsed'), sum: !!s.querySelector('.eco-sum') })));
+  is(secs.map(s => s.title).join('|') === 'قسم تجهيز الأوردر|قسم التسليمات|قسم المرتجعات|أدوات مساعدة|أدوات أخرى', '🔴 خمس أقسام بالأسماء والترتيب المتفق عليه', secs.map(s => s.title).join('|'));
+  is(secs[0].rows.join() === 'rowPrint,rowPack' && secs[1].rows.join() === 'rowBosta,rowOffice' && secs[2].rows.join() === 'rowWarehouse,rowBostaReturns',
+     'الصفوف في أقسامها: (طباعة · تغليف) · (بوسطة · مكتب) · (رجوع للمخزن · مرتجعات بوسطة)', JSON.stringify(secs.map(s => s.rows)));
+  is(secs[3].tools.join() === 'Order-Item-Remover.html,Order-SKU-Barcode-Printer.html' && secs[4].tools.join() === 'Inventory-Audit-Updater.html,stats.html',
+     'الأدوات: مساعدة (عطلان · باركود) · أخرى (الجرد · الإحصائيات) — **كروت** مش pills', JSON.stringify([secs[3].tools, secs[4].tools]));
+  is(secs.every(s => s.open) && secs.slice(0, 3).every(s => s.sum) && !secs[3].sum && !secs[4].sum, 'كلها مفتوحة عند الفتح، وأقسام الطوابير بس ليها ملخّص مطوي');
+  // مرتجعات بوسطة = صف بلا طابور
+  const link = await page.evaluate(() => { const r = document.getElementById('rowBostaReturns');
+    return { tag: r.tagName, href: r.getAttribute('href'), link: r.classList.contains('is-link'), num: r.querySelector('.eco-count').textContent.trim(),
+             btn: !!r.querySelector('.eco-qref'), open: r.querySelector('.eco-open').textContent.trim(), inQ: 'bostaReturns' in homeQ, ageBox: !!r.querySelector('.eco-agebox') }; });
+  is(link.tag === 'A' && link.href === 'Bosta-Orders-Returned-Scanner.html' && link.link && link.num === '—' && !link.btn && !link.ageBox && link.open.includes('فتح الأداة') && !link.inQ,
+     '🔴 «مرتجعات بوسطة» **صف** (مش كارت) بلا عدّاد: `—` + «فتح الأداة ←» وبلا تحديث ولا جلب', JSON.stringify(link));
+  // مفيش حافة · الخلفية بتتلوّن بالعمر
+  const edge = await page.evaluate(() => { homeQ.print.at = new Date(Date.now() - 35 * 60000); renderFreshness();
+    const r = document.getElementById('rowPrint'); return { e: getComputedStyle(r, '::before').content, cls: [...r.classList].find(c => c.startsWith('age-')) }; });
+  is(edge.e === 'none' && edge.cls === 'age-warn', '⛔ مفيش حافة جانبية ملوّنة، ولون العمر على الخلفية والمربع والزرار', JSON.stringify(edge));
+  // ألوان الهوية: ٦ ألوان مختلفة وبعيدة عن سلّم العمر
+  const cols = await page.evaluate(() => {
+    const v = n => { const d = document.createElement('i'); d.style.color = `var(${n})`; document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; };
+    return { ids: ['rowPrint', 'rowPack', 'rowBosta', 'rowOffice', 'rowWarehouse', 'rowBostaReturns'].map(i => getComputedStyle(document.getElementById(i).querySelector('.eco-card-name')).color),
+             age: [v('--green'), v('--accent'), v('--amber'), v('--red'), v('--green-dark'), v('--accent-dark'), v('--amber-dark'), v('--red-dark')] }; });
+  is(new Set(cols.ids).size === 6 && cols.ids.every(c => !cols.age.includes(c)), '🎨 ٦ ألوان هوية مختلفة، ولا واحد منهم لون من سلّم العمر', cols.ids.join(' | '));
+  const want = { rowPrint: 'rgb(67, 56, 202)', rowPack: 'rgb(14, 116, 144)', rowBosta: 'rgb(190, 24, 93)', rowOffice: 'rgb(162, 28, 175)', rowWarehouse: 'rgb(120, 53, 15)', rowBostaReturns: 'rgb(154, 91, 36)' };
+  is(Object.keys(want).every((k, i) => cols.ids[i] === want[k]), '🎨 الألوان المعتمدة: إنديجو · سيان · وردي · فوشيا · بني غامق · كراميل', cols.ids.join(' | '));
+  // خطين العنوان بلون العنوان + إطار المطوي
+  const lines = await page.evaluate(() => [...document.querySelectorAll('.eco-home-sec')].every(s => { const c = getComputedStyle(s.querySelector('.eco-home-sec-title')).color;
+    return [...s.querySelectorAll('.eco-sec-ln')].every(l => getComputedStyle(l).backgroundColor === c); }));
+  is(lines, 'خطين العنوان على الجانبين بنفس لون العنوان');
+  await page.click('#secDeliver .eco-home-sec-hd'); await page.waitForTimeout(450);
+  const fr = await page.evaluate(() => { const hd = document.querySelector('#secDeliver .eco-home-sec-hd'); return { bc: getComputedStyle(hd).borderTopColor, bw: getComputedStyle(hd).borderTopWidth,
+    tc: getComputedStyle(document.querySelector('#secDeliver .eco-home-sec-title')).color, pills: [...document.querySelectorAll('#secDeliver .eco-smw')].map(w => w.querySelector('.eco-sm-n').textContent.trim()) }; });
+  is(fr.bc === fr.tc && parseFloat(fr.bw) >= 2 && fr.pills.join('|') === 'جاهز لتسليم بوسطة|جاهز للتسليم للمكتب', '🎨 المطوي: إطار بنفس لون العنوان + ملخّص بأسماء الصفوف', JSON.stringify(fr));
+  // عطلان = الثيم الأحمر الوحيد
+  const dng = await page.evaluate(() => [...document.querySelectorAll('.eco-tool.tool-danger')].map(a => a.getAttribute('href')));
+  is(dng.join() === 'Order-Item-Remover.html', '🔴 الثيم الأحمر لـ«عطلان؟» وحده (الأداة الهدّامة)', dng.join());
+  is(errors.length === 0, 'صفر خطأ في الكونسول', errors.join(' | '));
   await ctx.close();
 }
 

@@ -9,7 +9,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 
   <!-- 🔴 قاعدة الأسبقية: الـ shell أولاً، وستايل الصفحة بعده وبيغلب -->
-  <link rel="stylesheet" href="shared/shell.css">
+  <link rel="stylesheet" href="shared/core.css">
+  <link rel="stylesheet" href="shared/hub.css">
 <style>
 /* ⚠️ الاستثناء الوحيد المسموح لكتلة توكنز في صفحة: `--container-max` لوحدها.
    الصفحة دي Tier M — تاب السجل جدول، فمايجوزش تفضل Tier S. */
@@ -182,8 +183,8 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
 /* ══ §READY-QUEUE — طابور «جاهز للتسليم لبوسطة» (v1.23.0) ══
    🔴 كلاسات الصفحة، مش الـ shell (قاعدة الأسبقية). اللي جاي من الـ shell
-      هو لوحة «آخر تحديث» بس (`.woc-fresh` · `.woc-ago` · `.woc-stamp-chip`
-      · `.woc-rbtn`) — اللوحة دي في **أربع** شاشات دلوقتي (الرئيسية ·
+      هو لوحة «آخر تحديث» بس (`.eco-fresh` · `.eco-ago` · `.eco-stamp-chip`
+      · `.eco-rbtn`) — اللوحة دي في **أربع** شاشات دلوقتي (الرئيسية ·
       التغليف · الطباعة · هنا)، ونسخة CSS خامسة معناها إن الشكل يفترق مع
       أول تعديل (درس R1). */
 .rq-box { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); overflow: hidden; }
@@ -197,7 +198,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .rq-fail { margin: 12px 16px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--red-light); border: 1px solid var(--red-border); color: var(--red-dark); font-size: 12.5px; }
 .rq-warn { margin: 12px 16px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--amber-light); border: 1px solid var(--amber-border); color: var(--amber-dark); font-size: 12.5px; }
 /* بادج عمر الأوردر — **نسخة طبق الأصل من `Orders-Packing-Checker.html`** بالحرف. الدرجة
-   نفسها بتيجي من `wocDayLevel` في الـ shell فمستحيل تفترق؛ اللون هو
+   نفسها بتيجي من `ecoDayLevel` في الـ shell فمستحيل تفترق؛ اللون هو
    اللي مكرّر. ⚠️ أي تعديل يتعمل في الصفحتين في نفس التمريرة. */
 .time-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; white-space: nowrap; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-secondary); }
 .time-badge.tb-d0 { background: var(--green-light);  color: var(--green-dark);  border-color: var(--green-border); }
@@ -801,17 +802,17 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
             <li><code>§LOG-JS</code> — القسم الموحّد: فلاتر multi-select + فترة سريعة + جدول بترتيب أعمدة + صفحات + تصدير</li>
             <li><code>§LOG-JS::logParams</code> — المصدر الوحيد لفلاتر التلات نداءات (get_logs / get_logs_count / get_logs_export)</li>
             <li><code>§SHELL-JS::freezeOnScroll</code> — قفل الهيدر وشريط التابات بعتبة <b>مقيسة</b> (measureSticky) مش رقم ثابت</li>
-            <li><code>checkWorkerVersion(PAGE_WORKERS)</code> + <code>wocRunDiag()</code> (shell) — حارس نسخة الـ Worker وزرار 🩺 الفحص الذاتي، وبيسمّي الـ Worker بالاسم</li>
+            <li><code>checkWorkerVersion(PAGE_WORKERS)</code> + <code>ecoRunDiag()</code> (shell) — حارس نسخة الـ Worker وزرار 🩺 الفحص الذاتي، وبيسمّي الـ Worker بالاسم</li>
           </ul>
 
           <h4>KEY VARIABLES</h4>
           <ul>
             <li><code>currentEmployee</code> — { username, displayName } جاي من <code>sessionStorage</code> عبر <code>requireSession()</code> — مش من شاشة دخول في الصفحة دي</li>
             <li><code>TOOL_VERSION</code> (shell) — نسخة <b>الهب كله</b>، مصدر واحد لكل الصفحات</li>
-            <li><code>WOC_WORKERS.shipped.min</code> (shell) — أقل نسخة Worker مقبولة. <b>مالهاش أي علاقة بـ <code>TOOL_VERSION</code></b> — اختلاف الرقمين وضع طبيعي</li>
-            <li><code>WOC_WORKERS.shipped.url</code> (shell) — ثابت في الكود، <b>مش</b> حقل إعدادات ولا localStorage</li>
+            <li><code>ECO_WORKERS.shipped.min</code> (shell) — أقل نسخة Worker مقبولة. <b>مالهاش أي علاقة بـ <code>TOOL_VERSION</code></b> — اختلاف الرقمين وضع طبيعي</li>
+            <li><code>ECO_WORKERS.shipped.url</code> (shell) — ثابت في الكود، <b>مش</b> حقل إعدادات ولا localStorage</li>
             <li><code>LS_SECRET = 'warehouse_ops_worker_secret'</code> (shell) — مفتاح <b>مجموعة <code>warehouse_ops</code></b>، قيمة واحدة للست Workers</li>
-            <li><code>WOC_API_TIMEOUT_MS</code> (shell) — مهلة ٩٠ ثانية على كل نداء (AbortController)</li>
+            <li><code>ECO_API_TIMEOUT_MS</code> (shell) — مهلة ٩٠ ثانية على كل نداء (AbortController)</li>
             <li>D1 logging للتحديثات: <code>tool = "metafields_change"</code> +
               <code>extra.sourceTool = "bosta_orders_shipped_scanner"</code> (يميّز سجل الأداة
               دي عن باقي الأدوات اللي بتكتب على نفس الـ tool). أحداث الدخول/الخروج تفضل تحت
@@ -933,16 +934,16 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
               <span class="count-lbl">أوردر</span>
             </div>
             <div class="rq-act">
-              <div class="woc-fresh">
-                <div class="woc-fresh-row">
-                  <span class="woc-fresh-lbl">آخر تحديث</span>
-                  <span class="woc-ago" id="rqAgo">لسه ما اتحدّثش</span>
+              <div class="eco-fresh">
+                <div class="eco-fresh-row">
+                  <span class="eco-fresh-lbl">آخر تحديث</span>
+                  <span class="eco-ago" id="rqAgo">لسه ما اتحدّثش</span>
                 </div>
-                <div class="woc-fresh-row" id="rqStamp"><span class="woc-stamp-chip">—</span></div>
+                <div class="eco-fresh-row" id="rqStamp"><span class="eco-stamp-chip">—</span></div>
               </div>
-              <button class="woc-rbtn" id="rqBtn" type="button" onclick="rqLoad(false)">
-                <span class="woc-rbtn-ico">↺</span><span>تحديث</span>
-                <span class="woc-rbtn-badge" id="rqBadge">—</span>
+              <button class="eco-rbtn" id="rqBtn" type="button" onclick="rqLoad(false)">
+                <span class="eco-rbtn-ico">↺</span><span>تحديث</span>
+                <span class="eco-rbtn-badge" id="rqBadge">—</span>
               </button>
             </div>
           </div>
@@ -950,7 +951,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <div id="rqTrunc" class="rq-warn" style="display:none;"></div>
           <div class="rq-body">
             <div id="rqEmpty" class="rq-empty">
-              <div class="woc-loadbox" role="status" aria-live="polite"><span class="woc-load-spin" aria-hidden="true"></span><div class="woc-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div></div>
+              <div class="eco-loadbox" role="status" aria-live="polite"><span class="eco-load-spin" aria-hidden="true"></span><div class="eco-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div></div>
             </div>
             <div class="table-wrap" id="rqTableWrap" style="display:none;">
               <table class="data-table">
@@ -1279,8 +1280,10 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 <div id="sharedMount"></div>
 
 <!-- 🔴 نسخة واحدة مضمّنة — ممنوع محتوى الملف ده يتنسخ هنا -->
-<script src="shared/shell.js"></script>
-<script>document.getElementById('sharedMount').innerHTML = wocSharedModals();</script>
+<script src="shared/hub-config.js"></script>
+<script src="shared/core.js"></script>
+<script src="shared/gates.js"></script>
+<script>document.getElementById('sharedMount').innerHTML = ecoSharedModals();</script>
 <script>
 
 // ══════════════════════════════════════════════════════════════
@@ -1297,20 +1300,20 @@ const session = requireSession();
 //    من `sessionStorage` عبر الهب، مش من شاشة دخول في الصفحة دي.
 const currentEmployee = { username: session.username, displayName: session.displayName };
 
-const { apiGet, apiPost } = wocApi(WOC_WORKERS.shipped);
+const { apiGet, apiPost } = ecoApi(ECO_WORKERS.shipped);
 const PAGE_WORKERS = ['shipped'];
 
-// ⚠️ الحلقة دي مكرّرة في كل صفحة **عن قصد**: `WOC_WORKERS` و`cmpVersion`
+// ⚠️ الحلقة دي مكرّرة في كل صفحة **عن قصد**: `ECO_WORKERS` و`cmpVersion`
 //    في الـ shell، بس فحص Step 9 بيطلب وجودهم في كل صفحة، والقايمة نفسها
 //    بتفرق من صفحة للتانية.
 async function renderAboutWorkers() {
   const box = document.getElementById('aboutWorkers');
   if (!box) return;
   const rows = await Promise.all(PAGE_WORKERS.map(async k => {
-    const w = WOC_WORKERS[k];
+    const w = ECO_WORKERS[k];
     let got = '—', mark = '❌';
     try {
-      const cfg = await wocApi(w).apiGet('get_config');
+      const cfg = await ecoApi(w).apiGet('get_config');
       got = cfg.version || cfg.WORKER_VERSION || '—';
       mark = cmpVersion(got, w.min) < 0 ? '⚠️' : '✅';
     } catch { got = 'تعذّر الوصول'; }
@@ -2835,7 +2838,7 @@ async function fetchLog() {
   const base   = logParams();
 
   document.getElementById('logTableBody').innerHTML =
-    '<tr class="empty-row"><td colspan="9">' + wocLoadingHTML('⏳ جاري تحميل السجل برجاء الانتظار ...', true) + '</td></tr>';
+    '<tr class="empty-row"><td colspan="9">' + ecoLoadingHTML('⏳ جاري تحميل السجل برجاء الانتظار ...', true) + '</td></tr>';
   document.getElementById('paginationRow').style.display = 'none';
 
   try {
@@ -3149,14 +3152,14 @@ function rqSetFresh() {
   const info  = agoInfo(rqState.at, Date.now());
   const agoEl = document.getElementById('rqAgo');
   const btn   = document.getElementById('rqBtn');
-  if (agoEl) { agoEl.className = 'woc-ago ' + info.cls; agoEl.textContent = info.text; }
+  if (agoEl) { agoEl.className = 'eco-ago ' + info.cls; agoEl.textContent = info.text; }
   if (btn)   btn.classList.toggle('is-stale', info.stale);
   const stamp = document.getElementById('rqStamp');
   if (stamp) {
     stamp.innerHTML = rqState.at
-      ? `<span class="woc-stamp-chip">${esc(formatDate(rqState.at.toISOString()))}</span>` +
-        `<span class="woc-stamp-chip">${esc(formatTimeOnly(rqState.at.toISOString()))}</span>`
-      : '<span class="woc-stamp-chip">—</span>';
+      ? `<span class="eco-stamp-chip">${esc(formatDate(rqState.at.toISOString()))}</span>` +
+        `<span class="eco-stamp-chip">${esc(formatTimeOnly(rqState.at.toISOString()))}</span>`
+      : '<span class="eco-stamp-chip">—</span>';
   }
 }
 
@@ -3182,7 +3185,7 @@ function rqRender() {
       ? '<div class="ico">✅</div><div>مفيش أوردرات مستنية تسليم لبوسطة دلوقتي</div>'
       : (rqState.failed
           ? '<div class="ico">⚠️</div><div>تعذّر تحميل الطابور — اضغط «تحديث»</div>'
-          : wocLoadingHTML());
+          : ecoLoadingHTML());
     return;
   }
 
@@ -3190,7 +3193,7 @@ function rqRender() {
   wrap.style.display  = '';
   const now = new Date();
   tbody.innerHTML = rows.map(o => {
-    const age = wocOrderAge(o.createdAt, now);
+    const age = ecoOrderAge(o.createdAt, now);
     const qty = (o.itemsQty === null || o.itemsQty === undefined) ? '—' : o.itemsQty;
     const tot = o.total ? Number(o.total).toLocaleString('en-US', { maximumFractionDigits: 2 }) : '—';
     return `<tr>
@@ -3256,7 +3259,7 @@ setInterval(() => {
   tds.forEach((el, i) => {
     const o = rqState.orders[i];
     if (!o) return;
-    const age = wocOrderAge(o.createdAt, now);
+    const age = ecoOrderAge(o.createdAt, now);
     el.className   = `time-badge age-badge ${age.cls}`;
     el.textContent = age.text;
   });
@@ -3265,7 +3268,7 @@ setInterval(() => {
 // ══════════════════════════════════════════════════════════════
 // §INIT — التحميل (الجلسة اتأكدت فوق)
 // ══════════════════════════════════════════════════════════════
-document.getElementById('headerMount').innerHTML = wocHeader({
+document.getElementById('headerMount').innerHTML = ecoHeader({
   icon: '📦', title: 'قسم تسليمات بوسطة', subtitle: 'مركز عمليات المخزن',
   session,
   // ⚠️ Chip التاب الحالي — بيظهر **بس وقت الـ Sticky** (شريط التابات

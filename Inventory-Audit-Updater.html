@@ -9,7 +9,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 
 <!-- 🔴 قاعدة الأسبقية: الـ shell أولاً، وستايل الصفحة بعده وبيغلب -->
-<link rel="stylesheet" href="shared/shell.css">
+<link rel="stylesheet" href="shared/core.css">
+<link rel="stylesheet" href="shared/hub.css">
 <style>
 /* ⚠️ Tier L (1400px) = افتراضي الـ shell، فمفيش `--container-max` هنا. كتلة التوكنز اتشالت
    بالكامل: الألوان والمقاسات كلها من `shared/shell.css` (ومعاها اللي الصفحة دي احتاجته:
@@ -1045,8 +1046,8 @@ col.hl{background:var(--accent-light);}
         <div class="about-sec-body">
           <h4>FEATURE MAP</h4>
           <ul>
-            <li><code>§CONFIG</code> — <code>requireSession()</code> · <code>currentEmployee</code> · <code>apiGet</code>/<code>apiPost</code> فوق <code>wocApi(WOC_WORKERS.audit)</code> (مهلة ٩٠ ث + إلغاء يدوي) · <code>onBeforeLogout</code> · دوال التوقيت (Intl)</li>
-            <li><code>shared/shell.js</code> — الإعدادات · التوست · النسخة · الفحص الذاتي (<code>wocRunDiag</code>) · الهيدر · الخروج · <code>playBeep</code> (ومعاه نغمة <code>alarm</code>) — نسخة واحدة مضمّنة للهب كله</li>
+            <li><code>§CONFIG</code> — <code>requireSession()</code> · <code>currentEmployee</code> · <code>apiGet</code>/<code>apiPost</code> فوق <code>ecoApi(ECO_WORKERS.audit)</code> (مهلة ٩٠ ث + إلغاء يدوي) · <code>onBeforeLogout</code> · دوال التوقيت (Intl)</li>
+            <li><code>shared/shell.js</code> — الإعدادات · التوست · النسخة · الفحص الذاتي (<code>ecoRunDiag</code>) · الهيدر · الخروج · <code>playBeep</code> (ومعاه نغمة <code>alarm</code>) — نسخة واحدة مضمّنة للهب كله</li>
             <li><code>§AUTH-JS</code> / <code>§IDLE-JS</code> — <b>اتشالوا</b>: الدخول في <code>index.html</code> بس، ومفيش خروج تلقائي بالوقت في الهب</li>
             <li><code>§SCAN</code> — <code>handleBarcodeScan</code> · <code>handleScanCountInput</code> · <code>§SCAN::plausibility</code></li>
             <li><code>§TOOL-JS</code> — الأولويات · بطاقة المنتج · لوحة التعديل · العد بالسكانر · كارت الأوردرات غير المشحونة (<b>عرض فقط</b> — مفيش أي فعل عليها من الأداة دي)</li>
@@ -1062,9 +1063,9 @@ col.hl{background:var(--accent-light);}
           <h4>KEY VARIABLES</h4>
           <ul>
             <li><code>LS_SECRET = 'warehouse_ops_worker_secret'</code> (الـ shell — مفتاح مجموعة <code>warehouse_ops</code>؛ القديم <code>stockaudit_worker_secret</code> مابقاش بيتقري) — السر الوحيد في localStorage. الاستثناء: تفضيل عرض الأعمدة <code>stockaudit_col_widths_log_v1</code> / <code>stockaudit_col_widths_bulk_v1</code> / <code>stockaudit_col_widths_priority_v1</code> (تفضيل واجهة مش هوية — ارفع <code>_v1</code> لو الأعمدة اتغيّرت)</li>
-            <li><code>WOC_WORKERS.audit.url</code> (الـ shell) — constant مش حقل إعدادات (Standards #28)</li>
+            <li><code>ECO_WORKERS.audit.url</code> (الـ shell) — constant مش حقل إعدادات (Standards #28)</li>
             <li><code>TOOL_VERSION</code> (الـ shell) — نسخة <b>الهب كله</b>، مصدر واحد لكل الصفحات</li>
-            <li><code>WOC_WORKERS.audit.min</code> (الـ shell) — أقل نسخة Worker مقبولة. <b>مالهاش أي علاقة بـ <code>TOOL_VERSION</code></b></li>
+            <li><code>ECO_WORKERS.audit.min</code> (الـ shell) — أقل نسخة Worker مقبولة. <b>مالهاش أي علاقة بـ <code>TOOL_VERSION</code></b></li>
             <li><code>currentEmployee</code> — { username, displayName } جاي من <code>sessionStorage</code> عبر <code>requireSession()</code></li>
             <li><code>LOG_PAGE_SIZE = 100</code> · <code>LOG_T</code> / <code>BULK_T</code> / <code>PRIO_T</code> — إعداد وحالة فلاتر كل جدول (قيم · بحث · تاريخ) لمحرّك <code>§TBL-JS</code></li>
             <li><code>bulkIndex</code> · <code>bulkScans</code> · <code>bulkLive</code> · <code>bulkDone</code> — حالة الجلسة الجماعية، كلها في الذاكرة بس</li>
@@ -1119,8 +1120,10 @@ col.hl{background:var(--accent-light);}
 <div id="sharedMount"></div>
 
 <!-- 🔴 نسخة واحدة مضمّنة — ممنوع محتوى الملف ده يتنسخ هنا -->
-<script src="shared/shell.js"></script>
-<script>document.getElementById('sharedMount').innerHTML = wocSharedModals();</script>
+<script src="shared/hub-config.js"></script>
+<script src="shared/core.js"></script>
+<script src="shared/gates.js"></script>
+<script>document.getElementById('sharedMount').innerHTML = ecoSharedModals();</script>
 <script>
 // ══════════════════════════════════════════════════════
 // §CONFIG — الجلسة والـ Worker (الهوية من الهب، مش من شاشة دخول)
@@ -1136,13 +1139,13 @@ const session = requireSession();
 //    `set_audit_date` · `bulk_adjust`). الاسم بيوصل من `sessionStorage` عبر الهب.
 const currentEmployee = { username: session.username, displayName: session.displayName };
 
-// ⚠️ الرابط ثابت في `WOC_WORKERS.audit` (الـ shell) — مش حقل إعدادات ولا localStorage
+// ⚠️ الرابط ثابت في `ECO_WORKERS.audit` (الـ shell) — مش حقل إعدادات ولا localStorage
 //    (Standards #28). وحد النسخة الأدنى (`min`) هناك كمان — مالوش علاقة بـ `TOOL_VERSION`.
 const PAGE_WORKERS = ['audit'];
-const _woc = wocApi(WOC_WORKERS.audit);
+const _woc = ecoApi(ECO_WORKERS.audit);
 
 // الأداة المستقلة كانت بتعتبر `{ ok:false }` خطأ حتى لو HTTP 200 — محتفظين بالسلوك ده
-// فوق `wocApi` (اللي بتفحص `resp.ok` بس) عشان مسار فشل جوّه الـ Worker مايتقريش نجاح.
+// فوق `ecoApi` (اللي بتفحص `resp.ok` بس) عشان مسار فشل جوّه الـ Worker مايتقريش نجاح.
 function _auditOk(data) {
   if (data && data.ok === false) throw new Error(data.error || 'الـ Worker رد بخطأ');
   return data;
@@ -1179,42 +1182,14 @@ window.addEventListener('beforeunload', e => {
 //    مسحات ما اتنفّذتش (وإلا ساعة عدّ كانت هتضيع بلا تحذير). العدّ بيبدأ من جديد بعد ما تخلص.
 window.shellIsBusy = () => (typeof isUpdatingBulk !== 'undefined' && isUpdatingBulk) || bulkHasUnsavedSession();
 
-// ─── §CONFIG::time — توقيت القاهرة يتحسب، مايتكتبش ثابت ───
-// نفس النسخة بالحرف في الـ Worker (constants §13). الإزاحة الثابتة كانت هتغلط
-// بساعة من 29-10-2026 من غير ما الأداة تشتكي.
-const CAIRO_TZ  = 'Africa/Cairo';
-const _cairoFmt = new Intl.DateTimeFormat('en-CA', {
-  timeZone: CAIRO_TZ, hourCycle: 'h23',
-  year:'numeric', month:'2-digit', day:'2-digit',
-  hour:'2-digit', minute:'2-digit', second:'2-digit',
-});
-function cairoParts(d){
-  const o = {};
-  for (const p of _cairoFmt.formatToParts(d)) if (p.type !== 'literal') o[p.type] = p.value;
-  if (o.hour === '24') o.hour = '00';
-  return o;
-}
+// ─── §CONFIG::time — توقيت القاهرة من الـ core ───
+// `cairoParts` و`formatDateTime`/`formatDate`/`formatTimeOnly` في `shared/core.js` (`Intl` على
+// `Africa/Cairo`) — النسخ المحلية اتشالت (المرحلة ١ · توحيد الهبّين).
 function cairoDateStr(d = new Date()){ const p = cairoParts(d); return `${p.year}-${p.month}-${p.day}`; }
 
-// Standards #14/#23: 📅 DD/MM/YYYY 🕐 HH:MM صباحاً/مساءً — بدون بادج
-function formatDateTime(iso){
-  if (!iso) return '—';
-  const p = cairoParts(new Date(iso));
-  let h = +p.hour; const ampm = h >= 12 ? 'مساءً' : 'صباحاً'; h = h % 12 || 12;
-  return `📅 ${p.day}/${p.month}/${p.year} 🕐 ${String(h).padStart(2,'0')}:${p.minute} ${ampm}`;
-}
-function formatDate(iso){
-  if (!iso) return '—';
-  const p = cairoParts(new Date(iso));
-  return `📅 ${p.day}/${p.month}/${p.year}`;
-}
-function formatTimeOnly(iso){
-  if (!iso) return '—';
-  const p = cairoParts(new Date(iso));
-  let h = +p.hour; const ampm = h >= 12 ? 'مساءً' : 'صباحاً'; h = h % 12 || 12;
-  return `🕐 ${String(h).padStart(2,'0')}:${p.minute} ${ampm}`;
-}
-// عمود التاريخ في XLSX — الاستثناء الوحيد: بدون إيموجي
+// عمود التاريخ في XLSX — الاستثناء الوحيد: بدون إيموجي.
+// ⚠️ **محلّي عن قصد** (مش من الـ core): الجرد بيصدّر `DD/MM/YYYY` والخانة الفاضية `—`،
+//    ونسخة الـ core `DD-MM-YYYY` وفاضية. توحيد التصدير قرار منفصل.
 function formatDateForExport(iso){
   if (!iso) return '—';
   const p = cairoParts(new Date(iso));
@@ -1246,19 +1221,19 @@ async function loadLogEmployees() {
   } catch { /* السجل شغّال من غير الفلتر */ }
 }
 
-// ⚠️ مكرّرة في كل صفحة عن قصد — فحص Step 9 بيطلب `WOC_WORKERS` و`cmpVersion` في كل صفحة،
+// ⚠️ مكرّرة في كل صفحة عن قصد — فحص Step 9 بيطلب `ECO_WORKERS` و`cmpVersion` في كل صفحة،
 //    والقايمة (`PAGE_WORKERS`) بتفرق من صفحة للتانية.
 async function renderAboutWorkers() {
   const box = document.getElementById('aboutWorkers');
   if (!box) return;
-  // بلا سر `wocApi` بتفتح الإعدادات لوحدها — وده مايحصلش من غير ما الموظف يدوس (نفس حارس
+  // بلا سر `ecoApi` بتفتح الإعدادات لوحدها — وده مايحصلش من غير ما الموظف يدوس (نفس حارس
   // `checkWorkerVersion`). الجدول بيتملّى بعد حفظ السر من `onSettingsSaved`.
   if (!isConfigured()) return;
   const rows = await Promise.all(PAGE_WORKERS.map(async k => {
-    const w = WOC_WORKERS[k];
+    const w = ECO_WORKERS[k];
     let got = '—', mark = '❌';
     try {
-      const cfg = await wocApi(w).apiGet('get_config');
+      const cfg = await ecoApi(w).apiGet('get_config');
       got = cfg.version || cfg.WORKER_VERSION || '—';
       mark = cmpVersion(got, w.min) < 0 ? '⚠️' : '✅';
     } catch { got = 'تعذّر الوصول'; }
@@ -3479,7 +3454,7 @@ async function exportBulkXLSX(){
 // ══════════════════════════════════════════════════════
 // §INIT — التحميل (الجلسة اتأكدت فوق)
 // ══════════════════════════════════════════════════════
-document.getElementById('headerMount').innerHTML = wocHeader({
+document.getElementById('headerMount').innerHTML = ecoHeader({
   icon: '📋', title: 'جرد المخزون', subtitle: 'مركز عمليات المخزن', session,
 });
 renderVersionUI();                       // بعد ما الهيدر يتحقن — زرار النسخة جوّاه
