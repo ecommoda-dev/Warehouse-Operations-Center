@@ -38,18 +38,27 @@ const launchOpts = { args: ['--no-sandbox'] };
 if (process.env.PW_CHROMIUM) launchOpts.executablePath = process.env.PW_CHROMIUM;
 const browser = await chromium.launch(launchOpts);
 
-// ── أيام القاهرة (إزاحة +٣ زي `toCairo` في الـ shell) ──
+// ── أيام القاهرة — بـ`Intl` على Africa/Cairo (نفس نهج `toCairo` في الـ shell) ──
+// 🔴 كانت إزاحة +٣ ثابتة والـ fixtures بساعات UTC مكتوبة على الصيفي: بعد ٢٩-١٠-٢٠٢٦ (UTC+2)
+//    «١٢:٣٠ ص القاهرة» بتبقى ٢٢:٣٠Z مش ٢١:٣٠Z والفحص كان هيفشل لسبب مالوش علاقة بالكود.
 const pad = n => String(n).padStart(2, '0');
-const dayOf = ms => { const d = new Date(ms + 3 * 3600 * 1000); return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}`; };
+const _fmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo', hourCycle: 'h23',
+  year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+const offsetMs = t => { const o = {}; for (const p of _fmt.formatToParts(new Date(t))) if (p.type !== 'literal') o[p.type] = p.value;
+  return Date.UTC(+o.year, +o.month - 1, +o.day, o.hour === '24' ? 0 : +o.hour, +o.minute, +o.second) - Math.floor(t / 1000) * 1000; };
+const dayOf = ms => { const d = new Date(ms + offsetMs(ms)); return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}`; };
+// لحظة UTC (ISO) لساعة محددة بتوقيت القاهرة في يوم `YYYY-MM-DD`
+const cairoIso = (day, h, m) => { const g = Date.parse(`${day}T00:00:00Z`); const start = g - offsetMs(g - offsetMs(g));
+  return new Date(start + (h * 60 + m) * 60000).toISOString(); };
 const addDays = (s, n) => { const [y,m,d] = s.split('-').map(Number); const x = new Date(Date.UTC(y, m-1, d) + n*86400000); return `${x.getUTCFullYear()}-${pad(x.getUTCMonth()+1)}-${pad(x.getUTCDate())}`; };
 const TODAY = dayOf(Date.now()), YEST = addDays(TODAY, -1), D2 = addDays(TODAY, -2);
 
 // 🔴 الفخ: الساعة ١٢:٣٠ بعد منتصف الليل بتوقيت القاهرة = ٢١:٣٠ **من يوم UTC اللي قبله**.
-const T_TODAY_MORNING = `${TODAY}T07:00:00Z`;          // النهارده ١٠:٠٠ القاهرة
-const T_TODAY_UTCTRAP = `${YEST}T21:30:00Z`;           // النهارده ١٢:٣٠ ص القاهرة (يوم UTC = امبارح!)
-const T_YEST_LATE     = `${YEST}T20:30:00Z`;           // امبارح ١١:٣٠ م
-const T_YEST_NOON     = `${YEST}T09:00:00Z`;           // امبارح ١٢:٠٠ ظهرًا
-const T_D2_LATE       = `${D2}T20:30:00Z`;             // أول إمبارح ١١:٣٠ م — **مش** داخل
+const T_TODAY_MORNING = cairoIso(TODAY, 10, 0);          // النهارده ١٠:٠٠ القاهرة
+const T_TODAY_UTCTRAP = cairoIso(TODAY, 0, 30);           // النهارده ١٢:٣٠ ص القاهرة (يوم UTC = امبارح!)
+const T_YEST_LATE     = cairoIso(YEST, 23, 30);           // امبارح ١١:٣٠ م
+const T_YEST_NOON     = cairoIso(YEST, 12, 0);           // امبارح ١٢:٠٠ ظهرًا
+const T_D2_LATE       = cairoIso(D2, 23, 30);             // أول إمبارح ١١:٣٠ م — **مش** داخل
 
 const E = (timestamp, type, order, extra) => ({ timestamp, type, order_name: `#${order}`, extra: extra === undefined ? null : JSON.stringify(extra) });
 
