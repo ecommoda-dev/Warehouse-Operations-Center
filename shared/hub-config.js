@@ -190,7 +190,7 @@ const ECO_WORKERS = {
   audit:    { url: 'https://inventory-audit-updater-worker.ecommoda-dev.workers.dev', min: '6.2.1', label: 'جرد المخزون' },
 };
 
-const TOOL_VERSION = 'v1.47.0';                     // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.48.0';                     // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const SHOP_HANDLE  = '6c7e1a-53';
 

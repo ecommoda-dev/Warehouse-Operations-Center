@@ -400,7 +400,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 /* مطوي = شريط ملوّن بدل الخطين */
 .eco-home-sec.is-collapsed .eco-home-sec-hd{background:var(--sec-bg);border:2px solid var(--sec-fg);padding:7px 11px}
 .eco-home-sec.is-collapsed .eco-sec-ln{display:none}
-.eco-home-sec.is-collapsed .eco-sec-mid{margin-inline:auto}
+.eco-home-sec.is-collapsed .eco-sec-mid{flex:1 1 auto;margin-inline:0}   /* العنوان على اليمين في كل الأقسام المطوية (v1.51/v1.48 · طلب أحمد) — كان في النص للأدوات */
 .eco-home-sec.is-collapsed.has-sum .eco-home-sec-sub{display:none}
 /* مطوي بملخّص: الأيقونة ثم العنوان على اليمين، والكبسولات بعدهم في نفس الصف (v1.46.0 · طلب أحمد) */
 .eco-home-sec.is-collapsed.has-sum .eco-sec-mid{flex:1 1 auto;margin-inline:0;gap:12px;flex-wrap:wrap}
@@ -428,7 +428,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 /* المناطق الأربعة: الهوية · الرقم · التفاصيل (بتتمدّد) · الأكشن */
 .eco-row-id{display:flex;align-items:center;gap:10px;flex:0 0 auto;min-width:196px}
 .eco-row-num{flex:0 0 auto;min-width:84px}
-.eco-row-mid{flex:1 1 230px;min-width:215px;display:flex;flex-direction:column;gap:7px}
+.eco-row-mid{flex:1 1 230px;min-width:215px;display:flex;flex-direction:column;align-items:center;gap:7px}
 /* منطقة الأكشن = لوحة «آخر تحديث» + زرار التحديث **مع بعض**
    (نفس `.rdy-actions` في `pack.html`). `align-items:stretch` بيخلّي
    الزرار بنفس ارتفاع اللوحة بالظبط. */
@@ -484,11 +484,22 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .eco-count.failed{color:var(--red);font-size:24px}
 .eco-unit{font-size:12px;font-weight:700;color:var(--text-muted)}
 /* التقسيمة — شيبس بنفس لغة `.count-badge` في صفحة التغليف */
-.eco-chips{display:flex;gap:6px;flex-wrap:wrap;min-height:22px}
-.eco-chips-line{display:flex;gap:6px;flex-wrap:wrap;width:100%}
+.eco-chips{display:flex;gap:6px;flex-wrap:wrap;min-height:22px;align-items:center;justify-content:center}
+.eco-chips-line{display:flex;gap:6px;flex-wrap:wrap;width:100%;align-items:center;justify-content:center}
 .eco-chips:has(.eco-chips-line){flex-direction:column}
 .eco-chip{display:inline-flex;align-items:center;gap:5px;padding:2.5px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface-2);font-size:11.5px;font-weight:800;color:var(--text-secondary)}
 .eco-chip b{font-family:var(--font-mono);font-variant-numeric:tabular-nums;direction:ltr}
+/* 🎨 §HOME-CHIPS — «مجموعة موصولة» (قرار أحمد 22-10-2026 من مختبر الـ chips): مربعات `grp` متلزقة في
+   كبسولة واحدة بفواصل، الرقم يمين والاسم يسار، مقاس صغير، والصفر باهت. الألوان من نفس كلاسات `.eco-chip`
+   (`qc-*` · `chip-ch-*`) فمفيش لون مكتوب هنا. ⚠️ `flex-wrap` + نصف قطر أصغر عشان الكبسولة لو لفّت على الضيق
+   ماتبقاش دايرة مشوّهة. */
+.eco-cgroup{display:inline-flex;flex-wrap:wrap;max-width:100%;border:1px solid var(--border-strong);border-radius:20px;overflow:hidden}
+.eco-cgroup .eco-chip{border:0;border-radius:0;white-space:nowrap}
+.eco-cgroup .eco-chip+.eco-chip{border-inline-start:1px solid color-mix(in srgb,currentColor 30%,transparent)}
+.eco-cgroup .eco-chip.z0>b,.eco-cgroup .eco-chip.z0>span:not(.eco-att){opacity:.42}   /* الصفر باهت — النص بس، عشان بادج ⏳ على الخانة (تحذير) ما يبهتش معاها */
+/* بادج «في انتظار الرفع» — ⏳ + رقم، ما بيبهتش مع الصفر */
+.eco-att{display:inline-flex;align-items:center;gap:3px;padding:0 6px;border-radius:999px;font-size:10.5px;font-weight:800;background:var(--amber-light);color:var(--amber-dark);border:1px solid var(--amber-border);font-variant-numeric:tabular-nums}
+.eco-att svg{width:10px;height:10px;flex:none}
 /* مربعات المندوب على صف «جاهز للتغليف» (v1.13.0 · بقوا تلاتة في v1.14.0) —
    بدّلوا `chip-s1`/`chip-s2`.
    ⚠️ الألوان **نفس ألوان مربعات `.zchip` في `pack.html`** بالحرف: بوسطة

@@ -51,14 +51,13 @@ function derivePrint(data) {
     if (gate === 's2')           { n.s2Hold++;  continue; }
     n[chan]++;
   }
+  // 🎨 §HOME-CHIPS: القنوات التلاتة «مجموعة موصولة» (`grp`)، و«في انتظار الرفع» بادج ⏳ على خانة بوسطة
+  //    (`att`) مش مربع لوحده. ⚠️ المربعات الشاذة (مؤجّل · بلا منطقة) كبسولات لوحدها جنب المجموعة.
   const chips = [
-    { cls: 'chip-ch-invoice',  label: 'مناديب', n: n.invoice },
-    { cls: 'chip-ch-awb',      label: 'بوسطة',  n: n.awb },
-    { cls: 'chip-ch-showroom', label: 'شو روم', n: n.showroom },
+    { grp: true, cls: 'chip-ch-invoice',  label: 'مناديب', n: n.invoice },
+    { grp: true, cls: 'chip-ch-awb',      label: 'بوسطة',  n: n.awb, att: { n: n.pending, title: 'في انتظار الرفع على بوسطة' } },
+    { grp: true, cls: 'chip-ch-showroom', label: 'شو روم', n: n.showroom },
   ];
-  if (n.pending) chips.push({ cls: 'chip-ch-pending', label: '⏳ في انتظار الرفع على بوسطة', n: n.pending });
-  if (n.s2Hold)  chips.push({ cls: 'chip-ch-hold',    label: '⏸️ استبدال بوسطة (مؤجّل)', n: n.s2Hold });
-  if (n.none)    chips.push({ cls: 'chip-ch-none',    label: '⚠️ المنطقة غير محددة',              n: n.none });
   return { total: n.invoice + n.awb + n.showroom + n.none, chips };
 }
 // 🔴 طابور التغليف: التقسيمة **بالمندوب** (بوسطة · شو روم · مناديب) — نفس مربعات `Orders-Packing-Checker.html`،
@@ -67,7 +66,7 @@ function derivePack(data) {
   const orders = data.orders || [];
   const cn = ecoCourierCounts(orders);
   return { total: data.total ?? orders.length,
-           chips: ECO_COURIER_GROUPS.map(g => ({ cls: g.cls, label: g.label, n: cn[g.key] })) };
+           chips: ECO_COURIER_GROUPS.map(g => ({ grp: true, cls: g.cls, label: g.label, n: cn[g.key] })) };
 }
 
 const ECO_HOME = {

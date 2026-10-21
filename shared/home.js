@@ -240,13 +240,28 @@ function setCount(key, r) {
   c.classList.remove('pending', 'failed');
   // 🔴 `ch.row` (اختياري) بيحط المربع في سطر لوحده — «In-Return» تحت مربعات المحاولات. من غيره
   //    كل المربعات في سطر واحد بيلفّ لوحده.
-  const chipHtml = ch => `<span class="eco-chip ${esc(ch.cls)}">${esc(ch.label)} <b>${ch.n}</b></span>`;
+  // 🎨 `ch.grp` (اختياري) = المربع من «مجموعة موصولة» (§HOME-CHIPS · قرار أحمد 22-10-2026): كل مربعات
+  //    `grp` في السطر بتتلزق في كبسولة واحدة بفواصل (الرقم يمين والاسم يسار)، والصفر باهت. المربعات
+  //    بلا `grp` بتفضل كبسولات لوحدها جنبها. 🔴 الألوان من نفس `cls` (`qc-*` · `chip-ch-*`) — مصدر واحد.
+  // 🎨 `ch.att` (اختياري · `{ n, title }`) = بادج ⏳ على المربع (مثال: «في انتظار الرفع» على بوسطة) —
+  //    ⚠️ ما بيبهتش حتى والمربع صفر: ده تحذير، وتبهيته بيخبّيه لما يتحتاج.
+  const ATT_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12M6 21h12"/><path d="M7 3c0 5 5 6 5 9s-5 4-5 9M17 3c0 5-5 6-5 9s5 4 5 9"/></svg>';
+  const attHtml = ch => ch.att && ch.att.n
+    ? `<span class="eco-att" title="${esc(ch.att.title)}" aria-label="${esc(ch.att.title)}: ${ch.att.n}">${ATT_SVG}${ch.att.n}</span>` : '';
+  const chipHtml = ch => ch.grp
+    ? `<span class="eco-chip ${esc(ch.cls)}${ch.n ? '' : ' z0'}"><b>${ch.n}</b><span>${esc(ch.label)}</span>${attHtml(ch)}</span>`
+    : `<span class="eco-chip ${esc(ch.cls)}">${esc(ch.label)} <b>${ch.n}</b></span>`;
+  const chipsHtml = list => {
+    const g = list.filter(c => c.grp);
+    return (g.length ? `<span class="eco-cgroup">${g.map(chipHtml).join('')}</span>` : '')
+      + list.filter(c => !c.grp).map(chipHtml).join('');
+  };
   const chipRows = {};
   (r.chips || []).forEach(ch => (chipRows[ch.row || 0] = chipRows[ch.row || 0] || []).push(ch));
   const rowKeys = Object.keys(chipRows).sort((a, b) => a - b);
   document.getElementById(ids.chips).innerHTML = rowKeys.length > 1
-    ? rowKeys.map(k => `<div class="eco-chips-line">${chipRows[k].map(chipHtml).join('')}</div>`).join('')
-    : (r.chips || []).map(chipHtml).join('');
+    ? rowKeys.map(k => `<div class="eco-chips-line">${chipsHtml(chipRows[k])}</div>`).join('')
+    : chipsHtml(r.chips || []);
   // ⚠️ تحذير «القايمة مقطوعة» — ده عن الطابور مش عن الفلوس (الفلوس اتشالت من الرئيسية).
   document.getElementById(ids.money).innerHTML = r.truncated
     ? `<span class="eco-chip qc-flag">⚠️ القايمة مقطوعة — فيه أكتر من المعروض</span>` : '';
