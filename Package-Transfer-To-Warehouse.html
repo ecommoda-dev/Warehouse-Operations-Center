@@ -160,7 +160,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .rq-fail { margin: 12px 16px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--red-light); border: 1px solid var(--red-border); color: var(--red-dark); font-size: 12.5px; }
 .rq-warn { margin: 12px 16px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--amber-light); border: 1px solid var(--amber-border); color: var(--amber-dark); font-size: 12.5px; }
 /* بادج عمر الأوردر — **نسخة طبق الأصل من `Orders-Packing-Checker.html`** بالحرف. الدرجة
-   نفسها بتيجي من `wocDayLevel` في الـ shell فمستحيل تفترق؛ اللون هو
+   نفسها بتيجي من `ecoDayLevel` في الـ shell فمستحيل تفترق؛ اللون هو
    اللي مكرّر. ⚠️ أي تعديل يتعمل في الصفحتين في نفس التمريرة. */
 .time-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; white-space: nowrap; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-secondary); }
 .time-badge.tb-d0 { background: var(--green-light);  color: var(--green-dark);  border-color: var(--green-border); }
@@ -619,7 +619,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <h4>FEATURE MAP</h4>
           <ul>
             <li><code>shared/shell.js</code> — الهوية والهيدر والإعدادات والتوست وحارس النسخة (نسخة واحدة مضمّنة للهب كله)</li>
-            <li><code>shared/shell.js §WAREHOUSE-GATE</code> — 🔴 <b>مصدر الأهلية الوحيد في الواجهة</b> (<code>wocWarehouseGate</code> · <code>wocWarehouseQueue</code>). الصفحة دي <b>والشاشة الرئيسية</b> بينادوا نفس الدالة على نفس الرد. ⛔ <b>وممنوع ينسخ حارس الإلغاء من §OFFICE-GATE</b> — هناك رفض وهنا أهلية</li>
+            <li><code>shared/shell.js §WAREHOUSE-GATE</code> — 🔴 <b>مصدر الأهلية الوحيد في الواجهة</b> (<code>ecoWarehouseGate</code> · <code>ecoWarehouseQueue</code>). الصفحة دي <b>والشاشة الرئيسية</b> بينادوا نفس الدالة على نفس الرد. ⛔ <b>وممنوع ينسخ حارس الإلغاء من §OFFICE-GATE</b> — هناك رفض وهنا أهلية</li>
             <li><code>§SCAN</code> — سكانر بمهلة (١٥٠ms للسكانة · ٤٠٠ms للكتابة)، نفس قيم <code>Orders-Packing-Checker.html</code> بالحرف</li>
             <li><code>§TOOL-JS::scanOrder</code> — نداء <code>scan</code> فوري لكل باركود، ومعالجة الخمس نتايج</li>
             <li><code>§TOOL-JS::outcomeModal</code> — نافذة واحدة بأربع نغمات (مرفوض · خلاص متعمل · إقرار · فشل)، ومدخل واحد <code>showOutcome</code></li>
@@ -630,16 +630,16 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
             <li><code>§SHELL-JS::freezeOnScroll</code> — قفل الهيدر وشريط التابات بعتبة <b>مقيسة</b> مش رقم ثابت</li>
             <li><code>§SCAN::evaluate</code> (Worker) — 🔴 <b>الحارس الحقيقي</b>: بيقرا الأوردر حيًّا وقت الضغطة</li>
             <li><code>§SCAN::resolveOrder</code> (Worker) — الرقم الطويل قراءة بمفتاح، والقصير <b>بحث بمطابقة تامة</b> على الاسم الراجع</li>
-            <li><code>checkWorkerVersion(PAGE_WORKERS)</code> + <code>wocRunDiag()</code> (shell) — حارس النسخة وزرار 🩺 الفحص الذاتي</li>
+            <li><code>checkWorkerVersion(PAGE_WORKERS)</code> + <code>ecoRunDiag()</code> (shell) — حارس النسخة وزرار 🩺 الفحص الذاتي</li>
           </ul>
 
           <h4>KEY VARIABLES</h4>
           <ul>
             <li><code>currentEmployee</code> — { username, displayName } جاي من <code>sessionStorage</code> عبر <code>requireSession()</code></li>
             <li><code>TOOL_VERSION</code> (shell) — نسخة <b>الهب كله</b></li>
-            <li><code>WOC_WORKERS.warehouse.min</code> (shell) — أقل نسخة Worker مقبولة. <b>مالهاش أي علاقة بـ <code>TOOL_VERSION</code></b>، ولا بحد أداة المكتب</li>
+            <li><code>ECO_WORKERS.warehouse.min</code> (shell) — أقل نسخة Worker مقبولة. <b>مالهاش أي علاقة بـ <code>TOOL_VERSION</code></b>، ولا بحد أداة المكتب</li>
             <li><code>LS_SECRET = 'warehouse_ops_worker_secret'</code> (shell) — 🔴 الأداة دي <b>عضو في مجموعة <code>warehouse_ops</code> من أول يوم</b>: مفيش سر قديم خاص بيها لأنها مالهاش نسخة مستقلة</li>
-            <li><code>WOC_API_TIMEOUT_MS</code> (shell) — مهلة ٩٠ ثانية على كل نداء</li>
+            <li><code>ECO_API_TIMEOUT_MS</code> (shell) — مهلة ٩٠ ثانية على كل نداء</li>
             <li>D1: <code>tool = "metafields_change"</code> (سجل <b>مشترك</b>) + <code>extra.sourceTool = "package_transfer_to_warehouse"</code> · <code>type = "update"</code> أو <code>"rejected"</code>. أحداث الدخول/الخروج تحت <code>warehouse_ops_center</code> (الهب)</li>
             <li>🔴 أي استعلام خط أساس على السجل ده <b>لازم يفلتر على <code>extra.sourceTool</code></b> — من غيره بيعدّ صفوف <b>أربع</b> أدوات مع بعض (سكانرا بوسطة · تسليمات المكتب · دي)</li>
             <li><code>extra.result</code> — <code>success</code>/<code>warning</code>/<code>error</code>/<code>rejected</code>/<code>already</code></li>
@@ -785,7 +785,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
         <!-- ══ §WAREHOUSE-QUEUE — «جاهز للرجوع للمخزن» ══════════════════
              🔴 **عرض بحت** — مفيش مربعات اختيار ومفيش «أضف للدفعة».
-             🔴 **والحكم مش هنا:** الأهلية بتتحسب من `wocWarehouseGate` في
+             🔴 **والحكم مش هنا:** الأهلية بتتحسب من `ecoWarehouseGate` في
                 `shared/shell.js` §WAREHOUSE-GATE — **نفس** الدالة اللي
                 الشاشة الرئيسية بتعدّ بيها، على **نفس** رد الـ endpoint.
                 ⛔ ممنوع أي قاعدة أهلية مكتوبة في الصفحة دي (درس R1).
@@ -1091,8 +1091,10 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 <div id="sharedMount"></div>
 
 <!-- 🔴 نسخة واحدة مضمّنة — ممنوع محتوى الملف ده يتنسخ هنا -->
-<script src="shared/shell.js"></script>
-<script>document.getElementById('sharedMount').innerHTML = wocSharedModals();</script>
+<script src="shared/hub-config.js"></script>
+<script src="shared/core.js"></script>
+<script src="shared/gates.js"></script>
+<script>document.getElementById('sharedMount').innerHTML = ecoSharedModals();</script>
 <script>
 
 // ══════════════════════════════════════════════════════════════
@@ -1109,20 +1111,20 @@ const session = requireSession();
 //    من `sessionStorage` عبر الهب، مش من شاشة دخول في الصفحة دي.
 const currentEmployee = { username: session.username, displayName: session.displayName };
 
-const { apiGet, apiPost } = wocApi(WOC_WORKERS.warehouse);
+const { apiGet, apiPost } = ecoApi(ECO_WORKERS.warehouse);
 const PAGE_WORKERS = ['warehouse'];
 
-// ⚠️ الحلقة دي مكرّرة في كل صفحة **عن قصد**: `WOC_WORKERS` و`cmpVersion`
+// ⚠️ الحلقة دي مكرّرة في كل صفحة **عن قصد**: `ECO_WORKERS` و`cmpVersion`
 //    في الـ shell، بس فحص Step 9 بيطلب وجودهم في كل صفحة، والقايمة نفسها
 //    بتفرق من صفحة للتانية.
 async function renderAboutWorkers() {
   const box = document.getElementById('aboutWorkers');
   if (!box) return;
   const rows = await Promise.all(PAGE_WORKERS.map(async k => {
-    const w = WOC_WORKERS[k];
+    const w = ECO_WORKERS[k];
     let got = '—', mark = '❌';
     try {
-      const cfg = await wocApi(w).apiGet('get_config');
+      const cfg = await ecoApi(w).apiGet('get_config');
       got = cfg.version || cfg.WORKER_VERSION || '—';
       mark = cmpVersion(got, w.min) < 0 ? '⚠️' : '✅';
     } catch { got = 'تعذّر الوصول'; }
@@ -2012,7 +2014,7 @@ async function fetchLog() {
   const base   = logParams();
 
   document.getElementById('logTableBody').innerHTML =
-    '<tr class="empty-row"><td colspan="8">' + wocLoadingHTML('⏳ جاري تحميل السجل برجاء الانتظار ...', true) + '</td></tr>';
+    '<tr class="empty-row"><td colspan="8">' + ecoLoadingHTML('⏳ جاري تحميل السجل برجاء الانتظار ...', true) + '</td></tr>';
   document.getElementById('paginationRow').style.display = 'none';
 
   try {
@@ -2217,7 +2219,7 @@ async function exportLogXLSX() {
 // ══════════════════════════════════════════════════════════════
 // §WAREHOUSE-QUEUE-JS — طابور «جاهز للرجوع للمخزن» (v1.28.0)
 // ══════════════════════════════════════════════════════════════
-// 🔴 **الأهلية بتتحسب من `wocWarehouseGate` في `shared/shell.js` §WAREHOUSE-GATE**
+// 🔴 **الأهلية بتتحسب من `ecoWarehouseGate` في `shared/shell.js` §WAREHOUSE-GATE**
 //    — مش هنا، ومش في `index.html`. الصفحة والشاشة الرئيسية بينادوا **نفس**
 //    الـ endpoint و**نفس** الدالة، فمستحيل الرقمين يفترقوا (درس R1 — v1.11.0:
 //    الرئيسية قالت ٦٦ والصفحة فتحت على ٦ لأن البوابة كانت في صفحة واحدة).
@@ -2282,7 +2284,7 @@ function rqRender() {
         + 'وأي طرد راجع تاني <b>بيتسكن عادي</b> والـ Worker هو اللي بيحكم.</div>'
       : (rqState.failed
           ? '<div class="ico">⚠️</div><div>تعذّر تحميل الطابور — اضغط «تحديث»</div>'
-          : wocLoadingHTML());
+          : ecoLoadingHTML());
     return;
   }
 
@@ -2290,7 +2292,7 @@ function rqRender() {
   wrap.style.display  = '';
   const now = new Date();
   tbody.innerHTML = rows.map(o => {
-    const age = wocOrderAge(o.createdAt, now);
+    const age = ecoOrderAge(o.createdAt, now);
     const qty = (o.itemsQty === null || o.itemsQty === undefined) ? '—' : o.itemsQty;
     // ⚠️ «نوع الأوردر» — التفرقة بين الطردين **مقصودة** (بخلاف طابور بوسطة
     //    اللي بلا علامة): الموظف بيسكن **باركود الأوردر**، وهو نفسه على
@@ -2319,7 +2321,7 @@ function rqRender() {
 }
 
 // ─── الحالة اللي خلّت الأوردر مؤهل ───────────────────────────
-// ⚠️ **الترتيب هو الترتيب في `wocWarehouseGate` بالحرف** — S1 الأول. لو
+// ⚠️ **الترتيب هو الترتيب في `ecoWarehouseGate` بالحرف** — S1 الأول. لو
 //    اتقلب هنا، صف بحالتين مؤهلتين بيقول حاجة والـ Worker بيكتب على حاجة
 //    تانية (درس R1).
 function rqStatusOf(o) {
@@ -2366,7 +2368,7 @@ async function rqLoad(silent) {
   try {
     const data = await apiGet('get_ready_to_warehouse');
     // 🔴 **المصدر الوحيد للأهلية** — الـ shell، مش الصفحة.
-    rqState.orders = wocWarehouseQueue(data.orders || []);
+    rqState.orders = ecoWarehouseQueue(data.orders || []);
     rqState.at     = new Date();
     rqState.failed = false;
     document.getElementById('rqFail').style.display = 'none';
@@ -2384,7 +2386,7 @@ async function rqLoad(silent) {
     //    من الرد نفسه، وإلا تاريخ الواجهة وتاريخ الـ Worker يفترقوا في صمت
     //    (درس R1). وفيه بند في فحص المتصفح بيقفل ده.
     const sub = document.getElementById('rqSub');
-    const since = wocYmdToDMY(data.ordersSince);
+    const since = ecoYmdToDMY(data.ordersSince);
     if (sub && since) {
       sub.textContent = `مرتجع أو ملغي · مسجّل إنه في المكتب · قاهرة+جيزة وشو روم · أوردرات من ${since}`;
     }
@@ -2418,7 +2420,7 @@ setInterval(() => {
   document.querySelectorAll('#rqTableBody .age-badge').forEach((el, i) => {
     const o = rqState.orders[i];
     if (!o) return;
-    const age = wocOrderAge(o.createdAt, now);
+    const age = ecoOrderAge(o.createdAt, now);
     el.className   = `time-badge age-badge ${age.cls}`;
     el.textContent = age.text;
   });
@@ -2427,7 +2429,7 @@ setInterval(() => {
 // ══════════════════════════════════════════════════════════════
 // §INIT — التحميل (الجلسة اتأكدت فوق)
 // ══════════════════════════════════════════════════════════════
-document.getElementById('headerMount').innerHTML = wocHeader({
+document.getElementById('headerMount').innerHTML = ecoHeader({
   icon: '🏭', title: 'قسم استلام المرتجعات', subtitle: 'مركز عمليات المخزن',
   session,
   // ⚠️ Chip التاب الحالي — بيظهر **بس وقت الـ Sticky** (شريط التابات بيتقفل

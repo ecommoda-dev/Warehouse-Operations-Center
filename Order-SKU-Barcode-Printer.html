@@ -1055,8 +1055,10 @@ a.bc-sku-link:hover{border-bottom-color:var(--accent)}
 <div id="sharedMount"></div>
 
 <!-- 🔴 نسخة واحدة مضمّنة — ممنوع محتوى الملف ده يتنسخ هنا -->
-<script src="shared/shell.js"></script>
-<script>document.getElementById('sharedMount').innerHTML = wocSharedModals();</script>
+<script src="shared/hub-config.js"></script>
+<script src="shared/core.js"></script>
+<script src="shared/gates.js"></script>
+<script>document.getElementById('sharedMount').innerHTML = ecoSharedModals();</script>
 <script>
 // ══════════════════════════════════════════════════════════════
 // §INIT — الجلسة أولاً، قبل أي حاجة تانية
@@ -1070,17 +1072,17 @@ const currentEmployee = { username: session.username, displayName: session.displ
 //    مربع بوسطة بيفشل على Worker تغليف قديم، والرسالة لازم تسمّيه.
 const PAGE_WORKERS = ['barcode', 'pack'];
 
-// ⚠️ الحلقة دي مكرّرة في كل الصفحات **عن قصد**: `WOC_WORKERS` و`cmpVersion`
+// ⚠️ الحلقة دي مكرّرة في كل الصفحات **عن قصد**: `ECO_WORKERS` و`cmpVersion`
 //    في الـ shell، بس فحص Step 9 بيطلب وجودهم في كل صفحة، والقايمة نفسها
 //    بتفرق من صفحة للتانية.
 async function renderAboutWorkers() {
   const box = document.getElementById('aboutWorkers');
   if (!box) return;
   const rows = await Promise.all(PAGE_WORKERS.map(async (key) => {
-    const w = WOC_WORKERS[key];
+    const w = ECO_WORKERS[key];
     let got = '—', mark = '❌';
     try {
-      const cfg = await wocApi(w).apiGet('get_config');
+      const cfg = await ecoApi(w).apiGet('get_config');
       got = cfg.version || cfg.WORKER_VERSION || '—';
       mark = cmpVersion(got, w.min) < 0 ? '⚠️' : '✅';
     } catch { got = 'تعذّر الوصول'; }
@@ -1144,8 +1146,8 @@ let bcFailed = [];   // [{ label, reason }]
 
 let bcInFlight = 0;  // عدد النداءات الجارية — بيعطّل الأزرار وبس
 
-const bcApi     = () => wocApi(WOC_WORKERS.barcode);
-const bcPackApi = () => wocApi(WOC_WORKERS.pack);
+const bcApi     = () => ecoApi(ECO_WORKERS.barcode);
+const bcPackApi = () => ecoApi(ECO_WORKERS.pack);
 
 // ─── §TOOL-JS::helpers ───
 
@@ -1823,7 +1825,7 @@ function bcRenderBody() {
     if (o.isSku) {
       head = `
         <tr class="bc-grp is-sku"><td colspan="${COLS}"><div class="bc-grp-in">
-          <span class="bc-grp-sku-name">${WOC_ICON_BARCODE} أصناف بدون أوردر</span>
+          <span class="bc-grp-sku-name">${ECO_ICON_BARCODE} أصناف بدون أوردر</span>
         </div></td></tr>`;
     } else {
       const link = o.orderId
@@ -2438,7 +2440,7 @@ function clearLogFilters() {
 async function fetchLog() {
   logLoaded = true;
   const body = document.getElementById('logBody');
-  body.innerHTML = '<tr class="empty-row"><td colspan="7">' + wocLoadingHTML('⏳ جاري تحميل السجل برجاء الانتظار ...', true) + '</td></tr>';
+  body.innerHTML = '<tr class="empty-row"><td colspan="7">' + ecoLoadingHTML('⏳ جاري تحميل السجل برجاء الانتظار ...', true) + '</td></tr>';
   const p = logFilterParams();
   const offset = (logCurrentPage - 1) * LOG_PAGE_SIZE;
   try {
@@ -2476,7 +2478,7 @@ function goPage(dir) {
 //    `print_failed` لأن الفشل الوحيد الممكن (الطابعة) الأداة مش شايفاه.
 function logTypeLabel(t) {
   return t === 'print_sku'
-    ? `<span class="log-type-badge sku">${WOC_ICON_BARCODE} بدون أوردر</span>`
+    ? `<span class="log-type-badge sku">${ECO_ICON_BARCODE} بدون أوردر</span>`
     : '<span class="log-type-badge order">📦 باركود-SKU لأوردر</span>';
 }
 
@@ -2539,8 +2541,8 @@ async function exportLogXLSX() {
 // §INIT
 // ══════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('headerMount').innerHTML = wocHeader({
-    icon: WOC_ICON_BARCODE, title: 'باركود SKU', subtitle: 'مركز عمليات المخزن', session,
+  document.getElementById('headerMount').innerHTML = ecoHeader({
+    icon: ECO_ICON_BARCODE, title: 'باركود SKU', subtitle: 'مركز عمليات المخزن', session,
   });
   renderVersionUI();
   checkWorkerVersion(PAGE_WORKERS);

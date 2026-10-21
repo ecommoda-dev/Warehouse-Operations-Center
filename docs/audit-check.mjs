@@ -309,7 +309,7 @@ console.log('\n⑦ تاب السجل — فلتر الموظف بيتملّى م
 }
 
 // ══════════════════════════════════════════════════════════════
-console.log('\n⑧ الجرد الجماعي — إلغاء تحميل الباركودات (cancelSignal في wocApi)');
+console.log('\n⑧ الجرد الجماعي — إلغاء تحميل الباركودات (cancelSignal في ecoApi)');
 {
   const { ctx, page, calls, errors } = await makePage({ bulkDelayMs: 4000 });
   await page.goto(`${BASE}/${PAGE}`);

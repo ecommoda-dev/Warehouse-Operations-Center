@@ -301,8 +301,10 @@
 <div id="sharedMount"></div>
 
 <!-- 🔴 نسخة واحدة مضمّنة — ممنوع محتوى الملف ده يتنسخ هنا -->
-<script src="shared/shell.js"></script>
-<script>document.getElementById('sharedMount').innerHTML = wocSharedModals();</script>
+<script src="shared/hub-config.js"></script>
+<script src="shared/core.js"></script>
+<script src="shared/gates.js"></script>
+<script>document.getElementById('sharedMount').innerHTML = ecoSharedModals();</script>
 <script>
 // ══════════════════════════════════════════════════════════════
 // §INIT — الجلسة أولاً، قبل أي حاجة تانية
@@ -320,16 +322,16 @@ const ST_TOOLS = [
   { key: 'remover', label: 'حذف منتج', icon: '🗑' },
 ];
 
-// ⚠️ الحلقة دي مكرّرة في الست صفحات **عن قصد**: `WOC_WORKERS` و`cmpVersion`
+// ⚠️ الحلقة دي مكرّرة في الست صفحات **عن قصد**: `ECO_WORKERS` و`cmpVersion`
 //    في الـ shell، بس فحص Step 9 بيطلب وجودهم في كل صفحة.
 async function renderAboutWorkers() {
   const box = document.getElementById('aboutWorkers');
   if (!box) return;
   const rows = await Promise.all(ST_TOOLS.map(async ({ key }) => {
-    const w = WOC_WORKERS[key];
+    const w = ECO_WORKERS[key];
     let got = '—', mark = '❌';
     try {
-      const cfg = await wocApi(w).apiGet('get_config');
+      const cfg = await ecoApi(w).apiGet('get_config');
       got = cfg.version || cfg.WORKER_VERSION || '—';
       mark = cmpVersion(got, w.min) < 0 ? '⚠️' : '✅';
     } catch { got = 'تعذّر الوصول'; }
@@ -377,7 +379,7 @@ const ST_RANGES = {
 //
 //    الحل بلا أي تعديل Worker: اطلب **يوم UTC زيادة** وفلتر هنا بـ
 //    `cairoDayStr` اللي في الـ shell.
-function stAddDays(dayStr, n) { return wocAddDays(dayStr, n); }   // المصدر في الـ shell (§HOME-DONE بتستخدمه كمان)
+function stAddDays(dayStr, n) { return ecoAddDays(dayStr, n); }   // المصدر في الـ shell (§HOME-DONE بتستخدمه كمان)
 
 // بداية يوم القاهرة بالملّي — تُستخدم للخروج المبكر من التصفيح
 function stDayStartMs(dayStr) { return cairoDayStartMs(dayStr); }   // المصدر في الـ shell (Intl)
@@ -449,7 +451,7 @@ function stResultStatus(toolKey, ex) {
 // دلوقتي، فالصفوف المطلوبة في أول الترتيب. أول ما صفحة تخلص بصف أقدم من
 // بداية النافذة، مافيش داعي لصفحة تانية.
 async function stFetchTool(key, dateFrom, dateTo, startMs) {
-  const api  = wocApi(WOC_WORKERS[key]);
+  const api  = ecoApi(ECO_WORKERS[key]);
   const rows = [];
   for (let page = 0; page < STATS_MAX_PAGES; page++) {
     const res  = await api.apiGet('get_logs', {
@@ -469,7 +471,7 @@ async function stFetchTool(key, dateFrom, dateTo, startMs) {
 //    الموسّعة (مطابقة «طباعة → تغليف») بس، والأرقام اللي محتاجة `extra`
 //    بتيجي من `get_logs` المصفّح زي باقي الأدوات.
 async function stFetchPrintWide(dateFrom, dateTo) {
-  const res = await wocApi(WOC_WORKERS.printer).apiPath('/logs', { dateFrom, dateTo });
+  const res = await ecoApi(ECO_WORKERS.printer).apiPath('/logs', { dateFrom, dateTo });
   return { rows: res?.entries || [], truncated: !!res?.truncated };
 }
 
@@ -690,7 +692,7 @@ function stRenderBanners() {
   const failed = ST_TOOLS.filter(t => stState.fail[t.key]);
   if (failed.length) {
     parts.push(`<div class="st-fail">⚠️ ${failed.map(t =>
-      `تعذّر جلب سجل ${esc(WOC_WORKERS[t.key].label)} — ${esc(stState.fail[t.key])}`).join('<br>')}
+      `تعذّر جلب سجل ${esc(ECO_WORKERS[t.key].label)} — ${esc(stState.fail[t.key])}`).join('<br>')}
       <br><b>أرقام المصدر ده بتتعرض «تعذّر»، وأي رقم بيجمع أكتر من أداة بيتقفل بالكامل.</b></div>`);
   }
   if (stState.wideFail && !stState.fail.printer) {
@@ -917,7 +919,7 @@ function stRenderFreshness(now = Date.now()) {
   document.getElementById('stRefreshBtn').classList.toggle('is-stale', info.stale);
 }
 
-// ── النبضة — **صفر نداء شبكة**، زي `WOC_TICK_MS` و`rdyTick` بالظبط ───
+// ── النبضة — **صفر نداء شبكة**، زي `ECO_TICK_MS` و`rdyTick` بالظبط ───
 function stStartTicker() {
   if (stState.tickTimer) return;
   stState.tickTimer = setInterval(() => stRenderFreshness(), STATS_TICK_MS);
@@ -940,7 +942,7 @@ function stRenderPresets() {
 // §INIT
 // ══════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('headerMount').innerHTML = wocHeader({
+  document.getElementById('headerMount').innerHTML = ecoHeader({
     icon: '📊', title: 'إحصائيات المخزن', subtitle: 'مركز عمليات المخزن', session,
   });
   renderVersionUI();

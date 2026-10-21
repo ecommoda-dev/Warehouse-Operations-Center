@@ -134,8 +134,8 @@ const RAW = [
     s1:'Ready', s2:null, packedAtS1:'2026-09-15T10:00:00Z', packedAtS2:null,
     packedByS1:'Abo Selim', packedByS2:null, whereaboutsS1:'Warehouse', whereaboutsS2:null },
 ];
-// 🔴 الترتيب هنا **جزء من البند** — `wocWarehouseQueue` بترتّب بالأقدم
-//    **تغليفًا** الأول (زي `wocOfficeQueue` بالحرف). الترتيب بتاريخ الأوردر
+// 🔴 الترتيب هنا **جزء من البند** — `ecoWarehouseQueue` بترتّب بالأقدم
+//    **تغليفًا** الأول (زي `ecoOfficeQueue` بالحرف). الترتيب بتاريخ الأوردر
 //    كان هيدّي ترتيب تاني خالص، و`updatedAt` **اتشال بالكامل** في v1.30.0.
 // ⚠️ ولاحظ إن `#54301` بيترتّب بوقت تغليف **S2** مش S1 — الماكينة بتاعته.
 const ELIGIBLE_NAMES = ['#54727', '#54580', '#54296', '#54301'];
@@ -343,7 +343,7 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
   // ⚠️ والصفّان دول **مؤهلان في الـ Worker** — الفلتر عرض بس، والسكانة شغّالة
   //    عليهم. البند ده بيقرا البوابة مباشرةً عشان يثبت السبب مش النتيجة.
   const whyCourier = await page.evaluate((raw) =>
-    wocWarehouseGate(raw.find(o => o.orderName === '#54555')).code, RAW);
+    ecoWarehouseGate(raw.find(o => o.orderName === '#54555')).code, RAW);
   is(whyCourier === 'not_in_office',
      '🔴 وسبب الاستبعاد `not_in_office` — مش `status` ولا `not_packed`', String(whyCourier));
 
@@ -358,14 +358,14 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
   is(badge === cnt, 'بادج زرار التحديث == العدّاد', `${badge} ≠ ${cnt}`);
 
   // 🔴 البند اللي بيقفل درس R1: الصفحة بتعدّ من **نفس** دالة الـ shell
-  const gateCount = await page.evaluate((raw) => wocWarehouseQueue(raw).length, RAW);
+  const gateCount = await page.evaluate((raw) => ecoWarehouseQueue(raw).length, RAW);
   is(gateCount === ELIGIBLE_NAMES.length,
-     '`wocWarehouseQueue` في الـ shell بترجّع نفس الرقم بالظبط', String(gateCount));
+     '`ecoWarehouseQueue` في الـ shell بترجّع نفس الرقم بالظبط', String(gateCount));
 
   // 🔴 **والبوابتان مختلفتان فعلاً** — لو حد وحّدهم، الملغي هيختفي من هنا
-  const officeCount = await page.evaluate((raw) => wocOfficeQueue(raw).length, RAW);
+  const officeCount = await page.evaluate((raw) => ecoOfficeQueue(raw).length, RAW);
   is(officeCount !== gateCount,
-     '🔴 `wocOfficeQueue` بترجّع رقم مختلف على نفس البيانات — البوابتان مش نسخة واحدة',
+     '🔴 `ecoOfficeQueue` بترجّع رقم مختلف على نفس البيانات — البوابتان مش نسخة واحدة',
      `office ${officeCount} · warehouse ${gateCount}`);
 
   // عمود «الحالة» — السبب اللي الأوردر في القايمة عشانه
@@ -402,9 +402,9 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
   // 🔴 **الأرضية مكتوبة على الشاشة وجاية من الرد** — لو الصفحة كتبتها
   //    بالإيد، تغيير الأرضية في الـ Worker بيسيب الشاشة بتقول القديم
   //    **في صمت** (درس R1).
-  // ⚠️ والمقارنة بنص `wocYmdToDMY` **المحسوب في الصفحة** مش بنص مكتوب هنا.
+  // ⚠️ والمقارنة بنص `ecoYmdToDMY` **المحسوب في الصفحة** مش بنص مكتوب هنا.
   const subTxt  = (await page.locator('#rqSub').textContent() || '');
-  const wantDay = await page.evaluate((d) => wocYmdToDMY(d), ORDERS_SINCE);
+  const wantDay = await page.evaluate((d) => ecoYmdToDMY(d), ORDERS_SINCE);
   is(subTxt.includes(wantDay),
      '🔴 أرضية تاريخ الأوردر مكتوبة على الشاشة — والتاريخ جاي من رد الـ Worker',
      `${subTxt} ⊅ ${wantDay}`);

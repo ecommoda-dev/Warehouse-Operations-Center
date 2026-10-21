@@ -210,8 +210,8 @@ for (const [file, title, tabLog, panelLog, rows, diag] of [
   is((await page.locator('#clLatestVerBadge').innerText()).trim() === ver.replace(' 📋',''),
      '🔴 بادج سجل التغييرات == زرار النسخة (مصدر واحد · Standards #24)');
   is(await page.locator('#verStaleBtn').isVisible() === false, 'مفيش تحذير نسخة — الـ Worker الوهمي على الحد الأدنى');
-  is(await page.locator('#settingsOverlay').count() === 1, 'نافذة الإعدادات اتحقنت من `wocSharedModals()`');
-  is(await page.locator('#toastContainer').count() === 1, 'حاوية التوست اتحقنت من `wocSharedModals()`');
+  is(await page.locator('#settingsOverlay').count() === 1, 'نافذة الإعدادات اتحقنت من `ecoSharedModals()`');
+  is(await page.locator('#toastContainer').count() === 1, 'حاوية التوست اتحقنت من `ecoSharedModals()`');
 
   console.log('② الفحص الذاتي 🩺 — بيسمّي الـ Worker وبيعرض الـ hint');
   await page.click('#settingsBtn'); await page.waitForTimeout(150);

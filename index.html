@@ -262,7 +262,7 @@
               قاعدة ١٧). من غير الشرط ده كان **٤٠ أوردر بوسطة** يظهروا هنا
               (تلت الـ Ready يوم القياس)، ونفس الأوردر يتعدّ في الصف اللي فوق
               **وفي الصف ده** — والموظف يروح يدوّر على طرد مش موجود.
-           🔴 **العدّ من `wocOfficeGate` في `shared/shell.js` §OFFICE-GATE** —
+           🔴 **العدّ من `ecoOfficeGate` في `shared/shell.js` §OFFICE-GATE** —
               **نفس** الدالة اللي `Package-Transfer-To-Office.html` بتعدّ بيها بالحرف،
               على **نفس** رد الـ endpoint. ⛔ ممنوع أي حساب أهلية هنا (درس R1).
            ⚠️ **بلا مربعات تقسيمة** زي صف بوسطة بالظبط — مناديب وشو روم
@@ -306,7 +306,7 @@
               وفي القيمة المكتوبة.
            ⛔ **وأخطر حاجة: الإلغاء.** في صف المكتب الملغي **مستبعَد**؛ هنا
               هو **شرط أهلية**. نسخ الشرط من فوق بيفضّي الصف ده في صمت.
-           🔴 **العدّ من `wocWarehouseGate` في `shared/shell.js`
+           🔴 **العدّ من `ecoWarehouseGate` في `shared/shell.js`
               §WAREHOUSE-GATE** — **نفس** الدالة اللي `Package-Transfer-To-Warehouse.html`
               بتعدّ بيها بالحرف، على **نفس** رد الـ endpoint. ⛔ ممنوع أي
               حساب أهلية هنا (درس R1).
@@ -630,7 +630,7 @@
         <ul class="cl-items">
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>روابط كل الأدوات الداخلية بقت باسم ريبو الأداة بالحرف</b>: <code>Order-Printer.html</code> · <code>Orders-Packing-Checker.html</code> · <code>Order-Item-Remover.html</code> · <code>Order-SKU-Barcode-Printer.html</code> (§5.2 في <code>ecommoda-constants</code>). الروابط القديمة (<code>print.html</code> · <code>pack.html</code> · <code>remove.html</code> · <code>sku-barcode.html</code>) بتدّي <b>404</b> بلا إعادة توجيه.</span></li>
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>«بلا قناة» بقت «المنطقة غير محددة»</b> و<b>«مستنية رفع على بوسطة» بقت «في انتظار الرفع على بوسطة»</b> (الشاشة الرئيسية وقسم الطباعة).</span></li>
-          <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>حالة التحميل موحّدة في كل الأدوات</b>: «⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...» بخط كبير وتقيل ودايرة بتلف، وزرار «تحديث» بيقول «جاري التحديث ...» بأيقونة بتلف. المصدر <code>.woc-loadbox</code> في <code>shared/shell.css</code> و<code>wocLoadingHTML</code> في <code>shared/shell.js</code>.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>حالة التحميل موحّدة في كل الأدوات</b>: «⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...» بخط كبير وتقيل ودايرة بتلف، وزرار «تحديث» بيقول «جاري التحديث ...» بأيقونة بتلف. المصدر <code>.woc-loadbox</code> في <code>shared/shell.css</code> و<code>ecoLoadingHTML</code> في <code>shared/shell.js</code>.</span></li>
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🗑️ <b>«رحلة الأوردر» اتحذفت بالكامل</b> (الصفحة ومربعها في قسم «أخرى»). ⚠️ الأوردرات لسه بتتتبّع من سجل كل أداة.</span></li>
         </ul>
       </div>
@@ -758,7 +758,7 @@
         <ul class="cl-items">
           <li class="cl-item"><span class="cl-tag new">جديد</span><span>🔴 <b>سكانرا بوسطة دخلوا الهب</b> — <code>shipped.html</code> (تسليم لبوسطة) و<code>returned.html</code> (استلام راجع). الموظف بيدخل <b>مرة واحدة</b> وبيتنقّل بينهم وبين الطباعة والتغليف من غير ما يدخل تاني. مربعاتهم في قسم «أدوات» في <b>صف تاني</b> — أخضر للشحن وأحمر للمرتجعات، لأنهم بيعملوا عكس بعض.</span></li>
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>السر بقى على ست Workers</b> بدل أربعة — نفس مفتاح مجموعة <code>warehouse_ops</code> بالظبط، من غير أي حقل جديد في الإعدادات.</span></li>
-          <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>مهلة ٩٠ ثانية على كل نداء Worker</b> في الـ shell (<code>WOC_API_TIMEOUT_MS</code>). من غيرها الـ Worker الواقف كان بيسيب الزرار معطّل والشاشة بتلف <b>للأبد</b>، والموظف بيعمل refresh وسط عملية كتابة.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>مهلة ٩٠ ثانية على كل نداء Worker</b> في الـ shell (<code>ECO_API_TIMEOUT_MS</code>). من غيرها الـ Worker الواقف كان بيسيب الزرار معطّل والشاشة بتلف <b>للأبد</b>، والموظف بيعمل refresh وسط عملية كتابة.</span></li>
           <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>🔴 <b><code>playBeep('scan')</code> كانت بتطلّع نغمة الفشل.</b> الـ shell كان فيه فرعان بس (<code>warn</code> · <code>success</code>) والـ <code>else</code> بيرد على أي قيمة تانية بالنغمة النازلة — يعني الموظف اللي بيسكن ٨٢ ملصق وراه كان بيسمع «فشل» ٨٢ مرة على شغل تمام، <b>وصفر خطأ في الكونسول</b>. بقى فيه فرع صريح لكل نغمة.</span></li>
           <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span><b>الفحص الذاتي 🩺 بقى بيفهم شكل تالت لـ <code>checks</code></b> — كائن بندوده كائنات جوّاها <code>ok</code> (سكانر المرتجعات). قبل كده الفحص الفاشل كان بيتعرض ℹ️ «معلومة» بجسم JSON خام، يعني صلاحية ناقصة بتبان زي أي سطر عادي. وبقى بيعرض سطر «إزاي تصلّحها» (<code>hint</code>) تحت الفحص الفاشل بس.</span></li>
         </ul>
@@ -975,8 +975,10 @@
 <div id="sharedMount"></div>
 
 <!-- 🔴 نسخة واحدة مضمّنة — ممنوع محتوى الملف ده يتنسخ هنا -->
-<script src="shared/shell.js"></script>
-<script>document.getElementById('sharedMount').innerHTML = wocSharedModals();</script>
+<script src="shared/hub-config.js"></script>
+<script src="shared/core.js"></script>
+<script src="shared/gates.js"></script>
+<script>document.getElementById('sharedMount').innerHTML = ecoSharedModals();</script>
 <script>
 // ══════════════════════════════════════════════════════════════
 // §PAGE — index.html
@@ -985,9 +987,9 @@
 // ⚠️ الصفحة دي **مافيهاش حارس جلسة** — دي شاشة الدخول نفسها.
 //    باقي الصفحات بتنادي الحارس في أول سطر عندها.
 
-const { apiGet, apiPost } = wocApi(WOC_WORKERS.auth);   // الدخول على Worker مستقل بتاع الهب (v1.32.0)
+const { apiGet, apiPost } = ecoApi(ECO_WORKERS.auth);   // الدخول على Worker مستقل بتاع الهب (v1.32.0)
 // ⚠️ `barcode` داخل هنا رغم إن الشاشة الرئيسية **مابتناديهوش** لأي عدد:
-//    القايمة دي بتغذّي 🩺 فحص النظام كمان (`wocRunDiag`)، والفحص من الشاشة
+//    القايمة دي بتغذّي 🩺 فحص النظام كمان (`ecoRunDiag`)، والفحص من الشاشة
 //    الرئيسية هو الفحص الشامل — Worker مش في القايمة بيختفي من الفحص خالص.
 // 🔴 `auth` داخل هنا من v1.32.0 — هو Worker الدخول، وحارس النسخة لازم
 //    يسمّيه زي أي Worker تاني لو اتأخر أو وقع.
@@ -1198,7 +1200,7 @@ async function finishLogin(username, displayName, logged) {
 //    نفس الـ Custom App). `armAuto` · `autoTick` · `visibilitychange` · `dirty` اتشالوا.
 //    ✅ اللي فضل: النبضة (٣٠ ثانية) بتحدّث «منذ كام» **بلا أي نداء شبكة**، وهي اللي
 //    بتلوّن الصف بعمره.
-const WOC_TICK_MS         = 30 * 1000;
+const ECO_TICK_MS         = 30 * 1000;
 
 // ══════════════════════════════════════════════════════════════
 // §HOME-DONE — «اللي خلص النهارده / أمس» تحت الطوابير التلاتة (v1.40.0 · قرار أحمد)
@@ -1243,7 +1245,7 @@ function donePickShip(e) {
 async function fetchDoneCounts(key) {
   const d = HOME_QUEUES[key].done;
   try {
-    const res = await wocApi(WOC_WORKERS[d.worker]).apiGet('get_done_counts');
+    const res = await ecoApi(ECO_WORKERS[d.worker]).apiGet('get_done_counts');
     const c = res && res.counts;
     if (res && res.ok !== false && c && Number.isInteger(c.today) && Number.isInteger(c.yesterday)
         && res.today === cairoDayStr(new Date())) {
@@ -1255,10 +1257,10 @@ async function fetchDoneCounts(key) {
 
 async function fetchDoneCountsFromLogs(key) {
   const d = HOME_QUEUES[key].done;
-  const api = wocApi(WOC_WORKERS[d.worker]);
+  const api = ecoApi(ECO_WORKERS[d.worker]);
   const today = cairoDayStr(new Date());
-  const yest  = wocAddDays(today, -1);
-  const dateFrom = wocAddDays(yest, -1);                           // يوم UTC زيادة
+  const yest  = ecoAddDays(today, -1);
+  const dateFrom = ecoAddDays(yest, -1);                           // يوم UTC زيادة
   const startMs  = cairoDayStartMs(yest);   // بداية يوم القاهرة لأمس (Intl — مش +٣ ثابتة)
   const seen = { [today]: new Set(), [yest]: new Set() };
   for (let page = 0; page < DONE_MAX_PAGES; page++) {
@@ -1288,7 +1290,7 @@ async function loadDone(key) {
   try {
     q.done = await fetchDoneCounts(key);
     q.doneErr = null;
-    cacheSet(WOC_CACHE_DONE + key, { day: cairoDayStr(new Date()), counts: q.done });
+    cacheSet(ECO_CACHE_DONE + key, { day: cairoDayStr(new Date()), counts: q.done });
   } catch (err) {
     q.doneErr = err.message || 'تعذّر تحميل «خلص»';   // الرقم القديم (لو فيه) بيفضل
   } finally {
@@ -1329,11 +1331,11 @@ const HOME_QUEUES = {
     ids: { count:'cntPrint', chips:'chipsPrint', fail:'failPrint',
            ago:'agoPrint', stamp:'stampPrint', btn:'btnPrint', badge:'badgePrint' },
     done: { id: 'donePrint', verb: 'اتطبع', worker: 'printer', pick: donePickPrint },
-    cache: WOC_CACHE_PRINT,
+    cache: ECO_CACHE_PRINT,
     // 🔴 `allZones: true` لازم يبقى **مطابق** لللي `Order-Printer.html` بيبعته —
-    //    الاتنين بيكتبوا نفس الكاش (`WOC_CACHE_PRINT`)، ولو الرقم هنا
+    //    الاتنين بيكتبوا نفس الكاش (`ECO_CACHE_PRINT`)، ولو الرقم هنا
     //    قناة واحدة والصفحة تلاتة، الرئيسية تقول ١٢ والصفحة تفتح على ٤٩.
-    fetchRaw() { return wocApi(WOC_WORKERS.printer).apiPath('/orders', { allZones: true }); },
+    fetchRaw() { return ecoApi(ECO_WORKERS.printer).apiPath('/orders', { allZones: true }); },
     // 🔴 `derive` واحدة للشبكة وللكاش — نسختين كانوا هيخلّوا رقم الكاش يخالف رقم الشبكة لنفس الرد.
     derive(data) {
       const orders = data.orders || [];
@@ -1341,14 +1343,14 @@ const HOME_QUEUES = {
       // بتطبع حاجات مختلفة على ورق مختلف، ودي المعلومة اللي الموظف
       // بيتصرّف عليها. مربع «بلا قناة» بيظهر بس لما يكون فيه فعلاً.
       // 🔴 العدّ بيعدّي على **نفس بوابة `Order-Printer.html` بالحرف**
-      //    (`wocChannelOf`/`wocChannelGate` في §BOSTA-GATE بتاع الـ shell).
+      //    (`ecoChannelOf`/`ecoChannelGate` في §BOSTA-GATE بتاع الـ shell).
       //    الرقم هنا وعد بشغل موجود: لو قال ٦٦ والصفحة تفتح على ٦، الموظف
       //    بيروح لطابور مش موجود. المستبعَد **بيتعدّ وبيتقال** في مربع
       //    لوحده — مش بيختفي في صمت.
       const n = { invoice: 0, awb: 0, showroom: 0, none: 0, pending: 0, s2Hold: 0 };
       for (const o of orders) {
-        const chan = wocChannelOf(o);
-        const gate = wocChannelGate(o, chan);
+        const chan = ecoChannelOf(o);
+        const gate = ecoChannelGate(o, chan);
         if (gate === 'not-uploaded') { n.pending++; continue; }
         if (gate === 's2')           { n.s2Hold++;  continue; }
         n[chan]++;
@@ -1378,8 +1380,8 @@ const HOME_QUEUES = {
     ids: { count:'cntPack', chips:'chipsPack', fail:'failPack',
            ago:'agoPack', stamp:'stampPack', btn:'btnPack', badge:'badgePack' },
     done: { id: 'donePack', verb: 'اتغلّف', worker: 'pack', pick: e => e.type === 'packed' },
-    cache: WOC_CACHE_PACK,
-    fetchRaw() { return wocApi(WOC_WORKERS.pack).apiGet('get_ready_orders'); },
+    cache: ECO_CACHE_PACK,
+    fetchRaw() { return ecoApi(ECO_WORKERS.pack).apiGet('get_ready_orders'); },
     derive(data) {
       const orders = data.orders || [];
       // 🔴 التقسيمة **بالمندوب** مش بالنوع (قرار أحمد 07-09-2026). السبب
@@ -1388,12 +1390,12 @@ const HOME_QUEUES = {
       //    الحالتين. اللي بيفرق فعلاً هو **بوسطة ولا مندوب**: ورق مختلف
       //    وملصق مختلف ومحطة تسليم مختلفة. ودي بالظبط نفس تقسيمة مربعات
       //    `Orders-Packing-Checker.html` اللي الصفحة بتفتح عليها.
-      // 🔴 العدّ بيعدّي على `wocCourierGroup` في الـ shell §COURIER-GROUP —
+      // 🔴 العدّ بيعدّي على `ecoCourierGroup` في الـ shell §COURIER-GROUP —
       //    **نفس** القاعدة اللي `Orders-Packing-Checker.html` بتعدّ بيها بالحرف. نسخة تانية
       //    هنا معناها الرئيسية تقول ٣٦ والصفحة تفتح على رقم تاني (درس R1).
-      const cn = wocCourierCounts(orders);
+      const cn = ecoCourierCounts(orders);
       return { total: data.total ?? orders.length,
-               chips: WOC_COURIER_GROUPS.map(g => ({ grp: true, cls: g.cls, label: g.label, n: cn[g.key] })) };
+               chips: ECO_COURIER_GROUPS.map(g => ({ grp: true, cls: g.cls, label: g.label, n: cn[g.key] })) };
     },
   },
   // ── «جاهز لتسليم بوسطة» (v1.23.0) ──────────────────────────────
@@ -1411,8 +1413,8 @@ const HOME_QUEUES = {
     // `types`/`results` فلاتر server-side بتقلّل الصفحات بس — الحكم النهائي في `pick` (فلتر مجهول في الـ Worker بيتجاهَل في صمت).
     done: { id: 'doneBosta', verb: 'اتسلّم لبوسطة', worker: 'shipped',
             params: { types: 'update', results: 'success,warning' }, pick: donePickShip },
-    cache: WOC_CACHE_BOSTA,
-    fetchRaw() { return wocApi(WOC_WORKERS.shipped).apiGet('get_ready_to_ship'); },
+    cache: ECO_CACHE_BOSTA,
+    fetchRaw() { return ecoApi(ECO_WORKERS.shipped).apiGet('get_ready_to_ship'); },
     derive(data) {
       const orders = data.orders || [];
       return { total: data.counts?.total ?? orders.length, chips: [] };
@@ -1423,7 +1425,7 @@ const HOME_QUEUES = {
   // 🔴 **الـ Worker بيرجّع اللي حالته `Ready` خام، والأهلية بتتحسب هنا** —
   //    مش اختيار معماري: `custom.package_whereabouts_s1` **مش قابل للفلترة**
   //    في بحث شوبيفاي، والفلتر عليه بيرجّع المتجر كله في صمت.
-  // ⛔ **بس الحساب مش هنا فعليًا** — `wocOfficeGate` في الـ shell §OFFICE-GATE،
+  // ⛔ **بس الحساب مش هنا فعليًا** — `ecoOfficeGate` في الـ shell §OFFICE-GATE،
   //    و`Package-Transfer-To-Office.html` بتنادي **نفس الدالة** على **نفس الرد**.
   //    نسخة تانية من القاعدة في أي صفحة = الرقم هنا يخالف القايمة هناك
   //    (درس R1 · v1.11.0).
@@ -1431,16 +1433,16 @@ const HOME_QUEUES = {
     err: 'تعذّر جلب طابور تسليمات المكتب',
     ids: { count:'cntOffice', chips:'chipsOffice', fail:'failOffice',
            ago:'agoOffice', stamp:'stampOffice', btn:'btnOffice', badge:'badgeOffice' },
-    cache: WOC_CACHE_OFFICE,
-    fetchRaw() { return wocApi(WOC_WORKERS.office).apiGet('get_ready_to_office'); },
+    cache: ECO_CACHE_OFFICE,
+    fetchRaw() { return ecoApi(ECO_WORKERS.office).apiGet('get_ready_to_office'); },
     derive(data) {
-      return { total: wocOfficeQueue(data.orders || []).length, chips: [] };
+      return { total: ecoOfficeQueue(data.orders || []).length, chips: [] };
     },
   },
 
   // ── «جاهز للرجوع للمخزن» (v1.28.0) ─────────────────────────────
   // 🔴 **نفس عقد صف المكتب بالحرف** — الـ Worker بيرجّع خام والأهلية في
-  //    `wocWarehouseGate` بالـ shell، و`Package-Transfer-To-Warehouse.html` بتنادي **نفس
+  //    `ecoWarehouseGate` بالـ shell، و`Package-Transfer-To-Warehouse.html` بتنادي **نفس
   //    الدالة** على **نفس الرد**. ⛔ ممنوع أي حساب أهلية هنا (درس R1).
   // ⛔ **ومعكوس صف المكتب في الإلغاء:** هناك الملغي مستبعَد، هنا مؤهل.
   // ⚠️ **بلا مربعات تقسيمة** — «مرتجع» و«ملغي» بيتفرقوا في **الصفحة** (عمود
@@ -1451,10 +1453,10 @@ const HOME_QUEUES = {
     err: 'تعذّر جلب طابور استلام المرتجعات',
     ids: { count:'cntWarehouse', chips:'chipsWarehouse', fail:'failWarehouse',
            ago:'agoWarehouse', stamp:'stampWarehouse', btn:'btnWarehouse', badge:'badgeWarehouse' },
-    cache: WOC_CACHE_WAREHOUSE,
-    fetchRaw() { return wocApi(WOC_WORKERS.warehouse).apiGet('get_ready_to_warehouse'); },
+    cache: ECO_CACHE_WAREHOUSE,
+    fetchRaw() { return ecoApi(ECO_WORKERS.warehouse).apiGet('get_ready_to_warehouse'); },
     derive(data) {
-      return { total: wocWarehouseQueue(data.orders || []).length, chips: [] };
+      return { total: ecoWarehouseQueue(data.orders || []).length, chips: [] };
     },
   },
 };
@@ -1472,7 +1474,7 @@ function showHome() {
   const s = getSession();
   if (!s) return;
   document.getElementById('loginOverlay').classList.add('hidden');
-  document.getElementById('headerMount').innerHTML = wocHeader({
+  document.getElementById('headerMount').innerHTML = ecoHeader({
     icon: '🏭', title: 'مركز عمليات المخزن', subtitle: 'EcomModa — محطة المخزن',
     home: false,          // ⚠️ إحنا **في** الشاشة الرئيسية
     session: s,
@@ -1494,10 +1496,10 @@ function showHome() {
 //    الاتنين مع بعض هما اللي بيقللوا التزامن الفعلي.
 // ⚠️ **مش بديل لـ `allSettled`** — لسه فشل طابور واحد **مايخفيش** التاني
 //    (قاعدة ٢)، والتأخير هنا في **وقت الإطلاق** بس مش في المعالجة بعد كده.
-const WOC_QUEUE_STAGGER_MS = 200;   // فاصل بين إطلاق كل طابور والتاني
+const ECO_QUEUE_STAGGER_MS = 200;   // فاصل بين إطلاق كل طابور والتاني
 function loadQueuesStaggered(keys) {
   return Promise.allSettled(keys.map((k, i) =>
-    new Promise(r => setTimeout(r, i * WOC_QUEUE_STAGGER_MS)).then(() => loadQueue(k))
+    new Promise(r => setTimeout(r, i * ECO_QUEUE_STAGGER_MS)).then(() => loadQueue(k))
   ));
 }
 
@@ -1637,7 +1639,7 @@ function renderFreshness(now = Date.now()) {
 // ─── النبضة — أرقام محسوبة محليًا، **صفر نداء شبكة** ───
 function startHomeTicker() {
   if (homeTickTimer) return;
-  homeTickTimer = setInterval(() => renderFreshness(), WOC_TICK_MS);
+  homeTickTimer = setInterval(() => renderFreshness(), ECO_TICK_MS);
 }
 
 // ─── من الكاش (v1.43.0) ───
@@ -1647,16 +1649,16 @@ function startHomeTicker() {
 function homeFromCache(key) {
   const def = HOME_QUEUES[key], q = homeQ[key];
   const c = cacheGet(def.cache);
-  if (!c || c.ageMs >= WOC_CACHE_TTL_MS) return false;
+  if (!c || c.ageMs >= ECO_CACHE_TTL_MS) return false;
   let r;
   try { r = def.derive(c.data); } catch { return false; }
   clearFail(def.ids.fail);
   setCount(key, r.total, r.chips);
   q.at = new Date(c.at);
   if (def.done) {
-    const d = cacheGet(WOC_CACHE_DONE + key);
+    const d = cacheGet(ECO_CACHE_DONE + key);
     // 🔴 يوم القاهرة جوّه الكاش: كاش اتكتب ١١:٥٧م مايتعرضش «النهارده» بعد نص الليل
-    if (d && d.ageMs < WOC_CACHE_TTL_MS && d.data && d.data.day === cairoDayStr(new Date())) {
+    if (d && d.ageMs < ECO_CACHE_TTL_MS && d.data && d.data.day === cairoDayStr(new Date())) {
       q.done = d.data.counts; q.doneErr = null; renderDone(key);
     } else {
       loadDone(key);                  // «خلص» لوحده — الطابور من الكاش
@@ -1665,17 +1667,17 @@ function homeFromCache(key) {
   return true;
 }
 
-// ⚠️ الحلقة دي مكرّرة في الخمس صفحات **عن قصد**: `WOC_WORKERS` و`cmpVersion`
+// ⚠️ الحلقة دي مكرّرة في الخمس صفحات **عن قصد**: `ECO_WORKERS` و`cmpVersion`
 //    في الـ shell، بس فحص Step 9 بيطلب وجودهم في كل صفحة، والقايمة نفسها
 //    (`PAGE_WORKERS`) بتفرق من صفحة للتانية.
 async function renderAboutWorkers() {
   const box = document.getElementById('aboutWorkers');
   if (!box) return;
   const rows = await Promise.all(PAGE_WORKERS.map(async k => {
-    const w = WOC_WORKERS[k];
+    const w = ECO_WORKERS[k];
     let got = '—', mark = '⏳';
     try {
-      const cfg = await wocApi(w).apiGet('get_config');
+      const cfg = await ecoApi(w).apiGet('get_config');
       got = cfg.version || cfg.WORKER_VERSION || '—';
       mark = cmpVersion(got, w.min) < 0 ? '⚠️' : '✅';
     } catch { mark = '❌'; got = 'تعذّر الوصول'; }

@@ -489,7 +489,7 @@
         `#logTabContent` وكل §LOG-JS كانوا موجودين، بس مفيش أي زرار بينادي
         عليهم — فتاب «سجل العمليات» كان مستحيل يتفتح. نفس عيلة الباج بتاعت
         chip التاب في `Order-Printer.html` (كتلة كانت جوّه الهيدر القديم وراحت معاه
-        وقت التحويل لـ `wocHeader`). -->
+        وقت التحويل لـ `ecoHeader`). -->
 <div class="main-tabs-bar">
   <button class="main-tab-btn active" id="mainTabRemove" onclick="switchMainTab('remove')">🔍 البحث والحذف</button>
   <button class="main-tab-btn" id="mainTabLog" onclick="switchMainTab('log')">📜 سجل العمليات</button>
@@ -551,8 +551,10 @@
 <div id="sharedMount"></div>
 
 <!-- 🔴 نسخة واحدة مضمّنة — ممنوع محتوى الملف ده يتنسخ هنا -->
-<script src="shared/shell.js"></script>
-<script>document.getElementById('sharedMount').innerHTML = wocSharedModals();</script>
+<script src="shared/hub-config.js"></script>
+<script src="shared/core.js"></script>
+<script src="shared/gates.js"></script>
+<script>document.getElementById('sharedMount').innerHTML = ecoSharedModals();</script>
 <script>
 
 // ══════════════════════════════════════════════════════════════
@@ -563,23 +565,23 @@
 //    أثناء التحويل لشاشة الدخول.
 const session = requireSession();
 const currentEmployee = { username: session.username, displayName: session.displayName };
-const { apiGet, apiPost } = wocApi(WOC_WORKERS.remover);
+const { apiGet, apiPost } = ecoApi(ECO_WORKERS.remover);
 const PAGE_WORKERS = ['remover'];
 
 // خاصة بالصفحة — كانت في §CONFIG المحذوف
 function toggleSearchActiveState(el) { el.classList.toggle('has-value', el.value.trim().length > 0); }
 
-// ⚠️ الحلقة دي مكرّرة في الخمس صفحات **عن قصد**: `WOC_WORKERS` و`cmpVersion`
+// ⚠️ الحلقة دي مكرّرة في الخمس صفحات **عن قصد**: `ECO_WORKERS` و`cmpVersion`
 //    في الـ shell، بس فحص Step 9 بيطلب وجودهم في كل صفحة، والقايمة نفسها
 //    بتفرق من صفحة للتانية.
 async function renderAboutWorkers() {
   const box = document.getElementById('aboutWorkers');
   if (!box) return;
   const rows = await Promise.all(PAGE_WORKERS.map(async k => {
-    const w = WOC_WORKERS[k];
+    const w = ECO_WORKERS[k];
     let got = '—', mark = '❌';
     try {
-      const cfg = await wocApi(w).apiGet('get_config');
+      const cfg = await ecoApi(w).apiGet('get_config');
       got = cfg.version || cfg.WORKER_VERSION || '—';
       mark = cmpVersion(got, w.min) < 0 ? '⚠️' : '✅';
     } catch { got = 'تعذّر الوصول'; }
@@ -643,7 +645,7 @@ async function lookupOrder() {
   const area = document.getElementById('orderResultArea');
   if (!raw) { showToast('اكتب رقم الأوردر أولاً', 'error'); return; }
   const btn = document.getElementById('searchBtn'); btn.disabled = true; btn.textContent = '⏳ جارٍ البحث...';
-  area.innerHTML = '<div class="card">' + wocLoadingHTML('⏳ جاري البحث عن الأوردر برجاء الانتظار ...') + '</div>';
+  area.innerHTML = '<div class="card">' + ecoLoadingHTML('⏳ جاري البحث عن الأوردر برجاء الانتظار ...') + '</div>';
   try {
     const data = await apiGetLookup(raw);
     currentOrder = data.order;
@@ -869,7 +871,7 @@ function clearLogFilters() {
 async function fetchLog() {
   logLoaded = true;
   const body = document.getElementById('logBody');
-  body.innerHTML = '<tr class="empty-row"><td colspan="7">' + wocLoadingHTML('⏳ جاري تحميل السجل برجاء الانتظار ...', true) + '</td></tr>';
+  body.innerHTML = '<tr class="empty-row"><td colspan="7">' + ecoLoadingHTML('⏳ جاري تحميل السجل برجاء الانتظار ...', true) + '</td></tr>';
   const employee = document.getElementById('logFilterEmployee').value || null;
   const search = document.getElementById('logSearch').value.trim() || null;
   const offset = (logCurrentPage - 1) * LOG_PAGE_SIZE;
@@ -959,7 +961,7 @@ async function exportLogXLSX() {
 // Init
 // ══════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('headerMount').innerHTML = wocHeader({
+  document.getElementById('headerMount').innerHTML = ecoHeader({
     icon: '🗑️', title: 'حذف منتج من الأوردر', subtitle: 'مركز عمليات المخزن', session,
   });
   renderVersionUI();

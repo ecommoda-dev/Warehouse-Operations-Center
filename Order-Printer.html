@@ -500,7 +500,7 @@
 .type-text.type-s2 { color: var(--purple-dark); }
 
 /* ── بادج عمر الأوردر — **نسخة من `.time-badge` في `Orders-Packing-Checker.html`** بالحرف
-   (نفس الدرجات ونفس التوكنز). الدرجة بتيجي من `wocDayLevel` في الـ shell،
+   (نفس الدرجات ونفس التوكنز). الدرجة بتيجي من `ecoDayLevel` في الـ shell،
    فمستحيل الصفحتين يفترقوا في **الدرجة**؛ الـ CSS هنا هو اللي بيلوّنها،
    وأي تعديل عليه يتعمل في الصفحتين في نفس التمريرة (درس R1). */
 .time-badge {
@@ -1914,8 +1914,10 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 <div id="sharedMount"></div>
 
 <!-- 🔴 نسخة واحدة مضمّنة — ممنوع محتوى الملف ده يتنسخ هنا -->
-<script src="shared/shell.js"></script>
-<script>document.getElementById('sharedMount').innerHTML = wocSharedModals();</script>
+<script src="shared/hub-config.js"></script>
+<script src="shared/core.js"></script>
+<script src="shared/gates.js"></script>
+<script>document.getElementById('sharedMount').innerHTML = ecoSharedModals();</script>
 <script>
 
 // ══════════════════════════════════════════════════════════════
@@ -1927,20 +1929,20 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 //    التحويل لشاشة الدخول شغّال. نداءات ضايعة ووميض شاشة.
 const session = requireSession();
 const currentEmployee = { username: session.username, displayName: session.displayName };
-const { apiGet, apiPost, apiPath } = wocApi(WOC_WORKERS.printer);
+const { apiGet, apiPost, apiPath } = ecoApi(ECO_WORKERS.printer);
 const PAGE_WORKERS = ['printer'];
 
-// ⚠️ الحلقة دي مكرّرة في الخمس صفحات **عن قصد**: `WOC_WORKERS` و`cmpVersion`
+// ⚠️ الحلقة دي مكرّرة في الخمس صفحات **عن قصد**: `ECO_WORKERS` و`cmpVersion`
 //    في الـ shell، بس فحص Step 9 بيطلب وجودهم في كل صفحة، والقايمة نفسها
 //    بتفرق من صفحة للتانية.
 async function renderAboutWorkers() {
   const box = document.getElementById('aboutWorkers');
   if (!box) return;
   const rows = await Promise.all(PAGE_WORKERS.map(async k => {
-    const w = WOC_WORKERS[k];
+    const w = ECO_WORKERS[k];
     let got = '—', mark = '❌';
     try {
-      const cfg = await wocApi(w).apiGet('get_config');
+      const cfg = await ecoApi(w).apiGet('get_config');
       got = cfg.version || cfg.WORKER_VERSION || '—';
       mark = cmpVersion(got, w.min) < 0 ? '⚠️' : '✅';
     } catch { got = 'تعذّر الوصول'; }
@@ -2048,10 +2050,10 @@ async function openReprintFor(cleanNum, oid) {
   row.printedBy = vi.printedBy;
   row.printedAt = vi.printedAt || (o.type === 'S2' ? o.printingTimeS2 : o.printingTimeS1)
                   || (printLastS1Map[cleanNum]?.timestamp || null);
-  // 🔴 القناة — من غيرها `wocChannelOf` بترجّع "none" وأوردر بوسطة بيتطبعله
+  // 🔴 القناة — من غيرها `ecoChannelOf` بترجّع "none" وأوردر بوسطة بيتطبعله
   //    **فاتورة شوبيفاي بدل البوليصة**. الحقل بييجي من `/lookup` (Worker
   //    v2.5.0) بنفس شكل صف `/orders` بالحرف.
-  row.chan = wocChannelOf(o);
+  row.chan = ecoChannelOf(o);
   // §LAST-DOC — نفس شارة الطابور: «الورقة اللي في المخزن فاتورة ولا بوليصة؟»
   row.lastDoc = (printLastDocMap[cleanNum] || {}).doc || null;
   reprintRow = row;
@@ -2828,7 +2830,7 @@ async function loadOrders(forceRefresh = false) {
     //    هتفضل على عدد قديم.
     // ⚠️ الكاش بيتكتب **مفلتر** — الشاشة الرئيسية بتقرا منه، وعدّاد فيه
     //    أوردر اتطبع خلاص بيخلّي الرئيسية تقول رقم والصفحة تفتح على رقم تاني.
-    cacheSet(WOC_CACHE_PRINT, { ...ordersData, orders: allOrders, total: allOrders.length });
+    cacheSet(ECO_CACHE_PRINT, { ...ordersData, orders: allOrders, total: allOrders.length });
 
     rebuildPrintFilterItems();
     applyPrintFilters();
@@ -2902,7 +2904,7 @@ function prtTick() {
   const nowMs = Date.now(), now = new Date(nowMs);
   prtRenderFreshness(nowMs);
   document.querySelectorAll("#printTableBody [data-prt-age]").forEach(el => {
-    const info = wocOrderAge(el.dataset.prtAge || null, now);
+    const info = ecoOrderAge(el.dataset.prtAge || null, now);
     el.className   = `time-badge age-badge ${info.cls}`;
     el.textContent = info.text;
   });
@@ -2951,7 +2953,7 @@ function rebuildPrintFilterItems() {
 // 🔴 القناة `null` = **مش عارفين**. الصف بيظهر والطباعة مقفولة برسالة.
 //    ممنوع أي تخمين ومنوع أي اشتقاق من العنوان (قاعدة ١٦)، وممنوع الإخفاء —
 //    الإخفاء هو اللي أنتج «الأوردر مش ظاهر» مع `ZONE_FILTER`.
-// 🔴 `ZONE_SHOWROOM` و`BOSTA_UPLOADED_TAGS` و`wocChannelOf` و`wocChannelGate`
+// 🔴 `ZONE_SHOWROOM` و`BOSTA_UPLOADED_TAGS` و`ecoChannelOf` و`ecoChannelGate`
 //    كلهم في `shared/shell.js` §BOSTA-GATE — **مش هنا**. الشاشة الرئيسية
 //    بتعدّ من نفس رد `/orders` بالظبط، ونسخة تانية من أي قاعدة فيهم معناها
 //    إن الرئيسية تقول رقم والصفحة تفتح على رقم تاني (اللي حصل في v1.11.0:
@@ -3005,13 +3007,13 @@ function renderChannelCounts() {
   const rows   = decoratePrintRows();
   const counts = { invoice: 0, showroom: 0, awb: 0, none: 0 };
   // 🔴 البادج بيعدّ **اللي بيتعرض في القناة فعلاً** — بنفس بوابة الجدول
-  //    بالحرف (`wocChannelGate`). قبل v1.11.1 كان بيعدّ القناة كلها،
+  //    بالحرف (`ecoChannelGate`). قبل v1.11.1 كان بيعدّ القناة كلها،
   //    فبادج بوسطة كان بيقول ٦٦ والجدول تحته فيه ٦: الفرق كان متفسَّر في
   //    الملاحظة، بس **رقم على زرار مش بيتقرا كحاشية** — بيتقرا كوعد بشغل
   //    موجود. المستبعَد بيتقال بعدده في الملاحظة، مش في العدّاد.
   for (const r of rows) {
     const chan = r.chan;
-    if (wocChannelGate(r, chan) === null) counts[chan] = (counts[chan] || 0) + 1;
+    if (ecoChannelGate(r, chan) === null) counts[chan] = (counts[chan] || 0) + 1;
   }
 
   for (const key of Object.keys(CHANNELS)) {
@@ -3209,7 +3211,7 @@ function prtSinceText(iso) {
 function decoratePrintRows() {
   return allOrders.map(o => {
     const vi   = voidInvoiceInfo(o);
-    const chan = wocChannelOf(o);
+    const chan = ecoChannelOf(o);
     return {
       ...o,
       chan,
@@ -3221,7 +3223,7 @@ function decoratePrintRows() {
         : null,
       // §BOSTA-GATE — `tags` بترجع من `/orders` أصلاً (نفس المصدر بتاع
       //    `isPrinted`)، فمفيش نداء زيادة ومفيش تعديل Worker للبند ده.
-      bostaUploaded: wocBostaUploaded(o),
+      bostaUploaded: ecoBostaUploaded(o),
       count: getPrintCount(o),
       // ⚠️ `time` اتشال من صفوف الطابور (v1.14.0) — عمود «الوقت» بقى جزء من
       //    عمود «تاريخ الأوردر». `sortConfig.time` **بيفضل** لأن تاب السجل
@@ -3256,7 +3258,7 @@ function applyPrintFilters() {
     //    **قناته هو** بالحرف — مش بوابة مفتوحة. يعني أوردر بوسطة لسه
     //    ما اترفعش يفضل مستبعَد زي ما هو، ومجموع مربعات القنوات يفضل
     //    مساوي لعدد صفوف الجدول بالظبط (نفس البند في فحص المتصفح).
-    if (wocChannelGate(o, activeChannel === null ? o.chan : activeChannel)) return false;
+    if (ecoChannelGate(o, activeChannel === null ? o.chan : activeChannel)) return false;
     if (q && !(String(o.name).toLowerCase().includes(q) || String(o.customer).toLowerCase().includes(q))) return false;
     if (msState.pType.selected.size   && !msState.pType.selected.has(o.type))     return false;
     if (msState.pStatus.selected.size && !msState.pStatus.selected.has(o.status)) return false;
@@ -3284,7 +3286,7 @@ function renderPrintTable(rows) {
       // ⚠️ الـ ISO بيتحط في `data-prt-age` عشان النبضة تحدّث البادج **في
       //    مكانه** كل ٣٠ ثانية من غير إعادة رسم الجدول — إعادة الرسم
       //    بتصفّر تمرير الجدول تحت إيد الموظف (نفس `data-rdy-age`).
-      const age = wocOrderAge(o.createdAt, now);
+      const age = ecoOrderAge(o.createdAt, now);
       // ⛔ صف بلا قناة: مربع التحديد **متعطّل** والسبب مكتوب جنبه. الصف
       //    بيظهر عشان الموظف يعرف إن فيه أوردر مستني قرار، مش عشان يطبعه.
       const lock = !o.printable;
@@ -4847,7 +4849,7 @@ function renderFooter() {
 // ══════════════════════════════════════════════════════════════
 window.addEventListener("load", () => {
   renderVersionUI();
-  document.getElementById("headerMount").innerHTML = wocHeader({
+  document.getElementById("headerMount").innerHTML = ecoHeader({
     icon: '🖨️', title: 'قسم الطباعة', subtitle: 'مركز عمليات المخزن',
     session,
     // ⚠️ Chip التاب الحالي — بيظهر **بس وقت الـ Sticky** (شريط التابات
@@ -4880,9 +4882,9 @@ window.addEventListener("load", () => {
 
   // ⚠️ كاش الطابور — الشاشة **مابتفضلش فاضية**. القديم بيترسم فورًا
   //    ومختوم بوقته، والجلب بيحصل في الخلفية لو عدّى الـ TTL.
-  const cached = cacheGet(WOC_CACHE_PRINT);
+  const cached = cacheGet(ECO_CACHE_PRINT);
   if (cached) { renderOrdersFrom(cached.data); markFreshness(cached.at); }
-  const queueReady = (!cached || cached.ageMs > WOC_CACHE_TTL_MS) ? loadOrders() : Promise.resolve();
+  const queueReady = (!cached || cached.ageMs > ECO_CACHE_TTL_MS) ? loadOrders() : Promise.resolve();
 
   const logsReady = loadLogs();   // عدّاد «مرات الطباعة» + خريطة آخر طباعة
 
