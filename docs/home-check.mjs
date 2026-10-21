@@ -359,16 +359,17 @@ console.log('⑦ التصميم الموحّد — الأقسام الخمسة �
      'الصفوف في أقسامها: (طباعة · تغليف) · (بوسطة · مكتب) · (رجوع للمخزن · مرتجعات بوسطة)', JSON.stringify(secs.map(s => s.rows)));
   is(secs[3].tools.join() === 'Order-Item-Remover.html,Order-SKU-Barcode-Printer.html' && secs[4].tools.join() === 'Inventory-Audit-Updater.html,stats.html',
      'الأدوات: مساعدة (عطلان · باركود) · أخرى (الجرد · الإحصائيات) — **كروت** مش pills', JSON.stringify([secs[3].tools, secs[4].tools]));
-  is(secs.every(s => s.open) && secs.slice(0, 3).every(s => s.sum) && !secs[3].sum && !secs[4].sum, 'كلها مفتوحة عند الفتح، وأقسام الطوابير بس ليها ملخّص مطوي');
+  is(secs.every(s => s.open && s.sum), 'كلها مفتوحة عند الفتح، وكلها ليها ملخّص مطوي (بلاطات — الأدوات كمان)');
   // 🎨 المطوي: العنوان على اليمين في **كل** الأقسام (أقسام الأدوات كانت في النص) — طلب أحمد 22-10-2026
-  for (const id of ['secPrep', 'secHelper', 'secOther']) await page.locator(`#${id} [data-sec-toggle]`).click();
+  for (const id of ['secPrep', 'secHelper', 'secOther']) await page.locator(`#${id} [data-sec-toggle] .eco-sec-chev`).click();
   await page.waitForTimeout(400);
+  if (process.env.ECO_SHOT3) await page.screenshot({ path: process.env.ECO_SHOT3, fullPage: true });
   const pos = await page.evaluate(() => ['secPrep', 'secHelper', 'secOther'].map(id => {
     const h = document.querySelector(`#${id} .eco-home-sec-hd`).getBoundingClientRect(), t = document.querySelector(`#${id} .eco-home-sec-ico`).getBoundingClientRect();
     return Math.round(h.right - t.right);
   }));
   is(pos.every(x => Math.abs(x - pos[0]) <= 2), '🎨 المطوي: أيقونة/عنوان كل الأقسام على اليمين بنفس البُعد (الأدوات مش في النص)', pos.join(','));
-  for (const id of ['secPrep', 'secHelper', 'secOther']) await page.locator(`#${id} [data-sec-toggle]`).click();
+  for (const id of ['secPrep', 'secHelper', 'secOther']) await page.locator(`#${id} [data-sec-toggle] .eco-sec-chev`).click();
   // مرتجعات بوسطة = صف بلا طابور
   const link = await page.evaluate(() => { const r = document.getElementById('rowBostaReturns');
     return { tag: r.tagName, href: r.getAttribute('href'), link: r.classList.contains('is-link'), num: r.querySelector('.eco-count').textContent.trim(),
@@ -391,9 +392,9 @@ console.log('⑦ التصميم الموحّد — الأقسام الخمسة �
   const lines = await page.evaluate(() => [...document.querySelectorAll('.eco-home-sec')].every(s => { const c = getComputedStyle(s.querySelector('.eco-home-sec-title')).color;
     return [...s.querySelectorAll('.eco-sec-ln')].every(l => getComputedStyle(l).backgroundColor === c); }));
   is(lines, 'خطين العنوان على الجانبين بنفس لون العنوان');
-  await page.click('#secDeliver .eco-home-sec-hd'); await page.waitForTimeout(450);
+  await page.click('#secDeliver .eco-sec-chev'); await page.waitForTimeout(450);
   const fr = await page.evaluate(() => { const hd = document.querySelector('#secDeliver .eco-home-sec-hd'); return { bc: getComputedStyle(hd).borderTopColor, bw: getComputedStyle(hd).borderTopWidth,
-    tc: getComputedStyle(document.querySelector('#secDeliver .eco-home-sec-title')).color, pills: [...document.querySelectorAll('#secDeliver .eco-smw')].map(w => w.querySelector('.eco-sm-n').textContent.trim()) }; });
+    tc: getComputedStyle(document.querySelector('#secDeliver .eco-home-sec-title')).color, pills: [...document.querySelectorAll('#secDeliver .eco-sm')].map(w => w.querySelector('.eco-sm-n').textContent.trim()) }; });
   is(fr.bc === fr.tc && parseFloat(fr.bw) >= 2 && fr.pills.join('|') === 'جاهز لتسليم بوسطة|جاهز للتسليم للمكتب', '🎨 المطوي: إطار بنفس لون العنوان + ملخّص بأسماء الصفوف', JSON.stringify(fr));
   // عطلان = الثيم الأحمر الوحيد
   const dng = await page.evaluate(() => [...document.querySelectorAll('.eco-tool.tool-danger')].map(a => a.getAttribute('href')));
