@@ -152,7 +152,7 @@
           </div>
         </div>
         <div class="woc-row-num woc-num">
-          <span class="woc-count pending" id="cntPrint">—</span><span class="woc-unit">أوردر</span>
+          <span class="woc-count pending" id="cntPrint">—</span>
         </div>
         <div class="woc-row-mid">
           <div class="woc-chips" id="chipsPrint"></div>
@@ -171,6 +171,7 @@
             <span class="woc-rbtn-ico">↺</span><span>تحديث</span><span class="woc-rbtn-badge" id="badgePrint">—</span>
           </button>
         </div>
+        <div class="woc-done" id="donePrint"></div>
       </a>
       <a class="woc-row" href="Orders-Packing-Checker.html">
         <div class="woc-row-id">
@@ -181,7 +182,7 @@
           </div>
         </div>
         <div class="woc-row-num woc-num">
-          <span class="woc-count pending" id="cntPack">—</span><span class="woc-unit">أوردر</span>
+          <span class="woc-count pending" id="cntPack">—</span>
         </div>
         <div class="woc-row-mid">
           <div class="woc-chips" id="chipsPack"></div>
@@ -200,6 +201,7 @@
             <span class="woc-rbtn-ico">↺</span><span>تحديث</span><span class="woc-rbtn-badge" id="badgePack">—</span>
           </button>
         </div>
+        <div class="woc-done" id="donePack"></div>
       </a>
       <!-- ══ صف تالت — «جاهز لتسليم بوسطة» (v1.23.0 · قرار أحمد 13-09-2026) ══
            ⚠️ **صف زيادة مش تخطيط جديد** — بالظبط زي ما القاعدة مكتوبة فوق.
@@ -227,7 +229,7 @@
           </div>
         </div>
         <div class="woc-row-num woc-num">
-          <span class="woc-count pending" id="cntBosta">—</span><span class="woc-unit">أوردر</span>
+          <span class="woc-count pending" id="cntBosta">—</span>
         </div>
         <div class="woc-row-mid">
           <div class="woc-chips" id="chipsBosta"></div>
@@ -246,6 +248,7 @@
             <span class="woc-rbtn-ico">↺</span><span>تحديث</span><span class="woc-rbtn-badge" id="badgeBosta">—</span>
           </button>
         </div>
+        <div class="woc-done" id="doneBosta"></div>
       </a>
       <!-- ══ صف رابع — «جاهز للتسليم للمكتب» (v1.26.0 · قرار أحمد 15-09-2026) ══
            🔴 **الرقم بيعدّ الطرد اللي المفروض ينتقل من المخزن للمكتب النهاردة**:
@@ -271,7 +274,7 @@
           </div>
         </div>
         <div class="woc-row-num woc-num">
-          <span class="woc-count pending" id="cntOffice">—</span><span class="woc-unit">أوردر</span>
+          <span class="woc-count pending" id="cntOffice">—</span>
         </div>
         <div class="woc-row-mid">
           <div class="woc-chips" id="chipsOffice"></div>
@@ -316,7 +319,7 @@
           </div>
         </div>
         <div class="woc-row-num woc-num">
-          <span class="woc-count pending" id="cntWarehouse">—</span><span class="woc-unit">أوردر</span>
+          <span class="woc-count pending" id="cntWarehouse">—</span>
         </div>
         <div class="woc-row-mid">
           <div class="woc-chips" id="chipsWarehouse"></div>
@@ -498,7 +501,20 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.39.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.40.0</span>
+          <span class="cl-ver-date">21-10-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>✅ <b>شريط «اللي خلص النهارده / أمس»</b> تحت الطباعة والتغليف وتسليم بوسطة: «اتطبع» · «اتغلّف» · «اتسلّم لبوسطة» ثم اليوم وأمس. <b>أوردرات مميزة</b> بتوقيت القاهرة (إعادة الطباعة بتتحسب مرة)، و«أمس» يوم كامل. بيتحدّث مع زرار تحديث الصف وبنفس دورة الـ١٥ دقيقة، وفشله مايخفيش الطابور.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🏷️ <b>chips التقسيمة بقت كبسولة موصولة بخانات رقم</b>: الرقم على اليمين والاسم على اليسار، والصفر باهت، و«في انتظار الرفع على بوسطة» بقى بادج ⏳ على خانة بوسطة.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>كلمة «أوردر» اتشالت من جنب الرقم الكبير في كل الصفوف. رقم «اليوم» رمادي غامق عن قصد عشان مايتلخبطش مع الرقم الكبير.</span></li>
+          <li class="cl-item"><span class="cl-tag change">ملاحظة</span><span>⚠️ العدّ من <code>get_logs</code> الموجود في الـ Workers (صفر تعديل Worker وصفر Promote). جلبه ممكن ياخد كذا صفحة سجل لو الشغل كتير، وأي سجل أطول من الحد بيطلع «تعذّر» بدل رقم ناقص.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.39.0</span>
           <span class="cl-ver-date">13-10-2026</span>
         </div>
         <ul class="cl-items">
@@ -1146,6 +1162,108 @@ async function finishLogin(username, displayName, logged) {
 const WOC_AUTO_REFRESH_MS = 15 * 60 * 1000;
 const WOC_TICK_MS         = 30 * 1000;
 
+// ══════════════════════════════════════════════════════════════
+// §HOME-DONE — «اللي خلص النهارده / أمس» تحت الطوابير التلاتة (v1.40.0 · قرار أحمد)
+// ══════════════════════════════════════════════════════════════
+// 🔴 **أوردرات مميزة، مش صفوف** — إعادة الطباعة/التغليف بتتحسب مرة واحدة في اليوم
+//    (وإلا الرقم بيتنفخ بالإعادة). والمميّز **جوّه اليوم الواحد**: نفس الأوردر
+//    أمس واليوم بيتعدّ في اليومين.
+// 🔴 **يوم القاهرة** مش يوم UTC (نفس فخّ `stats.html`): بنطلب يوم UTC زيادة
+//    وبنقسّم بـ `cairoDayStr`. من غير ده «النهارده» بتفقد من ٩ مساءً.
+// 🔴 **القراءة من `get_logs` الموجود** (D1) — صفر تعديل Worker وصفر Promote. القرار
+//    الأصلي كان عدّ جاهز من الـ Workers؛ اتأجّل لأنه محتاج تعديل 3 ريبوهات
+//    وPromotes. `fetchDoneCounts` هي المكان الوحيد اللي هيتبدّل لو العدّ اتنقل.
+// 🔴 **الفشل مش صفر ومش بيخفي الطابور** — جلب «خلص» مستقل: لو فشل، الرقم القديم
+//    بيفضل (أو «—» لو ماحصلش نجاح) وعلامة «تعذّر»، والطابور شغّال عادي.
+// 🔴 **لو السجل أطول من `DONE_MAX_PAGES` صفحة بنرمي** — رقم ناقص بيعدّي كأنه
+//    كامل هو أسوأ من «تعذّر».
+// ⚠️ بتتحدّث مع زرار تحديث نفس الصف وبنفس دورة الـ١٥ دقيقة — مفيش تايمر لوحدها.
+const DONE_PAGE      = 100;   // سقف `get_logs` المفروض من الـ Workers
+const DONE_MAX_PAGES = 15;
+
+function doneExtra(e) {
+  if (!e || !e.extra) return {};
+  if (typeof e.extra === 'object') return e.extra;
+  try { return JSON.parse(e.extra) || {}; } catch { return {}; }
+}
+// الطباعة: فاتورة (S1/S2) أو بوليصة (AWB). `not_found` ما اتطبعش، ونتيجة `error` فشل.
+// 🔴 `extra.result` في الطباعة **كائن** (`{status}`) مش نص زي التغليف — راجع `stats.html`.
+function donePickPrint(e) {
+  if (!['S1', 'S2', 'AWB'].includes(e.type)) return false;
+  const r = doneExtra(e).result;
+  return !(r && typeof r === 'object' && r.status === 'error');
+}
+// التسليم: `update` بنتيجة success/warning. `already` و`rejected` مش «اتسلّم».
+function donePickShip(e) {
+  return e.type === 'update' && ['success', 'warning'].includes(doneExtra(e).result);
+}
+
+async function fetchDoneCounts(key) {
+  const d = HOME_QUEUES[key].done;
+  const api = wocApi(WOC_WORKERS[d.worker]);
+  const today = cairoDayStr(new Date());
+  const yest  = wocAddDays(today, -1);
+  const dateFrom = wocAddDays(yest, -1);                           // يوم UTC زيادة
+  const startMs  = Date.parse(`${yest}T00:00:00Z`) - 3 * 3600 * 1000;   // بداية يوم القاهرة لأمس
+  const seen = { [today]: new Set(), [yest]: new Set() };
+  for (let page = 0; page < DONE_MAX_PAGES; page++) {
+    const res = await api.apiGet('get_logs', {
+      limit: DONE_PAGE, offset: page * DONE_PAGE, dateFrom, dateTo: today, ...(d.params || {}),
+    });
+    const got = res?.entries || [];
+    for (const e of got) {
+      const day = e.timestamp ? cairoDayStr(e.timestamp) : null;
+      if (!seen[day] || !d.pick(e)) continue;
+      const name = String(e.order_name ?? '').replace('#', '').trim();
+      if (name) seen[day].add(name);
+    }
+    const last = got[got.length - 1];
+    // `get_logs` مرتّب `timestamp DESC` — أول صفحة بتخلص بصف أقدم من أمس معناه مفيش لزوم لغيرها
+    if (got.length < DONE_PAGE || (last && new Date(last.timestamp).getTime() < startMs)) {
+      return { today: seen[today].size, yest: seen[yest].size };
+    }
+  }
+  throw new Error('سجل اليومين أطول من الحد — الرقم مش كامل');
+}
+
+async function loadDone(key) {
+  const q = homeQ[key];
+  q.doneBusy = true;
+  renderDone(key);
+  try {
+    q.done = await fetchDoneCounts(key);
+    q.doneErr = null;
+  } catch (err) {
+    q.doneErr = err.message || 'تعذّر تحميل «خلص»';   // الرقم القديم (لو فيه) بيفضل
+  } finally {
+    q.doneBusy = false;
+    renderDone(key);
+  }
+}
+
+const DONE_ICO_CK  = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5 10 17.5 19 7"/></svg>';
+const DONE_ICO_ARR = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/></svg>';
+function renderDone(key) {
+  const d = HOME_QUEUES[key].done;
+  const el = d && document.getElementById(d.id);
+  if (!el) return;
+  const q = homeQ[key];
+  // «—» قبل أول جلب ناجح، مش «٠» — «ما اتحدّثش» ≠ «مفيش شغل خلص»
+  const f = w => q.done ? Number(q.done[w]).toLocaleString('en-US') : '—';
+  const warn = q.doneErr
+    ? `<span class="woc-done-warn" title="${esc(q.doneErr)}">⚠️ تعذّر</span>` : '';
+  el.classList.toggle('is-busy', !!q.doneBusy);
+  el.setAttribute('role', 'group');
+  el.setAttribute('aria-label', `${d.verb}: اليوم وأمس`);
+  el.innerHTML =
+    `<span class="woc-done-lbl"><span class="woc-ck">${DONE_ICO_CK}</span><span>${esc(d.verb)}</span>${warn}`
+    + `<span class="woc-done-arr">${DONE_ICO_ARR}</span></span>`
+    + `<span class="woc-done-cells">`
+    + `<span class="woc-done-cell"><span class="woc-done-k">اليوم</span><b class="woc-done-today">${f('today')}</b></span>`
+    + `<span class="woc-done-cell"><span class="woc-done-k">أمس</span><span class="woc-done-yest">${f('yest')}</span></span>`
+    + `</span>`;
+}
+
 // تعريف كل طابور: الـ IDs بتاعته + إزاي بيتجاب.
 // ⚠️ الاتنين بيكتبوا الكاش المشترك بعد كل جلب ناجح، فـ `Order-Printer.html`
 //    و`Orders-Packing-Checker.html` بيفتحوا على بيانات أحدث بدل شاشة فاضية.
@@ -1154,6 +1272,7 @@ const HOME_QUEUES = {
     err: 'تعذّر جلب طابور الطباعة',
     ids: { count:'cntPrint', chips:'chipsPrint', fail:'failPrint',
            ago:'agoPrint', stamp:'stampPrint', btn:'btnPrint', badge:'badgePrint' },
+    done: { id: 'donePrint', verb: 'اتطبع', worker: 'printer', pick: donePickPrint },
     async fetch() {
       // 🔴 `allZones: true` لازم يبقى **مطابق** لللي `Order-Printer.html` بيبعته —
       //    الاتنين بيكتبوا نفس الكاش (`WOC_CACHE_PRINT`)، ولو الرقم هنا
@@ -1177,14 +1296,18 @@ const HOME_QUEUES = {
         if (gate === 's2')           { n.s2Hold++;  continue; }
         n[chan]++;
       }
+      // 🔴 §HOME-CHIPS (v1.40.0): التلات قنوات **مجموعة موصولة بخانات رقم**
+      //    (`grp: true`)، و«في انتظار الرفع على بوسطة» بقى **بادج على خانة
+      //    بوسطة** (`att`) بدل chip لوحده — الرفع على بوسطة بيخص بوسطة. ⚠️ ويظهر
+      //    **بس لما يكون فيه فعلاً**، والبادج مابيبهتش حتى لو خانة بوسطة صفر.
       const chips = [
-        { cls: 'chip-ch-invoice',  label: 'مناديب',     n: n.invoice },
-        { cls: 'chip-ch-awb',      label: 'بوسطة',      n: n.awb },
-        { cls: 'chip-ch-showroom', label: 'شو روم',     n: n.showroom },
+        { grp: true, cls: 'chip-ch-invoice',  label: 'مناديب', n: n.invoice },
+        { grp: true, cls: 'chip-ch-awb',      label: 'بوسطة',  n: n.awb,
+          att: n.pending ? { n: n.pending, label: 'في انتظار الرفع على بوسطة' } : null },
+        { grp: true, cls: 'chip-ch-showroom', label: 'شو روم', n: n.showroom },
       ];
       // المربعات دي بتظهر **بس لما يكون فيها فعلاً** — نفس مبدأ «بلا قناة»:
       // صفر مايتكتبش عشان الشاشة ماتتعوّدش على تحذير دايم فتبطّل تشوفه.
-      if (n.pending) chips.push({ cls: 'chip-ch-pending', label: '⏳ في انتظار الرفع على بوسطة', n: n.pending });
       if (n.s2Hold)  chips.push({ cls: 'chip-ch-hold',    label: '⏸️ استبدال بوسطة (مؤجّل)', n: n.s2Hold });
       if (n.none)    chips.push({ cls: 'chip-ch-none',    label: '⚠️ المنطقة غير محددة',              n: n.none });
       // 🔴 الإجمالي = **اللي ينفع يتطبع دلوقتي**، مش طول المصفوفة. أوردر
@@ -1197,6 +1320,7 @@ const HOME_QUEUES = {
     err: 'تعذّر جلب طابور التغليف',
     ids: { count:'cntPack', chips:'chipsPack', fail:'failPack',
            ago:'agoPack', stamp:'stampPack', btn:'btnPack', badge:'badgePack' },
+    done: { id: 'donePack', verb: 'اتغلّف', worker: 'pack', pick: e => e.type === 'packed' },
     async fetch() {
       const data = await wocApi(WOC_WORKERS.pack).apiGet('get_ready_orders');
       cacheSet(WOC_CACHE_PACK, data);
@@ -1212,7 +1336,7 @@ const HOME_QUEUES = {
       //    هنا معناها الرئيسية تقول ٣٦ والصفحة تفتح على رقم تاني (درس R1).
       const cn = wocCourierCounts(orders);
       return { total: data.total ?? orders.length,
-               chips: WOC_COURIER_GROUPS.map(g => ({ cls: g.cls, label: g.label, n: cn[g.key] })) };
+               chips: WOC_COURIER_GROUPS.map(g => ({ grp: true, cls: g.cls, label: g.label, n: cn[g.key] })) };
     },
   },
   // ── «جاهز لتسليم بوسطة» (v1.23.0) ──────────────────────────────
@@ -1227,6 +1351,9 @@ const HOME_QUEUES = {
     err: 'تعذّر جلب طابور تسليمات بوسطة',
     ids: { count:'cntBosta', chips:'chipsBosta', fail:'failBosta',
            ago:'agoBosta', stamp:'stampBosta', btn:'btnBosta', badge:'badgeBosta' },
+    // `types`/`results` فلاتر server-side بتقلّل الصفحات بس — الحكم النهائي في `pick` (فلتر مجهول في الـ Worker بيتجاهَل في صمت).
+    done: { id: 'doneBosta', verb: 'اتسلّم لبوسطة', worker: 'shipped',
+            params: { types: 'update', results: 'success,warning' }, pick: donePickShip },
     async fetch() {
       const data = await wocApi(WOC_WORKERS.shipped).apiGet('get_ready_to_ship');
       const orders = data.orders || [];
@@ -1320,6 +1447,7 @@ function loadQueuesStaggered(keys) {
 // المكتب على Workers مستقلة، فنفس القاعدة بتنطبق عليهم بالحرف.)
 function loadCounts() {
   renderFreshness();
+  Object.keys(homeQ).forEach(renderDone);   // «—» لحد أول جلب
   startHomeTicker();
   // ⚠️ التسليح **من الدخول** كمان مش من أول نجاح بس: لو أول جلب فشل،
   //    تفضل فيه محاولة تلقائية بدل ما الكارت يقف على ⚠️ للأبد.
@@ -1339,6 +1467,9 @@ async function loadQueue(key, silent = true) {
   if (q.loading) return;              // ضغطة + نبضة في نفس اللحظة
   q.loading = true;
   setRefreshing(key, true);
+  // 🔴 «خلص» بالتوازي ومستقل: فشله **مايمنعش** الطابور ولا العكس (قاعدة ٤).
+  //    `loadDone` مابترميش أبدًا — بتخزّن الخطأ وبترسمه.
+  const donePromise = def.done ? loadDone(key) : null;
   try {
     const r = await def.fetch();
     clearFail(def.ids.fail);
@@ -1354,10 +1485,30 @@ async function loadQueue(key, silent = true) {
     setFail(key, err.message || def.err);
     if (!silent) showToast(err.message || def.err, 'error', 5000);
   } finally {
+    if (donePromise) await donePromise;   // الزرار بيفضل «جاري التحديث» لحد ما الاتنين يخلصوا
     q.loading = false;
     setRefreshing(key, false);
     renderFreshness();
   }
+}
+
+// 🔴 §HOME-CHIPS (v1.40.0) — المجموعات (`grp`) في **كبسولة موصولة** بخانة رقم مصمتة
+//    لكل مجموعة: الرقم على اليمين والاسم على اليسار، والصفر **باهت**. وباقي
+//    المربعات (استبدال مؤجّل · منطقة غير محددة) chips عادية جنبها. البادج (`att`)
+//    على الخانة نفسها ومابيبهتش.
+function chipsHTML(chips) {
+  const grp = chips.filter(c => c.grp), rest = chips.filter(c => !c.grp);
+  let h = '';
+  if (grp.length) {
+    h += '<span class="woc-cgroup">' + grp.map(c => {
+      const att = c.att
+        ? `<span class="woc-att" title="${esc(c.att.label)}" aria-label="${esc(c.att.label)}: ${c.att.n}">⏳ ${c.att.n}</span>` : '';
+      return `<span class="woc-seg ${esc(c.cls)}${c.n === 0 ? ' z0' : ''}">`
+        + `<span class="woc-seg-n">${c.n}</span><span class="woc-seg-l"><span class="woc-seg-t">${esc(c.label)}</span>${att}</span></span>`;
+    }).join('') + '</span>';
+  }
+  return h + rest.map(ch =>
+    `<span class="woc-chip ${esc(ch.cls)}">${esc(ch.label)} <b>${ch.n}</b></span>`).join('');
 }
 
 // ⚠️ التقسيمة بقت **من الطابور نفسه** مش ثابتة S1/S2 — طابور الطباعة
@@ -1367,8 +1518,7 @@ function setCount(key, total, chips = []) {
   const c = document.getElementById(ids.count);
   c.textContent = String(total);
   c.classList.remove('pending', 'failed');
-  document.getElementById(ids.chips).innerHTML = chips.map(ch =>
-    `<span class="woc-chip ${esc(ch.cls)}">${esc(ch.label)} <b>${ch.n}</b></span>`).join('');
+  document.getElementById(ids.chips).innerHTML = chipsHTML(chips);
   document.getElementById(ids.badge).textContent = String(total);
 }
 
