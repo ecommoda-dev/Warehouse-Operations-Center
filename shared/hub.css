@@ -12,12 +12,14 @@
   --id-office:#a21caf; --id-office-light:#fdf4ff; --id-office-border:#f0abfc;
   --id-warehouse:#78350f; --id-warehouse-light:#fbf4ec; --id-warehouse-border:#e0c3a0;
   --id-bostaret:#9a5b24; --id-bostaret-light:#fcf3e8; --id-bostaret-border:#ecc9a0;
+  --id-upload:#6d28d9; --id-upload-light:#f5f3ff; --id-upload-border:#c4b5fd;   /* رفع بوسطة — بنفسجي: بعيد عن سلّم العمر وعن باقي هويات الرئيسية */
 }
 .eco-qrow.id-print,.eco-sm.id-print{--idc:var(--id-print);--idc-light:var(--id-print-light);--idc-border:var(--id-print-border)}
 .eco-qrow.id-pack,.eco-sm.id-pack{--idc:var(--id-pack);--idc-light:var(--id-pack-light);--idc-border:var(--id-pack-border)}
 .eco-qrow.id-deliver,.eco-sm.id-deliver{--idc:var(--id-deliver);--idc-light:var(--id-deliver-light);--idc-border:var(--id-deliver-border)}
 .eco-qrow.id-office,.eco-sm.id-office{--idc:var(--id-office);--idc-light:var(--id-office-light);--idc-border:var(--id-office-border)}
 .eco-qrow.id-warehouse,.eco-sm.id-warehouse{--idc:var(--id-warehouse);--idc-light:var(--id-warehouse-light);--idc-border:var(--id-warehouse-border)}
+.eco-qrow.id-upload,.eco-sm.id-upload{--idc:var(--id-upload);--idc-light:var(--id-upload-light);--idc-border:var(--id-upload-border)}
 .eco-qrow.id-bostaret,.eco-sm.id-bostaret{--idc:var(--id-bostaret);--idc-light:var(--id-bostaret-light);--idc-border:var(--id-bostaret-border)}
 .eco-home-sec.sec-prep{--sec-bg:#eef2ff;--sec-border:#c7d2fe;--sec-fg:#4338ca;--sec-solid:#4338ca}
 .eco-home-sec.sec-deliver{--sec-bg:#fdf2f8;--sec-border:#fbcfe8;--sec-fg:#be185d;--sec-solid:#be185d}
@@ -29,3 +31,7 @@
 .eco-chip.chip-ch-none{background:var(--amber-light);color:var(--amber-dark);border-color:var(--amber-border)}
 .eco-chip.chip-ch-pending{background:var(--amber-light);color:var(--amber-dark);border-color:var(--amber-border)}
 .eco-chip.chip-ch-hold{background:var(--surface-2);color:var(--text-secondary);border-color:var(--border-strong)}
+/* chips أوضاع «رفع بوسطة» (شحن · استرجاع · استبدال) — نفس ألوانها في هب الشحن بالحرف */
+.eco-chip.qc-job-s1{background:var(--accent-light);color:var(--accent-dark);border-color:var(--accent-border)}
+.eco-chip.qc-job-return{background:var(--amber-light);color:var(--amber-dark);border-color:var(--amber-border)}
+.eco-chip.qc-job-exchange{background:var(--teal-light);color:var(--teal-dark);border-color:var(--teal-border)}

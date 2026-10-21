@@ -503,6 +503,42 @@ function ecoCourierCounts(rows) {
 }
 
 // ══════════════════════════════════════════════════════════════
+// §BOSTA-UPLOAD-CACHE — عدّادات «رفع بوسطة» (صف الرئيسية + صفحة الأداة)
+// ══════════════════════════════════════════════════════════════
+// 🔴 في النواة (مش في ملف المجال) لأن `Bosta-Orders-Upload.html` **متطابقة بالبايت** في الهبّين وبتنادي `bostaCacheSet`
+//    بالاسم — ومفيش ملف مجال مشترك بينهم. المفتاح `ECO_CACHE_BOSTA_UPLOAD` بيتعرّف في `hub-config.js` بتاع كل هب
+//    (⛔ مش `ECO_CACHE_BOSTA` في المخزن — ده كاش طابور «جاهز لتسليم بوسطة»).
+// ── كاش «رفع بوسطة» — عدّاد لكل وضع لوحده (v1.38.0) ─────────────
+// 🔴 **بيتخزّن العدد بس مش الصفوف** — صفوف التلات أوضاع تقيلة (عنوان ومطابقة
+//    لكل أوردر)، والرئيسية محتاجة رقم «لم يتم الرفع» لكل وضع وبس.
+// 🔴 **ولكل وضع وقته** — صفحة الأداة بتجيب وضع واحد في المرة (`loadOrders`)
+//    والتانيين في الخلفية (`fetchJobCount`)، فكل واحد بيكتب خانته لوحده.
+//    والرئيسية بتاخد **أقدم** وقت فيهم: رقم إجمالي عمره «دقيقتين» وواحد من
+//    التلاتة عمره ساعة كان هيبقى ادعاء كاذب.
+// ⚠️ الرقم = `!alreadyUploaded` — **نفس** شرط تاب «الرفع» (`UPLOAD_TABS.main`).
+const ECO_BOSTA_MODES = ['s1', 'return', 'exchange'];
+function bostaCacheSet(mode, n) {
+  if (!ECO_BOSTA_MODES.includes(mode) || typeof n !== 'number') return;
+  try {
+    const raw = sessionStorage.getItem(ECO_CACHE_BOSTA_UPLOAD);
+    const c = raw ? JSON.parse(raw) : {};
+    c[mode] = { at: new Date().toISOString(), n };
+    sessionStorage.setItem(ECO_CACHE_BOSTA_UPLOAD, JSON.stringify(c));
+  } catch {}
+}
+// بترجّع `null` لو أي وضع ناقص — رقم إجمالي ناقص وضع شكله سليم وهو أقل من الحقيقة.
+function bostaCacheGet() {
+  try {
+    const c = JSON.parse(sessionStorage.getItem(ECO_CACHE_BOSTA_UPLOAD) || 'null');
+    if (!c || !ECO_BOSTA_MODES.every(m => c[m] && typeof c[m].n === 'number' && c[m].at)) return null;
+    const oldest = Math.min(...ECO_BOSTA_MODES.map(m => new Date(c[m].at).getTime()));
+    if (isNaN(oldest)) return null;
+    return { at: new Date(oldest).toISOString(), ageMs: Date.now() - oldest,
+             counts: Object.fromEntries(ECO_BOSTA_MODES.map(m => [m, c[m].n])) };
+  } catch { return null; }
+}
+
+// ══════════════════════════════════════════════════════════════
 // §BEEP — نغمات الصوت
 // ══════════════════════════════════════════════════════════════
 

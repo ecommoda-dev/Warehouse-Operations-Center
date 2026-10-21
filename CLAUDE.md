@@ -2,13 +2,13 @@
 
 # مركز عمليات المخزن — Warehouse Operations Center (`Warehouse-Operations-Center`)
 
-![version](https://img.shields.io/badge/version-v1.47.0-blue)
+![version](https://img.shields.io/badge/version-v1.50.0-blue)
 
 **بتعمل إيه:** هب واحد لمحطة المخزن. الموظف بيدخل **مرة واحدة**، وبعدين
 بيتنقّل بين الطباعة والتغليف وحذف المنتج وتسليمات بوسطة وسكانر المرتجعات
 ورحلة الأوردر من غير ما يدخل تاني ومن غير ما يفتح تبويبات متفرقة.
 **مين بيستخدمها:** المخزن
-**الإصدار:** `v1.47.0` — **واحد للهب كله** (`TOOL_VERSION` في `shared/hub-config.js`)
+**الإصدار:** `v1.50.0` — **واحد للهب كله** (`TOOL_VERSION` في `shared/hub-config.js`)
 
 > 🔴 **الهب واجهة + Worker دخول بس — من v1.32.0.** الريبو ده بقى فيه
 > `index.js` و`wrangler.toml`، **بس نطاقهم محصور في الدخول والخروج بس**
@@ -79,6 +79,30 @@
 ## 🧩 النواة المشتركة — المرجع في هب الشحن
 
 `core.js` · `core.css` · `home.js` **نسختين متطابقتين بالبايت** مع `Delivery-COD-Operations-Center` (`bash docs/core-twin-check.sh`)، والشرح الكامل (جدول الملفات · ترتيب التحميل · المولّدات · الفحوصات) في قسم **«النواة المشتركة بين الهبّين»** في `CLAUDE.md` بتاعه — ما بيتكررش هنا. اللي خاص بالمخزن: `shared/hub-config.js` · `hub.css` · `home-config.js` · **`gates.js`** (بوابات القنوات والمكتب والمرتجعات §BOSTA-GATE · §OFFICE-GATE · §WAREHOUSE-GATE؛ و§COURIER-GROUP بقى في `core.js`). ⛔ هب المخزن مالوش مولّدات (صفحاته مكتوبة بإيد).
+
+## 📤 تمريرة v1.50.0 — «رفع بوسطة» دخلت المخزن (طلب أحمد 22-10-2026)
+
+**الفكرة:** نفس صفحة `Bosta-Orders-Upload.html` اللي في هب الشحن والتحصيل (شحن · استرجاع · استبدال)، **أول صف في «قسم تجهيز الأوردر»** بعدّاد حيّ. الأداة **بتكتب** (شحنات بوسطة بفلوس + شوبيفاي + D1)، وأي موظف مخزن يقدر يرفع (قرار أحمد). ⚠️ مش «واجهة بحتة»: الـ Worker اتعدّل (ريبو `Bosta-Orders-Upload`) عشان يقبل سر المخزن.
+
+| الجزء | فين |
+|---|---|
+| الصفحة | `Bosta-Orders-Upload.html` — 🔴 **متطابقة بالبايت** مع هب الشحن (`bash docs/bosta-upload-twin-check.sh`، **بيقارن ومابينسخش**). مفيش نص خاص بهب فيها: عنوان التاب من `ECO_HUB.name` · السر والجلسة من `core.js` · علم الدفعة `uploadRunning` بيتقري من `ECO_HUB.isBusy` |
+| الـ Worker | `bosta-orders-upload-worker` — ريبو `Bosta-Orders-Upload` (**v2.23.0**: `WORKER_SECRET_WAREHOUSE` + `extra.via`) |
+| `ECO_WORKERS.bostaUpload` (`min: 2.23.0`) | `shared/hub-config.js` |
+| الكاش | `bostaCacheSet`/`bostaCacheGet` في **`core.js`** §BOSTA-UPLOAD-CACHE (مشتركة)، والمفتاح `ECO_CACHE_BOSTA_UPLOAD = 'woc_queue_bosta_upload'` |
+| الصف | `home-config.js` → `queues.bostaUpload` (أول صف في `Prep`) · `hub.css` (`id-upload` بنفسجي · `qc-job-*`) |
+| الفحص | `docs/bosta-table-check.mjs` (٨٧ بند، الصفحة في هب المخزن) · `docs/home-check.mjs` §⑧ (٧٧ بند) |
+
+- 🔴 **مفتاح الكاش مش `ECO_CACHE_BOSTA`.** ده كاش طابور «جاهز لتسليم بوسطة» (رد `get_ready_to_ship` خام). نسخ `bostaCacheSet` بيه كان هيكتب عدّادات الرفع فوقه فصف التسليمات يبوظ بلا خطأ. وفيه بند في `home-check` بيقفل إن الكاشين منفصلين.
+- 🔴 **مفتاح الصف `bostaUpload` مش `bosta`** (محجوز لتسليمات بوسطة).
+- 🔴 **السر:** الصفحة بتبعت سر `warehouse_ops` (من `warehouse_ops_worker_secret`) — والـ Worker بيقبله على `WORKER_SECRET_WAREHOUSE` **بعد Promote لـ v2.23.0**. قبلها كل نداء `401` والصف بيقول «تعذّر». الـ Worker ده **عضو في مجموعتين** (`delivery_cod_ops` + `warehouse_ops`) — **تدوير أي مجموعة لازم يشمله**، ولازم يتسجّل في `ecommoda-constants` → `secret-groups.md`.
+- ⚠️ **الخروج التلقائي (٦٠ د) موقوف وقت الرفع** عبر `ECO_HUB.isBusy` (`uploadRunning`). باقي صفحات المخزن بتعرّف `window.shellIsBusy` بنفسها.
+- ⚠️ **ضغط الاستعلامات:** الصف بينادي ٣ مرات (`get_orders` + `fetch_candidates` ×٢) على Worker بيشارك نفس الـ Custom App — `staggerMs: 200` بيفرّقه عن باقي الطوابير. ⚠️ **اتقاس بـ Worker وهمي بس** — أول فتح حقيقي بعد النشر هو القياس الفعلي لـ`THROTTLED`.
+- ⚠️ **عروض الأعمدة (`dco_col_widths_v1_Bosta-Orders-Upload.html_…`) مشتركة** بين الهبّين (نفس الـ origin واسم الملف).
+- ⚠️ **صف الرئيسية بلا شريط «اليوم / أمس»** (قرار أحمد — شكل صف الشحن بالحرف).
+- ⚠️ **حالة D1:** صفوف الرفع تحت `bosta_orders_upload`/`bosta_exchange_export` باسم الموظف زي ما هي، و`extra.via` (`warehouse_ops` أو `delivery_cod_ops`) بيقول الرفع جه من أنهي هب. صف الدخول بيتكتب `warehouse_ops_center`.
+- 🔴 **خطوات يدوية — حاجزة:** `WORKER_SECRET_WAREHOUSE` = قيمة `warehouse_ops` على `bosta-orders-upload-worker` → **Promote** (بعد نشر v2.23.0).
+- ⛔ **أي تعديل في الصفحة بيتعمل في الريبوهين في نفس التمريرة** (٢١ تعديل في ٣ أسابيع لحد دلوقتي). و`core.js`/`core.css`/`home.js` لسه متطابقة (`core-twin-check.sh`).
 
 ## 🎨 تمريرة v1.49.0 — الأقسام المطوية: بلاطات موصولة (§HOME-TILES · طلب أحمد 22-10-2026)
 
@@ -161,6 +185,7 @@ tool في D1 : warehouse_ops_center      ← login · logout بس
 | `Package-Transfer-To-Office.html` | **قسم تسليمات المكتب** — نقل الطرد من المخزن للمكتب | `package-transfer-to-office-worker` | **`1.1.0`** | M (1200) |
 | `Package-Transfer-To-Warehouse.html` | **قسم استلام المرتجعات** — رجوع الطرد الراجع للمخزن | `package-transfer-to-warehouse-worker` | **`1.0.0`** | M (1200) |
 | `Inventory-Audit-Updater.html` | **جرد المخزون** — جرد فردي · أولويات الجرد · جرد جماعي بالسكانر · سجل | `inventory-audit-updater-worker` | **`6.2.1`** | L (1400) |
+| `Bosta-Orders-Upload.html` | 📤 **رفع بوسطة** (v1.50.0 · شحن · استرجاع · استبدال · **أول صف في «قسم تجهيز الأوردر»** بعدّاد · **نسخة متطابقة بالبايت** مع هب الشحن والتحصيل) | `bosta-orders-upload-worker` | **`2.23.0`** | M (1200) |
 
 > ⚠️ **عشرة `min` مستقلة تمامًا** — مالهمش أي علاقة ببعض ولا بـ
 > `TOOL_VERSION`. `min` مايترفعش إلا لما الهب **يعتمد فعلاً** على حاجة جديدة
@@ -3015,6 +3040,7 @@ Orders-Packing-Checker.html  →  Order-Printer.html?order=<num>&from=pack
 | **تسليمات المكتب** | `get_config` · `diag` · `get_employees` · **`get_ready_to_office`** · **`scan` (POST)** · `get_logs*` |
 | **استلام المرتجعات** | `get_config` · `diag` · `get_employees` · **`get_ready_to_warehouse`** · **`scan` (POST)** · `get_logs*` |
 | **جرد المخزون** | `get_config` · `diag` · `get_employees` (فلتر السجل بس) · `list_skus` · `lookup_barcode` · `get_details` · `get_audit_date` · `get_audit_priorities` · **`get_bulk_index`** · **`bulk_compare` (POST)** · **`bulk_adjust` (POST)** · **`adjust_inventory` (POST)** · **`set_audit_date` (POST)** · `get_logs*` — **والهب مابينادش `check_employee`/`register_pin`/`verify_employee`/`log_logout` عليه** |
+| **رفع بوسطة** | `get_orders` · `fetch_candidates` (POST) · `get_districts` · `upload` · `upload_re` · `cancel_re` · `clear_upload_marks` · `check_export_duplicates` · `record_export` · `confirm_upload` · `get_logs*` · `diag` · `get_config` — الهب بينادي **التلات الأولانيين من الرئيسية** والباقي من الصفحة؛ **والدخول/الخروج مابيتنادوش عليه** |
 
 > ⚠️ **الطابعة بترّوت بالـ path كمان** (`/orders` · `/invoice` · `/track` ·
 > `/logs`) — شكل تاريخي متساب **عمدًا**، مش غلط يتصلّح. عشان كده `wocApi`
@@ -3457,6 +3483,9 @@ bash docs/label-twin-check.sh   # Orders-Packing-Checker.html ⟷ Order-SKU-Barc
 (300/310) أعلى من «محتوى ≤ 200` — السبب فوق في فخاخ الطابعة.
 
 ## مسائل مفتوحة
+
+- 🔴 **Worker `bosta-orders-upload-worker` v2.23.0 + `WORKER_SECRET_WAREHOUSE` — حاجز «رفع بوسطة» في المخزن (v1.50.0).** المطلوب: نشر v2.23.0 (قبول سر تاني + `extra.via`) → `WORKER_SECRET_WAREHOUSE` = قيمة `warehouse_ops` → **Promote**. من غيره الصف بيقول «تعذّر» والصفحة كل نداء فيها `401`. وبعدها **تسجيل عضويته في المجموعتين** في `ecommoda-constants` → `secret-groups.md` (بقى **أحد عشر Worker** في `warehouse_ops` مع الهب).
+- 🟡 **قياس `THROTTLED` بعد إضافة صف «رفع بوسطة»** — ٣ نداءات زيادة على الـ Custom App المشترك عند فتح الرئيسية. لو ظهر فشل جماعي: زوّد `staggerMs` أو استبدل `get_orders` بـ endpoint عدّ.
 
 - 🔴 **Promote لـ Worker التغليف v2.8.0 (§S2-CYCLE) — حاجز لدورات الاستبدال
   التانية.** الإصلاح اتكتب واتدمج في `Orders-Packing-Checker`؛ من غير الـ

@@ -98,7 +98,7 @@ const EXPECT = { print: [5, 3], pack: [2, 1], ship: [3, 1] };           // [ال
 // Worker وهمي — السيناريو بيتغيّر من `mode`
 // ══════════════════════════════════════════════════════════════
 function makeStub(mode = {}) {
-  const calls = { logs: [], orders: 0 };
+  const calls = { logs: [], orders: 0, upload: [] };
   const stub = async (route) => {
     const url = new URL(route.request().url());
     const host = url.hostname, action = url.searchParams.get('action');
@@ -120,6 +120,16 @@ function makeStub(mode = {}) {
             { channel: 'awb', zone: 'Other_Regions', tags: [] }, { channel: 'awb', zone: 'Other_Regions', tags: [] },
           ];
       return json({ ok: true, orders });
+    }
+    // 🔴 «رفع بوسطة» — التلات أوضاع على نفس الـ Worker. العدّ = `!alreadyUploaded`: شحن ٣ (من ٤) · استرجاع ٢ · استبدال ١.
+    if (host.startsWith('bosta-orders-upload-worker') && (action === 'get_orders' || action === 'fetch_candidates')) {
+      let jobType = 's1';
+      if (action === 'fetch_candidates') { try { jobType = JSON.parse(route.request().postData() || '{}').jobType; } catch {} }
+      calls.upload.push({ action, jobType, auth: route.request().headers()['authorization'] });
+      if (mode.uploadFail === jobType) return json({ ok: false, error: 'boom' }, 500);
+      const rows = jobType === 's1' ? [{ alreadyUploaded: false }, { alreadyUploaded: false }, { alreadyUploaded: false }, { alreadyUploaded: true }]
+                 : jobType === 'return' ? [{ alreadyUploaded: false }, { alreadyUploaded: false }] : [{ alreadyUploaded: false }];
+      return json({ ok: true, rows });
     }
     if (action === 'get_ready_orders') {
       return json({ ok: true, total: 3, orders: [{ courier: 'Saif' }, { courier: 'Saif' }, { courier: 'Bosta' }] });
@@ -215,7 +225,7 @@ console.log('① شريط «خلص» — الأرقام والتعريفات');
   is(yest !== today, '«أمس» أخف من «اليوم»');
 
   // الشريط جوّه الكارت وملزوق بحافته السفلية
-  const rb = await page.locator('a.eco-row').first().boundingBox(), sb = await page.locator('#donePrint').boundingBox();
+  const rb = await page.locator('#rowPrint').boundingBox(), sb = await page.locator('#donePrint').boundingBox();
   is(sb.x >= rb.x - 1 && sb.x + sb.width <= rb.x + rb.width + 1 && Math.abs((sb.y + sb.height) - (rb.y + rb.height)) <= 3,
      'الشريط جوّه الكارت بعرضه كله وملزوق بحافته السفلية', `${JSON.stringify(sb)} ↔ ${JSON.stringify(rb)}`);
   is(await page.locator('a.eco-row').first().evaluate(e => e.tagName) === 'A', 'الصف كله لينك (الشريط جزء منه)');
@@ -355,8 +365,8 @@ console.log('⑦ التصميم الموحّد — الأقسام الخمسة �
     rows: [...s.querySelectorAll('.eco-qrow')].map(r => r.id), tools: [...s.querySelectorAll('.eco-tool')].map(a => a.getAttribute('href')),
     open: !s.classList.contains('is-collapsed'), sum: !!s.querySelector('.eco-sum') })));
   is(secs.map(s => s.title).join('|') === 'قسم تجهيز الأوردر|قسم التسليمات|قسم المرتجعات|أدوات مساعدة|أدوات أخرى', '🔴 خمس أقسام بالأسماء والترتيب المتفق عليه', secs.map(s => s.title).join('|'));
-  is(secs[0].rows.join() === 'rowPrint,rowPack' && secs[1].rows.join() === 'rowBosta,rowOffice' && secs[2].rows.join() === 'rowWarehouse,rowBostaReturns',
-     'الصفوف في أقسامها: (طباعة · تغليف) · (بوسطة · مكتب) · (رجوع للمخزن · مرتجعات بوسطة)', JSON.stringify(secs.map(s => s.rows)));
+  is(secs[0].rows.join() === 'rowBostaUpload,rowPrint,rowPack' && secs[1].rows.join() === 'rowBosta,rowOffice' && secs[2].rows.join() === 'rowWarehouse,rowBostaReturns',
+     'الصفوف في أقسامها: (رفع بوسطة · طباعة · تغليف) · (بوسطة · مكتب) · (رجوع للمخزن · مرتجعات بوسطة)', JSON.stringify(secs.map(s => s.rows)));
   is(secs[3].tools.join() === 'Order-Item-Remover.html,Order-SKU-Barcode-Printer.html' && secs[4].tools.join() === 'Inventory-Audit-Updater.html,stats.html',
      'الأدوات: مساعدة (عطلان · باركود) · أخرى (الجرد · الإحصائيات) — **كروت** مش pills', JSON.stringify([secs[3].tools, secs[4].tools]));
   is(secs.every(s => s.open && s.sum), 'كلها مفتوحة عند الفتح، وكلها ليها ملخّص مطوي (بلاطات — الأدوات كمان)');
@@ -383,11 +393,11 @@ console.log('⑦ التصميم الموحّد — الأقسام الخمسة �
   // ألوان الهوية: ٦ ألوان مختلفة وبعيدة عن سلّم العمر
   const cols = await page.evaluate(() => {
     const v = n => { const d = document.createElement('i'); d.style.color = `var(${n})`; document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; };
-    return { ids: ['rowPrint', 'rowPack', 'rowBosta', 'rowOffice', 'rowWarehouse', 'rowBostaReturns'].map(i => getComputedStyle(document.getElementById(i).querySelector('.eco-card-name')).color),
+    return { ids: ['rowPrint', 'rowPack', 'rowBosta', 'rowOffice', 'rowWarehouse', 'rowBostaReturns', 'rowBostaUpload'].map(i => getComputedStyle(document.getElementById(i).querySelector('.eco-card-name')).color),
              age: [v('--green'), v('--accent'), v('--amber'), v('--red'), v('--green-dark'), v('--accent-dark'), v('--amber-dark'), v('--red-dark')] }; });
-  is(new Set(cols.ids).size === 6 && cols.ids.every(c => !cols.age.includes(c)), '🎨 ٦ ألوان هوية مختلفة، ولا واحد منهم لون من سلّم العمر', cols.ids.join(' | '));
-  const want = { rowPrint: 'rgb(67, 56, 202)', rowPack: 'rgb(14, 116, 144)', rowBosta: 'rgb(190, 24, 93)', rowOffice: 'rgb(162, 28, 175)', rowWarehouse: 'rgb(120, 53, 15)', rowBostaReturns: 'rgb(154, 91, 36)' };
-  is(Object.keys(want).every((k, i) => cols.ids[i] === want[k]), '🎨 الألوان المعتمدة: إنديجو · سيان · وردي · فوشيا · بني غامق · كراميل', cols.ids.join(' | '));
+  is(new Set(cols.ids).size === 7 && cols.ids.every(c => !cols.age.includes(c)), '🎨 ٧ ألوان هوية مختلفة، ولا واحد منهم لون من سلّم العمر', cols.ids.join(' | '));
+  const want = { rowPrint: 'rgb(67, 56, 202)', rowPack: 'rgb(14, 116, 144)', rowBosta: 'rgb(190, 24, 93)', rowOffice: 'rgb(162, 28, 175)', rowWarehouse: 'rgb(120, 53, 15)', rowBostaReturns: 'rgb(154, 91, 36)', rowBostaUpload: 'rgb(109, 40, 217)' };
+  is(Object.keys(want).every((k, i) => cols.ids[i] === want[k]), '🎨 الألوان المعتمدة: إنديجو · سيان · وردي · فوشيا · بني غامق · كراميل · بنفسجي (رفع بوسطة)', cols.ids.join(' | '));
   // خطين العنوان بلون العنوان + إطار المطوي
   const lines = await page.evaluate(() => [...document.querySelectorAll('.eco-home-sec')].every(s => { const c = getComputedStyle(s.querySelector('.eco-home-sec-title')).color;
     return [...s.querySelectorAll('.eco-sec-ln')].every(l => getComputedStyle(l).backgroundColor === c); }));
@@ -400,6 +410,39 @@ console.log('⑦ التصميم الموحّد — الأقسام الخمسة �
   const dng = await page.evaluate(() => [...document.querySelectorAll('.eco-tool.tool-danger')].map(a => a.getAttribute('href')));
   is(dng.join() === 'Order-Item-Remover.html', '🔴 الثيم الأحمر لـ«عطلان؟» وحده (الأداة الهدّامة)', dng.join());
   is(errors.length === 0, 'صفر خطأ في الكونسول', errors.join(' | '));
+  await ctx.close();
+}
+
+console.log('⑧ «رفع بوسطة» — أول صف في «تجهيز الأوردر» بعدّاد حيّ (v1.50.0)');
+{
+  const { page, ctx, calls, errors } = await openHome({});
+  is(await txt(page, '#cntBostaUpload') === '6', '🔴 الرقم الكبير = مجموع «لم يتم الرفع» في الأوضاع التلاتة (٣ + ٢ + ١ — والمرفوع قبل كده مش بيتعدّ)', await txt(page, '#cntBostaUpload'));
+  const chips = await page.evaluate(() => [...document.querySelectorAll('#rowBostaUpload .eco-chip')].map(c => c.textContent.replace(/\s+/g, ' ').trim()));
+  is(chips.length === 3 && chips[0].includes('شحن') && chips[0].startsWith('3') && chips[1].includes('استرجاع') && chips[1].startsWith('2') && chips[2].includes('استبدال') && chips[2].startsWith('1'),
+     'التلات chips بأرقامها (شحن ٣ · استرجاع ٢ · استبدال ١)', JSON.stringify(chips));
+  is(await page.evaluate(() => document.getElementById('rowBostaUpload').getAttribute('href')) === 'Bosta-Orders-Upload.html', 'الصف بيفتح صفحة الأداة');
+  is(calls.upload.length === 3 && calls.upload.some(c => c.action === 'get_orders') && ['return', 'exchange'].every(j => calls.upload.some(c => c.jobType === j)),
+     'التلات نداءات اتبعتت (get_orders + fetch_candidates لـ return و exchange)', JSON.stringify(calls.upload.map(c => c.jobType)));
+  is(calls.upload.every(c => c.auth === 'Bearer test-secret-0123456789'), '🔴 بسر مجموعة المخزن (`warehouse_ops_worker_secret`) مش سر الشحن', JSON.stringify(calls.upload.map(c => c.auth)));
+  // الكاش: مفتاح مستقل ومايدوسش على كاش تسليمات بوسطة
+  const ck = await page.evaluate(() => ({ up: JSON.parse(sessionStorage.getItem('woc_queue_bosta_upload') || 'null'), ship: JSON.parse(sessionStorage.getItem('woc_queue_bosta') || 'null') }));
+  is(ck.up && ck.up.s1 && ck.up.s1.n === 3 && ck.up.return.n === 2 && ck.up.exchange.n === 1, 'الكاش `woc_queue_bosta_upload` = عدّادات الأوضاع التلاتة', JSON.stringify(ck.up));
+  is(ck.ship && ck.ship.data && Array.isArray(ck.ship.data.orders) && !ck.ship.s1, '🔴 وكاش «جاهز لتسليم بوسطة» (`woc_queue_bosta`) فضل رد الـ Worker الخام — ماتدهسش', JSON.stringify(ck.ship).slice(0, 80));
+  const idx = await page.evaluate(() => ({ prep: [...document.querySelectorAll('#secPrep .eco-qrow')].map(r => r.id)[0], hasAge: !!document.querySelector('#rowBostaUpload .eco-agebox'), btn: !!document.querySelector('#rowBostaUpload .eco-qref'), done: !!document.querySelector('#rowBostaUpload .eco-done') }));
+  is(idx.prep === 'rowBostaUpload' && idx.hasAge && idx.btn && !idx.done, 'أول صف في القسم · مربع «آخر تحديث» وزرار التحديث · وبلا شريط «خلص» (قرار أحمد)', JSON.stringify(idx));
+  // فتح تاني من الكاش = صفر نداء رفع
+  const n0 = calls.upload.length;
+  await page.reload();
+  await page.waitForFunction(() => document.querySelector('#cntOffice') && document.querySelector('#cntOffice').textContent.trim() !== '—', null, { timeout: 15000 });
+  await page.waitForTimeout(1200);
+  is(calls.upload.length === n0 && await txt(page, '#cntBostaUpload') === '6', 'الفتح التاني خلال ١٠ دقايق = صفر نداء رفع والرقم من الكاش', `${n0} → ${calls.upload.length}`);
+  is(errors.length === 0, 'صفر خطأ في الكونسول', errors.join(' | '));
+  await ctx.close();
+}
+{ // فشل وضع واحد = الصف كله فشل بيسمّي الوضع (مش رقم ناقص شكله سليم) والباقي مابيتأثرش
+  const { page, ctx } = await openHome({ uploadFail: 'exchange' });
+  const t = await txt(page, '#rowBostaUpload');
+  is(t.includes('استبدال') && t.includes('تعذّر') && await txt(page, '#cntPrint') === '4', '🔴 فشل وضع الاستبدال: الصف بيقول «تعذّر» ويسمّي الوضع، وصف الطباعة سليم', t.slice(0, 140));
   await ctx.close();
 }
 

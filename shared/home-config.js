@@ -69,11 +69,27 @@ function derivePack(data) {
            chips: ECO_COURIER_GROUPS.map(g => ({ grp: true, cls: g.cls, label: g.label, n: cn[g.key] })) };
 }
 
+// 🔴 «رفع بوسطة» — نفس صف هب الشحن والتحصيل بالحرف (الصفحة `Bosta-Orders-Upload.html` متطابقة في الهبّين): التلات أوضاع
+//    بالتوازي على نفس الـ Worker، والعدّ بنفس شرط تاب «الرفع» جوّه الأداة (`!alreadyUploaded`). ⚠️ لو أي وضع فشل
+//    الصف كله بيقول فشل (بيسمّي الوضع) — رقم إجمالي ناقص وضع شكله سليم وهو أقل من الحقيقة. 🔴 والكاش عدّادات بس
+//    (`bostaCacheSet` في `core.js` — مفتاحه `ECO_CACHE_BOSTA_UPLOAD` مش كاش تسليمات بوسطة) وصفحة الأداة بتكتب فيه هي
+//    كمان مع كل جلب لأي وضع. ⚠️ والنداءات قراءة بحتة (`fetch_candidates` بطّل يكتب).
+//    🔴 مفتاح الصف `bostaUpload` مش `bosta` — ده محجوز لـ«جاهز لتسليم بوسطة».
+const BOSTA_MODES = [
+  { key: 's1',       label: '🚚 شحن عادي', cls: 'qc-job-s1' },
+  { key: 'return',   label: '↩️ استرجاع',  cls: 'qc-job-return' },
+  { key: 'exchange', label: '🔄 استبدال',  cls: 'qc-job-exchange' },
+];
+function deriveBosta(counts) {
+  const chips = BOSTA_MODES.map(m => ({ grp: true, cls: m.cls, label: m.label, n: counts[m.key] }));   // 🎨 مجموعة موصولة (§HOME-CHIPS)
+  return { total: chips.reduce((a, c) => a + c.n, 0), chips };
+}
+
 const ECO_HOME = {
   staggerMs: 200,     // 🔴 الخمس Workers بتشارك نفس الـ Custom App — فاصل بين إطلاق كل طابور (قرار أحمد 19-09-2026)
   sections: [
     { id: 'Prep', cls: 'sec-prep', summary: true, svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>`,
-      title: 'قسم تجهيز الأوردر', sub: 'طباعة وتغليف', queues: ['print', 'pack'] },
+      title: 'قسم تجهيز الأوردر', sub: 'رفع وطباعة وتغليف', queues: ['bostaUpload', 'print', 'pack'] },
     { id: 'Deliver', cls: 'sec-deliver', summary: true, svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h12M12 6l6 6-6 6"/></svg>`,
       title: 'قسم التسليمات', sub: 'بوسطة والمكتب', queues: ['bosta', 'office'] },
     { id: 'Returns', cls: 'sec-returns', summary: true, svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>`,
@@ -95,6 +111,42 @@ const ECO_HOME = {
       ] },
   ],
   queues: {
+    // 🔴 «رفع بوسطة» أول صف في «تجهيز الأوردر» — الرفع على بوسطة **شرط قبل** طباعة البوليصة (`ecoChannelGate` → `not-uploaded`)،
+    //    فعلامة ⏳ «في انتظار الرفع» على خانة بوسطة في صف الطباعة هي الطلب اللي الصف ده بيحلّه.
+    bostaUpload: {
+      href: 'Bosta-Orders-Upload.html', idCls: 'id-upload',
+      svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg>`,
+      name: 'رفع بوسطة', code: 'لم يتم الرفع',
+      err: 'تعذّر جلب أوردرات رفع بوسطة',
+      async fetch() {
+        const api = ecoApi(ECO_WORKERS.bostaUpload);
+        const s = getSession();
+        const get = {
+          s1:       () => api.apiGet('get_orders'),
+          return:   () => api.apiPost('fetch_candidates', { jobType: 'return',   employee: s?.username || null }),
+          exchange: () => api.apiPost('fetch_candidates', { jobType: 'exchange', employee: s?.username || null }),
+        };
+        const res = await Promise.allSettled(BOSTA_MODES.map(m => get[m.key]()));
+        const failed = BOSTA_MODES.filter((m, i) => res[i].status === 'rejected');
+        // ⚠️ الوضع اللي نجح بيتكتب في الكاش حتى لو غيره فشل — رقمه صح.
+        const counts = {};
+        BOSTA_MODES.forEach((m, i) => {
+          if (res[i].status !== 'fulfilled') return;
+          counts[m.key] = (res[i].value.rows || []).filter(r => !r.alreadyUploaded).length;
+          bostaCacheSet(m.key, counts[m.key]);
+        });
+        if (failed.length) {
+          const first = res.find(r => r.status === 'rejected').reason;
+          throw new Error(`تعذّر جلب ${failed.map(m => m.label).join(' · ')} — ${first?.message || 'خطأ غير معروف'}`);
+        }
+        return deriveBosta(counts);
+      },
+      fromCache() {
+        const c = bostaCacheGet();
+        if (!cacheFresh(c)) return null;
+        return { at: new Date(c.at), r: deriveBosta(c.counts) };
+      },
+    },
     print: {
       href: 'Order-Printer.html', idCls: 'id-print', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V3h10v6"/><rect x="4" y="9" width="16" height="8" rx="2"/><path d="M7 14h10v7H7z"/></svg>`,
       name: 'جاهز للطباعة', code: 'فواتير مستنية الطباعة',
