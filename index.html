@@ -501,7 +501,17 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.41.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.42.0</span>
+          <span class="cl-ver-date">21-10-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>🕐 <b>توقيت القاهرة بقى محسوب (<code>Intl</code> على <code>Africa/Cairo</code>) بدل إزاحة +٣ ثابتة</b> — مصر بترجع UTC+2 يوم ٢٩-١٠-٢٠٢٦، والإزاحة الثابتة كانت هتغلّط كل وقت معروض وكل «منذ كام» وحدود اليوم (شريط «خلص» والإحصائيات) بساعة. صفر تغيير في أي رقم قبل التاريخ ده.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge">v1.41.0</span>
           <span class="cl-ver-date">21-10-2026</span>
         </div>
         <ul class="cl-items">
@@ -1241,7 +1251,7 @@ async function fetchDoneCountsFromLogs(key) {
   const today = cairoDayStr(new Date());
   const yest  = wocAddDays(today, -1);
   const dateFrom = wocAddDays(yest, -1);                           // يوم UTC زيادة
-  const startMs  = Date.parse(`${yest}T00:00:00Z`) - 3 * 3600 * 1000;   // بداية يوم القاهرة لأمس
+  const startMs  = cairoDayStartMs(yest);   // بداية يوم القاهرة لأمس (Intl — مش +٣ ثابتة)
   const seen = { [today]: new Set(), [yest]: new Set() };
   for (let page = 0; page < DONE_MAX_PAGES; page++) {
     const res = await api.apiGet('get_logs', {

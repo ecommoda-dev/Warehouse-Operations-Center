@@ -2423,7 +2423,7 @@ let dateFrom = null, dateTo = null;
 let dateFilterActive = false;
 let rangeDebounce = null;
 
-function cairoNow()          { return new Date(Date.now() + 3 * 60 * 60 * 1000); }
+function cairoNow()          { return toCairo(new Date().toISOString()); }   // Intl من الـ shell — مش +٣ ثابتة
 function cairoDateStr(d)     { const p = n => String(n).padStart(2, '0');
                                return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())}`; }
 function addDays(dateStr, n) { const d = new Date(`${dateStr}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return cairoDateStr(d); }
