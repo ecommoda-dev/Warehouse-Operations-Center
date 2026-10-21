@@ -178,7 +178,7 @@ const WOC_WORKERS = {
   audit:    { url: 'https://inventory-audit-updater-worker.ecommoda-dev.workers.dev', min: '6.2.1', label: 'جرد المخزون' },
 };
 
-const TOOL_VERSION = 'v1.42.0';                     // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.43.0';                     // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const SHOP_HANDLE  = '6c7e1a-53';
 // ⚠️ `WOC_APP_ID` اتشالت في v1.32.0 — Worker الدخول المستقل (`WOC_WORKERS.auth`)
@@ -209,7 +209,16 @@ function isConfigured()   { return getSecret().trim().length > 0; }
 const WOC_SESSION_KEY  = 'woc_session';       // الهوية
 const WOC_CACHE_PRINT  = 'woc_queue_print';   // كاش طابور الطباعة
 const WOC_CACHE_PACK   = 'woc_queue_pack';    // كاش طابور التغليف
-const WOC_CACHE_TTL_MS = 15 * 60 * 1000;      // ١٥ دقيقة
+const WOC_CACHE_BOSTA     = 'woc_queue_bosta';      // كاش طابور تسليمات بوسطة — رد `get_ready_to_ship` خام (v1.43.0)
+const WOC_CACHE_OFFICE    = 'woc_queue_office';     // كاش طابور تسليمات المكتب — رد `get_ready_to_office` خام
+const WOC_CACHE_WAREHOUSE = 'woc_queue_warehouse';  // كاش طابور استلام المرتجعات — رد `get_ready_to_warehouse` خام
+const WOC_CACHE_DONE      = 'woc_done_';            // + مفتاح الطابور: عدّاد «خلص النهارده / أمس» (نفس عمر كاش الطابور)
+// 🔴 **الرئيسية بتترسم من الكاش لو عمره أقل من ده — من غير أي نداء** (v1.43.0 ·
+//    قرار أحمد 21-10-2026 · نفس سياسة `Delivery-COD-Operations-Center` بالحرف).
+//    التحديث التلقائي اتلغى، فالرجوع للرئيسية بـ 🏠 كان هيبقى أتقل نداء في الهب
+//    (٥ نداءات كل رجوع) لو ماكانش فيه الحد ده. أقدم من كده = جلب جديد عادي.
+const WOC_CACHE_TTL_MS = 10 * 60 * 1000;      // ١٠ دقايق
+const WOC_IDLE_KEY     = 'woc_last_activity';  // §IDLE — آخر نشاط (sessionStorage، لكل تاب لوحده)
 
 function getSession() {
   try {
@@ -227,6 +236,7 @@ function setSession(username, displayName) {
     sessionStorage.setItem(WOC_SESSION_KEY, JSON.stringify({
       v: 1, username, displayName, loginAt: new Date().toISOString(),
     }));
+    sessionStorage.setItem(WOC_IDLE_KEY, String(Date.now()));   // §IDLE — بداية العدّ من الدخول
   } catch {}
 }
 
@@ -235,6 +245,11 @@ function clearSession() {
     sessionStorage.removeItem(WOC_SESSION_KEY);
     sessionStorage.removeItem(WOC_CACHE_PRINT);
     sessionStorage.removeItem(WOC_CACHE_PACK);
+    sessionStorage.removeItem(WOC_CACHE_BOSTA);
+    sessionStorage.removeItem(WOC_CACHE_OFFICE);
+    sessionStorage.removeItem(WOC_CACHE_WAREHOUSE);
+    ['print', 'pack', 'bosta'].forEach(k => sessionStorage.removeItem(WOC_CACHE_DONE + k));
+    sessionStorage.removeItem(WOC_IDLE_KEY);
   } catch {}
 }
 
@@ -1192,24 +1207,146 @@ function showWorkerStale() {
   showToast(wocStaleMsgs.join(' · '), 'error', 9000);
 }
 
-// ── الخروج ────────────────────────────────────────────────────
+// ── الخروج (Standards #52) ────────────────────────────────────
+// 🔴 **الخروج اليدوي فوري بلا أي تأكيد من الـ shell** (`confirm`/`showConfirm` ممنوعين)
+//    — والضغط على اسم الموظف في الهيدر يطلّع. الحارسان: دفعة شغّالة (toast مش
+//    تأكيد)، وخطّاف `onBeforeLogout()` الاختياري لصفحة عندها شغل ما اتحفظش (الجرد
+//    الجماعي) — هو اللي بيسأل هناك، والـ shell مابيسألش.
 // ⚠️ الخروج بينادي `WOC_WORKERS.auth` — نفس Worker الدخول بالضبط، بلا
-//    `appId` (الاسم متحدّد في كود الـ Worker نفسه من v1.32.0).
+//    `appId` (الاسم متحدّد في كود الـ Worker نفسه من v1.32.0). ونداء `log_logout`
+//    ليه سقف ٣ ثواني — Worker بطيء مايعطّلش الخروج.
 // ⚠️ الجلسة والكاش بيتمسحوا **حتى لو** نداء التسجيل فشل — الخروج فعل
 //    محلي، ومانسيبش موظف داخل عشان D1 ما ردّتش.
-async function doLogout() {
-  // خطّاف اختياري: صفحة عندها شغل جاري (جرد جماعي بيتنفّذ) ترجّع `false` من
-  // `onBeforeLogout()` فالخروج يتوقّف. الخروج وسط كتابة جماعية بيقطع الدفعة.
-  if (typeof onBeforeLogout === 'function' && onBeforeLogout() === false) return;
+function doLogout() {
+  if (typeof onBeforeLogout === 'function') {
+    if (onBeforeLogout() === false) return;
+  } else if (wocIdleBusy()) {
+    showToast('فيه دفعة بتتنفّذ دلوقتي — استنى لحد ما تخلص', 'warning');
+    return;
+  }
+  performLogout('manual');
+}
+
+// مسار واحد للخروج اليدوي والتلقائي. `reason`: 'manual' | 'idle'.
+async function performLogout(reason = 'manual') {
+  idleStop();
   const s = getSession();
   try {
     if (s?.username) {
-      await wocApi(WOC_WORKERS.auth).apiGet('log_logout', { username: s.username });
+      await Promise.race([
+        wocApi(WOC_WORKERS.auth).apiGet('log_logout', { username: s.username }),
+        new Promise(r => setTimeout(r, 3000)),
+      ]);
     }
   } catch { /* الخروج بيتم برضه */ }
   clearSession();
-  location.replace('index.html');
+  location.replace(reason === 'idle' ? 'index.html?reason=idle' : 'index.html');
 }
+
+// ══════════════════════════════════════════════════════════════
+// §IDLE — الخروج التلقائي لعدم النشاط (Standards #52 · idle-logout.md · v1.43.0)
+// ══════════════════════════════════════════════════════════════
+// 🔴 **نسخة من `Delivery-COD-Operations-Center` §IDLE بالحرف** — قرار أحمد 21-10-2026:
+//    الهبّان بنفس السياسة. فرق الأسماء بس (`WOC_*` / `woc*`). ⚠️ أي تعديل هنا يتعمل
+//    في الهبّين في نفس التمريرة (درس R1).
+// 🔴 **60 دقيقة لكل الأدوات بلا استثناء** — ممنوع قيمة مختلفة لصفحة بعينها.
+// 🔴 **مرة واحدة هنا مش في كل صفحة** — وآخر نشاط في `sessionStorage` (مش
+//    متغيّر): كل صفحة في الهب reload كامل، والمتغيّر بيضيع مع التنقل.
+// ⚠️ وقت فعلي (`Date.now()`) كل ٣٠ ث + عند `visibilitychange`/`focus` — مش
+//    `setTimeout` واحد ٦٠ دقيقة (المتصفح بيبطّئه في الخلفية والجهاز لما ينام بيوقفه).
+// ⚠️ النشاط = `keydown/pointerdown/wheel/touchstart/scroll` على `document`.
+//    ⛔ مش `mousemove` ولا أي polling. السكانر بيبعت ضغطات مفاتيح فبيتحسب نشاط لوحده.
+// ⚠️ **حارس الدفعة** `wocIdleBusy()`: صفحة فيها شغل جاري بتعرّف
+//    `window.shellIsBusy = () => …` (الجرد الجماعي · سكانرا المكتب والمرتجعات). طول ما
+//    هي `true` الخروج التلقائي واليدوي موقوفين والعدّ بيبدأ من جديد بعد الدفعة.
+// ⚠️ الحماية على العميل بس — مش أمان حقيقي (الهوية من العميل أصلًا). الهدف:
+//    ماتفضلش بيانات الأوردرات على شاشة مخزن مهجورة.
+const IDLE_TIMEOUT_MIN = 60;
+const IDLE_WARN_SEC    = 60;
+const IDLE_CHECK_MS    = 30000;
+const IDLE_THROTTLE_MS = 10000;
+
+function idleGet() {
+  try { return +sessionStorage.getItem(WOC_IDLE_KEY) || Date.now(); } catch { return Date.now(); }
+}
+function idleSet(t) { try { sessionStorage.setItem(WOC_IDLE_KEY, String(t)); } catch {} }
+let idleLast = idleGet(), idleTimer = null, idleFast = null, idleDone = false;
+
+function wocIdleBusy() {
+  try { if (typeof window.shellIsBusy === 'function' && window.shellIsBusy()) return true; } catch {}
+  return false;
+}
+
+function idleMark() {
+  const now = Date.now();
+  if (now - idleLast < IDLE_THROTTLE_MS) return;
+  idleLast = now; idleSet(now); idleHideWarn();
+}
+
+function idleWarnEl() {
+  let el = document.getElementById('idleWarn');
+  if (el) return el;
+  el = document.createElement('div');
+  el.id = 'idleWarn'; el.className = 'idle-warn';
+  el.setAttribute('role', 'alertdialog'); el.setAttribute('aria-live', 'assertive');
+  el.innerHTML =
+    '<div class="idle-warn-txt"><div class="idle-warn-l1"></div><div class="idle-warn-l2"></div></div>'
+    + '<button type="button" class="idle-warn-btn" id="idleWarnBtn">أنا موجود</button>';
+  document.body.appendChild(el);
+  el.querySelector('#idleWarnBtn').addEventListener('click', () => { idleLast = 0; idleMark(); });
+  return el;
+}
+function idleShowWarn(sec) {
+  const el = idleWarnEl();
+  const name = getSession()?.displayName || '';
+  el.querySelector('.idle-warn-l1').textContent = `سيتم تسجيل الخروج لعدم النشاط بعد ${sec} ثانية`;
+  el.querySelector('.idle-warn-l2').textContent = `هل أنت موجود يا ${name}؟`;
+  el.classList.add('visible');
+}
+function idleHideWarn() {
+  const el = document.getElementById('idleWarn');
+  if (el) el.classList.remove('visible');
+}
+
+function idleTick() {
+  if (idleDone || !getSession()) return;
+  if (wocIdleBusy()) { idleLast = Date.now(); idleSet(idleLast); idleHideWarn(); return; }
+  // صفحة/تاب تاني ممكن يكون جدّد. قراءة خام: مفتاح غايب = 0 (مش «دلوقتي»)
+  // وإلا جلسة قديمة بلا مفتاح كانت هتفضل شغّالة للأبد.
+  let stored = 0; try { stored = +sessionStorage.getItem(WOC_IDLE_KEY) || 0; } catch {}
+  idleLast = Math.max(idleLast, stored);
+  const limit  = IDLE_TIMEOUT_MIN * 60000;
+  const idleMs = Date.now() - idleLast;
+  if (idleMs >= limit) { idleStop(); idleHideWarn(); performLogout('idle'); return; }
+  const remain = limit - idleMs;
+  if (remain <= IDLE_WARN_SEC * 1000) idleShowWarn(Math.ceil(remain / 1000)); else idleHideWarn();
+}
+
+function idleStart() {
+  idleDone = false;
+  if (idleTimer) return;
+  idleTimer = setInterval(idleTick, IDLE_CHECK_MS);
+}
+function idleStop() {
+  idleDone = true;
+  if (idleTimer) { clearInterval(idleTimer); idleTimer = null; }
+  if (idleFast)  { clearInterval(idleFast);  idleFast = null; }
+}
+function idleInit() {
+  ['keydown', 'pointerdown', 'wheel', 'touchstart', 'scroll'].forEach(ev =>
+    document.addEventListener(ev, idleMark, { capture: true, passive: true }));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) idleTick(); });
+  window.addEventListener('focus', idleTick);
+  if (getSession()) {
+    idleStart();
+    idleTick();          // reload بعد غياب طويل → خروج فوري
+    // بانر التحذير بيعدّ كل ثانية (الفحص الأساسي كل ٣٠ ث مش كفاية للعدّاد)
+    idleFast = setInterval(() => {
+      if (document.getElementById('idleWarn')?.classList.contains('visible')) idleTick();
+    }, 1000);
+  }
+}
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') idleInit();
 
 // ══════════════════════════════════════════════════════════════
 // §HEADER — الهيدر الموحّد

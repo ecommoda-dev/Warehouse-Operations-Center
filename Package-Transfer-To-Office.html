@@ -1302,6 +1302,7 @@ function handleScan() {
 
 let sessionRows = [];          // سكانات الجلسة — عرض بحت، مش مصدر للسجل
 let scanBusy    = false;       // بيمنع سكانتين متوازيتين على نفس النداء
+window.shellIsBusy = () => scanBusy;   // §IDLE — الخروج التلقائي (٦٠ د) موقوف طول ما سكانة بتتسجّل
 let pendingAck  = null;        // الأوردر المستني إقرار (نافذة التحذير مفتوحة)
 
 const OUTCOME_LABEL = {
@@ -2194,13 +2195,12 @@ async function exportLogXLSX() {
 //    قابل للفلترة في بحث شوبيفاي، والفلتر عليه بيرجّع المتجر كله في صمت.
 //    فالـ Worker بيجيب `Ready` خام والواجهة بتحكم.
 //
-// ⚠️ **التحديث التلقائي بنفس حراس الشاشة الرئيسية التلاتة** — التسليح بعد
+// ⚠️ (تاريخي — اتشال في v1.43.0) **التحديث التلقائي بنفس حراس الشاشة الرئيسية التلاتة** — التسليح بعد
 //    كل جلب ناجح (مش من الدخول)، و`document.hidden` = صفر استعلام، والنبضة
 //    بتحدّث «منذ كام» **بلا أي نداء شبكة**.
-const RQ_AUTO_REFRESH_MS = 15 * 60 * 1000;   // نفس فترة `Orders-Packing-Checker.html` والرئيسية
 const RQ_TICK_MS         = 30 * 1000;        // نبضة عرض — صفر شبكة
 
-const rqState = { orders: [], at: null, loading: false, dirty: false, timer: null, failed: false };
+const rqState = { orders: [], at: null, loading: false, failed: false };
 
 function rqSetFresh() {
   const info  = agoInfo(rqState.at, Date.now());
@@ -2329,8 +2329,7 @@ function rqRemove(orderId) {
   if (rqState.orders.length !== before) rqRender();
 }
 
-// ⚠️ `loading` بيمنع نداءين متوازيين (ضغطة + نبضة)، و`dirty` مابيتصفّرش
-//    غير بعد جلب ناجح — لو الجلب فشل، أول رجوع تاني للتاب بيحاول.
+// ⚠️ `loading` بيمنع نداءين متوازيين (ضغطتين ورا بعض).
 async function rqLoad(silent) {
   if (rqState.loading) return;
   rqState.loading = true;
@@ -2342,7 +2341,6 @@ async function rqLoad(silent) {
     // 🔴 **المصدر الوحيد للأهلية** — الـ shell، مش الصفحة.
     rqState.orders = wocOfficeQueue(data.orders || []);
     rqState.at     = new Date();
-    rqState.dirty  = false;
     rqState.failed = false;
     document.getElementById('rqFail').style.display = 'none';
 
@@ -2380,23 +2378,12 @@ async function rqLoad(silent) {
     if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
     rqRender();
     rqSetFresh();
-    rqArmAuto();
     if (!silent) document.getElementById('scanInput')?.focus();   // الفوكس يرجع للسكانر
   }
 }
 
-// التسليح **بعد كل جلب** — «١٥ دقيقة من آخر تحديث فعلي» مش من فتح الصفحة
-function rqArmAuto() {
-  if (rqState.timer) clearTimeout(rqState.timer);
-  rqState.timer = setTimeout(() => {
-    if (document.hidden) { rqState.dirty = true; return; }   // مخفي = صفر استعلام
-    rqLoad(true);
-  }, RQ_AUTO_REFRESH_MS);
-}
-
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && rqState.dirty) rqLoad(true);
-});
+// ⛔ مفيش تحديث تلقائي (v1.43.0 · قرار أحمد 21-10-2026 — نفس سياسة `Delivery-COD-Operations-Center`): الجلب عند الفتح
+//    وعند «تحديث» بس. التسليح التلقائي (`rqArmAuto`) و`visibilitychange` اتشالوا.
 
 // النبضة عرض بحت — بتحدّث «منذ كام» وبادج العمر **بلا أي نداء شبكة**.
 // ⚠️ إعادة رسم الجدول كل نص دقيقة كانت هتصفّر التمرير تحت إيد الموظف.

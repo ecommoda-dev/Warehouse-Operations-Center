@@ -168,6 +168,13 @@ async function openHome(mode) {
       sessionStorage.setItem('woc_session', JSON.stringify({ v: 1, username: 'tester', displayName: 'الموظف التجريبي', loginAt: new Date().toISOString() }));
     } catch {}
   });
+  // لتسجيل كل `setInterval`/`setTimeout` بمدة ≥ ١٠ دقايق (بند ⑥ — مفيش تحديث تلقائي)
+  await page.addInitScript(() => {
+    window.__longTimers = [];
+    for (const n of ['setInterval', 'setTimeout']) {
+      const o = window[n]; window[n] = (fn, ms, ...a) => { if (ms >= 600000) window.__longTimers.push(n + ':' + ms); return o(fn, ms, ...a); };
+    }
+  });
   const { stub, calls } = makeStub(mode);
   await page.route('**/*.workers.dev/**', stub);
   await page.goto(`${BASE}/index.html`);
@@ -313,6 +320,36 @@ console.log('⑤ العدّ جاهز من الـ Worker (get_done_counts) + ال
   // Worker قديم (get_done_counts → 400): التصفيح هو اللي بيشتغل — هو الوضع الافتراضي في ①–④
   const { page, ctx, calls } = await openHome({});
   is((calls.done || 0) >= 3 && (await txt(page, '#donePrint .woc-done-today')) === '5', 'Worker قديم (400) → الرجوع للتصفيح بنفس الأرقام');
+  await ctx.close();
+}
+
+console.log('⑥ بلا تحديث تلقائي + الرئيسية من الكاش (٥ طوابير · ١٠ دقايق)');
+{
+  const { page, ctx, calls } = await openHome({});
+  const snap = () => ({ orders: calls.orders, done: calls.done || 0, logs: calls.logs.length });
+  const timers = await page.evaluate(() => window.__longTimers);
+  is(timers.length === 0, '🔴 مفيش أي مؤقّت ≥ ١٠ دقايق (تحديث تلقائي اتشال)', JSON.stringify(timers));
+  const keys = await page.evaluate(() => ['print','pack','bosta','office','warehouse'].map(k => sessionStorage.getItem('woc_queue_' + k) !== null));
+  is(keys.every(Boolean), 'كل طابور اتكتب في الكاش بعد أول جلب (٥ مفاتيح)', JSON.stringify(keys));
+  const dk = await page.evaluate(() => ['print','pack','bosta'].map(k => sessionStorage.getItem('woc_done_' + k) !== null));
+  is(dk.every(Boolean), 'و«خلص» اتكتب في كاشه (٣ مفاتيح)', JSON.stringify(dk));
+  const before = snap();
+  await page.reload();
+  await page.waitForFunction(() => document.querySelector('#cntOffice') && document.querySelector('#cntOffice').textContent.trim() !== '—', null, { timeout: 15000 });
+  await page.waitForTimeout(1500);
+  const after = snap();
+  is(JSON.stringify(before) === JSON.stringify(after), '🔴 الفتح التاني خلال ١٠ دقايق = صفر نداء (طابور ولا «خلص»)', `${JSON.stringify(before)} → ${JSON.stringify(after)}`);
+  is((await txt(page, '#cntPrint')) === '4' && (await txt(page, '#donePrint .woc-done-today')) === '5', 'والأرقام معروضة من الكاش (٤ · ٥)');
+  is((await txt(page, '#agoPrint')).length > 0 && (await txt(page, '#stampPrint')) !== '—', 'والصف بيقول عمره وبختم وقت الكاش');
+  // كاش الطباعة أقدم من ١٠ دقايق → الطباعة بس هي اللي بتتجاب
+  await page.evaluate(() => { const c = JSON.parse(sessionStorage.getItem('woc_queue_print')); c.at = new Date(Date.now() - 11 * 60000).toISOString(); sessionStorage.setItem('woc_queue_print', JSON.stringify(c)); });
+  await page.reload();
+  await page.waitForFunction(() => document.querySelector('#cntOffice') && document.querySelector('#cntOffice').textContent.trim() !== '—', null, { timeout: 15000 });
+  await page.waitForTimeout(1500);
+  const after2 = snap();
+  is(after2.orders === after.orders + 1, 'كاش الطباعة ١١ دقيقة → اتجاب هو بس (+١ على /orders)', `${after.orders} → ${after2.orders}`);
+  const packCalls = calls.logs.filter(c => c.host.startsWith('orders-packing-checker-worker')).length;
+  is(packCalls === 1, 'والتغليف فضل من الكاش (صفر نداء جديد)', String(packCalls));
   await ctx.close();
 }
 

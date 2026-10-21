@@ -1176,7 +1176,7 @@
             <li>لسه <b>بلا أي أكشن على الأوردر ومفيش نداء للـ Worker</b> — بيفتحوا
                 صفحة وبس.</li>
             <li>الطابور بيترسم من <b>الكاش</b> أول ما الصفحة تفتح (مختوم بوقته)،
-                والجلب بيحصل في الخلفية لو الكاش عدّى ١٥ دقيقة. الشاشة الفاضية
+                والجلب بيحصل في الخلفية لو الكاش عدّى ١٠ دقايق. الشاشة الفاضية
                 أسوأ من شاشة قديمة مختومة بوقتها.</li>
             <li>صف الدخول في D1 بقى <code>warehouse_ops_center</code>، لكن
                 <b>فعل التغليف نفسه (<code>packed</code>) لسه تحت
@@ -1244,7 +1244,6 @@
             <li><code>§TOOL::readyQueue</code> (HTML) — الطابور تحت مربعات الإدخال · <code>§READY-JS</code> — الفلاتر · الترتيب · الجدول · تصدير XLSX</li>
             <li><code>§READY-JS::elapsed</code> (HTML) — <code>rdySincePrint</code> · <code>rdyOrderAgeText</code> · <code>rdyDayDiff</code> — الأعمدة المحسوبة بالوقت (بتوقيت القاهرة، بفرق الأيام التقويمية)</li>
             <li><code>§READY-JS::ticker</code> + <code>::freshness</code> (HTML) — نبضة كل ٣٠ ثانية بتحدّث الأرقام النسبية <b>في مكانها</b> بدون أي نداء شبكة</li>
-            <li><code>§READY-JS::autoRefresh</code> (HTML) — <code>rdyArmAutoRefresh</code> · <code>rdyAutoRefreshTick</code> · <code>rdyQueueVisible</code> — التحديث التلقائي كل ١٥ دقيقة (النداء الدوري الوحيد في الأداة)</li>
             <li><code>§READY-JS::courier</code> (HTML) — عرض المندوب بلونه (بوسطة أحمر · شو روم أخضر · غيرهم أزرق · فاضي رمادي)</li>
             <li><code>§READY-JS::courierChips</code> (HTML) — مربعا «بوسطة/مناديب» فوق الجدول (v2.6.2، بدّلوا مربعات المنطقة اللي اتشالت): عدّ من الطابور كله وفلترة بضغطة، <b>نفس حالة</b> فلتر «المندوب»</li>
             <li><code>§LABEL-MACHINE</code> (HTML · CSS + JS) — ماكينة الليبل المطبوع ٢×١ إنش: <code>bcBuildLabel</code> · <code>bcFitLabelText</code> · <code>bcRenderLabels</code> · <code>bcFirePrint</code>. 🔴 <b>نسخة مكرّرة عن قصد</b> — التوأم في <code>Order-SKU-Barcode-Printer.html</code>، والكتلتان <b>متطابقتان بايت ببايت</b>. الانحراف بيتمسك بـ<code>bash docs/label-twin-check.sh</code></li>
@@ -3795,38 +3794,9 @@ function rdyStopTicker() {
   if (rdyTickTimer) { clearInterval(rdyTickTimer); rdyTickTimer = null; }
 }
 
-// ─── §READY-JS::autoRefresh — تحديث تلقائي كل ١٥ دقيقة (بند ٨، v2.4.0) ───
-//
-// ⚠️ ده **النداء الدوري الوحيد** في الأداة، وقرار مقصود (أحمد 05-09-2026).
-//    `get_ready_orders` بيصفّح كل الأوردرات ويصنّف S2 لكل واحد، فأي فترة
-//    أقصر من كده تكلفتها حقيقية على الـ Worker وعلى حدود شوبيفاي.
-//
-// ⚠️ ومابيستعلمش والطابور مش معروض (شاشة تشييك مفتوحة أو تاب السجل) —
-//    بيعلّم `rdyDirty` بس، والجلب بيحصل أول ما الموظف يرجع. كده مافيش
-//    استعلام على قايمة محدش شايفها، ومافيش إعادة رسم تحت إيد موظف بيغلّف.
-const RDY_AUTO_REFRESH_MS = 15 * 60 * 1000;
-let rdyAutoTimer = null;
-
-function rdyQueueVisible() {
-  const panel = document.getElementById('panel-scan');
-  const entry = document.getElementById('subscreenEntry');
-  return !!(panel && panel.classList.contains('active') && entry && entry.style.display !== 'none');
-}
-
-// بتتنادى بعد الدخول وبعد **كل** جلب ناجح — فالعدّاد معناه «١٥ دقيقة من
-// آخر تحديث فعلي»، مش من لحظة الدخول.
-function rdyArmAutoRefresh() {
-  rdyStopAutoRefresh();
-  rdyAutoTimer = setInterval(rdyAutoRefreshTick, RDY_AUTO_REFRESH_MS);
-}
-function rdyStopAutoRefresh() {
-  if (rdyAutoTimer) { clearInterval(rdyAutoTimer); rdyAutoTimer = null; }
-}
-function rdyAutoRefreshTick() {
-  if (!currentEmployee) { rdyStopAutoRefresh(); return; }
-  if (!rdyQueueVisible()) { rdyDirty = true; return; }
-  rdyLoadOrders({ silent: true });   // صامت — مايسرقش الفوكس من السكانر
-}
+// ─── §READY-JS — (التحديث التلقائي اتشال) ───
+// ⛔ مفيش تحديث تلقائي (v1.43.0 · قرار أحمد 21-10-2026 — نفس سياسة `Delivery-COD-Operations-Center`). الجلب عند الفتح (لو الكاش
+//    أقدم من ١٠ دقايق) وعند «تحديث» وبعد تغليف (`rdyDirty` عند الرجوع للطابور). `rdyArmAutoRefresh` اتشالت.
 
 function rdyTick() {
   const now = new Date();
@@ -4045,7 +4015,6 @@ async function rdyLoadOrders({ silent = false } = {}) {
     cacheSet(WOC_CACHE_PACK, data);
     rdyDirty = false;                // ⚠️ بيتصفّر بعد **نجاح** الجلب بس
     rdyRenderFrom(data, new Date().toISOString());
-    rdyArmAutoRefresh();             // العدّاد بيبدأ من آخر تحديث ناجح
 
   } catch (err) {
     // ⚠️ فشل الطابور **مش** بيتحوّل لقايمة فاضية — «تعذّر الاستعلام» ≠ «مفيش شغل».
@@ -4092,7 +4061,6 @@ function rdyRebuildFilterItems() {
 function rdyResetAll() {
   rdyAllOrders = [];
   rdyStopTicker();
-  rdyStopAutoRefresh();
   rdyLastLoadedAt = null;
   rdyDirty = false;
   rdySetRefreshBadge(null);
@@ -4855,10 +4823,6 @@ window.addEventListener('DOMContentLoaded', () => {
   const cached = cacheGet(WOC_CACHE_PACK);
   if (cached) { rdyRenderFrom(cached.data, cached.at); }
   if (!cached || cached.ageMs > WOC_CACHE_TTL_MS) rdyLoadOrders();
-
-  // ⚠️ التسليح هنا كمان مش بس بعد الجلب الناجح — لو أول جلب فشل يفضل فيه
-  //    محاولة تلقائية بعد ١٥ دقيقة بدل ما الطابور يقف للأبد.
-  rdyArmAutoRefresh();
 
   setTimeout(() => focusEntryInput(), 100);   // المربع النشط — الافتراضي
 });
