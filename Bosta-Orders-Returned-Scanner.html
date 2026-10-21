@@ -48,7 +48,7 @@
 .main-tab-btn.active{background:var(--amber);border-color:var(--amber);box-shadow:0 2px 8px rgba(217,119,6,.25)}
 
 /* ⚠️ الـ chrome (الهيدر · التابات · الإعدادات · شِل المودالات · التوست ·
-   الـ changelog · الـ about · شاشة الدخول) اتشال — كله في `shared/shell.css`.
+   الـ changelog · الـ about · شاشة الدخول) اتشال — كله في `shared/core.css`.
    ⚠️ `.btn-*` و`.card` و`.container` و`.spinner` معرّفين هنا **بشكل مختلف**
       عن الـ shell عن قصد — قاعدة الأسبقية بتخلّي نسخة الصفحة تغلب. */
 .container { max-width: var(--container-max); margin: 0 auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; }
@@ -851,7 +851,7 @@ input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-colo
             <li><code>§TOOL-JS::pendingRejected</code> — المرفوض اللي لسه ما اتسجلش بالسبب ده (حارس التكرار في السجل)</li>
             <li><code>§UPDATE::logRejectedItems</code> (Worker) — إعادة تحقق من المرفوض وقت التسجيل + صف D1 بنوع <code>rejected</code></li>
             <li><code>§CONFIG::esc</code> — تهريب أي نص جاي من بوسطة/شوبيفاي قبل ما يتحط في innerHTML</li>
-            <li><code>shared/shell.js</code> — الهوية (<code>requireSession</code>) والهيدر الموحّد والإعدادات والتوست وحارس النسخة والفحص الذاتي 🩺، <b>نسخة واحدة مضمّنة للهب كله</b></li>
+            <li><code>shared/core.js</code> — الهوية (<code>requireSession</code>) والهيدر الموحّد والإعدادات والتوست وحارس النسخة والفحص الذاتي 🩺، <b>نسخة واحدة مضمّنة للهب كله</b></li>
             <li><code>§SHELL-JS::freezeOnScroll</code> — الهيدر وشريط التابات جوّه <code>.sticky-header-wrap</code> بعتبة <b>مقيسة</b> (<code>measureSticky</code>) + chip التاب</li>
             <li><code>§LOGIN</code> / <code>§AUTH-JS</code> — <b>اتشالوا</b>: الدخول بيحصل مرة واحدة في الشاشة الرئيسية للهب</li>
             <li><code>PAGE_DIAG_LABELS</code> — أسماء عربية لفحوصات <code>?action=diag</code> (الـ Worker ده بيرجّع <code>checks</code> ككائن بمفاتيح إنجليزية)</li>

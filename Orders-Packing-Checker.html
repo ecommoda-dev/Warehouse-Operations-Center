@@ -770,12 +770,12 @@
       **من غير أوردر أصلاً** (مدخل الـ SKU المباشر)، فالسطر ماكانش هيبقى
       موجود على كل ليبل حتى لو اتساب.
 
-   🔴 `--font-label` معرّف في `shared/shell.css` مع باقي التوكنز (كتلة
+   🔴 `--font-label` معرّف في `shared/core.css` مع باقي التوكنز (كتلة
       التوكنز مصدر واحد). وهو **استثناء موثّق من Standards #11** (خط واحد
       Noto Sans Arabic): الاستثناء متحدّد بالليبل **المطبوع** بس — مفيش أي
       عنصر على الشاشة بيستخدمه.
       ⚠️ **قيمته اتغيّرت في v1.15.0** من سيريف (Georgia) لـ grotesque
-         محايد (Arial/Helvetica). السبب والتفاصيل في `shared/shell.css`
+         محايد (Arial/Helvetica). السبب والتفاصيل في `shared/core.css`
          جنب التوكن نفسه — **مش هنا**، عشان مايبقاش فيه مصدرين.
    ══════════════════════════════════════════════════════════════ */
 #printArea{display:none}
@@ -814,7 +814,7 @@
      ⛔ ممنوع الرجوع لـ `visibility:hidden` هنا. */
   body>*{display:none !important}
   #printArea{display:block !important}
-  /* ⚠️ `shell.css` بيحط `padding:12px` على `body` — من غير التصفير ده
+  /* ⚠️ `core.css` بيحط `padding:12px` على `body` — من غير التصفير ده
      الليبل بينزاح داخل الورقة الصغيرة (٢×١ إنش مفيهاش هامش يستحمّل).
      🔴 و`min-height:100vh` عليه كمان، وده **مساهم تاني في الصفحات
      البيضا**: بيفرض على الـ body ارتفاع صفحة كاملة على الأقل حتى لو
@@ -1255,7 +1255,7 @@
           <ul>
             <li><code>TOOL_VERSION</code> — مصدر واحد لرقم نسخة الواجهة (الهيدر + الـ Changelog + شاشة الدخول)</li>
             <li><code>MIN_WORKER_VERSION</code> — أقل نسخة Worker الواجهة دي بتشتغل معاها (مالهاش علاقة بـ <code>TOOL_VERSION</code>)</li>
-            <li>روابط الـ Workers — ثوابت في <code>shared/shell.js</code> § CONFIG، مش في الإعدادات ولا في التخزين المحلي (Standards #28)</li>
+            <li>روابط الـ Workers — ثوابت في <code>shared/hub-config.js</code> § CONFIG، مش في الإعدادات ولا في التخزين المحلي (Standards #28)</li>
             <li><code>LS_SECRET = 'pack_checker_worker_secret'</code> — المفتاح الوحيد في localStorage</li>
             <li><code>currentEmployee</code> — <code>{ username, displayName }</code> في الذاكرة فقط</li>
             <li><code>lastEntryMode</code> — آخر مربع إدخال اتشتغل منه (<code>shopify</code> · <code>bosta</code> · <code>manual</code>). في الذاكرة فقط، وبيتصفّر عند الخروج.</li>
@@ -3284,7 +3284,7 @@ function rdyCourierClass(display) {
 //    بس: «بوسطة» (أحمر) لو المندوب بوسطة، و«مناديب» (أزرق) لأي حاجة
 //    تانية — **حتى لو مفيش مندوب مسجل خالص**. نفس تصنيف `rdyCourierClass`
 //    اللي بيلوّن عمود المندوب، بس مجمّع في مجموعتين بدل أربعة.
-// 🔴 **المجموعتان والقاعدة في `shared/shell.js` §COURIER-GROUP — مش هنا**
+// 🔴 **المجموعتان والقاعدة في `shared/gates.js` §COURIER-GROUP — مش هنا**
 //    (اتنقلوا في v1.13.0). الشاشة الرئيسية في الهب بقت بتعرض **نفس**
 //    المربعين على صف «جاهز للتغليف» من **نفس** رد `get_ready_orders`،
 //    فنسخة تانية من القاعدة هنا معناها الرئيسية تقول ٣٦ والصفحة تفتح على
@@ -4629,7 +4629,7 @@ const BC_PX_PER_IN      = 96;   // 96 CSS px ≈ إنش
 // §LABEL-JS — SKU فوق · باركود تحته. **سطران وبس** (v1.15.0)
 // ══════════════════════════════════════════════════════════════
 //
-// 2in × 1in، خط grotesque محايد للنص (`--font-label` في `shell.css`)،
+// 2in × 1in، خط grotesque محايد للنص (`--font-label` في `core.css`)،
 // وبدون أي نص تحت الباركود نفسه.
 //
 // 🔴 **سطر رقم الأوردر اتشال** (قرار أحمد 08-09-2026). كان اتضاف في

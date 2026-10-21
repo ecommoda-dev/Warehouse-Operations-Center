@@ -222,7 +222,7 @@ function esc(v) {
 }
 
 // حالة «جاري الاستعلام» الموحّدة (v1.36.0) — نفس الشكل والنص في كل الأدوات.
-// ⚠️ الـ CSS (`.eco-loadbox`) في `shared/shell.css` §LOADBOX. `msg` اختياري،
+// ⚠️ الـ CSS (`.eco-loadbox`) في `shared/core.css` §LOADBOX. `msg` اختياري،
 //    `small` للاستخدام جوّه خلية جدول.
 const ECO_LOADING_MSG = '⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...';
 function ecoLoadingHTML(msg, small) {
