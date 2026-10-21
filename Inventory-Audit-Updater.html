@@ -1188,20 +1188,9 @@ window.shellIsBusy = () => (typeof isUpdatingBulk !== 'undefined' && isUpdatingB
 // `Africa/Cairo`) — النسخ المحلية اتشالت (المرحلة ١ · توحيد الهبّين).
 function cairoDateStr(d = new Date()){ const p = cairoParts(d); return `${p.year}-${p.month}-${p.day}`; }
 
-// عمود التاريخ في XLSX — الاستثناء الوحيد: بدون إيموجي.
-// ⚠️ **محلّي عن قصد** (مش من الـ core): الجرد بيصدّر `DD/MM/YYYY` والخانة الفاضية `—`،
-//    ونسخة الـ core `DD-MM-YYYY` وفاضية. توحيد التصدير قرار منفصل.
-function formatDateForExport(iso){
-  if (!iso) return '—';
-  const p = cairoParts(new Date(iso));
-  return `${p.day}/${p.month}/${p.year}`;
-}
-function formatTimeForExport(iso){
-  if (!iso) return '—';
-  const p = cairoParts(new Date(iso));
-  let h = +p.hour; const ampm = h >= 12 ? 'مساءً' : 'صباحاً'; h = h % 12 || 12;
-  return `${String(h).padStart(2,'0')}:${p.minute} ${ampm}`;
-}
+// 🔴 `formatDateForExport` و`formatTimeForExport` من الـ core (`DD-MM-YYYY` · وفاضي = خانة فاضية) —
+//    النسخة المحلية (`DD/MM/YYYY` · `—`) اتشالت (قرار أحمد 22-10-2026، توحيد تصدير الجرد مع باقي الهب).
+//    ⛔ ممنوع ترجع نسخة محلية: تعريف في الصفحة بيغلب الـ core في صمت.
 
 // ─── §CONFIG::onSettingsSaved — بعد حفظ السر ───
 // الشِل بينادي الدالة دي بعد حفظ الإعدادات: حارس النسخة + فلتر الموظف في السجل
