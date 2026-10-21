@@ -980,3 +980,272 @@ function ecoSharedModals() {
     </div>
     <div class="toast-container" id="toastContainer"></div>`;
 }
+
+// ══════════════════════════════════════════════════════════════
+// §TABLE — فلاتر رأس العمود + عناوين ثابتة + سحب عرض الأعمدة (Standards #47 · #49 · #50 · #51)
+// ══════════════════════════════════════════════════════════════
+// 🔴 **مكوّن بيشتغل على الـ DOM الجاهز — مش جوّه رسم كل صفحة.** الصفحة بترسم جدولها زي ما هي، والمكوّن
+//    بيحقن قمع ▽ ومقبض السحب في كل `<th>` وبيخفي/يظهر `<tr>` حسب قيمة الخلية. صفحة بتعيد رسم `<tbody>`
+//    (جلب · ترتيب · تصفيح) بيتعاد عليها الفلتر لوحده (MutationObserver).
+// 🔴 **التفعيل صريح:** الصفحة بتنادي `ecoTablesAuto()` مرة واحدة. صفحات DCO (فيها مكوّنها الخاص في
+//    الجداول المولّدة) **مابتناديهاش** — غير كده الجدول هيتحقن مرتين.
+// ⚠️ **الفلتر على الصفوف المعروضة بس.** جدول بتصفيح من السيرفر (السجلات) بيفلتر الصفحة الحالية — البار فوق
+//    الجدول بيقول «N من M» عشان الموظف مايفتكرش إن ده كل السجل.
+// ⚠️ **العرض مابيتغيّرش لحد ما الموظف يسحب أو يدوس دبل كليك** — أول سحب بيجمّد العروض على قياسها الحالي.
+//    الجدول اللي ماحدّش لمسه بيفضل بتخطيطه الأصلي بالحرف.
+// ⚠️ **`localStorage` للعروض تفضيل شاشة مش بيانات** — مايتمسحش مع الخروج، ومفتاحه واحد لكل صفحة.
+// ⚠️ صف فيه `colspan` (تفاصيل · «مفيش نتيجة» · عنوان مجموعة) مابيتفلترش بنفسه — بيتبع الصف اللي قبله.
+const ECO_TBL_LS = 'eco_col_widths_v1_' + ((typeof location !== 'undefined' && location.pathname.split('/').pop()) || 'page');
+const ECO_DOM = typeof window !== 'undefined' && typeof window.addEventListener === 'function';   // rules-check بيحمّل الملف في Node
+const ECO_TBL_MIN = 64, ECO_TBL_MAX = 700;
+const ECO_TBL_SKIP = /^(إجراء|الإجراء|تحديد|اختيار|حذف|✓|#)?$/;
+const ecoTblFilters = {};          // sig → { colKey: { sel:Set } | { q:string } }
+let ecoTblPop = null, ecoTblPopCtx = null, ecoTblDrag = null, ecoTblBadge = null, ecoTblScanT = null;
+
+function ecoTblLabel(th) {
+  const c = th.cloneNode(true);
+  c.querySelectorAll('.eco-hf,.eco-rz,svg,.eco-tbl-skip').forEach(n => n.remove());
+  return (c.textContent || '').replace(/[▲▼↑↓⇅⇵↕▴▾]/g, '').replace(/\s+/g, ' ').trim();
+}
+function ecoTblHeads(t) { return [...t.querySelectorAll(':scope > thead > tr:last-child > th')]; }
+function ecoTblSig(t) { return ecoTblHeads(t).map(ecoTblLabel).join('|'); }
+function ecoTblCellText(td) {
+  if (!td) return '';
+  if (td.dataset && td.dataset.ecoV !== undefined) return td.dataset.ecoV;
+  return (td.innerText || td.textContent || '').replace(/\s+/g, ' ').trim();
+}
+function ecoTblRows(t) { return t.tBodies[0] ? [...t.tBodies[0].children].filter(r => r.tagName === 'TR') : []; }
+function ecoTblIsData(tr, n) { return tr.children.length === n && !tr.querySelector('td[colspan],th[colspan]'); }
+function ecoTblEligible(t) {
+  if (t.dataset.ecoNotable !== undefined || t.classList.contains('eco-tbl-on')) return false;
+  if (t.closest('.eco-overlay,.eco-modal,#printArea,[data-eco-notable]')) return false;
+  return ecoTblHeads(t).length >= 2 && !!t.tBodies[0];
+}
+function ecoTblState(t) { const s = ecoTblSig(t); return ecoTblFilters[s] || (ecoTblFilters[s] = {}); }
+function ecoTblFilterable(th, i, t) {
+  if (th.dataset.ecoNofilter !== undefined || th.querySelector('input')) return false;
+  const l = ecoTblLabel(th);
+  return !ECO_TBL_SKIP.test(l);
+}
+
+// ── التفعيل ──
+function ecoTblEnhance(t) {
+  const wrap = document.createElement('div'); wrap.className = 'eco-tbl-wrap';
+  const bar = document.createElement('div'); bar.className = 'eco-tbl-bar'; bar.hidden = true;
+  t.parentNode.insertBefore(bar, t); t.parentNode.insertBefore(wrap, t); wrap.appendChild(t);
+  t.classList.add('eco-tbl-on');
+  t._eco = { wrap, bar, frozen: false, w: {} };
+  ecoTblInject(t);
+  const mo = new MutationObserver(ms => {
+    let head = false, body = false;
+    ms.forEach(m => { const tg = m.target; if (tg.closest && tg.closest('thead')) head = true; else if (tg === t.tBodies[0] || (tg.closest && tg.closest('tbody'))) body = true; else if (tg === t) head = true; });
+    clearTimeout(t._eco.T);
+    t._eco.T = setTimeout(() => { if (head) ecoTblInject(t); ecoTblApply(t); }, 40);
+  });
+  mo.observe(t, { childList: true, subtree: true });
+  t._eco.mo = mo;
+  ecoTblApply(t);
+}
+function ecoTblInject(t) {
+  const heads = ecoTblHeads(t), keys = heads.map((th, i) => ecoTblLabel(th) || ('c' + i));
+  heads.forEach((th, i) => {
+    if (ecoTblFilterable(th, i, t) && !th.querySelector(':scope > .eco-hf')) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'eco-hf'; b.setAttribute('aria-label', 'فلتر العمود');
+      b.innerHTML = '<svg viewBox="0 0 16 16" width="11" height="11" aria-hidden="true"><path d="M1.5 2.5h13L9.5 8.7V13l-3 1.5V8.7z" fill="currentColor"/></svg>';
+      b.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); ecoTblOpenPop(t, i, b); });
+      th.appendChild(b);
+    }
+    if (!th.querySelector(':scope > .eco-rz')) {
+      const h = document.createElement('span'); h.className = 'eco-rz'; h.setAttribute('aria-hidden', 'true'); th.appendChild(h);
+    }
+  });
+  // مفتاح العمود على الـ th نفسه (للعروض المحفوظة)
+  heads.forEach((th, i) => { th.dataset.ecoK = keys[i]; });
+  // الأعمدة اتغيّرت (تبديل وضع) → العروض القديمة ملغية والتخطيط يرجع تلقائي
+  const sig = keys.join('|');
+  if (t._eco.sig && t._eco.sig !== sig) ecoTblUnfreeze(t);
+  t._eco.sig = sig;
+  if (!t._eco.loaded) { t._eco.loaded = true; ecoTblLoadW(t); }
+  ecoTblUpdateIcons(t);
+}
+
+// ── الفلترة ──
+function ecoTblActive(f) { return f && ((f.sel && f.sel.size) || (f.q && f.q.trim())); }
+function ecoTblApply(t) {
+  const st = ecoTblState(t), heads = ecoTblHeads(t), n = heads.length;
+  const idx = {}; heads.forEach((th, i) => idx[th.dataset.ecoK] = i);
+  const act = Object.keys(st).filter(k => ecoTblActive(st[k]) && idx[k] !== undefined);
+  const rows = ecoTblRows(t); let total = 0, shown = 0, prevVisible = true;
+  rows.forEach(tr => {
+    if (!ecoTblIsData(tr, n)) { tr.classList.toggle('eco-tf-hide', act.length > 0 && !prevVisible); return; }
+    total++;
+    let ok = true;
+    for (const k of act) {
+      const f = st[k], v = ecoTblCellText(tr.children[idx[k]]);
+      if (f.sel && f.sel.size) { if (!f.sel.has(v)) { ok = false; break; } }
+      else if (f.q && f.q.trim() && !v.toLowerCase().includes(f.q.trim().toLowerCase())) { ok = false; break; }
+    }
+    tr.classList.toggle('eco-tf-hide', !ok); prevVisible = ok; if (ok) shown++;
+  });
+  const bar = t._eco.bar;
+  if (act.length) {
+    bar.hidden = false;
+    bar.innerHTML = `<span>فلتر مفعّل — عرض <b>${shown}</b> من <b>${total}</b> (الصفوف المعروضة في الصفحة)</span><button type="button" class="eco-tbl-clear">✕ مسح كل الفلاتر</button>`;
+    bar.querySelector('.eco-tbl-clear').onclick = () => { ecoTblClosePop(); Object.keys(st).forEach(k => delete st[k]); ecoTblApply(t); };
+  } else { bar.hidden = true; bar.innerHTML = ''; }
+  ecoTblUpdateIcons(t);
+}
+function ecoTblUpdateIcons(t) {
+  const st = ecoTblState(t);
+  ecoTblHeads(t).forEach(th => { const b = th.querySelector(':scope > .eco-hf'); if (b) b.classList.toggle('on', !!ecoTblActive(st[th.dataset.ecoK])); });
+}
+
+// ── القايمة العائمة ──
+function ecoTblClosePop() { if (ecoTblPop) { ecoTblPop.remove(); ecoTblPop = null; ecoTblPopCtx = null; } }
+function ecoTblValues(t, i) {
+  const n = ecoTblHeads(t).length, m = new Map();
+  ecoTblRows(t).forEach(tr => { if (!ecoTblIsData(tr, n)) return; const v = ecoTblCellText(tr.children[i]); m.set(v, (m.get(v) || 0) + 1); });
+  return m;
+}
+function ecoTblOpenPop(t, i, anchor) {
+  if (ecoTblPopCtx && ecoTblPopCtx.anchor === anchor) { ecoTblClosePop(); return; }
+  ecoTblClosePop();
+  const th = ecoTblHeads(t)[i], key = th.dataset.ecoK, st = ecoTblState(t), vals = ecoTblValues(t, i);
+  const longest = Math.max(0, ...[...vals.keys()].map(v => v.length));
+  const mode = (vals.size <= 30 && longest <= 40) ? 'list' : 'text';
+  ecoTblPop = document.createElement('div'); ecoTblPop.className = 'eco-hpop'; document.body.appendChild(ecoTblPop);
+  ecoTblPopCtx = { t, i, key, anchor, mode };
+  const title = esc(ecoTblLabel(th));
+  if (mode === 'text') {
+    ecoTblPop.innerHTML = `<div class="eco-hpop-hd">${title}</div><div class="eco-hpop-body"><input type="text" class="eco-hpop-inp" aria-label="بحث في ${title}" autocomplete="off" value="${esc((st[key] && st[key].q) || '')}"><button type="button" class="eco-hpop-clr">✕ مسح الاختيار</button></div>`;
+    const inp = ecoTblPop.querySelector('input');
+    inp.addEventListener('input', () => { clearTimeout(inp._t); inp._t = setTimeout(() => { if (inp.value.trim()) st[key] = { q: inp.value }; else delete st[key]; ecoTblApply(t); }, 150); });
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); ecoTblClosePop(); } });
+    ecoTblPop.querySelector('.eco-hpop-clr').onclick = () => { delete st[key]; inp.value = ''; ecoTblApply(t); };
+    setTimeout(() => inp.focus(), 0);
+  } else {
+    const items = [...vals.entries()].sort((a, b) => a[0].localeCompare(b[0], 'ar'));
+    const draw = () => {
+      const sel = (st[key] && st[key].sel) || new Set();
+      ecoTblPop.innerHTML = `<div class="eco-hpop-hd">${title}</div><div class="eco-hpop-top"><button type="button" class="eco-hpop-clr">✕ مسح الاختيار</button><button type="button" class="eco-hpop-all">تحديد الكل</button></div><div class="eco-hpop-list">` +
+        items.map(([v, c], j) => `<label class="eco-hpop-item${sel.has(v) ? ' on' : ''}"><input type="checkbox" data-j="${j}" ${sel.has(v) ? 'checked' : ''}><span>${v === '' ? '— فاضي —' : esc(v)}</span><em>${c}</em></label>`).join('') + `</div>`;
+      ecoTblPop.querySelector('.eco-hpop-clr').onclick = () => { delete st[key]; ecoTblApply(t); draw(); ecoTblPlace(); };
+      ecoTblPop.querySelector('.eco-hpop-all').onclick = () => { st[key] = { sel: new Set(items.map(x => x[0])) }; ecoTblApply(t); draw(); ecoTblPlace(); };
+      ecoTblPop.querySelectorAll('input[data-j]').forEach(cb => cb.addEventListener('change', () => {
+        const cur = (st[key] && st[key].sel) || new Set(), v = items[+cb.dataset.j][0];
+        if (cb.checked) cur.add(v); else cur.delete(v);
+        if (cur.size) st[key] = { sel: cur }; else delete st[key];
+        ecoTblApply(t); draw(); ecoTblPlace();
+      }));
+    };
+    draw();
+  }
+  ecoTblPlace();
+}
+function ecoTblPlace() {
+  if (!ecoTblPop || !ecoTblPopCtx) return;
+  const a = ecoTblPopCtx.anchor;
+  if (!document.contains(a)) { ecoTblClosePop(); return; }
+  const r = a.getBoundingClientRect(), pw = ecoTblPop.offsetWidth, ph = ecoTblPop.offsetHeight;
+  let left = r.left + r.width / 2 - pw / 2; left = Math.max(8, Math.min(left, innerWidth - pw - 8));
+  let top = r.bottom + 6; if (top + ph > innerHeight - 8) top = Math.max(8, r.top - ph - 6);
+  ecoTblPop.style.left = left + 'px'; ecoTblPop.style.top = top + 'px';
+}
+ECO_DOM && document.addEventListener('mousedown', e => {
+  // 🔴 حارس `document.contains` — القايمة بتتعاد رسمها بعد كل اختيار، والعنصر المضغوط بيتشال من الـ DOM قبل الحدث
+  if (!ecoTblPop) return;
+  if (!document.contains(e.target)) return;
+  if (ecoTblPop.contains(e.target) || (e.target.closest && e.target.closest('.eco-hf'))) return;
+  ecoTblClosePop();
+}, true);
+ECO_DOM && document.addEventListener('keydown', e => { if (e.key === 'Escape') ecoTblClosePop(); });
+ECO_DOM && document.addEventListener('scroll', ecoTblPlace, true);
+ECO_DOM && window.addEventListener('resize', ecoTblPlace);
+
+// ── العروض ──
+function ecoTblCols(t) {
+  let cg = t.querySelector(':scope > colgroup.eco-cg');
+  const n = ecoTblHeads(t).length;
+  if (!cg || cg.children.length !== n) {
+    if (cg) cg.remove();
+    cg = document.createElement('colgroup'); cg.className = 'eco-cg';
+    cg.innerHTML = '<col>'.repeat(n); t.insertBefore(cg, t.firstChild);
+  }
+  return [...cg.children];
+}
+function ecoTblLoadW(t) {
+  try {
+    const all = JSON.parse(localStorage.getItem(ECO_TBL_LS) || '{}'), s = all[t._eco.sig];
+    const keys = ecoTblHeads(t).map(th => th.dataset.ecoK);
+    if (s && keys.every(k => s[k] >= ECO_TBL_MIN)) { t._eco.w = s; t._eco.frozen = true; t._eco.custom = true; ecoTblApplyW(t); }
+  } catch (e) {}
+}
+function ecoTblSaveW(t) {
+  try { const all = JSON.parse(localStorage.getItem(ECO_TBL_LS) || '{}'); all[t._eco.sig] = t._eco.w; localStorage.setItem(ECO_TBL_LS, JSON.stringify(all)); } catch (e) {}
+}
+function ecoTblApplyW(t) {
+  const keys = ecoTblHeads(t).map(th => th.dataset.ecoK), cols = ecoTblCols(t), e = t._eco;
+  let sum = 0; keys.forEach(k => sum += e.w[k] || 0);
+  const slack = Math.max(0, e.wrap.clientWidth - sum); let tot = 0;
+  cols.forEach((c, i) => { const w = (e.w[keys[i]] || ECO_TBL_MIN) + (i === cols.length - 1 ? slack : 0); c.style.width = w + 'px'; tot += w; });
+  t.style.width = tot + 'px'; t.classList.add('eco-fixed');
+}
+function ecoTblFreeze(t) {
+  if (t._eco.frozen) return;
+  const heads = ecoTblHeads(t); if (!heads[0] || !heads[0].getBoundingClientRect().width) return;
+  heads.forEach(th => { t._eco.w[th.dataset.ecoK] = Math.max(ECO_TBL_MIN, Math.floor(th.getBoundingClientRect().width)); });
+  t._eco.frozen = true; ecoTblApplyW(t);
+}
+function ecoTblUnfreeze(t) {
+  const e = t._eco; e.frozen = false; e.custom = false; e.w = {};
+  t.classList.remove('eco-fixed'); t.style.width = '';
+  const cg = t.querySelector(':scope > colgroup.eco-cg'); if (cg) cg.remove();
+  e.loaded = false;
+}
+function ecoTblShowBadge(w) { if (!ecoTblBadge) { ecoTblBadge = document.createElement('div'); ecoTblBadge.className = 'eco-w-badge'; document.body.appendChild(ecoTblBadge); } ecoTblBadge.textContent = w + ' px'; }
+ECO_DOM && document.addEventListener('pointerdown', e => {
+  const h = e.target.closest && e.target.closest('.eco-rz'); if (!h || e.button) return;
+  const th = h.closest('th'), t = th.closest('table.eco-tbl-on'); if (!t) return;
+  e.preventDefault(); e.stopPropagation(); ecoTblClosePop();
+  ecoTblFreeze(t); if (!t._eco.frozen) return;
+  const k = th.dataset.ecoK, heads = ecoTblHeads(t), last = heads[heads.length - 1] === th;
+  if (last) { let s = 0; heads.forEach(x => s += t._eco.w[x.dataset.ecoK] || 0); t._eco.w[k] += Math.max(0, t._eco.wrap.clientWidth - s); }
+  ecoTblDrag = { t, k, x: e.clientX, w: t._eco.w[k], sign: getComputedStyle(t).direction === 'rtl' ? -1 : 1, h };
+  try { h.setPointerCapture(e.pointerId); } catch (_) {}
+  h.classList.add('active'); document.body.classList.add('eco-col-resizing'); ecoTblShowBadge(ecoTblDrag.w);
+});
+ECO_DOM && document.addEventListener('pointermove', e => {
+  if (!ecoTblDrag) return;
+  const d = ecoTblDrag; d.t._eco.w[d.k] = Math.max(ECO_TBL_MIN, Math.min(ECO_TBL_MAX, Math.round(d.w + d.sign * (e.clientX - d.x))));
+  ecoTblApplyW(d.t); ecoTblShowBadge(d.t._eco.w[d.k]);
+});
+function ecoTblEnd() {
+  if (!ecoTblDrag) return; const d = ecoTblDrag; ecoTblDrag = null;
+  d.h.classList.remove('active'); document.body.classList.remove('eco-col-resizing');
+  if (ecoTblBadge) { ecoTblBadge.remove(); ecoTblBadge = null; }
+  d.t._eco.custom = true; ecoTblSaveW(d.t);
+}
+ECO_DOM && document.addEventListener('pointerup', ecoTblEnd); ECO_DOM && document.addEventListener('pointercancel', ecoTblEnd);
+// ⚠️ المقبض جوّه `<th>` اللي عليه `onclick` للترتيب — الضغطة بعد السحب لازم ما توصلش للترتيب
+ECO_DOM && document.addEventListener('click', e => { if (e.target.closest && e.target.closest('.eco-rz')) { e.stopPropagation(); e.preventDefault(); } }, true);
+// دبل كليك = ضبط على أطول محتوى. 🔴 القياس بـ`Range` على المحتوى مش على الخلية (قياس الخلية بيدّي عرض العمود الحالي)
+ECO_DOM && document.addEventListener('dblclick', e => {
+  const h = e.target.closest && e.target.closest('.eco-rz'); if (!h) return;
+  const th = h.closest('th'), t = th.closest('table.eco-tbl-on'); if (!t) return;
+  ecoTblFreeze(t); if (!t._eco.frozen) return;
+  const i = ecoTblHeads(t).indexOf(th), k = th.dataset.ecoK;
+  t.classList.add('eco-measure');
+  const hr = document.createRange(); hr.setStart(th, 0); hr.setEndBefore(th.querySelector('.eco-hf') || h);
+  let w = hr.getBoundingClientRect().width + 36;
+  ecoTblRows(t).forEach(tr => { const td = tr.children[i]; if (!td || tr.classList.contains('eco-tf-hide') || !ecoTblIsData(tr, ecoTblHeads(t).length)) return; const r = document.createRange(); r.selectNodeContents(td); w = Math.max(w, r.getBoundingClientRect().width + 16); });
+  t.classList.remove('eco-measure');
+  t._eco.w[k] = Math.max(ECO_TBL_MIN, Math.min(ECO_TBL_MAX, Math.ceil(w))); t._eco.custom = true; ecoTblApplyW(t); ecoTblSaveW(t);
+});
+ECO_DOM && window.addEventListener('resize', () => { document.querySelectorAll('table.eco-tbl-on.eco-fixed').forEach(t => ecoTblApplyW(t)); });
+
+// ── التشغيل ──
+function ecoTblScan() { document.querySelectorAll('table').forEach(t => { if (ecoTblEligible(t)) ecoTblEnhance(t); }); }
+function ecoTablesAuto() {
+  ecoTblScan();
+  new MutationObserver(() => { clearTimeout(ecoTblScanT); ecoTblScanT = setTimeout(ecoTblScan, 80); }).observe(document.body, { childList: true, subtree: true });
+}
