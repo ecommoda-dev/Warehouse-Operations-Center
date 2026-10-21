@@ -1,39 +1,58 @@
 // ══════════════════════════════════════════════════════════════
+// §HUB-CONFIG-BEGIN — السطور الوحيدة اللي بتفرّق الـ Worker ده عن توأمه
+// ══════════════════════════════════════════════════════════════
+// 🔴 كل اللي تحت §HUB-CONFIG-END متطابق بالبايت في الريبوهين
+//    (`docs/auth-worker-twin-check.sh`). أي حاجة تخص هب واحد بس تتكتب هنا.
+// ⚠️ `TOOL_NAME` متحدّد هنا مش جاي من العميل (الواجهة مابتبعتش `appId`) —
+//    ولازم يتسجّل في `ecommoda-constants` §7 **قبل أول `writeLog`** (Rule 7).
+// ⚠️ `WORKER_VERSION` رقم واحد للنسختين: الكود (خارج الكتلة دي) متطابق، فنسخة
+//    واحدة. أي تعديل كود = ترفيعه في الاتنين.
+const HUB_CONFIG = {
+  WORKER_NAME:    'warehouse-operations-center-worker',
+  TOOL_NAME:      'warehouse_ops_center',      // قيمة `tool` في D1 — دخول/خروج بس
+  SECRET_GROUP:   'warehouse_ops',     // مجموعة سر WORKER_SECRET
+  PEERS_NOTE:     'باقي الثمانية Workers',     // نص بصمة السر في `diag`
+  WORKER_VERSION: '1.0.1',
+};
+// §HUB-CONFIG-END
+// ══════════════════════════════════════════════════════════════
 
+// ══════════════════════════════════════════════════════════════
 // §HEADER
-// Worker: warehouse-operations-center-worker — EcomModa
-// Tool:   مركز عمليات المخزن — **الدخول والخروج وبس**
+// Worker الدخول لمركز العمليات (انظر `HUB_CONFIG` فوق) — EcomModa
+// Tool:   **الدخول والخروج وبس**
 //
-// skills: worker-builder v3.7.1 · constants v1.10.0 · html-builder v6.6.0 — 24-09-2026
+// skills: worker-builder v3.7.1 · constants v1.10.0 · html-builder v6.6.0
+//
+// 🔴 **الملف ده نسختين متطابقتين خارج كتلة `HUB_CONFIG`** — واحدة في كل ريبو
+//    (`Warehouse-Operations-Center` · `Delivery-COD-Operations-Center`)،
+//    ومفيش ريبو «أصل». والـ Worker **منشور مرتين** (مش Worker واحد بيخدم
+//    الهبّين): كل هب ليه Worker وسر مجموعة وصف `tool` في D1 مستقلين.
+//    ⛔ **أي تعديل هنا يتعمل في الاتنين في نفس التمريرة.** الفحص:
+//    `bash docs/auth-worker-twin-check.sh` — بيقارن ويقول الفرق بس، **مابينسخش
+//    ولا بيعدّل**. أحمد هو اللي بيقرر أنهي نسخة الصح.
 //
 // 🔴 **الـ Worker ده جزء من الهب نفسه، مش أداة تانية.** الهب واجهة + Worker
 //    دخول = **الشكل القياسي** في الستاك (قرار ٨ في
 //    `ecommoda-tool-migration-playbook`: أداة = Worker واحد + HTML واحد +
-//    ريبو واحد) — نفس الشكل اللي `Delivery-COD-Operations-Center` بيه، ونفس
-//    القرار اللي نقل الهب ده من «الدخول عبر Worker التغليف» لـWorker بتاعه.
+//    ريبو واحد).
 //
-// ⛔ **وممنوع يتضاف له أي endpoint تشغيلي.** لا طابور ولا سكان ولا تغليف.
-//    كل أداة تشغيلية في الهب على Worker بتاعها في ريبوها (التغليف · الطباعة ·
-//    حذف منتج · باركود SKU · سكانرا بوسطة · تسليمات المكتب · استلام
-//    المرتجعات). الاسم بيقول «مركز عمليات المخزن» فالإغراء موجود — والقاعدة
-//    دي هي اللي بتمنعه: Worker واحد بيخدم أدوات كتير = مصدرين للحقيقة.
+// ⛔ **وممنوع يتضاف له أي endpoint تشغيلي.** لا طابور ولا سكان ولا تغليف ولا
+//    تحديث حالة. أي أداة تشغيلية في الهب على Worker بتاعها في ريبوها. الاسم
+//    بيقول «مركز العمليات» فالإغراء موجود — والقاعدة دي هي اللي بتمنعه:
+//    Worker واحد بيخدم أدوات كتير = مصدرين للحقيقة.
 //
-// 🔴 **بيكتب صفّين بس في D1:** `login` و`logout` تحت
-//    `tool = 'warehouse_ops_center'`. صفر كتابة على شوبيفاي، وصفر أي
-//    قيمة `type` تانية.
+// 🔴 **بيكتب صفّين بس في D1:** `login` و`logout` تحت `tool = TOOL_NAME`.
+//    صفر كتابة على شوبيفاي، وصفر أي قيمة `type` تانية.
 //
 // 🔴 **ومفيش `CLIENT_ID`/`CLIENT_SECRET` عليه بقرار** — مالوش أي نداء
 //    لشوبيفاي. يعني سطح الـ PIN ومفاتيح المتجر **في Workers مختلفة**:
 //    اللي بيقرا PIN مايقدرش يلمس المتجر، واللي بيقرا المتجر مايقدرش يقرا PIN.
-//
-// 🔴 **قبل ده كان الدخول بيحصل عبر `orders-packing-checker-worker`** (عن
-//    طريق `appId: 'warehouse_ops_center'` في `verify_employee`/`log_logout`).
-//    السبب اللي غيّر ده: أكبر Worker شغل في المخزن كان بيتحكم في أهم نقطة
-//    في الهب (الدخول)، وأي مشكلة أو Promote ناقص فيه كان بيقفل باب الدخول
-//    كله. الدخول دلوقتي مستقل تمامًا، وWorker التغليف رجع لشغله بس.
 // ══════════════════════════════════════════════════════════════
-const TOOL_NAME      = 'warehouse_ops_center';
-const WORKER_VERSION = '1.0.0';
+const TOOL_NAME      = HUB_CONFIG.TOOL_NAME;
+const SECRET_GROUP   = HUB_CONFIG.SECRET_GROUP;
+const PEERS_NOTE     = HUB_CONFIG.PEERS_NOTE;
+const WORKER_VERSION = HUB_CONFIG.WORKER_VERSION;
 
 // ─── §CONSTANTS::authApps ───
 // 🔴 **قايمة بيضاء مقفولة، مش قبول لأي نص.** `appId` جاي من العميل، وجدول
@@ -86,7 +105,7 @@ function assertEnv(env) {
 
 // ─── §HELPERS::secretFingerprint — بصمة قصيرة لسر المجموعة ───
 // (`ecommoda-constants` → `references/secret-groups.md`)
-// الطول لوحده **مش كافي** لإثبات إن أعضاء مجموعة `warehouse_ops` شايلين
+// الطول لوحده **مش كافي** لإثبات إن أعضاء مجموعة `SECRET_GROUP` (مفتاحها في `HUB_CONFIG`) شايلين
 // نفس القيمة — سرّين مختلفين بنفس الطول شكلهم واحد. البصمة بتكشف الحالتين
 // اللي بيوقّعوا الناس: ① عضو لسه على السر القديم ② السر اتضاف والـ Promote
 // ما اتعملش. ⛔ ٨ خانات hex من SHA-256 — **مش** قابلة لاسترجاع القيمة.
@@ -186,7 +205,7 @@ async function registerPin(db, username, pin) {
 // الـ commit. `resolveAuthTool()` هنا دايمًا بترجع TOOL_NAME (AUTH_APPS
 // فيها اسم واحد بس)، فمفيش قيمة tool تانية ممكن تتكتب من الكود ده فعليًا.
 const LOG_REGISTRY = {
-  warehouse_ops_center: new Set(['login', 'logout']),
+  [TOOL_NAME]: new Set(['login', 'logout']),
 };
 
 const isRegisteredLogValue = (tool, type) => !!LOG_REGISTRY[tool]?.has(type);
@@ -282,7 +301,7 @@ async function handleDiag(env, request) {
   // ② بصمة سر المجموعة — الطول مش كافي لإثبات التوحيد
   const fp = await secretFingerprint(s);
   push(!!fp, 'بصمة WORKER_SECRET', fp
-    ? `بصمة ${fp} · مجموعة warehouse_ops — لازم تطابق باقي الثمانية Workers`
+    ? `بصمة ${fp} · مجموعة ${SECRET_GROUP} — لازم تطابق ${PEERS_NOTE}`
     : 'مفيش سر — البصمة مستحيلة',
     'لو البصمة مختلفة عن باقي الأعضاء، المجموعة مكسورة والهب هيرجّع 401 من العضو المختلف بس');
 
@@ -369,7 +388,11 @@ export default {
       // ── register_pin — POST (PIN in body — GET is FORBIDDEN) ──────
       // ⚠️ **إنشاء PIN لأول مرة بس** — مش تغيير ولا إعادة ضبط (دول في
       //    الأدمن بانل). والـ PIN مشترك على الستاك كله، فاللي بيتعمل من هنا
-      //    هو نفسه اللي بيدخل بيه محطة الشحن والتحصيل والأدوات المستقلة.
+      //    هو نفسه اللي بيدخل بيه الهب التاني والأدوات المستقلة.
+      // 🔴 **متساب بقرار أحمد (15-09-2026)** — شيله كان هيمنع الموظف الجديد
+      //    من الدخول من المحطة دي خالص، والخطر اللي بيقفله (إنشاء PIN لاسم
+      //    لسه مالوش واحد) **موجود بالظبط في الهب التاني**، فشيله من هنا
+      //    بيقفل باب من اتنين. مكان الحماية الحقيقي هو الأدمن بانل.
       if (action === 'register_pin') {
         if (request.method !== 'POST') return json({ error: 'POST required' }, 405, request);
         const { username, pin } = await request.json().catch(() => ({}));
@@ -436,7 +459,7 @@ export default {
 
       // 🔴 **مفيش `get_logs*` — والغياب مقصود.** الهب مالوش تاب سجل دخول،
       //    والأداة بتكتب صفّي دخول/خروج بس. endpoint بلا مستهلك = سطح بلا
-      //    لازمة (نفس قرار الطابورين وأداتَي العهدة). لو اتطلب عرض سجل
+      //    لازمة (نفس قرار باقي Workers الطوابير والعهدة). لو اتطلب عرض سجل
       //    الدخول يومًا، مكانه شاشة الإحصائيات أو الأدمن بانل مش هنا.
       return json({ error: `Unknown action: ${action}` }, 404, request);
     } catch (e) {
