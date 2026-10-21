@@ -178,7 +178,7 @@ const WOC_WORKERS = {
   audit:    { url: 'https://inventory-audit-updater-worker.ecommoda-dev.workers.dev', min: '6.2.1', label: 'جرد المخزون' },
 };
 
-const TOOL_VERSION = 'v1.39.0';                      // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.40.0';                     // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const SHOP_HANDLE  = '6c7e1a-53';
 // ⚠️ `WOC_APP_ID` اتشالت في v1.32.0 — Worker الدخول المستقل (`WOC_WORKERS.auth`)
@@ -435,6 +435,15 @@ function cairoDayStr(dateLike) {
   const iso = dateLike instanceof Date ? dateLike.toISOString() : dateLike;
   const d = toCairo(iso), pad = n => String(n).padStart(2, '0');
   return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+}
+
+// إضافة أيام لـ`YYYY-MM-DD` بحساب تاريخ مجرّد (UTC) — مش `Date.now() - 24h`، لأن
+// الأخيرة بتنزلق ساعة حوالين تغيير التوقيت وبتدّي «امبارح» غلط. بتتستخدم في
+// الشاشة الرئيسية (§HOME-DONE) و`stats.html` — نسخة واحدة (درس R1).
+function wocAddDays(dayStr, n) {
+  const [y, m, d] = dayStr.split('-').map(Number);
+  const x = new Date(Date.UTC(y, m - 1, d) + n * 86400000), pad = v => String(v).padStart(2, '0');
+  return `${x.getUTCFullYear()}-${pad(x.getUTCMonth() + 1)}-${pad(x.getUTCDate())}`;
 }
 
 // فرق **الأيام التقويمية** بتوقيت القاهرة — مش (الآن − الوقت)/86400000.

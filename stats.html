@@ -377,12 +377,7 @@ const ST_RANGES = {
 //
 //    الحل بلا أي تعديل Worker: اطلب **يوم UTC زيادة** وفلتر هنا بـ
 //    `cairoDayStr` اللي في الـ shell.
-function stAddDays(dayStr, n) {
-  const [y, m, d] = dayStr.split('-').map(Number);
-  const x = new Date(Date.UTC(y, m - 1, d) + n * 86400000);
-  const pad = v => String(v).padStart(2, '0');
-  return `${x.getUTCFullYear()}-${pad(x.getUTCMonth() + 1)}-${pad(x.getUTCDate())}`;
-}
+function stAddDays(dayStr, n) { return wocAddDays(dayStr, n); }   // المصدر في الـ shell (§HOME-DONE بتستخدمه كمان)
 
 // بداية يوم القاهرة بالملّي — تُستخدم للخروج المبكر من التصفيح
 function stDayStartMs(dayStr) { return Date.parse(`${dayStr}T00:00:00Z`) - 3 * 3600 * 1000; }

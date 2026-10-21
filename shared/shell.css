@@ -440,6 +440,53 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .woc-chip.chip-ch-pending{background:var(--amber-light);color:var(--amber-dark);border-color:var(--amber-border)}
 .woc-chip.chip-ch-hold{background:var(--surface-2);color:var(--text-secondary);border-color:var(--border-strong)}
 
+/* ══ §HOME-CHIPS — «مجموعة موصولة بخانات رقم» (v1.40.0 · قرار أحمد) ══
+   المجموعات (مناديب · بوسطة · شو روم) في كبسولة واحدة بفواصل، وكل مجموعة
+   خانة رقم مصمتة بلون المجموعة + اسمها. الرقم على اليمين والاسم على اليسار
+   (ترتيب الـ DOM: الرقم الأول — RTL). مقاس صغير، والصفر **باهت**.
+   ⚠️ الألوان **نفس** ألوان `.woc-chip` فوق بالحرف (درس R1) — الكلاسين
+      `qc-*` (التغليف) و`chip-ch-*` (الطباعة) الاتنين متعرّفين هنا.
+   ⚠️ **البادج (`.woc-att`) مابيبهتش** مع الخانة: «في انتظار الرفع على بوسطة»
+      على خانة بوسطة صفر تحذير، وتبهيته بيخبّيه بالظبط لما يتحتاج. */
+.woc-chips{align-items:center;justify-content:center}
+.woc-cgroup{display:inline-flex;border:1px solid var(--border-strong);border-radius:999px;overflow:hidden;max-width:100%}
+.woc-seg{display:inline-flex;align-items:stretch;font-size:11px;font-weight:800;white-space:nowrap;background:var(--surface-2);color:var(--text-secondary)}
+.woc-seg+.woc-seg{border-inline-start:1px solid var(--border)}
+.woc-seg-n{display:grid;place-items:center;min-width:2.4em;padding-inline:8px;background:var(--text-secondary);color:var(--on-accent);font-family:var(--font-mono);font-variant-numeric:tabular-nums;direction:ltr}
+.woc-seg-l{display:inline-flex;align-items:center;gap:6px;padding:2px 9px}
+.woc-seg.z0 .woc-seg-n,.woc-seg.z0 .woc-seg-t{opacity:.42}
+.woc-seg.qc-courier,.woc-seg.chip-ch-invoice{background:var(--accent-light);color:var(--accent-dark)}
+.woc-seg.qc-courier .woc-seg-n,.woc-seg.chip-ch-invoice .woc-seg-n{background:var(--accent)}
+.woc-seg.qc-bosta,.woc-seg.chip-ch-awb{background:var(--red-light);color:var(--red-dark)}
+.woc-seg.qc-bosta .woc-seg-n,.woc-seg.chip-ch-awb .woc-seg-n{background:var(--red)}
+.woc-seg.qc-showroom,.woc-seg.chip-ch-showroom{background:var(--teal-light);color:var(--teal-dark)}
+.woc-seg.qc-showroom .woc-seg-n,.woc-seg.chip-ch-showroom .woc-seg-n{background:var(--teal)}
+.woc-att{display:inline-flex;align-items:center;gap:3px;padding:0 7px;border-radius:999px;font-size:10.5px;font-weight:800;background:var(--amber-light);color:var(--amber-dark);border:1px solid var(--amber-border);font-family:var(--font-mono);font-variant-numeric:tabular-nums;direction:ltr}
+
+/* ══ §HOME-DONE — شريط «اللي خلص النهارده / أمس» (v1.40.0 · قرار أحمد) ══
+   تحت الطوابير التلاتة (الطباعة · التغليف · تسليم بوسطة) جوّه نفس الكارت:
+   بدون خلفية، في النص، مدمج، بخط منقّط من فوق. ✓ في دايرة خضرا ثم الفعل
+   (اتطبع · اتغلّف · اتسلّم لبوسطة) ثم سهم، وبعدها «اليوم» و«أمس» في خانتين بفاصل.
+   🔴 **رقم «اليوم» محايد (رمادي غامق) عن قصد** — الرقم الكبير بلون الأداة معناه
+      «شغل مطلوب»، وتلوين رقم «اليوم» بنفس اللون كان بيخلّيهم يتقروا مقياس واحد.
+   ⚠️ «أمس» رقم رمادي بلا سهم ولا نسبة: يوم كامل مقابل يوم لسه شغال.
+   ⚠️ الهوامش السالبة بتمدّ الشريط لحدود الكارت (الكارت padding:14px 18px) —
+      لو الـ padding اتغيّر، القيم دي تتغيّر معاه. */
+.woc-done{flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 16px;margin:-6px -18px -14px;padding:6px 18px;border-top:1px dashed var(--border-strong);font-size:13px}
+.woc-done-lbl{display:inline-flex;align-items:center;gap:7px;font-weight:800;color:var(--text-mid);white-space:nowrap}
+.woc-ck{width:18px;height:18px;border-radius:50%;background:var(--green);color:var(--surface);display:inline-grid;place-items:center;flex:none}
+.woc-done-arr{display:inline-grid;color:var(--text-muted)}
+.woc-done-cells{display:inline-flex;align-items:center}
+.woc-done-cell{display:inline-flex;align-items:baseline;gap:6px;padding-inline:18px}
+.woc-done-cell:first-child{padding-inline-start:0}
+.woc-done-cell+.woc-done-cell{border-inline-start:1px solid var(--border-strong)}
+.woc-done-k{font-size:12px;color:var(--text-muted);font-weight:600}
+.woc-done-today{font-family:var(--font-mono);font-size:17px;font-weight:800;line-height:1.1;color:var(--text-mid);font-variant-numeric:tabular-nums;direction:ltr}
+.woc-done-yest{font-family:var(--font-mono);font-size:14px;font-weight:500;line-height:1.1;color:var(--text-muted);font-variant-numeric:tabular-nums;direction:ltr}
+.woc-done-warn{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--amber-dark)}
+.woc-done.is-busy .woc-done-cells{opacity:.55}
+@media (max-width:560px){.woc-done-cell{padding-inline:12px}}
+
 /* لوحة «آخر تحديث» — **نفس شكل `.rdy-fresh` في `Orders-Packing-Checker.html`** بالحرف:
    صندوق محدّد بسطرين، الأول اللافتة + عدّاد القِدَم والتاني ختم
    التاريخ والوقت، وملزوق بزرار التحديث في منطقة واحدة.
