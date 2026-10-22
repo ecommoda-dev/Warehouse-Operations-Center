@@ -80,7 +80,7 @@ const RAW = [
   { orderId:'7212244533573', orderName:'#54301', createdAt:'2026-08-30T08:00:00Z',
     cancelledAt:null,
     address:'20 شارع عباس العقاد، مدينة نصر، القاهرة', itemsQty:1, total:'1500.00', zone:'Cairo+Giza', courier:'Sobhy',
-    s1:'Delivered', s2:'Returned', packedAtS1:'2026-09-01T06:43:11Z', packedAtS2:'2026-09-09T08:20:10Z',
+    s1:'Delivered', s2:'Returned', s2Cycle:'exchange', packedAtS1:'2026-09-01T06:43:11Z', packedAtS2:'2026-09-09T08:20:10Z',
     packedByS1:'Abo Selim', packedByS2:'Marwan Mohammed', whereaboutsS1:null, whereaboutsS2:'Office' },
 
   // ❌ بوسطة — مرتجعاتها ليها أداتها
@@ -108,7 +108,13 @@ const RAW = [
   { orderId:'7212244533577', orderName:'#54173', createdAt:'2026-08-28T08:00:00Z',
     cancelledAt:null,
     address:'15 شارع مصطفى النحاس، القاهرة', itemsQty:1, total:'1200.00', zone:'Cairo+Giza', courier:'Sobhy',
-    s1:'Delivered', s2:'Returned', packedAtS1:'2026-09-02T11:06:53Z', packedAtS2:null,
+    s1:'Delivered', s2:'Returned', s2Cycle:'return', packedAtS1:'2026-09-02T11:06:53Z', packedAtS2:null,
+    packedByS1:'Abo Selim', packedByS2:null, whereaboutsS1:null, whereaboutsS2:'Office' },
+  // ✅ مؤهل — S2 **نوعه مش معروف** (`s2Cycle: null` — Worker قديم أو `read_returns` ناقصة): لازم يتعرض «استبدال/استرجاع» مش تخمين
+  { orderId:'7212244533591', orderName:'#54175', createdAt:'2026-08-26T08:00:00Z',
+    cancelledAt:null,
+    address:'11 شارع الهرم، الجيزة', itemsQty:1, total:'600.00', zone:'Cairo+Giza', courier:'Sobhy',
+    s1:'Delivered', s2:'Returned', s2Cycle:null, packedAtS1:'2026-09-12T11:06:53Z', packedAtS2:null,
     packedByS1:'Abo Selim', packedByS2:null, whereaboutsS1:null, whereaboutsS2:'Office' },
   // 🔴 ❌ **وده الوش التاني للشرط**: S2 = Returned **والشحنة الأصلية نفسها ما
   //    اتغلّفتش** (مفيش `s1_packing_date_time`) — مفيش طرد يرجع أصلاً.
@@ -148,7 +154,7 @@ const RAW = [
 //    كان هيدّي ترتيب تاني خالص، و`updatedAt` **اتشال بالكامل** في v1.30.0.
 // ⚠️ ولاحظ إن الترتيب بوقت تغليف **S1** حتى لصفوف S2 (`#54301` · `#54173`) — v1.52.0:
 //    الطرد الراجع هو الشحنة الأصلية. (قبلها كان `#54301` بيترتّب بوقت S2.)
-const ELIGIBLE_NAMES = ['#54301', '#54173', '#54727', '#54580', '#54296'];
+const ELIGIBLE_NAMES = ['#54301', '#54173', '#54727', '#54580', '#54296', '#54175'];
 
 const SCAN_REPLIES = {
   // نجاح
@@ -471,7 +477,7 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
      '🔴 وسبب الاستبعاد `not_in_office` — مش `status` ولا `not_packed`', String(whyCourier));
 
   // 🔴 الترتيب جزء من العقد — الأقدم **تغليفًا** الأول
-  is(names[0].includes('#54301') && names[names.length - 1].includes('#54296'),
+  is(names[0].includes('#54301') && names[names.length - 1].includes('#54175'),
      '🔴 الترتيب بالأقدم تغليفًا الأول (S1 على الماكينتين)',
      names.join(' · '));
 
@@ -497,8 +503,17 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
   const rowsTxt = await page.$$eval('#rqTableBody tr', trs => trs.map(t => t.textContent));
   is((await rowTxt('#54727')).includes('مرتجع'), 'صف المرتجع عليه بادج «مرتجع»');
   is((await rowTxt('#54580')).includes('ملغي'),  'صف الملغي عليه بادج «ملغي» — مش نفس البادج');
-  is((await rowTxt('#54301')).includes('استبدال'),
-     'صف S2 عليه «استبدال» — باركود الأوردر واحد للطردين فالتفرقة لازم تتقال');
+  // 🔴 v1.53.0 — صف S2 بيتقسّم من `s2Cycle`: استبدال · استرجاع · غير معروف (مش تخمين)
+  const typeCell = async (n) => page.$$eval('#rqTableBody tr', (trs, nm) => {
+    const tr = trs.find(t => t.textContent.includes(nm)); return tr ? tr.cells[2].textContent.trim() : '';
+  }, n);
+  const tExch = await typeCell('#54301'), tRet = await typeCell('#54173'), tUnk = await typeCell('#54175'), tS1 = await typeCell('#54727');
+  is(tExch === 'استبدال', '🔴 `s2Cycle = exchange` → «استبدال»', tExch);
+  is(tRet === 'استرجاع', '🔴 `s2Cycle = return` → «استرجاع»', tRet);
+  is(tUnk === 'استبدال/استرجاع', '🔴 `s2Cycle` فاضي → «استبدال/استرجاع» مش تخمين', tUnk);
+  is(tS1 === 'عادي', 'صف S1 لسه «عادي»', tS1);
+  is((await rowTxt('#54173')).includes('مرتجع (استرجاع)') && (await rowTxt('#54301')).includes('مرتجع (استبدال)'),
+     'عمود «الحالة» بيتبع نفس النص (مصدر واحد `rqTypeLabel`)');
 
   // عمود «موقع الشحنة» — العهدة قبل السكانة
   is((await rowTxt('#54727')).includes('في المكتب'), 'عمود العهدة بيقول «في المكتب» للراجع من المكتب');
