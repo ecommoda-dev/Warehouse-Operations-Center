@@ -157,7 +157,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .pick-list { display: flex; flex-direction: column; gap: 6px; max-height: 55vh; overflow-y: auto; margin: 10px 0; }
 .pick-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
 .pick-row:hover { background: var(--surface-2); }
-.pick-row .btn { margin-inline-start: auto; white-space: nowrap; }
+.pick-row .btn { white-space: nowrap; }
 .pick-row .pk-name { font-weight: 800; min-width: 70px; }
 .pick-row .pk-addr { flex: 1; font-size: 12px; color: var(--text-secondary); }
 .pick-empty { text-align: center; padding: 24px; color: var(--text-secondary); }
@@ -1634,11 +1634,11 @@ function renderOrderPicker() {
   }
   // الإضافة بضغطة واحدة على زرار الصف نفسه — بـ`data-id` + listener واحد (مش `onclick` بنص)
   list.innerHTML = rows.map(o => `<div class="pick-row">
+      <button class="btn btn-primary btn-sm" type="button" data-pick-id="${esc(String(o.orderId))}">➕ إضافة</button>
       <span class="pk-name">${esc(o.orderName)}</span>
       <span class="pk-addr">${esc(o.address || '—')}</span>
       <span>${esc(rqTypeLabel(o))}</span>
       <span>${esc(rqStatusOf(o).text || '')}</span>
-      <button class="btn btn-primary btn-sm" type="button" data-pick-id="${esc(String(o.orderId))}">➕ إضافة</button>
     </div>`).join('');
 }
 document.getElementById('pickList').addEventListener('click', e => {
