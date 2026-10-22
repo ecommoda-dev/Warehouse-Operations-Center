@@ -132,6 +132,8 @@
 /* الاسم المعتمد في data-table-standard — كان مستخدَم في الجدول من غير ما يكون
    معرّف، فالخلايا رجعت rtl في صمت. الاتنين نفس التعريف. */
 .col-num  { font-family: var(--font-mono); direction: ltr; white-space: nowrap; }
+/* «العنوان» في طابور الرجوع (v1.52.0): سطر عنوان طويل — بيلفّ في عمود محدود العرض بدل ما يمدّ الجدول */
+.col-addr { min-width: 220px; max-width: 420px; white-space: normal; line-height: 1.5; }
 input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent); }
 .reject-reason { font-size: 11px; color: var(--red); white-space: normal; max-width: 220px; direction: rtl; text-align: center; display: inline-block; }
 
@@ -471,7 +473,8 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
   <div id="headerMount"></div>
 
   <div class="main-tabs-bar" id="mainTabsBar">
-    <button class="main-tab-btn active" id="tabScanner" onclick="switchMainTab('scanner')">📷 السكانر</button>
+    <button class="main-tab-btn active" id="tabScanner" onclick="switchMainTab('scanner')">📷 الأوردرات</button>
+    <button class="main-tab-btn"        id="tabPartial" onclick="switchMainTab('partial')">📦 منتجات التسليم الجزئي</button>
     <button class="main-tab-btn"        id="tabLog"     onclick="switchMainTab('log')">📋 السجل</button>
   </div>
 
@@ -490,7 +493,19 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
            واحد للنسخة (Standards #24). الرقم هنا **مش** مكتوب بإيد. -->
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.51.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.52.0</span>
+          <span class="cl-ver-date">22-10-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>🔴 <b>أوردرات «الاسترجاع» الخالص كانت بتترفض بـ«مفيش طرد يرجع» ومش بتظهر في الطابور.</b> الطرد الراجع هو <b>الشحنة الأصلية (S1)</b> اللي اتغلّفت، ومفيش طرد S2 بيتغلّف في الاسترجاع — فشرط التغليف بقى على <code>s1_packing_date_time</code> للماكينتين (في الـ Worker والطابور مع بعض). 🔴 <b>محتاج Promote:</b> Worker v1.6.0 — قبله الاسترجاع لسه بيترفض.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>جدول «جاهز للرجوع للمخزن»: اتشال عمودا «العميل» و«تاريخ الأوردر» واتضاف <b>«العنوان»</b> بعد رقم الأوردر.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>التابات بقت: <b>📷 الأوردرات</b> (السكانر + طابور الأوردرات بس) · <b>📦 منتجات التسليم الجزئي</b> (قطع مستنية الرجوع للمخزن + مربع سكان قطع خاص بيها) · <b>📋 السجل</b>.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.51.0</span>
           <span class="cl-ver-date">22-10-2026</span>
         </div>
         <ul class="cl-items">
@@ -606,10 +621,11 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
               <code>Cancelled</code> (أو ملغي على شوبيفاي نفسها) فالعهدة بتتكتب على
               <code>_s1</code>، أو <code>S2 = Returned</code> فبتتكتب على
               <code>_s2</code>.</li>
-            <li><b>اتغلّف فعلاً</b> — وقت تغليف مسجّل على <b>ميتافيلد الماكينة
-              بتاعتها</b>: <code>s1_packing_date_time</code> لصف S1 و
-              <code>s2_packing_date_time</code> لصف S2. ⚠️ أوردر اتلغى قبل ما
-              يتغلّف <b>مفيهوش طرد أصلاً</b> — مفيش حاجة ترجع على الرف.</li>
+            <li><b>اتغلّف فعلاً</b> — وقت تغليف <b>الشحنة الأصلية</b>
+              (<code>s1_packing_date_time</code>) على الماكينتين. 🔴 <b>مش
+              <code>s2_…</code></b>: الطرد الراجع هو الأصلي، وفي الاسترجاع الخالص
+              مفيش طرد S2 اتغلّف أصلاً (v1.52.0). ⚠️ أوردر اتلغى قبل ما يتغلّف
+              <b>مفيهوش طرد أصلاً</b> — مفيش حاجة ترجع على الرف.</li>
             <li><b>عهدة الطرد مش <code>Warehouse</code></b> — <code>Warehouse</code>
               بترجّع «خلاص متعمل» (محايدة)، و<code>Office</code>/<code>Courier</code>
               <b>مقبولتين</b>: دول بالظبط الطريقان اللي الطرد بيرجع منهم.</li>
@@ -620,7 +636,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
             <li>الدخول بيحصل <b>مرة واحدة</b> في الشاشة الرئيسية للهب — الصفحة دي
               مالهاش شاشة دخول.</li>
             <li>الطابور بيتحمّل تلقائيًا ويقول إيه المرتجع/الملغي اللي المفروض
-              يرجع على الرف — <b>آخر ٣٠ يوم</b>.</li>
+              يرجع على الرف — <b>آخر ٢٥٠ يوم</b>.</li>
             <li>الموظف بيسكن باركود الأوردر — بتفتح <b>لوحة بقطع الطرد</b>، وبيسكن
               باركود كل قطعة (أو «ناقصة» / «استلام يدوي»). آخر قطعة = التسجيل
               بيحصل لوحده (v1.51.0). مفيش دفعة.</li>
@@ -913,11 +929,10 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
                 <thead>
                   <tr>
                     <th>رقم الأوردر</th>
-                    <th>العميل</th>
+                    <th>العنوان</th>
                     <th>نوع الأوردر</th>
                     <th>الحالة</th>
                     <th>موقع الشحنة</th>
-                    <th>تاريخ الأوردر</th>
                   </tr>
                 </thead>
                 <tbody id="rqTableBody"></tbody>
@@ -928,11 +943,30 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
       </div>
     </div>
 
+  </div><!-- /panelScanner -->
+
+  <!-- ══ PANEL: PARTIAL — «منتجات التسليم الجزئي» (v1.52.0 · طلب أحمد 22-10-2026) ══
+       تاب لوحده لقايمة «قطع مستنية الرجوع للمخزن» — تاب «الأوردرات» فيه السكانر
+       وطابور الأوردرات بس. وفيه مربع سكان قطع **خاص بالتاب ده** (نفس `receiveLooseItem`
+       بتاعة سكان القطعة السايبة) عشان الموظف مايضطرش يرجع لتاب تاني يسكن. -->
+  <div id="panelPartial" class="tab-panel">
+
+    <div class="card" id="riScanCard" style="margin-bottom:16px;">
+      <div class="card-body">
+        <div class="scan-row">
+          <input id="scanInputRi" class="scan-input" type="text"
+            placeholder="امسح باركود القطعة الراجعة هنا..." autocomplete="off"
+            aria-label="باركود القطعة" />
+        </div>
+      </div>
+    </div>
+
     <!-- ══ §RI — «قطع مستنية الرجوع للمخزن» (دفتر D1 · v1.51.0) ═══════════
          من جدول `warehouse_return_items` (`get_return_items`): قطع التسليم
          الجزئي اللي لسه في المكتب (الأوردر بيفضل `Shipped` فمش في الطابور
          فوق) + قطع وصلت ناقصة مع أوردر كامل. سكان باركود القطعة (٨–٩ أرقام)
-         في المربع فوق بيقفل **أقدم** سطر مستني بنفس الباركود (قرار أحمد). -->
+         في المربع فوق (أو في تاب «الأوردرات») بيقفل **أقدم** سطر مستني بنفس
+         الباركود (قرار أحمد). -->
     <div class="card" id="riBox" style="margin-bottom:16px;">
       <div class="rq-head">
         <div>
@@ -983,8 +1017,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
       </div>
     </div>
 
-  </div><!-- /panelScanner -->
-  </div><!-- /panelScanner -->
+  </div><!-- /panelPartial -->
 
   <!-- ══════════════════════════════════════════════════════════════
        §LOG — القسم الموحّد: فلاتر + جدول في كارت واحد
@@ -1314,16 +1347,19 @@ function statusBadgeClass(value) {
 // ══════════════════════════════════════════════════════════════
 // Main Tabs
 // ══════════════════════════════════════════════════════════════
-const TAB_IDS = ['scanner', 'log'];
+const TAB_IDS = ['scanner', 'partial', 'log'];
 let currentTab = 'scanner';
 
 function switchMainTab(tab) {
   currentTab = tab;
   document.getElementById('tabScanner').classList.toggle('active', tab === 'scanner');
+  document.getElementById('tabPartial').classList.toggle('active', tab === 'partial');
   document.getElementById('tabLog')    .classList.toggle('active', tab === 'log');
   document.getElementById('panelScanner').classList.toggle('active', tab === 'scanner');
+  document.getElementById('panelPartial').classList.toggle('active', tab === 'partial');
   document.getElementById('panelLog')    .classList.toggle('active', tab === 'log');
   if (tab === 'log') loadLog();
+  else focusScan();
   updateTabChip();
   closeTabChipMenu();
 }
@@ -1376,7 +1412,7 @@ window.addEventListener('resize', () => {
 });
 
 // ─── §SHELL-JS::tabChip — بديل شريط التابات المقفول وقت الـ Sticky ───
-const TAB_BTN_ID = { scanner: 'tabScanner', log: 'tabLog' };
+const TAB_BTN_ID = { scanner: 'tabScanner', partial: 'tabPartial', log: 'tabLog' };
 
 function updateTabChip() {
   const label = document.getElementById(TAB_BTN_ID[currentTab]).textContent.trim();
@@ -1412,11 +1448,11 @@ document.addEventListener('click', (e) => {
 
 // ── Auto-focus scan input ──────────────────────────────────────────────────────
 document.addEventListener('click', e => {
-  const inp = document.getElementById('scanInput');
+  const inp = activeScanInput();
   if (!inp) return;
   // ⚠️ شرط `loginOverlay` اتشال — مفيش شاشة دخول في الصفحة دي، الجلسة
   //    اتأكدت في `requireSession()` قبل أي سطر تاني.
-  if (currentTab === 'scanner' &&
+  if (currentTab !== 'log' &&
       !e.target.closest('.eco-overlay') &&
       !e.target.closest('.settings-overlay') &&
       !e.target.closest('.res-overlay') &&
@@ -1440,22 +1476,46 @@ document.addEventListener('click', e => {
 //    الـ listener بيقطع دفعة السكانر في نصّها.
 
 let scanTimer;
-const scanInputEl = document.getElementById('scanInput');
+const scanInputEl   = document.getElementById('scanInput');
+const scanInputRiEl = document.getElementById('scanInputRi');   // v1.52.0 — تاب «منتجات التسليم الجزئي»
 
-scanInputEl.addEventListener('input', () => {
-  clearTimeout(scanTimer);
-  // دفعة السكانر بتيجي أسرع من ٨٠ms بين الحروف: بعد ٣ حروف نعتبرها سكانر
-  // ونستنى ١٥٠ms بس بعد آخر حرف. الكتابة اليدوية بتاخد المهلة الكاملة.
-  const isBurst = scanInputEl.value.length > 3;
-  scanTimer = setTimeout(handleScan, isBurst ? 150 : 400);
-});
+// 🔴 **مربعا سكان — واحد في كل تاب — ومسار واحد ورا الاتنين** (`routeScan`).
+//    مربع تاب «الأوردرات» بيقبل أوردر وقطعة؛ مربع تاب «منتجات التسليم الجزئي»
+//    بيقبل **قطعة بس** (`routeScanRi`) — أوردر هناك بيتوجّه لتاب «الأوردرات» بدل ما
+//    يفتح لوحة استلام في تاب مش شايفها.
+function activeScanInput() {
+  if (currentTab === 'partial') return scanInputRiEl;
+  if (currentTab === 'scanner') return scanInputEl;
+  return null;
+}
+function focusScan() { activeScanInput()?.focus(); }
 
-function handleScan() {
-  const val = scanInputEl.value.trim();
-  scanInputEl.value = '';
-  scanInputEl.focus();
-  if (!val) return;
-  routeScan(val);
+function bindScanInput(el, onScan) {
+  el.addEventListener('input', () => {
+    clearTimeout(scanTimer);
+    // دفعة السكانر بتيجي أسرع من ٨٠ms بين الحروف: بعد ٣ حروف نعتبرها سكانر
+    // ونستنى ١٥٠ms بس بعد آخر حرف. الكتابة اليدوية بتاخد المهلة الكاملة.
+    const isBurst = el.value.length > 3;
+    scanTimer = setTimeout(() => {
+      const val = el.value.trim();
+      el.value = '';
+      el.focus();
+      if (val) onScan(val);
+    }, isBurst ? 150 : 400);
+  });
+}
+bindScanInput(scanInputEl, val => routeScan(val));
+bindScanInput(scanInputRiEl, val => routeScanRi(val));
+
+function routeScanRi(code) {
+  if (recv) {
+    playBeep('warn');
+    showToast(`فيه أوردر مفتوح للاستلام (${recv.order?.orderName || ''}) في تاب «الأوردرات» — خلّصه أو ألغيه الأول`, 'warn');
+    return;
+  }
+  if (isItemBarcode(code)) { receiveLooseItem(code); return; }
+  playBeep('warn');
+  showToast('المربع ده للقطع بس (٨–٩ أرقام) — سكان الأوردرات من تاب «الأوردرات»', 'warn');
 }
 
 // ─── §TOOL-JS::routeScan — مين السكانة دي؟ (v1.51.0) ───
@@ -1691,7 +1751,7 @@ document.getElementById('recvBody').addEventListener('click', e => {
   else if (b.dataset.act === 'undo') { u.state = 'wait'; u.mode = null; }
   recv.flash = null;
   recvRender();
-  scanInputEl.focus();
+  focusScan();
 });
 
 // ─── سكان قطعة جوّه الأوردر المفتوح ───
@@ -1721,7 +1781,7 @@ function recvCancel() {
   if (n.done + n.miss > 0 && !confirm('فيه قطع اتسكنت — إلغاء الاستلام بيمسح اللي اتعلّم ومش هيتسجّل حاجة. متأكد؟')) return;
   recv = null;
   recvRender();
-  scanInputEl.focus();
+  focusScan();
 }
 
 // ─── الخطوة ②: إنهاء الاستلام ───
@@ -1869,7 +1929,8 @@ async function receiveLooseItem(code, id) {
 
 function setScanBusyUI(busy) {
   scanInputEl.disabled = busy;
-  if (!busy) scanInputEl.focus();
+  scanInputRiEl.disabled = busy;
+  if (!busy) focusScan();
 }
 
 // ─── §TOOL-JS::session — جدول سكانات الجلسة + العدّادات ───
@@ -1980,7 +2041,7 @@ function showOutcome({ tone, title, order, machine, lines, note, buttons }) {
 
 function closeOutcome() {
   document.getElementById('outcomeOverlay').classList.remove('open');
-  document.getElementById('scanInput')?.focus();   // الفوكس يرجع للسكانر
+  focusScan();   // الفوكس يرجع للسكانر
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2713,9 +2774,10 @@ function rqRender() {
 
   empty.style.display = 'none';
   wrap.style.display  = '';
-  const now = new Date();
   tbody.innerHTML = rows.map(o => {
-    const age = ecoOrderAge(o.createdAt, now);
+    // 🔴 **v1.52.0 (قرار أحمد 22-10-2026):** عمودا «العميل» و«تاريخ الأوردر» اتشالوا
+    //    (ومعاهم بادج العمر والنبضة بتاعته) واتضاف «العنوان» بعد رقم الأوردر.
+    //    ⛔ العنوان بييجي من الـ Worker (`address`، v1.6.0) — مفيش تركيب عنوان هنا.
     // ⚠️ عمود «عدد القطع» اتشال (v1.51.0 · قرار أحمد): `currentSubtotalLineItemsQuantity`
     //    بيبقى **صفر دايمًا** على أي أوردر ملغي أو مرتجع (الإلغاء بيصفّر الكميات)، فالعمود كان
     //    بيقول «٠» على كل صف. القطع الحقيقية بتظهر في لوحة الاستلام بعد سكان الأوردر.
@@ -2735,11 +2797,10 @@ function rqRender() {
     const wh = rqWhereaboutsText(o.whereabouts);
     return `<tr>
       <td>${orderLink(o.orderName, o.orderId)}</td>
-      <td>${esc(o.customer || '—')}</td>
+      <td class="col-addr">${esc(o.address || '—')}</td>
       <td><span class="type-text ${typeClass}">${esc(typeLabel)}</span></td>
       <td><span class="badge ${st.cls}">${esc(st.text)}</span></td>
       <td><span class="wh-text ${wh.cls}">${esc(wh.text)}</span></td>
-      <td>${esc(formatDate(o.createdAt))} <span class="time-badge age-badge ${age.cls}">${esc(age.text)}</span></td>
     </tr>`;
   }).join('');
 }
@@ -2828,27 +2889,16 @@ async function rqLoad(silent) {
     if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
     rqRender();
     rqSetFresh();
-    if (!silent) document.getElementById('scanInput')?.focus();   // الفوكس يرجع للسكانر
+    if (!silent) focusScan();   // الفوكس يرجع للسكانر
   }
 }
 
 // ⛔ مفيش تحديث تلقائي (v1.43.0 · قرار أحمد 21-10-2026 — نفس سياسة `Delivery-COD-Operations-Center`): الجلب عند الفتح
 //    وعند «تحديث» بس. التسليح التلقائي (`rqArmAuto`) و`visibilitychange` اتشالوا.
 
-// النبضة عرض بحت — بتحدّث «منذ كام» وبادج العمر **بلا أي نداء شبكة**.
-// ⚠️ إعادة رسم الجدول كل نص دقيقة كانت هتصفّر التمرير تحت إيد الموظف.
-setInterval(() => {
-  rqSetFresh();
-  if (!rqState.orders.length) return;
-  const now = new Date();
-  document.querySelectorAll('#rqTableBody .age-badge').forEach((el, i) => {
-    const o = rqState.orders[i];
-    if (!o) return;
-    const age = ecoOrderAge(o.createdAt, now);
-    el.className   = `time-badge age-badge ${age.cls}`;
-    el.textContent = age.text;
-  });
-}, RQ_TICK_MS);
+// النبضة عرض بحت — بتحدّث «منذ كام» في لوحة «آخر تحديث» **بلا أي نداء شبكة**.
+// (بادج عمر الأوردر اتشال مع عمود «تاريخ الأوردر» — v1.52.0.)
+setInterval(rqSetFresh, RQ_TICK_MS);
 
 // ══════════════════════════════════════════════════════════════
 // §RI-JS — «قطع مستنية الرجوع للمخزن» (دفتر D1 · v1.51.0)
@@ -2958,7 +3008,7 @@ async function riLoad(silent) {
     if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
     riRender();
     riSetFresh();
-    if (!silent) document.getElementById('scanInput')?.focus();
+    if (!silent) focusScan();
   }
 }
 setInterval(riSetFresh, RQ_TICK_MS);   // نبضة عرض بس — صفر شبكة
@@ -2973,7 +3023,7 @@ document.getElementById('headerMount').innerHTML = ecoHeader({
   //    وقتها). كان جوّه الهيدر القديم، فبيتحط هنا في `extras` عشان الهيدر
   //    بقى موحّد في الـ shell. نفس نمط `Order-Printer.html` و`Bosta-Orders-Shipped-Scanner.html`.
   extras: '<div class="active-tab-chip" id="activeTabChip" onclick="toggleTabChipMenu(event)">'
-        +   '<span id="activeTabChipLabel">📷 السكانر</span><span class="chip-arrow">▾</span>'
+        +   '<span id="activeTabChipLabel">📷 الأوردرات</span><span class="chip-arrow">▾</span>'
         +   '<div class="tab-chip-menu" id="tabChipMenu"></div>'
         + '</div>',
 });
@@ -2991,11 +3041,12 @@ buildTabChipMenu();
 updateTabChip();
 measureSticky();                         // ← بعد رسم التابات والـ chip
 
-document.getElementById('scanInput')?.focus();   // السكانر جاهز من أول لحظة
+focusScan();   // السكانر جاهز من أول لحظة
 rqLoad(true);                            // الطابور — قراءة بحتة
 riLoad(true).then(() => {               // دفتر القطع الراجعة — قراءة D1 بحتة (v1.51.0)
   // جاي من صف الرئيسية (`#riBox`) — انزل للقايمة بعد ما تترسم
-  if (location.hash === '#riBox') document.getElementById('riBox')?.scrollIntoView({ block: 'start' });
+  // (v1.52.0: القايمة بقت في تاب لوحده — بنفتحه الأول)
+  if (location.hash === '#riBox') { switchMainTab('partial'); document.getElementById('riBox')?.scrollIntoView({ block: 'start' }); }
 });
 </script>
 </body>
