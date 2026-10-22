@@ -493,7 +493,17 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
            واحد للنسخة (Standards #24). الرقم هنا **مش** مكتوب بإيد. -->
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.52.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.53.0</span>
+          <span class="cl-ver-date">22-10-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🔴 <b>عمود «نوع الأوردر» بقى بيفرّق بين «استبدال» و«استرجاع»</b> لصفوف دورة S2 (من <code>returns[].exchangeLineItems</code> على شوبيفاي — Worker v1.7.0). ⚠️ «استرجاع» هو الأرجح مش المؤكد: استبدال اتعدّل يدويًا بيطلع «استرجاع». ولو الـ Worker قديم أو <code>read_returns</code> ناقصة بيفضل «استبدال/استرجاع».</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.52.0</span>
           <span class="cl-ver-date">22-10-2026</span>
         </div>
         <ul class="cl-items">
@@ -2785,8 +2795,12 @@ function rqRender() {
     //    اللي بلا علامة): الموظف بيسكن **باركود الأوردر**، وهو نفسه على
     //    الطردين، فالسكانة لوحدها مابتقولش أنهي طرد. نفس تصميم عمود «نوع
     //    الأوردر» في `Orders-Packing-Checker.html` بالحرف — نص عادي بلون بدل بادج.
+    // 🔴 **v1.53.0 (طلب أحمد 22-10-2026):** صف S2 بقى بيتقسّم لـ«استبدال» / «استرجاع» من `o.s2Cycle`
+    //    (Worker v1.7.0 — `returns[].exchangeLineItems` في استعلام منفصل). `s2Cycle` فاضي (Worker قديم أو
+    //    `read_returns` ناقصة) = «استبدال/استرجاع» — **مش تخمين**. ⚠️ و«استرجاع» هو الأرجح مش المؤكد:
+    //    استبدال اتعدّل يدويًا بيفضل `exchangeLineItems` فاضي (قاعدة ٨). ⛔ مايتركّبش عليه أي فعل.
     const typeClass = o.machine === 's2' ? 'type-s2' : 'type-s1';
-    const typeLabel = o.machine === 's2' ? 'استبدال' : 'عادي';
+    const typeLabel = rqTypeLabel(o);
     // 🔴 **عمود «الحالة» — السبب اللي الأوردر ده في القايمة عشانه.**
     //    «مرتجع» و«ملغي» بيتصرّف عليهم الموظف بطريقتين مختلفتين (المرتجع
     //    بيتفتح ويتراجع · الملغي بيترجّع على الرف زي ما هو)، فجمعهم في كلمة
@@ -2809,8 +2823,15 @@ function rqRender() {
 // ⚠️ **الترتيب هو الترتيب في `ecoWarehouseGate` بالحرف** — S1 الأول. لو
 //    اتقلب هنا، صف بحالتين مؤهلتين بيقول حاجة والـ Worker بيكتب على حاجة
 //    تانية (درس R1).
+// نص نوع الأوردر — مصدر واحد للعمودين (نوع الأوردر · الحالة)
+function rqTypeLabel(o) {
+  if (o.machine !== 's2') return 'عادي';
+  if (o.s2Cycle === 'exchange') return 'استبدال';
+  if (o.s2Cycle === 'return')   return 'استرجاع';
+  return 'استبدال/استرجاع';
+}
 function rqStatusOf(o) {
-  if (o.machine === 's2') return { cls: 'badge-amber', text: 'مرتجع (استبدال/استرجاع)' };
+  if (o.machine === 's2') return { cls: 'badge-amber', text: `مرتجع (${rqTypeLabel(o)})` };
   if (o.s1 === 'Returned') return { cls: 'badge-amber', text: 'مرتجع' };
   if (o.s1 === 'Cancelled' || o.cancelledAt) return { cls: 'badge-red', text: 'ملغي' };
   return { cls: 'badge-neutral', text: '—' };
