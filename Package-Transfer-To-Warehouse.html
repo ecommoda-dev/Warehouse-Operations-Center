@@ -193,6 +193,31 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
    (نفس منطق `.scan-hint` في `Order-SKU-Barcode-Printer.html`). */
 .wh-text.wh-home     { color: var(--green-dark); }
 
+/* ══ §RECV — الاستلام قطعة قطعة (v1.51.0 · طلب أحمد 22-10-2026) ══
+   بيظهر بعد سكان باركود الأوردر: قايمة قطع الطرد، وكل قطعة بتتعلّم بسكان
+   باركودها. ⚠️ الحالات التلاتة لكل قطعة: ⏳ مستنية · ✅ اتسكنت · ❌ ناقصة. */
+.recv-box { border: 2px solid var(--accent-border); border-radius: var(--radius-sm); background: var(--surface); overflow: hidden; }
+.recv-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px; background: var(--accent-light); border-bottom: 1px solid var(--accent-border); }
+.recv-title { font-size: 14px; font-weight: 800; color: var(--text-primary); }
+.recv-sub { font-size: 12px; color: var(--text-secondary); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.recv-prog { margin-inline-start: auto; font-family: var(--font-mono); font-size: 20px; font-weight: 800; color: var(--accent-dark); direction: ltr; }
+.recv-note { padding: 10px 16px; font-size: 12.5px; color: var(--amber-dark); background: var(--amber-light); border-bottom: 1px solid var(--amber-border); }
+.recv-foot { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--surface-2); }
+.recv-row.u-done  { background: var(--green-light); }
+.recv-row.u-miss  { background: var(--red-light); }
+.recv-row.u-flash { outline: 2px solid var(--green); outline-offset: -2px; }
+.u-state { font-weight: 800; white-space: nowrap; }
+.u-state.s-wait { color: var(--text-muted); }
+.u-state.s-done { color: var(--green-dark); }
+.u-state.s-miss { color: var(--red-dark); }
+.u-acts { display: inline-flex; gap: 6px; }
+
+/* ══ §RI — «قطع مستنية الرجوع للمخزن» (دفتر D1 · v1.51.0) ══
+   نفس شكل `.rq-box` (الطابور فوقه) — نفس المعلومة بشكلين = الموظف بيتعلّمها مرتين. */
+.ri-src { font-weight: 800; white-space: nowrap; }
+.ri-src.src-partial { color: var(--id-retitems); }
+.ri-src.src-order   { color: var(--amber-dark); }
+
 .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: var(--on-accent); border-radius: 50%; animation: spin .6s linear infinite; flex-shrink: 0; }
 .spinner-dark { border-color: rgba(0,0,0,.15); border-top-color: var(--accent); }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -465,7 +490,21 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
            واحد للنسخة (Standards #24). الرقم هنا **مش** مكتوب بإيد. -->
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.35.1</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.51.0</span>
+          <span class="cl-ver-date">22-10-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🔴 <b>الاستلام بقى قطعة قطعة.</b> سكان باركود الأوردر بيفتح لوحة بقطع الطرد (من شوبيفاي: قطع الإلغاء أو قطع دورة الاسترجاع/الاستبدال)، وبعدها تسكن باركود كل قطعة. لما آخر قطعة تتسكن الاستلام بيتسجّل لوحده — والطرد بيتكتب «في المخزن» <b>بعد</b> سكان القطع بس.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>❌ <b>قطعة ناقصة</b> = تعلّمها «ناقصة» وتأكّد في نافذة — الطرد بيتسجّل «في المخزن» والقطعة بتظهر في القايمة الجديدة لحد ما توصل. ✋ قطعة باركودها ممسوح أو مالهاش باركود = «استلام يدوي».</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>📦 <b>قسم «قطع مستنية الرجوع للمخزن»</b> تحت مربع السكان: قطع التسليم الجزئي اللي رجعت مع المندوب + القطع الناقصة. سكان باركود القطعة (٨–٩ أرقام) بيقفل <b>أقدم</b> سطر مستني بنفس الباركود، والنتيجة بتقول الأوردر بالاسم. وليه صف في الشاشة الرئيسية.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>عمود <b>«عدد القطع»</b> اتشال من الطابور — القطع بقت بتتعرض في لوحة الاستلام.</span></li>
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>⚠️ قطعة مش من الأوردر المفتوح = رفض بنغمة فشل <b>من غير أي كتابة</b>. والـ Worker بيعيد قراءة القطع طازة قبل الكتابة — لو اتغيّرت من وقت السكان، الاستلام بيترفض بالسبب.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.35.1</span>
           <span class="cl-ver-date">25-09-2026</span>
         </div>
         <ul class="cl-items">
@@ -582,8 +621,11 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
               مالهاش شاشة دخول.</li>
             <li>الطابور بيتحمّل تلقائيًا ويقول إيه المرتجع/الملغي اللي المفروض
               يرجع على الرف — <b>آخر ٣٠ يوم</b>.</li>
-            <li>الموظف بيسكن باركود الأوردر — <b>والتسجيل فوري</b>: مفيش دفعة
-              ومفيش زرار تنفيذ.</li>
+            <li>الموظف بيسكن باركود الأوردر — بتفتح <b>لوحة بقطع الطرد</b>، وبيسكن
+              باركود كل قطعة (أو «ناقصة» / «استلام يدوي»). آخر قطعة = التسجيل
+              بيحصل لوحده (v1.51.0). مفيش دفعة.</li>
+            <li>سكان <b>باركود قطعة</b> (٨–٩ أرقام) من غير أوردر مفتوح = استلام قطعة
+              من «قطع مستنية الرجوع للمخزن» (تسليم جزئي · ناقصة) — أقدم سطر الأول.</li>
             <li>النتيجة: نجاح = توست + الصف بيختفي من الطابور · خلاص متعمل / مرفوض
               = <b>نافذة بالسبب</b> · حالة شاذة = <b>نافذة تفاصيل وإقرار</b> قبل
               التسجيل.</li>
@@ -595,7 +637,11 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <table>
             <tr><th>action</th><th>الوصف</th></tr>
             <tr><td><code>get_ready_to_warehouse</code></td><td>المرتجع/الملغي في آخر ٣٠ يوم (تلات استعلامات) بحقوله الخام — <b>قراءة بحتة</b></td></tr>
-            <tr><td><code>scan</code></td><td>قراءة الأوردر حيًّا + الحكم + <code>metafieldsSet</code> + صف D1</td></tr>
+            <tr><td><code>order_items</code></td><td>(v1.51.0) قراءة الأوردر حيًّا + نفس الحكم + <b>قطع الطرد</b> — <b>قراءة بحتة</b>، والرفض/«خلاص متعمل» بيتسجّلوا صف زي ما كانوا</td></tr>
+            <tr><td><code>receive_order</code></td><td>(v1.51.0) إعادة قراءة طازة + تحقق إن كل قطعة اتسكنت أو اتعلّمت ناقصة بإقرار → <code>metafieldsSet</code> (<code>Warehouse</code>) + سطور الدفتر (<code>received</code>/<code>missing</code>) + صف D1</td></tr>
+            <tr><td><code>get_return_items</code></td><td>(v1.51.0) دفتر <code>warehouse_return_items</code> — القطع <code>pending</code> + <code>missing</code> (قراءة D1 بحتة)</td></tr>
+            <tr><td><code>receive_item</code></td><td>(v1.51.0) قفل سطر قطعة بالباركود (أقدم مستني ثم أقدم ناقص) أو بالـ <code>id</code> (يدوي)</td></tr>
+            <tr><td><code>scan</code></td><td>المسار القديم (سكانة = كتابة فورية) — لسه في الـ Worker، والصفحة <b>مابقتش بتناديه</b></td></tr>
             <tr><td><code>get_logs</code> / <code>get_logs_count</code> / <code>get_logs_export</code></td><td>سجل العمليات — فلاتر server-side (<code>employees</code> · <code>types</code> · <code>results</code> · <code>machines</code> · <code>search</code> · <code>dateFrom</code>/<code>dateTo</code>) + صفحات + ترتيب، والتصدير بيرجّع <code>cap</code>/<code>total</code>/<code>truncated</code></td></tr>
             <tr><td><code>get_employees</code></td><td>تعبئة فلتر الموظف في تاب السجل</td></tr>
             <tr><td><code>diag</code></td><td>فحص ذاتي بدون كتابة — المتغيرات (اسم وطول فقط) · OAuth · صلاحية <code>write_orders</code> · <b>تعريف الميتافيلد الحيّ</b> · D1 · تكلفة الاستعلام · الـ Origin</td></tr>
@@ -622,7 +668,10 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
             <li><code>shared/core.js</code> — الهوية والهيدر والإعدادات والتوست وحارس النسخة (نسخة واحدة مضمّنة للهب كله)</li>
             <li><code>shared/gates.js §WAREHOUSE-GATE</code> — 🔴 <b>مصدر الأهلية الوحيد في الواجهة</b> (<code>ecoWarehouseGate</code> · <code>ecoWarehouseQueue</code>). الصفحة دي <b>والشاشة الرئيسية</b> بينادوا نفس الدالة على نفس الرد. ⛔ <b>وممنوع ينسخ حارس الإلغاء من §OFFICE-GATE</b> — هناك رفض وهنا أهلية</li>
             <li><code>§SCAN</code> — سكانر بمهلة (١٥٠ms للسكانة · ٤٠٠ms للكتابة)، نفس قيم <code>Orders-Packing-Checker.html</code> بالحرف</li>
-            <li><code>§TOOL-JS::scanOrder</code> — نداء <code>scan</code> فوري لكل باركود، ومعالجة الخمس نتايج</li>
+            <li><code>§TOOL-JS::routeScan</code> — باركود ٨–٩ أرقام = قطعة، غير كده = أوردر (v1.51.0)</li>
+            <li><code>§TOOL-JS::openOrder</code> — نداء <code>order_items</code> (قراءة) ومعالجة النتايج</li>
+            <li><code>§RECV-JS</code> — لوحة الاستلام قطعة قطعة + <code>receive_order</code>. مفتاح القطعة <code>lineItemId#unitIndex</code> = نفس صيغة الـ Worker بالحرف</li>
+            <li><code>§RI-JS</code> + <code>receiveLooseItem</code> — «قطع مستنية الرجوع للمخزن» و<code>receive_item</code>. الرقم بنفس <code>derive</code> صف الرئيسية (<code>home-config.js</code> · <code>ECO_CACHE_RETURN_ITEMS</code>)</li>
             <li><code>§TOOL-JS::outcomeModal</code> — نافذة واحدة بأربع نغمات (مرفوض · خلاص متعمل · إقرار · فشل)، ومدخل واحد <code>showOutcome</code></li>
             <li><code>§TOOL-JS::session</code> — جدول سكانات الجلسة + العدّادات</li>
             <li><code>§WAREHOUSE-QUEUE-JS</code> — الطابور بالتحديث التلقائي وحراسه التلاتة</li>
@@ -766,6 +815,41 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
             aria-label="باركود الأوردر" />
         </div>
 
+        <!-- ══ §RECV — الاستلام قطعة قطعة (v1.51.0 · طلب أحمد 22-10-2026) ══════
+             بيظهر بعد سكان باركود الأوردر. كل قطعة بتتعلّم بسكان **باركود
+             المنتج** (٨–٩ أرقام)، و`Warehouse` مابتتكتبش غير لما **كل** قطعة
+             تبقى «اتسكنت» أو «ناقصة» (بإقرار صريح). الكتابة نفسها في الـ Worker
+             (`receive_order`) على قراءة **طازجة** — مش على القايمة دي. -->
+        <div class="recv-box" id="recvBox" style="display:none;">
+          <div class="recv-head">
+            <div>
+              <div class="recv-title">📦 استلام قطع الطرد</div>
+              <div class="recv-sub" id="recvSub"></div>
+            </div>
+            <div class="recv-prog" id="recvProg" aria-live="polite">0 / 0</div>
+          </div>
+          <div class="recv-note" id="recvNote" style="display:none;"></div>
+          <div class="table-wrap" id="recvTableWrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>SKU</th>
+                  <th>المنتج</th>
+                  <th>باركود المنتج</th>
+                  <th>القطعة</th>
+                  <th>الحالة</th>
+                  <th>إجراء</th>
+                </tr>
+              </thead>
+              <tbody id="recvBody"></tbody>
+            </table>
+          </div>
+          <div class="recv-foot">
+            <button class="btn btn-outline" id="recvCancelBtn" type="button" onclick="recvCancel()">✕ إلغاء الاستلام</button>
+            <button class="btn btn-success" id="recvFinishBtn" type="button" onclick="recvFinish()" disabled>✅ إنهاء الاستلام</button>
+          </div>
+        </div>
+
         <!-- جدول سكانات الجلسة — بيظهر بعد أول سكانة بس -->
         <div id="sessionWrap" style="display:none;">
           <div class="table-wrap">
@@ -832,7 +916,6 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
                     <th>العميل</th>
                     <th>نوع الأوردر</th>
                     <th>الحالة</th>
-                    <th>عدد القطع</th>
                     <th>موقع الشحنة</th>
                     <th>تاريخ الأوردر</th>
                   </tr>
@@ -841,6 +924,61 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
               </table>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ §RI — «قطع مستنية الرجوع للمخزن» (دفتر D1 · v1.51.0) ═══════════
+         من جدول `warehouse_return_items` (`get_return_items`): قطع التسليم
+         الجزئي اللي لسه في المكتب (الأوردر بيفضل `Shipped` فمش في الطابور
+         فوق) + قطع وصلت ناقصة مع أوردر كامل. سكان باركود القطعة (٨–٩ أرقام)
+         في المربع فوق بيقفل **أقدم** سطر مستني بنفس الباركود (قرار أحمد). -->
+    <div class="card" id="riBox" style="margin-bottom:16px;">
+      <div class="rq-head">
+        <div>
+          <div class="rq-title">📦 قطع مستنية الرجوع للمخزن</div>
+          <div class="rq-sub">قطع رجعت مع المندوب من تسليم جزئي · وقطع وصلت ناقصة مع أوردر مرتجع — اسكن باركود القطعة في المربع فوق</div>
+        </div>
+        <div class="count-badge">
+          <span class="count-num" id="riCount">—</span>
+          <span class="count-lbl">قطعة</span>
+        </div>
+        <div class="rq-act">
+          <div class="eco-fresh">
+            <div class="eco-fresh-row">
+              <span class="eco-fresh-lbl">آخر تحديث</span>
+              <span class="eco-ago" id="riAgo">لسه ما اتحدّثش</span>
+            </div>
+            <div class="eco-fresh-row" id="riStamp"><span class="eco-stamp-chip">—</span></div>
+          </div>
+          <button class="eco-rbtn" id="riBtn" type="button" onclick="riLoad(false)">
+            <span class="eco-rbtn-ico">↺</span><span>تحديث</span>
+            <span class="eco-rbtn-badge" id="riBadge">—</span>
+          </button>
+        </div>
+      </div>
+      <div id="riFail" class="rq-fail" style="display:none;"></div>
+      <div id="riTrunc" class="rq-warn" style="display:none;"></div>
+      <div class="rq-body">
+        <div id="riEmpty" class="rq-empty">
+          <div class="eco-loadbox" role="status" aria-live="polite"><span class="eco-load-spin" aria-hidden="true"></span><div class="eco-load-title">⏳ جاري تحميل القطع برجاء الانتظار ...</div></div>
+        </div>
+        <div class="table-wrap" id="riTableWrap" style="display:none;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>رقم الأوردر</th>
+                <th>SKU</th>
+                <th>المنتج</th>
+                <th>باركود المنتج</th>
+                <th>المصدر</th>
+                <th>الحالة</th>
+                <th>اتسجّلت</th>
+                <th>إجراء</th>
+              </tr>
+            </thead>
+            <tbody id="riTableBody"></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -1317,7 +1455,26 @@ function handleScan() {
   scanInputEl.value = '';
   scanInputEl.focus();
   if (!val) return;
-  scanOrder(val, false);
+  routeScan(val);
+}
+
+// ─── §TOOL-JS::routeScan — مين السكانة دي؟ (v1.51.0) ───
+// 🔴 **التمييز بالطول** (مقيس على المتجر 22-10-2026): باركود المنتج ٨–٩ أرقام ·
+//    اسم الأوردر ٥ أرقام · الـ Order ID ١٣ رقم. فالرقم ٨–٩ **قطعة** وأي حاجة
+//    تانية **أوردر** (زي ما كان قبل كده بالظبط).
+// ⚠️ وطول ما لوحة استلام أوردر مفتوحة، سكان القطعة بيتطابق مع قطع **الأوردر ده
+//    بس** — مش مع دفتر التسليم الجزئي. قطعة مش منه = رفض بلا أي كتابة.
+function isItemBarcode(code) { return /^\d{8,9}$/.test(String(code).trim()); }
+
+function routeScan(code) {
+  if (recv) {
+    if (isItemBarcode(code)) { recvScanUnit(code); return; }
+    playBeep('warn');
+    showToast(`فيه أوردر مفتوح للاستلام (${recv.order?.orderName || ''}) — خلّصه أو ألغيه الأول`, 'warn');
+    return;
+  }
+  if (isItemBarcode(code)) { receiveLooseItem(code); return; }
+  openOrder(code, false);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1333,7 +1490,10 @@ function handleScan() {
 
 let sessionRows = [];          // سكانات الجلسة — عرض بحت، مش مصدر للسجل
 let scanBusy    = false;       // بيمنع سكانتين متوازيتين على نفس النداء
-window.shellIsBusy = () => scanBusy;   // §IDLE — الخروج التلقائي (٦٠ د) موقوف طول ما سكانة بتتسجّل
+// §IDLE — الخروج التلقائي (٦٠ د) موقوف طول ما سكانة بتتسجّل **أو** لوحة استلام مفتوحة فيها
+// قطع اتعلّمت (v1.51.0) — الخروج كان هيمسح اللي اتسكن من غير ما يتسجّل.
+let recv = null;   // لوحة الاستلام المفتوحة (§RECV-JS) — { code, ack, order, machine, cycleKey, itemsUnknown, units }
+window.shellIsBusy = () => scanBusy || (!!recv && recv.units.some(u => u.state !== 'wait'));
 let pendingAck  = null;        // الأوردر المستني إقرار (نافذة التحذير مفتوحة)
 
 const OUTCOME_LABEL = {
@@ -1348,17 +1508,19 @@ function machineText(m) {
   return m === 's2' ? 'استبدال/استرجاع (S2)' : m === 's1' ? 'الشحنة الأصلية (S1)' : '—';
 }
 
-// ─── §TOOL-JS::scanOrder — المسار الوحيد للسكان ───
-// ⚠️ **مسار واحد بس**: السكانة والإقرار الاتنين بيعدّوا من هنا. مسار تاني
-//    للإقرار كان هيفترق مع أول تعديل (درس R1).
-async function scanOrder(code, ack) {
+// ─── §TOOL-JS::openOrder — الخطوة ①: سكان باركود الأوردر (v1.51.0) ───
+// ⚠️ **مسار واحد بس**: السكانة والإقرار الاتنين بيعدّوا من هنا (درس R1).
+// 🔴 النداء ده **مابيكتبش** على الحالة السليمة — بيرجّع قطع الطرد، والكتابة
+//    (عهدة `Warehouse` + الدفتر) في `recvSubmit` بعد سكان القطع. الرفض و«خلاص
+//    متعمل» لسه بيتسجّلوا صف في السجل زي ما كانوا.
+async function openOrder(code, ack) {
   if (scanBusy) { showToast('استنى لحد ما السكانة اللي قبلها تخلص', 'warn'); return; }
   if (isOutcomeOpen() && !ack) return;          // نافذة مفتوحة = الموظف لسه بيقرا
 
   scanBusy = true;
   setScanBusyUI(true);
   try {
-    const res = await apiPost('scan', {
+    const res = await apiPost('order_items', {
       code,
       ack: ack === true,
       employee: currentEmployee.username,
@@ -1370,33 +1532,25 @@ async function scanOrder(code, ack) {
       playBeep('warn');
       showOutcome({
         tone: 'warn',
-        title: '⚠️ محتاج مراجعة قبل التسجيل',
+        title: '⚠️ محتاج مراجعة قبل الاستلام',
         order: res.order,
         machine: res.machine,
         lines: res.warnings || [res.message],
-        note: 'التسجيل مش هيحصل غير لما تضغط «سجّل برضه».',
+        note: 'الاستلام مش هيبدأ غير لما تضغط «كمّل برضه».',
         buttons: [
-          { label: '✅ سجّل برضه', cls: 'btn-primary', primary: true,
-            onClick: () => { closeOutcome(); scanOrder(code, true); } },
+          { label: '✅ كمّل برضه', cls: 'btn-primary', primary: true,
+            onClick: () => { closeOutcome(); openOrder(code, true); } },
           { label: '✕ إلغاء', cls: 'btn-red', onClick: () => { pendingAck = null; closeOutcome(); } },
         ],
       });
       return;
     }
 
-    // ② نجاح (أو نجاح بتحذير) — توست، والصف بيختفي من الطابور
-    if (res.result === 'success' || res.result === 'warning') {
-      playBeep(res.result === 'warning' ? 'warn' : 'success');
-      pushSession(res, code);
-      rqRemove(res.order?.orderId);
-      if (res.logged === false) {
-        // العملية حصلت على شوبيفاي — والسجل هو اللي فشل. الفرق ده لازم يتقال.
-        showToast(`تم تسجيل ${res.order?.orderName || ''} — ⚠️ بس ما اتكتبش في السجل: ${res.logError || ''}`, 'warn', 8000);
-      } else if (res.result === 'warning') {
-        showToast(`تم تسجيل ${res.order?.orderName || ''} مع تحذير`, 'warn');
-      } else {
-        showToast(`✅ ${res.order?.orderName || ''} → رجع المخزن`, 'success');
-      }
+    // ② الطرد مؤهل — لوحة الاستلام قطعة قطعة
+    if (res.result === 'items') {
+      pendingAck = null;
+      playBeep('scan');
+      recvOpen(res, code, ack === true);
       return;
     }
 
@@ -1434,12 +1588,279 @@ async function scanOrder(code, ack) {
     });
   } catch (err) {
     playBeep('error');
-    // 🔴 «ما ردّش» ≠ «ما اتنفّذش» — الكتابة ممكن تكون تمّت فعلاً.
+    // ⚠️ الخطوة دي قراءة بس (مفيش كتابة على الحالة السليمة)، فإعادة السكان آمنة.
     showOutcome({
       tone: 'fail', title: '❌ النداء فشل',
       lines: [err.message],
-      note: 'راجع تاب السجل قبل ما تسكن الأوردر ده تاني — ممكن يكون اتسجّل فعلاً.',
+      note: 'اسكن الأوردر تاني — الخطوة دي مابتكتبش حاجة.',
     });
+  } finally {
+    scanBusy = false;
+    setScanBusyUI(false);
+    // 🔴 اللوحة اترسمت وإحنا لسه `scanBusy` (زرارا الإنهاء والإلغاء مقفولين) —
+    //    من غير إعادة الرسم دي، أوردر قطعه ما اتحددتش مالوش أي طريق للإنهاء.
+    if (recv) recvRender();
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// §RECV-JS — لوحة الاستلام قطعة قطعة (v1.51.0 · قرار أحمد 22-10-2026)
+// ══════════════════════════════════════════════════════════════
+// 🔴 القايمة دي **عرض + اختيار** بس — الـ Worker (`receive_order`) بيعيد قراءة
+//    الأوردر وقطعه **طازة** وبيرفض أي مفتاح قطعة مش في القايمة الحيّة، وأي قطعة
+//    مش متغطية، وأي ناقص من غير إقرار — **قبل** أي كتابة.
+// ⚠️ مفتاح القطعة = `lineItemId#unitIndex` — **نفس** صيغة الـ Worker بالحرف
+//    (`unitKey`). أي اختلاف = كل استلام بيرجع «القطع اتغيّرت» (409).
+// ⚠️ `recv` متعرّف فوق جنب `scanBusy` (§TOOL-JS) — `shellIsBusy` بيقراه.
+
+function recvOpen(res, code, ack) {
+  const units = [];
+  for (const it of (res.items || [])) {
+    for (let u = 1; u <= it.qty; u++) {
+      units.push({ key: `${it.lineItemId}#${u}`, unitIndex: u, qty: it.qty,
+        sku: it.sku, title: it.title, barcode: it.barcode, state: 'wait', mode: null });
+    }
+  }
+  recv = { code, ack, order: res.order, machine: res.machine, cycleKey: res.cycleKey,
+           itemsUnknown: !!res.itemsUnknown || !units.length, warnings: res.warnings || [], units, flash: null };
+  recvRender();
+  document.getElementById('recvBox').scrollIntoView({ block: 'nearest' });
+}
+
+function recvCounts() {
+  const n = { total: 0, done: 0, miss: 0, wait: 0 };
+  if (!recv) return n;
+  for (const u of recv.units) { n.total++; n[u.state]++; }
+  return n;
+}
+
+function recvRender() {
+  const box = document.getElementById('recvBox');
+  if (!recv) { box.style.display = 'none'; document.getElementById('recvBody').innerHTML = ''; return; }
+  box.style.display = '';
+  const o = recv.order || {};
+  document.getElementById('recvSub').innerHTML =
+    `${orderLink(o.orderName, o.orderId)}<span>·</span><b>${esc(machineText(recv.machine))}</b>`
+    + `<span>·</span><span>${esc(rqStatusOf({ ...o, machine: recv.machine }).text)}</span>`;
+  const n = recvCounts();
+  document.getElementById('recvProg').textContent = recv.itemsUnknown ? '—' : `${n.done + n.miss} / ${n.total}`;
+
+  const note = document.getElementById('recvNote');
+  const notes = [];
+  if (recv.itemsUnknown) notes.push('⚠️ ما قدرناش نحدد قطع الطرد ده من شوبيفاي — راجع الطرد بعينك، وبعدها «إنهاء الاستلام» هيطلب تأكيد يدوي.');
+  for (const w of recv.warnings) notes.push(`⚠️ ${w}`);
+  note.style.display = notes.length ? '' : 'none';
+  note.innerHTML = notes.map(esc).join('<br>');
+
+  const body = document.getElementById('recvBody');
+  document.getElementById('recvTableWrap').style.display = recv.units.length ? '' : 'none';
+  body.innerHTML = recv.units.map(u => {
+    const st = u.state === 'done'
+      ? `<span class="u-state s-done">✅ اتسكنت${u.mode === 'manual' ? ' (يدوي)' : ''}</span>`
+      : u.state === 'miss' ? '<span class="u-state s-miss">❌ ناقصة</span>'
+      : '<span class="u-state s-wait">⏳ مستنية</span>';
+    // ⚠️ الأزرار بـ`data-*` + listener واحد على الـ tbody — مش `onclick` بنص، عشان
+    //    مفيش قيمة (SKU · اسم منتج) تتسرّب جوّه HTML.
+    const acts = u.state === 'wait'
+      ? `<button class="btn btn-outline btn-sm" type="button" data-act="manual" data-key="${esc(u.key)}">✋ استلام يدوي</button>`
+        + `<button class="btn btn-danger-outline btn-sm" type="button" data-act="miss" data-key="${esc(u.key)}">❌ ناقصة</button>`
+      : `<button class="btn btn-outline btn-sm" type="button" data-act="undo" data-key="${esc(u.key)}">↩ تراجع</button>`;
+    const cls = u.state === 'done' ? 'u-done' : u.state === 'miss' ? 'u-miss' : '';
+    return `<tr class="recv-row ${cls}${recv.flash === u.key ? ' u-flash' : ''}" data-key="${esc(u.key)}">
+      <td class="col-mono">${esc(u.sku || '—')}</td>
+      <td>${esc(u.title || '—')}</td>
+      <td class="col-num">${u.barcode ? esc(u.barcode) : '<span class="u-state s-miss">مالهاش باركود</span>'}</td>
+      <td class="col-num">${u.qty > 1 ? `${u.unitIndex} من ${u.qty}` : '1'}</td>
+      <td>${st}</td>
+      <td><span class="u-acts">${acts}</span></td>
+    </tr>`;
+  }).join('');
+
+  const fin = document.getElementById('recvFinishBtn');
+  fin.disabled = scanBusy || (!recv.itemsUnknown && n.wait > 0);
+  document.getElementById('recvCancelBtn').disabled = scanBusy;
+}
+
+document.getElementById('recvBody').addEventListener('click', e => {
+  const b = e.target.closest('button[data-act]');
+  if (!b || !recv || scanBusy) return;
+  const u = recv.units.find(x => x.key === b.dataset.key);
+  if (!u) return;
+  if (b.dataset.act === 'manual') { u.state = 'done'; u.mode = 'manual'; }
+  else if (b.dataset.act === 'miss') { u.state = 'miss'; u.mode = null; }
+  else if (b.dataset.act === 'undo') { u.state = 'wait'; u.mode = null; }
+  recv.flash = null;
+  recvRender();
+  scanInputEl.focus();
+});
+
+// ─── سكان قطعة جوّه الأوردر المفتوح ───
+// أول قطعة **مستنية** بنفس الباركود بتتعلّم. ولو كل قطع الأوردر اتسكنت (مفيش
+// ناقص) الاستلام بيتنهي لوحده — من غير ضغطة زيادة.
+function recvScanUnit(code) {
+  const u = recv.units.find(x => x.state === 'wait' && x.barcode === code);
+  if (!u) {
+    const known = recv.units.some(x => x.barcode === code);
+    playBeep(known ? 'warn' : 'error');
+    showToast(known
+      ? 'القطعة دي اتعلّمت خلاص — كل قطعها في الأوردر ده اتسكنت'
+      : `الباركود ${code} مش من قطع الأوردر ده — الطرد فيه قطعة غلط؟ راجعها قبل الإنهاء`, known ? 'warn' : 'error', 6000);
+    return;
+  }
+  u.state = 'done'; u.mode = 'scan';
+  recv.flash = u.key;
+  playBeep('scan');
+  recvRender();
+  const n = recvCounts();
+  if (n.wait === 0 && n.miss === 0) recvFinish();
+}
+
+function recvCancel() {
+  if (!recv || scanBusy) return;
+  const n = recvCounts();
+  if (n.done + n.miss > 0 && !confirm('فيه قطع اتسكنت — إلغاء الاستلام بيمسح اللي اتعلّم ومش هيتسجّل حاجة. متأكد؟')) return;
+  recv = null;
+  recvRender();
+  scanInputEl.focus();
+}
+
+// ─── الخطوة ②: إنهاء الاستلام ───
+// القطع الناقصة والقطع اللي ما اتحددتش بيطلبوا **إقرار صريح** في نافذة قبل
+// النداء — والـ Worker بيرفض من غير الإقرار حتى لو الواجهة اتخطّت النافذة.
+function recvFinish() {
+  if (!recv || scanBusy) return;
+  const n = recvCounts();
+  if (!recv.itemsUnknown && n.wait > 0) { showToast(`فاضل ${n.wait} قطعة — اسكنها أو علّمها ناقصة`, 'warn'); return; }
+
+  if (recv.itemsUnknown) {
+    playBeep('warn');
+    showOutcome({
+      tone: 'warn', title: '⚠️ تأكيد استلام من غير سكان القطع',
+      order: recv.order, machine: recv.machine,
+      lines: ['قطع الطرد ده ما اتحددتش من شوبيفاي — الاستلام هيتسجّل على الأوردر بس، من غير سطور قطع في الدفتر.'],
+      note: 'متأكد إن الطرد وصل المخزن وراجعته بعينك؟',
+      buttons: [
+        { label: '✅ أيوه، سجّل الاستلام', cls: 'btn-primary', primary: true, onClick: () => { closeOutcome(); recvSubmit({ itemsUnknownAck: true }); } },
+        { label: '✕ رجوع', cls: 'btn-red', onClick: closeOutcome },
+      ],
+    });
+    return;
+  }
+  if (n.miss > 0) {
+    playBeep('warn');
+    const missing = recv.units.filter(u => u.state === 'miss');
+    showOutcome({
+      tone: 'warn', title: `⚠️ ${n.miss} قطعة ناقصة من الطرد`,
+      order: recv.order, machine: recv.machine,
+      lines: missing.map(u => `❌ ${u.sku || u.title || '—'}${u.qty > 1 ? ` (قطعة ${u.unitIndex} من ${u.qty})` : ''}`),
+      note: 'الطرد هيتسجّل «في المخزن»، والقطع دي هتتسجّل «ناقصة» وتظهر في «قطع مستنية الرجوع للمخزن» لحد ما توصل.',
+      buttons: [
+        { label: '✅ أيوه، القطع دي ناقصة فعلاً', cls: 'btn-primary', primary: true, onClick: () => { closeOutcome(); recvSubmit({ missingAck: true }); } },
+        { label: '✕ رجوع للسكان', cls: 'btn-red', onClick: closeOutcome },
+      ],
+    });
+    return;
+  }
+  recvSubmit({});
+}
+
+async function recvSubmit(extra) {
+  if (!recv || scanBusy) return;
+  const cur = recv;
+  scanBusy = true;
+  setScanBusyUI(true);
+  recvRender();
+  try {
+    const res = await apiPost('receive_order', {
+      code: String(cur.order?.orderId || cur.code),
+      ack: cur.ack === true,
+      employee: currentEmployee.username,
+      scanned: cur.units.filter(u => u.state === 'done').map(u => ({ key: u.key, mode: u.mode })),
+      missing: cur.units.filter(u => u.state === 'miss').map(u => u.key),
+      ...extra,
+    });
+
+    if (res.result === 'success' || res.result === 'warning') {
+      playBeep(res.result === 'warning' ? 'warn' : 'success');
+      pushSession(res, cur.code);
+      rqRemove(res.order?.orderId);
+      recv = null;
+      if (res.logged === false) {
+        showToast(`تم استلام ${res.order?.orderName || ''} — ⚠️ بس ما اتكتبش في السجل: ${res.logError || ''}`, 'warn', 8000);
+      } else if (res.result === 'warning') {
+        showOutcome({
+          tone: 'warn', title: '⚠️ الطرد اتسجّل «في المخزن» — مع ملاحظات',
+          order: res.order, machine: res.machine, lines: res.warnings || [],
+        });
+      } else {
+        showToast(`✅ ${res.order?.orderName || ''} → رجع المخزن (${res.units} قطعة)`, 'success');
+      }
+      if (res.missing) riLoad(true);
+      return;
+    }
+    // `error` — النداء وصل لشوبيفاي والكتابة اترفضت: اللوحة بتفضل مفتوحة عشان يعيد
+    playBeep('error');
+    pushSession(res, cur.code);
+    showOutcome({ tone: 'fail', title: '❌ الاستلام ما اتسجّلش', order: res.order, machine: res.machine,
+      lines: [res.message || 'فشل غير معروف'], note: 'القطع اللي اتعلّمت لسه زي ما هي — جرّب «إنهاء الاستلام» تاني.' });
+  } catch (err) {
+    playBeep('error');
+    const p = err.payload || {};
+    // 409 = مفيش أي كتابة حصلت (الـ Worker رفض قبل الكتابة)
+    if (err.status === 409 && (p.code === 'items_changed' || p.result === 'already' || p.result === 'rejected')) {
+      recv = null;
+      if (p.result === 'already') rqRemove(p.order?.orderId);
+      showOutcome({ tone: p.result === 'already' ? 'neutral' : 'fail',
+        title: p.result === 'already' ? '⏭ الطرد ده اتسجّل في المخزن خلاص' : '⛔ الأوردر اتغيّر من وقت السكان',
+        order: p.order, lines: [p.message || err.message],
+        note: p.result === 'already' ? 'مفيش حاجة كانت مطلوبة.' : 'مفيش أي حاجة اتكتبت — اسكن باركود الأوردر تاني.' });
+    } else if (err.status === 409) {
+      showOutcome({ tone: 'fail', title: '⛔ الاستلام ما اتسجّلش', lines: [p.message || err.message],
+        note: 'مفيش أي حاجة اتكتبت — راجع القطع وجرّب تاني.' });
+    } else {
+      // 🔴 «ما ردّش» ≠ «ما اتنفّذش» — الكتابة ممكن تكون تمّت فعلاً.
+      showOutcome({ tone: 'fail', title: '❌ النداء فشل', lines: [err.message],
+        note: 'راجع تاب السجل قبل ما تعيد — ممكن يكون الطرد اتسجّل فعلاً. لو اتسجّل، سكان الأوردر تاني هيقول «خلاص متعمل».' });
+    }
+  } finally {
+    scanBusy = false;
+    setScanBusyUI(false);
+    recvRender();
+  }
+}
+
+// ─── §TOOL-JS::receiveLooseItem — سكان قطعة سايبة (تسليم جزئي / ناقصة) ───
+// 🔴 الـ Worker بيقفل **أقدم** سطر مستني بنفس الباركود (قرار أحمد 22-10-2026)،
+//    والنتيجة بتقول الأوردر اللي القطعة اتحسبت عليه بالاسم.
+async function receiveLooseItem(code, id) {
+  if (scanBusy) { showToast('استنى لحد ما السكانة اللي قبلها تخلص', 'warn'); return; }
+  scanBusy = true;
+  setScanBusyUI(true);
+  try {
+    const res = await apiPost('receive_item', id
+      ? { id, employee: currentEmployee.username }
+      : { barcode: code, employee: currentEmployee.username });
+    if (res.result === 'success') {
+      playBeep('success');
+      const it = res.item || {};
+      pushSession({ result: 'success', order: { orderName: it.orderName, orderId: it.orderId },
+        machine: null, message: `قطعة: ${it.sku || it.title || code}${it.wasStatus === 'missing' ? ' (كانت ناقصة)' : ''}` }, code || it.sku);
+      riRemove(it.id);
+      showToast(`✅ ${it.sku || it.title || ''} — ${it.orderName || ''} → رجعت المخزن`, 'success');
+      return;
+    }
+    playBeep(res.result === 'already' ? 'warn' : 'error');
+    pushSession({ result: res.result === 'already' ? 'already' : 'rejected', order: res.item ? { orderName: res.item.orderName } : null,
+      machine: null, message: res.message }, code || '');
+    showOutcome({
+      tone: res.result === 'already' ? 'neutral' : 'fail',
+      title: res.result === 'already' ? '⏭ القطعة دي اتسلّمت خلاص' : '⛔ القطعة دي مش مستنية الاستلام',
+      lines: [res.message],
+    });
+  } catch (err) {
+    playBeep('error');
+    showOutcome({ tone: 'fail', title: '❌ النداء فشل', lines: [err.message],
+      note: 'حدّث «قطع مستنية الرجوع للمخزن» قبل ما تعيد — ممكن تكون اتسجّلت فعلاً.' });
   } finally {
     scanBusy = false;
     setScanBusyUI(false);
@@ -2295,7 +2716,9 @@ function rqRender() {
   const now = new Date();
   tbody.innerHTML = rows.map(o => {
     const age = ecoOrderAge(o.createdAt, now);
-    const qty = (o.itemsQty === null || o.itemsQty === undefined) ? '—' : o.itemsQty;
+    // ⚠️ عمود «عدد القطع» اتشال (v1.51.0 · قرار أحمد): `currentSubtotalLineItemsQuantity`
+    //    بيبقى **صفر دايمًا** على أي أوردر ملغي أو مرتجع (الإلغاء بيصفّر الكميات)، فالعمود كان
+    //    بيقول «٠» على كل صف. القطع الحقيقية بتظهر في لوحة الاستلام بعد سكان الأوردر.
     // ⚠️ «نوع الأوردر» — التفرقة بين الطردين **مقصودة** (بخلاف طابور بوسطة
     //    اللي بلا علامة): الموظف بيسكن **باركود الأوردر**، وهو نفسه على
     //    الطردين، فالسكانة لوحدها مابتقولش أنهي طرد. نفس تصميم عمود «نوع
@@ -2315,7 +2738,6 @@ function rqRender() {
       <td>${esc(o.customer || '—')}</td>
       <td><span class="type-text ${typeClass}">${esc(typeLabel)}</span></td>
       <td><span class="badge ${st.cls}">${esc(st.text)}</span></td>
-      <td class="col-num">${esc(String(qty))}</td>
       <td><span class="wh-text ${wh.cls}">${esc(wh.text)}</span></td>
       <td>${esc(formatDate(o.createdAt))} <span class="time-badge age-badge ${age.cls}">${esc(age.text)}</span></td>
     </tr>`;
@@ -2429,6 +2851,119 @@ setInterval(() => {
 }, RQ_TICK_MS);
 
 // ══════════════════════════════════════════════════════════════
+// §RI-JS — «قطع مستنية الرجوع للمخزن» (دفتر D1 · v1.51.0)
+// ══════════════════════════════════════════════════════════════
+// 🔴 **نفس الـ endpoint والكاش اللي صف الشاشة الرئيسية بيعدّ منهم**
+//    (`get_return_items` · `ECO_CACHE_RETURN_ITEMS`) — والرقم = المستنية + الناقصة،
+//    بنفس `derive` هناك بالحرف. رقمين مختلفين لنفس السؤال = درس R1.
+// ⚠️ القايمة **عرض** — الحكم وقت السكان في الـ Worker (`receive_item`): سطر
+//    اتقفل من جهاز تاني بيرجع «خلاص متعمل» مش نجاح كاذب.
+const riState = { items: [], at: null, loading: false, failed: false };
+
+function riSetFresh() {
+  const info  = agoInfo(riState.at, Date.now());
+  const agoEl = document.getElementById('riAgo');
+  const btn   = document.getElementById('riBtn');
+  if (agoEl) { agoEl.className = 'eco-ago ' + info.cls; agoEl.textContent = info.text; }
+  if (btn)   btn.classList.toggle('is-stale', info.stale);
+  const stamp = document.getElementById('riStamp');
+  if (stamp) {
+    stamp.innerHTML = riState.at
+      ? `<span class="eco-stamp-chip">${esc(formatDate(riState.at.toISOString()))}</span>` +
+        `<span class="eco-stamp-chip">${esc(formatTimeOnly(riState.at.toISOString()))}</span>`
+      : '<span class="eco-stamp-chip">—</span>';
+  }
+}
+
+function riRender() {
+  const rows  = riState.items;
+  const tbody = document.getElementById('riTableBody');
+  const wrap  = document.getElementById('riTableWrap');
+  const empty = document.getElementById('riEmpty');
+  const shown = riState.at ? String(rows.length) : '—';
+  document.getElementById('riCount').textContent = shown;
+  document.getElementById('riBadge').textContent = shown;
+
+  if (!rows.length) {
+    wrap.style.display  = 'none';
+    empty.style.display = '';
+    empty.innerHTML = riState.at
+      ? '<div class="ico">✅</div><div>مفيش قطع مستنية الرجوع للمخزن</div>'
+      : (riState.failed ? '<div class="ico">⚠️</div><div>تعذّر تحميل القطع — اضغط «تحديث»</div>' : ecoLoadingHTML());
+    return;
+  }
+  empty.style.display = 'none';
+  wrap.style.display  = '';
+  tbody.innerHTML = rows.map(r => {
+    const src = r.source === 'partial_delivery'
+      ? '<span class="ri-src src-partial">تسليم جزئي</span>'
+      : '<span class="ri-src src-order">أوردر مرتجع/ملغي</span>';
+    const st = r.status === 'missing'
+      ? '<span class="badge badge-red">❌ ناقصة</span>'
+      : '<span class="badge badge-amber">⏳ مستنية الاستلام</span>';
+    return `<tr>
+      <td>${orderLink(r.orderName, r.orderId)}</td>
+      <td class="col-mono">${esc(r.sku || '—')}</td>
+      <td>${esc(r.title || '—')}</td>
+      <td class="col-num">${r.barcode ? esc(r.barcode) : '<span class="u-state s-miss">مالهاش باركود</span>'}</td>
+      <td>${src}</td>
+      <td>${st}</td>
+      <td class="col-num">${esc(formatDate(r.createdAt))}</td>
+      <td><button class="btn btn-outline btn-sm" type="button" data-ri-id="${esc(String(r.id))}">✋ استلام يدوي</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ⚠️ «استلام يدوي» لقطعة باركودها ممسوح أو مالهاش باركود — بتأكيد، وبيتسجّل
+//    `receive_mode = manual` عشان يبان في الدفتر إنها ما اتسكنتش.
+document.getElementById('riTableBody').addEventListener('click', e => {
+  const b = e.target.closest('button[data-ri-id]');
+  if (!b || scanBusy) return;
+  const id = Number(b.dataset.riId);
+  const r  = riState.items.find(x => x.id === id);
+  if (!r) return;
+  if (!confirm(`تأكيد استلام القطعة ${r.sku || r.title || ''} (${r.orderName || ''}) يدويًا من غير سكان؟`)) return;
+  receiveLooseItem(null, id);
+});
+
+function riRemove(id) {
+  if (!id) return;
+  const before = riState.items.length;
+  riState.items = riState.items.filter(x => x.id !== id);
+  if (riState.items.length !== before) riRender();
+}
+
+async function riLoad(silent) {
+  if (riState.loading) return;
+  riState.loading = true;
+  const btn = document.getElementById('riBtn');
+  if (btn) { btn.disabled = true; btn.classList.add('loading'); }
+  try {
+    const data = await apiGet('get_return_items');
+    cacheSet(ECO_CACHE_RETURN_ITEMS, data);   // نفس كاش صف الرئيسية — بتفتح على رقم أحدث
+    riState.items  = data.items || [];
+    riState.at     = new Date();
+    riState.failed = false;
+    document.getElementById('riFail').style.display = 'none';
+    const trunc = document.getElementById('riTrunc');
+    trunc.style.display = data.truncated ? '' : 'none';
+    if (data.truncated) trunc.textContent = '⚠️ فيه قطع أكتر من الحد المعروض — اسكن عادي، والـ Worker هو اللي بيحكم.';
+  } catch (err) {
+    riState.failed = true;
+    const fail = document.getElementById('riFail');
+    fail.style.display = '';
+    fail.textContent = `⚠️ تعذّر تحميل القطع المستنية — ${err.message}. سكان الأوردرات شغّال عادي.`;
+  } finally {
+    riState.loading = false;
+    if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
+    riRender();
+    riSetFresh();
+    if (!silent) document.getElementById('scanInput')?.focus();
+  }
+}
+setInterval(riSetFresh, RQ_TICK_MS);   // نبضة عرض بس — صفر شبكة
+
+// ══════════════════════════════════════════════════════════════
 // §INIT — التحميل (الجلسة اتأكدت فوق)
 // ══════════════════════════════════════════════════════════════
 document.getElementById('headerMount').innerHTML = ecoHeader({
@@ -2458,6 +2993,10 @@ measureSticky();                         // ← بعد رسم التابات و�
 
 document.getElementById('scanInput')?.focus();   // السكانر جاهز من أول لحظة
 rqLoad(true);                            // الطابور — قراءة بحتة
+riLoad(true).then(() => {               // دفتر القطع الراجعة — قراءة D1 بحتة (v1.51.0)
+  // جاي من صف الرئيسية (`#riBox`) — انزل للقايمة بعد ما تترسم
+  if (location.hash === '#riBox') document.getElementById('riBox')?.scrollIntoView({ block: 'start' });
+});
 </script>
 </body>
 </html>

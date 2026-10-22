@@ -137,6 +137,7 @@ function makeStub(mode = {}) {
     if (action === 'get_ready_to_ship')      return json({ ok: true, orders: [], counts: { total: 0 } });
     if (action === 'get_ready_to_office')    return json({ ok: true, orders: [] });
     if (action === 'get_ready_to_warehouse') return json({ ok: true, orders: [] });
+    if (action === 'get_return_items') return json({ ok: true, items: [], counts: { pending: 0, missing: 0 }, truncated: false });   // v1.51.0 — صف «قطع مستنية الرجوع»
 
     if (action === 'get_done_counts') {
       calls.done = (calls.done || 0) + 1;
@@ -365,8 +366,8 @@ console.log('⑦ التصميم الموحّد — الأقسام الخمسة �
     rows: [...s.querySelectorAll('.eco-qrow')].map(r => r.id), tools: [...s.querySelectorAll('.eco-tool')].map(a => a.getAttribute('href')),
     open: !s.classList.contains('is-collapsed'), sum: !!s.querySelector('.eco-sum') })));
   is(secs.map(s => s.title).join('|') === 'قسم تجهيز الأوردر|قسم التسليمات|قسم المرتجعات|أدوات مساعدة|أدوات أخرى', '🔴 خمس أقسام بالأسماء والترتيب المتفق عليه', secs.map(s => s.title).join('|'));
-  is(secs[0].rows.join() === 'rowBostaUpload,rowPrint,rowPack' && secs[1].rows.join() === 'rowBosta,rowOffice' && secs[2].rows.join() === 'rowWarehouse,rowBostaReturns',
-     'الصفوف في أقسامها: (رفع بوسطة · طباعة · تغليف) · (بوسطة · مكتب) · (رجوع للمخزن · مرتجعات بوسطة)', JSON.stringify(secs.map(s => s.rows)));
+  is(secs[0].rows.join() === 'rowBostaUpload,rowPrint,rowPack' && secs[1].rows.join() === 'rowBosta,rowOffice' && secs[2].rows.join() === 'rowWarehouse,rowReturnItems,rowBostaReturns',
+     'الصفوف في أقسامها: (رفع بوسطة · طباعة · تغليف) · (بوسطة · مكتب) · (رجوع للمخزن · قطع مستنية الرجوع · مرتجعات بوسطة)', JSON.stringify(secs.map(s => s.rows)));
   is(secs[3].tools.join() === 'Order-Item-Remover.html,Order-SKU-Barcode-Printer.html' && secs[4].tools.join() === 'Inventory-Audit-Updater.html,stats.html',
      'الأدوات: مساعدة (عطلان · باركود) · أخرى (الجرد · الإحصائيات) — **كروت** مش pills', JSON.stringify([secs[3].tools, secs[4].tools]));
   is(secs.every(s => s.open && s.sum), 'كلها مفتوحة عند الفتح، وكلها ليها ملخّص مطوي (بلاطات — الأدوات كمان)');
