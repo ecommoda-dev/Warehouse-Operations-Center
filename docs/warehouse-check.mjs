@@ -373,6 +373,8 @@ async function newPage({ withSession = true } = {}) {
 //    ٤٠٠ms للكتابة اليدوي). `press('Enter')` بيعدّي **بلا أي أثر**،
 //    والانتظار لازم يبقى **أطول من المهلة**.
 async function scan(page, code) {
+  // §SESSION (v1.53.1): السكانر مخفي لحد «ابدأ تسجيل المرتجعات»
+  if (!(await page.locator('#scanInput').isVisible())) await page.click('#startSessionBtn');
   await page.fill('#scanInput', String(code));
   await page.waitForTimeout(900);
 }
@@ -407,8 +409,18 @@ console.log('① الجلسة والهيدر الموحّد');
   is(!(await page.locator('#aboutWorkers').textContent() || '').includes('قسم تسليمات المكتب'),
      '🔴 `PAGE_WORKERS` فيها Worker واحد — مش Worker أداة المكتب كمان');
 
-  is(await page.evaluate(() => document.activeElement?.id) === 'scanInput',
-     'الفوكس على مربع السكان من أول لحظة');
+  // §SESSION (v1.53.1): الشاشة الأولى = زرار البدء الأخضر + الطابور، والسكانر مخفي
+  is(await page.locator('#startSessionBtn').isVisible() && !(await page.locator('#scanInput').isVisible()) && await page.locator('#rqBox').isVisible(),
+     '🔴 الشاشة الأولى: زرار «ابدأ تسجيل المرتجعات» + الطابور، والسكانر مخفي');
+  is((await page.evaluate(() => getComputedStyle(document.getElementById('startSessionBtn')).backgroundColor)) === 'rgb(22, 163, 74)',
+     'زرار البدء أخضر');
+  await page.click('#startSessionBtn');
+  is(await page.locator('#scanInput').isVisible() && !(await page.locator('#rqBox').isVisible()) && !(await page.locator('#startSessionBtn').isVisible()) && !(await page.locator('#sessionWrap').isVisible()),
+     '🔴 بعد البدء: السكانر ظاهر وجدول الجلسة فاضي والطابور مخفي');
+  is(await page.evaluate(() => document.activeElement?.id) === 'scanInput', 'الفوكس على مربع السكان بعد البدء');
+  await page.click('#endSessionBtn');
+  is(await page.locator('#startSessionBtn').isVisible() && await page.locator('#rqBox').isVisible() && !(await page.locator('#scanInput').isVisible()),
+     '«إنهاء الجلسة» بترجّع الشاشة الأولى');
   is(errors.length === 0, 'صفر أخطاء في الكونسول', errors.join(' | '));
   await ctx.close();
 }
@@ -782,7 +794,8 @@ console.log('③-ب قطع مستنية الرجوع للمخزن');
   is(tabNames.length === 3 && tabNames[0].includes('الأوردرات') && tabNames[1].includes('منتجات التسليم الجزئي') && tabNames[2].includes('السجل'),
      '🔴 التابات: «الأوردرات» · «منتجات التسليم الجزئي» · «السجل»', tabNames.join(' | '));
   is(!tabNames.some(t => t.includes('السكانر')), 'اسم تاب «السكانر» القديم اتشال', tabNames.join(' | '));
-  is(await page.locator('#rqBox').isVisible() && await page.locator('#scanInput').isVisible() && !(await page.locator('#riBox').isVisible()),
+  if (await page.locator('#endSessionBtn').isVisible()) await page.click('#endSessionBtn');   // §SESSION — الجلسة اتفتحت من السكانات اللي فاتت
+  is(await page.locator('#rqBox').isVisible() && await page.locator('#startSessionBtn').isVisible() && !(await page.locator('#riBox').isVisible()),
      '🔴 تاب «الأوردرات» فيه السكانر وطابور الأوردرات **بس** — قايمة القطع مش فيه');
   await page.click('#tabPartial');
   await page.waitForTimeout(300);
@@ -803,6 +816,7 @@ console.log('③-ب قطع مستنية الرجوع للمخزن');
      '🔴 باركود أوردر في مربع القطع **مابيفتحش لوحة استلام** (التاب مايشوفهاش) — بيتوجّه لتاب «الأوردرات»');
   await page.click('#tabScanner');
   await page.waitForTimeout(200);
+  if (!(await page.locator('#scanInput').isVisible())) { await page.click('#startSessionBtn'); await page.waitForTimeout(100); }   // §SESSION
   is(await page.evaluate(() => document.activeElement?.id) === 'scanInput', 'الرجوع لتاب «الأوردرات» بيرجّع الفوكس للسكانر');
   await scan(page, '44444444');
   is((await txt('#outcomeModal')).includes('مفيش قطعة مستنية'), 'باركود مالوش سطر مستني بيتقال بالنص');
