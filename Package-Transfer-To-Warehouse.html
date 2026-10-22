@@ -155,9 +155,9 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 /* §PICKER — اختيار أوردر من القايمة (فاتورة ضايعة/تالفة) */
 .pick-btn { white-space: nowrap; }
 .pick-list { display: flex; flex-direction: column; gap: 6px; max-height: 55vh; overflow-y: auto; margin: 10px 0; }
-.pick-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; background: var(--surface); }
+.pick-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
 .pick-row:hover { background: var(--surface-2); }
-.pick-row.sel { border-color: var(--accent); background: var(--accent-light); }
+.pick-row .btn { margin-inline-start: auto; white-space: nowrap; }
 .pick-row .pk-name { font-weight: 800; min-width: 70px; }
 .pick-row .pk-addr { flex: 1; font-size: 12px; color: var(--text-secondary); }
 .pick-empty { text-align: center; padding: 24px; color: var(--text-secondary); }
@@ -505,7 +505,6 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
       <input id="pickSearch" class="scan-input" type="text" placeholder="ابحث برقم الأوردر أو العنوان..." autocomplete="off" aria-label="بحث في الأوردرات" oninput="renderOrderPicker()" />
       <div class="pick-list" id="pickList"></div>
       <div style="display:flex; gap:10px; justify-content:flex-start;">
-        <button class="btn btn-primary" id="pickAddBtn" type="button" onclick="addPickedOrder()" disabled>➕ إضافة</button>
         <button class="btn btn-outline" type="button" onclick="closeOrderPicker()">إلغاء</button>
       </div>
     </div>
@@ -867,7 +866,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
     <div class="card" id="scanCard" style="margin-bottom:16px; display:none;">
       <div class="card-header">
         <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-          <button class="btn btn-red" id="endSessionBtn" type="button" onclick="endSession()">⏹ إنهاء الجلسة</button>
+          <button class="btn btn-danger-outline" id="endSessionBtn" type="button" onclick="endSession()">⏹ إنهاء الجلسة</button>
           <h2>📷 امسح باركود الأوردر الراجع</h2>
           <div class="count-badge">
             <span class="count-num" id="doneCount">0</span>
@@ -914,8 +913,8 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
             </table>
           </div>
           <div class="recv-foot">
-            <button class="btn btn-outline" id="recvCancelBtn" type="button" onclick="recvCancel()">✕ إلغاء الاستلام</button>
-            <button class="btn btn-red" id="recvFinishBtn" type="button" onclick="recvFinish()" disabled>✅ إنهاء الاستلام</button>
+            <button class="btn btn-danger-outline" id="recvCancelBtn" type="button" onclick="recvCancel()">✕ إلغاء الاستلام</button>
+            <button class="btn btn-success" id="recvFinishBtn" type="button" onclick="recvFinish()" disabled>✅ تسجيل الاستلام</button>
           </div>
         </div>
 
@@ -1613,11 +1612,9 @@ window.shellIsBusy = () => scanBusy || (!!recv && recv.units.some(u => u.state !
 // ─── §PICKER — اختيار من القايمة بدل السكان (فاتورة ضايعة/تالفة) ───
 // نفس مسار السكان بالظبط (`openOrder`) — مفيش كتابة جديدة. القايمة هي `rqState.orders`
 // (نفس طابور «جاهز للرجوع للمخزن»). أوردر واحد في المرة: لوحة الاستلام بتفتح لأوردر واحد.
-let pickedId = null;
 function openOrderPicker() {
   if (!sessionActive) return;
   if (scanBusy || recv) { showToast('خلّص الأوردر المفتوح للاستلام الأول', 'warn'); return; }
-  pickedId = null;
   document.getElementById('pickSearch').value = '';
   renderOrderPicker();
   document.getElementById('pickOverlay').classList.add('open');
@@ -1633,32 +1630,24 @@ function renderOrderPicker() {
   const list = document.getElementById('pickList');
   if (!rows.length) {
     list.innerHTML = `<div class="pick-empty">${rqState.orders.length ? 'مفيش نتيجة للبحث' : 'مفيش أوردرات في الطابور — حدّث الطابور أو اسكن الباركود'}</div>`;
-  } else {
-    list.innerHTML = rows.map(o => {
-      const id = String(o.orderId);
-      return `<label class="pick-row${id === pickedId ? ' sel' : ''}">
-        <input type="radio" name="pickOrder" value="${esc(id)}"${id === pickedId ? ' checked' : ''} />
-        <span class="pk-name">${esc(o.orderName)}</span>
-        <span class="pk-addr">${esc(o.address || '—')}</span>
-        <span>${esc(rqTypeLabel(o))}</span>
-        <span>${esc(rqStatusOf(o).text || '')}</span>
-      </label>`;
-    }).join('');
+    return;
   }
-  document.getElementById('pickAddBtn').disabled = !pickedId;
+  // الإضافة بضغطة واحدة على زرار الصف نفسه — بـ`data-id` + listener واحد (مش `onclick` بنص)
+  list.innerHTML = rows.map(o => `<div class="pick-row">
+      <span class="pk-name">${esc(o.orderName)}</span>
+      <span class="pk-addr">${esc(o.address || '—')}</span>
+      <span>${esc(rqTypeLabel(o))}</span>
+      <span>${esc(rqStatusOf(o).text || '')}</span>
+      <button class="btn btn-primary btn-sm" type="button" data-pick-id="${esc(String(o.orderId))}">➕ إضافة</button>
+    </div>`).join('');
 }
-document.getElementById('pickList').addEventListener('change', e => {
-  if (e.target.name !== 'pickOrder') return;
-  pickedId = e.target.value;
-  document.getElementById('pickAddBtn').disabled = false;
-  document.querySelectorAll('#pickList .pick-row').forEach(r => r.classList.toggle('sel', r.querySelector('input').checked));
-});
-function addPickedOrder() {
-  if (!pickedId) return;
-  const id = pickedId;
+document.getElementById('pickList').addEventListener('click', e => {
+  const btn = e.target.closest('[data-pick-id]');
+  if (!btn) return;
+  const id = btn.dataset.pickId;
   closeOrderPicker();
   openOrder(id, false);
-}
+});
 
 // ─── §SESSION — جلسة تسجيل المرتجعات (v1.53.1) ───
 // الشاشة الأولى: زرار البدء + الطابور. بعد البدء: السكانر وجدول الجلسة بس (فاضيين).
@@ -1839,7 +1828,7 @@ function recvRender() {
 
   const note = document.getElementById('recvNote');
   const notes = [];
-  if (recv.itemsUnknown) notes.push('⚠️ ما قدرناش نحدد قطع الطرد ده من شوبيفاي — راجع الطرد بعينك، وبعدها «إنهاء الاستلام» هيطلب تأكيد يدوي.');
+  if (recv.itemsUnknown) notes.push('⚠️ ما قدرناش نحدد قطع الطرد ده من شوبيفاي — راجع الطرد بعينك، وبعدها «تسجيل الاستلام» هيطلب تأكيد يدوي.');
   for (const w of recv.warnings) notes.push(`⚠️ ${w}`);
   note.style.display = notes.length ? '' : 'none';
   note.innerHTML = notes.map(esc).join('<br>');
@@ -1993,7 +1982,7 @@ async function recvSubmit(extra) {
     playBeep('error');
     pushSession(res, cur.code);
     showOutcome({ tone: 'fail', title: '❌ الاستلام ما اتسجّلش', order: res.order, machine: res.machine,
-      lines: [res.message || 'فشل غير معروف'], note: 'القطع اللي اتعلّمت لسه زي ما هي — جرّب «إنهاء الاستلام» تاني.' });
+      lines: [res.message || 'فشل غير معروف'], note: 'القطع اللي اتعلّمت لسه زي ما هي — جرّب «تسجيل الاستلام» تاني.' });
   } catch (err) {
     playBeep('error');
     const p = err.payload || {};
