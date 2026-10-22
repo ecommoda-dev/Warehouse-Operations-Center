@@ -174,7 +174,10 @@ const ECO_WORKERS = {
   // 🔴 **وهي معكوس أداة المكتب على نفس الحقل** — بتكتب `Warehouse` على طرد
   //    راجع (مرتجع/ملغي)، بينما دي بتكتب `Office` على طرد خارج. الاتنين
   //    Workers مستقلين وحدّين أدنى مستقلين — ⛔ ممنوع يتربطوا برقم واحد.
-  warehouse:{ url: 'https://package-transfer-to-warehouse-worker.ecommoda-dev.workers.dev', min: '1.0.0', label: 'قسم استلام المرتجعات' },
+  // 🔴 `min: '1.5.0'` (v1.51.0) — الصفحة بقت بتستلم **قطعة قطعة** (`order_items` · `receive_order`) وبتعرض
+  //    دفتر القطع الراجعة (`get_return_items` · `receive_item`)، وصف الرئيسية «قطع مستنية الرجوع للمخزن» بينادي
+  //    `get_return_items`. على Worker أقدم النداءات دي بترجّع `Unknown action` (404) — والحارس بيسمّي النسخة.
+  warehouse:{ url: 'https://package-transfer-to-warehouse-worker.ecommoda-dev.workers.dev', min: '1.5.0', label: 'قسم استلام المرتجعات' },
   // 🔴 جرد المخزون — انضم للهب في v1.39.0 (الأداة المستقلة `Inventory-Audit-Updater`).
   // `6.2.1` = نفس `MIN_WORKER_VERSION` اللي كانت في الأداة المستقلة بالحرف — الصفحة
   // **معتمدة عليه فعلاً** (Standards #29): تاب الجرد الجماعي بيقرا `bulk_compare`
@@ -196,7 +199,7 @@ const ECO_WORKERS = {
   bostaUpload: { url: 'https://bosta-orders-upload-worker.ecommoda-dev.workers.dev', min: '2.23.0', label: 'رفع بوسطة' },
 };
 
-const TOOL_VERSION = 'v1.50.0';                     // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.51.0';                     // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const SHOP_HANDLE  = '6c7e1a-53';
 
@@ -220,6 +223,7 @@ const ECO_CACHE_PACK   = 'woc_queue_pack';    // كاش طابور التغلي�
 const ECO_CACHE_BOSTA     = 'woc_queue_bosta';      // كاش طابور تسليمات بوسطة — رد `get_ready_to_ship` خام (v1.43.0)
 const ECO_CACHE_OFFICE    = 'woc_queue_office';     // كاش طابور تسليمات المكتب — رد `get_ready_to_office` خام
 const ECO_CACHE_WAREHOUSE = 'woc_queue_warehouse';  // كاش طابور استلام المرتجعات — رد `get_ready_to_warehouse` خام
+const ECO_CACHE_RETURN_ITEMS = 'woc_queue_return_items';  // كاش دفتر القطع الراجعة — رد `get_return_items` خام (v1.51.0)
 const ECO_CACHE_BOSTA_UPLOAD = 'woc_queue_bosta_upload';  // عدّادات «رفع بوسطة» التلاتة (شحن · استرجاع · استبدال) — ⛔ مش `ECO_CACHE_BOSTA` (ده كاش طابور تسليمات بوسطة)
 const ECO_CACHE_DONE      = 'woc_done_';            // + مفتاح الطابور: عدّاد «خلص النهارده / أمس» (نفس عمر كاش الطابور)
 const ECO_IDLE_KEY     = 'woc_last_activity';  // §IDLE — آخر نشاط (sessionStorage، لكل تاب لوحده)
@@ -230,7 +234,7 @@ const ECO_HUB = {
   icon: '📦',                       // الأيقونة الافتراضية للهيدر
   // مفاتيح sessionStorage اللي بتتمسح مع الخروج (الجلسة وآخر نشاط بيتمسحوا في الـ core)
   clearKeys: [
-    ECO_CACHE_PRINT, ECO_CACHE_PACK, ECO_CACHE_BOSTA, ECO_CACHE_OFFICE, ECO_CACHE_WAREHOUSE, ECO_CACHE_BOSTA_UPLOAD,
+    ECO_CACHE_PRINT, ECO_CACHE_PACK, ECO_CACHE_BOSTA, ECO_CACHE_OFFICE, ECO_CACHE_WAREHOUSE, ECO_CACHE_RETURN_ITEMS, ECO_CACHE_BOSTA_UPLOAD,
     ...['print', 'pack', 'bosta'].map(k => ECO_CACHE_DONE + k),
   ],
   // صفحات المخزن بتعرّف `window.shellIsBusy` بنفسها — ماعدا `Bosta-Orders-Upload.html`: نسخة متطابقة بالبايت مع هب الشحن

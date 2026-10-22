@@ -173,7 +173,98 @@ const SCAN_REPLIES = {
          warnings:['الشحنة الأصلية ودورة الاستبدال/الاسترجاع الاتنين مرتجعين/ملغيين'] }),
 };
 
-const DIAG = { ok:false, version:'1.0.0', checks:[
+// ══════════════════════════════════════════════════════════════
+// v1.51.0 — الاستلام قطعة قطعة + دفتر القطع الراجعة
+// ══════════════════════════════════════════════════════════════
+// قطع الطرد لكل أوردر (اللي `order_items` بيرجّعها) — نفس شكل رد الـ Worker بالحرف:
+// `{ lineItemId, sku, title, variantId, barcode, qty }`، ومفتاح القطعة في الواجهة
+// `lineItemId#unitIndex` (نفس `unitKey` في الـ Worker).
+const ORDER_ITEMS = {
+  '7212244533570': [
+    { lineItemId:'gid://shopify/LineItem/1', sku:'A / 44', title:'Shoe A - 44', variantId:'v1', barcode:'11111111', qty:1 },
+    { lineItemId:'gid://shopify/LineItem/2', sku:'B / 41', title:'Shoe B - 41', variantId:'v2', barcode:'22222222', qty:2 },
+  ],
+  '7212244533571': [
+    { lineItemId:'gid://shopify/LineItem/3', sku:'C / 40', title:'Shoe C - 40', variantId:'v3', barcode:'33333333', qty:1 },
+  ],
+  '7212244533578': [
+    { lineItemId:'gid://shopify/LineItem/4', sku:'D / 42', title:'Shoe D - 42', variantId:'v4', barcode:'66666666', qty:1 },
+  ],
+  // ⚠️ أوردر قطعه ما اتحددتش (مفيش سجل إلغاء) — `itemsUnknown`
+  '7212244533572': [],
+  // قطعة مالهاش باركود — استلام يدوي بس
+  '7212244533573': [
+    { lineItemId:'gid://shopify/LineItem/5', sku:'E / 39', title:'Shoe E - 39', variantId:'v5', barcode:null, qty:1 },
+  ],
+};
+// ⚠️ أوردرات بيرجّع لها `receive_order` 409 «القطع اتغيّرت» — اختبار مسار stale
+const STALE_ORDERS = new Set(['7212244533573']);
+SCAN_REPLIES['7212244533572'] = () => ({ ok:true, result:'success', code:'written', machine:'s1', logged:true,
+  order:{ orderId:'7212244533572', orderName:'#54296', zone:'Cairo+Giza' }, warnings:[] });
+SCAN_REPLIES['7212244533573'] = () => ({ ok:true, result:'success', code:'written', machine:'s2', logged:true,
+  order:{ orderId:'7212244533573', orderName:'#54301', zone:'Cairo+Giza' }, warnings:[] });
+
+// دفتر القطع (رد `get_return_items`) — بيتغيّر مع `receive_item` زي الـ Worker
+const RI_SEED = () => ([
+  { id:11, source:'partial_delivery', orderId:'7300000000001', orderName:'#60001', machine:'S1', lineItemId:'li-a',
+    sku:'P / 43', barcode:'44444444', title:'Partial P - 43', unitIndex:1, status:'pending', createdAt:'2026-10-18T10:00:00Z', createdBy:'ops' },
+  { id:12, source:'partial_delivery', orderId:'7300000000002', orderName:'#60002', machine:'S1', lineItemId:'li-b',
+    sku:'P / 43', barcode:'44444444', title:'Partial P - 43', unitIndex:1, status:'pending', createdAt:'2026-10-20T10:00:00Z', createdBy:'ops' },
+  { id:13, source:'order_return', orderId:'7300000000003', orderName:'#60003', machine:'S1', lineItemId:'li-c',
+    sku:'Q / 41', barcode:'55555555', title:'Missing Q - 41', unitIndex:1, status:'missing', createdAt:'2026-10-19T10:00:00Z', createdBy:'wh' },
+  { id:14, source:'partial_delivery', orderId:'7300000000004', orderName:'#60004', machine:'S1', lineItemId:'li-d',
+    sku:'R / 40', barcode:null, title:'No barcode R', unitIndex:1, status:'pending', createdAt:'2026-10-21T10:00:00Z', createdBy:'ops' },
+]);
+let RI = RI_SEED();
+const itemsCalls = [], receiveCalls = [], riCalls = [];
+
+function riReply() {
+  const counts = { pending: 0, missing: 0 };
+  for (const r of RI) counts[r.status]++;
+  return { ok:true, items:RI.slice(), counts, truncated:false, fetchedAt:new Date().toISOString() };
+}
+function orderItemsReply(b) {
+  const digits = String(b.code || '').replace(/\D/g, '');
+  const fn = SCAN_REPLIES[digits];
+  if (!fn) return { ok:true, result:'rejected', code:'not_found', message:`مفيش أوردر على شوبيفاي بالرقم ${digits}`, scanned:b.code };
+  const r = fn(b);
+  if (r.result !== 'success' && r.result !== 'warning') return r;
+  const items = ORDER_ITEMS[digits] || [];
+  return { ok:true, result:'items', order:r.order, machine:r.machine, warnings:r.warnings || [],
+           items, cycleKey:r.machine === 's2' ? 'gid://shopify/Return/9' : 'S1', itemsSource:'cancel_refund', itemsUnknown: !items.length };
+}
+function receiveOrderReply(b) {
+  const digits = String(b.code || '').replace(/\D/g, '');
+  if (STALE_ORDERS.has(digits))
+    return [409, { ok:false, result:'stale', code:'items_changed', message:'قطع الأوردر اتغيّرت على شوبيفاي من وقت السكان — اسكن الأوردر تاني', error:'قطع الأوردر اتغيّرت' }];
+  if ((b.missing || []).length && !b.missingAck)
+    return [409, { ok:false, result:'needs_ack', code:'missing_ack', message:'فيه قطع ناقصة — لازم إقرار صريح', error:'فيه قطع ناقصة' }];
+  const r = SCAN_REPLIES[digits]({ ...b, ack:true });
+  const units = (ORDER_ITEMS[digits] || []).reduce((s, i) => s + i.qty, 0);
+  const missing = (b.missing || []).length;
+  const warnings = [...(r.warnings || [])];
+  if (missing) warnings.push(`${missing} قطعة ناقصة — اتسجّلت «ناقصة» ومستنية مراجعة`);
+  if (!units) warnings.push('قطع الطرد ما اتحددتش من شوبيفاي — الاستلام اتأكد يدويًا من غير سكان القطع');
+  return [200, { ...r, result: warnings.length ? 'warning' : 'success', warnings, units, missing,
+                 ledger: units ? { units, inserted: units, missing } : null }];
+}
+function receiveItemReply(b) {
+  if (b.id) {
+    const r = RI.find(x => x.id === b.id);
+    if (!r) return { ok:true, result:'already', message:'القطعة دي اتسلّمت خلاص' };
+    RI = RI.filter(x => x !== r);
+    return { ok:true, result:'success', item:{ ...r, wasStatus:r.status } };
+  }
+  const cands = RI.filter(x => x.barcode === b.barcode)
+    .sort((a, c) => (a.status === c.status ? 0 : a.status === 'pending' ? -1 : 1) || a.createdAt.localeCompare(c.createdAt));
+  const r = cands[0];
+  if (!r) return { ok:true, result:'not_found', barcode:b.barcode,
+    message:'مفيش قطعة مستنية الاستلام بالباركود ده — لو ده طرد أوردر كامل، اسكن باركود الأوردر' };
+  RI = RI.filter(x => x !== r);
+  return { ok:true, result:'success', barcode:b.barcode, item:{ ...r, wasStatus:r.status } };
+}
+
+const DIAG = { ok:false, version:'1.5.0', checks:[
   { ok:true,  label:'متغيرات وأسرار الـ Worker', detail:'SHOP_DOMAIN=22 حرف · WORKER_SECRET=40 حرف' },
   { ok:true,  label:'أرضية تاريخ الأوردر', detail:'الطابور بيعرض أوردرات من 2026-04-01 فأحدث' },
   { ok:false, label:'تعريف package_whereabouts_s1', detail:'type=single_line_text_field',
@@ -205,6 +296,19 @@ function makeStub() {
                 : { ok:true, result:'rejected', code:'not_found',
                     message:`مفيش أوردر على شوبيفاي بالرقم ${digits}`, scanned:b.code };
     }
+    // ── v1.51.0 ──
+    else if (action === 'order_items') {
+      const b = JSON.parse(route.request().postData() || '{}'); itemsCalls.push(b); body = orderItemsReply(b);
+    }
+    else if (action === 'receive_order') {
+      const b = JSON.parse(route.request().postData() || '{}'); receiveCalls.push(b);
+      const [st, bd] = receiveOrderReply(b);
+      await route.fulfill({ status:st, contentType:'application/json', body:JSON.stringify(bd) }); return;
+    }
+    else if (action === 'get_return_items') body = riReply();
+    else if (action === 'receive_item') {
+      const b = JSON.parse(route.request().postData() || '{}'); riCalls.push(b); body = receiveItemReply(b);
+    }
     else if (action === 'get_logs')        { logCalls.push(url.toString()); body = { ok:true, entries:[] }; }
     else if (action === 'get_logs_count')  body = { ok:true, total:0 };
     else if (action === 'get_logs_export') body = { ok:true, entries:[], cap:2000, total:0, truncated:false };
@@ -224,7 +328,7 @@ async function newPage({ withSession = true } = {}) {
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  page.on('console', m => { if (m.type() === 'error' && !/net::ERR_/.test(m.text())) errors.push(m.text()); });
+  page.on('console', m => { if (m.type() === 'error' && !/net::ERR_|status of 409/.test(m.text())) errors.push(m.text()); });   // 409 = رد «القطع اتغيّرت» المقصود في ③
   await page.addInitScript((sess) => {
     // 🔴 مسجّل نغمات — `playBeep` مالهاش أي أثر في الـ DOM، فالاعتراض ده هو
     //    الطريقة الوحيدة لقياسها.
@@ -445,98 +549,223 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
 // ══════════════════════════════════════════════════════════════
 // ③ السكان — فوري، والنتايج
 // ══════════════════════════════════════════════════════════════
-console.log('③ السكان الفوري');
+console.log('③ السكان — الاستلام قطعة قطعة (v1.51.0)');
 {
-  scanCalls.length = 0;
+  itemsCalls.length = 0; receiveCalls.length = 0; scanCalls.length = 0;
   const { page, ctx, errors } = await newPage();
+  page.on('dialog', d => d.accept());
   await page.goto(`${BASE}/Package-Transfer-To-Warehouse.html`);
   await page.waitForTimeout(1200);
+  const txt = async (s) => ((await page.locator(s).textContent()) || '').trim();
+  const panelOpen = async () => (await page.locator('#recvBox').evaluate(e => getComputedStyle(e).display)) !== 'none';
+  const closeModal = async () => { await page.locator('#outcomeFtr button').first().click(); await page.waitForTimeout(250); };
 
   is(await page.locator('button:has-text("إضافة يدوي")').count() === 0,
      'مفيش زرار إدخال يدوي — السكانر هو المدخل الوحيد');
-  is(await page.locator('#btnUpdate').count() === 0,
-     'مفيش زرار تنفيذ — السكان فوري بلا دفعة');
+  is(await page.locator('#btnUpdate').count() === 0, 'مفيش زرار تنفيذ دفعة');
+  const heads = await page.$$eval('#rqTable thead th, table thead th', t => t.map(x => x.textContent.trim()));
+  is(!heads.some(h => h.includes('عدد القطع')), 'عمود «عدد القطع» اتشال من الطابور', heads.join(' | '));
+  is(!(await panelOpen()), 'لوحة الاستلام مخفية قبل أي سكان');
 
-  // ── نجاح ──
+  // ── ① مسار سليم: سكان الأوردر ← القطع ← إنهاء تلقائي ──
   const before = await page.$$eval('#rqTableBody tr', t => t.length);
   await scan(page, '7212244533570');
-  is(scanCalls.length === 1 && scanCalls[0].code === '7212244533570',
-     'السكانة بعتت نداء `scan` فورًا بلا أي زرار');
-  is(scanCalls[0].employee === 'tester', 'اسم الموظف اتبعت في جسم النداء');
-  is(await page.locator('#outcomeOverlay.open').count() === 0,
-     'النجاح **توست مش نافذة** — النافذة للحالة اللي محتاجة فعل بس');
-  const after = await page.$$eval('#rqTableBody tr', t => t.length);
-  is(after === before - 1,
-     '🔴 الصف اتشال من الطابور بعد النجاح — الشاشة **لازم تتغيّر**', `${before} → ${after}`);
-  is((await page.locator('#doneCount').textContent() || '').trim() === '1', 'عدّاد الجلسة اتحرّك');
-  is((await page.locator('#sessionBody').textContent() || '').includes('#54727'),
-     'صف الجلسة اتضاف باسم الأوردر');
+  is(itemsCalls.length === 1 && itemsCalls[0].code === '7212244533570' && itemsCalls[0].employee === 'tester',
+     'سكان الأوردر بينادي `order_items` (قراءة) بالموظف');
+  is(scanCalls.length === 0, '🔴 مفيش نداء `scan` (كتابة) من سكان الأوردر — الكتابة بعد القطع بس');
+  is(receiveCalls.length === 0, 'ومفيش `receive_order` قبل سكان القطع');
+  is(await panelOpen(), 'لوحة الاستلام اتفتحت');
+  is(!(await page.locator('#recvCancelBtn').isDisabled()), '🔴 زرار الإلغاء مفتوح بعد فتح اللوحة (اترسمت بعد ما السكانة خلصت)');
+  is(await page.$$eval('#recvBody tr', t => t.length) === 3, 'اللوحة فيها ٣ قطع (A×1 + B×2) — صف لكل قطعة');
+  is(await txt('#recvProg') === '0 / 3', 'العدّاد 0 / 3', await txt('#recvProg'));
+  is(await page.locator('#recvFinishBtn').isDisabled(), 'زرار الإنهاء مقفول طول ما فيه قطع مستنية');
+  is(await page.evaluate(() => window.shellIsBusy()) === false, 'الخروج التلقائي مش موقوف قبل أي علامة');
+  await scan(page, '11111111');
+  is(await txt('#recvProg') === '1 / 3', 'سكان قطعة A → 1 / 3');
+  is(await page.evaluate(() => window.shellIsBusy()) === true, '🔴 الخروج التلقائي موقوف بعد ما قطعة اتعلّمت');
+  is(receiveCalls.length === 0, 'سكان القطعة جوّه الأوردر مابيكتبش لوحده');
+  await scan(page, '22222222');
+  await scan(page, '22222222');
+  await page.waitForTimeout(400);
+  is(receiveCalls.length === 1, '🔴 آخر قطعة → `receive_order` اتنادى لوحده (إنهاء تلقائي)');
+  const rc = receiveCalls[0] || {};
+  is((rc.scanned || []).length === 3 && (rc.missing || []).length === 0,
+     'الجسم فيه ٣ قطع مسكونة وصفر ناقص', JSON.stringify(rc).slice(0, 200));
+  is((rc.scanned || []).map(s => s.key).sort().join(',') ===
+     'gid://shopify/LineItem/1#1,gid://shopify/LineItem/2#1,gid://shopify/LineItem/2#2',
+     '🔴 مفاتيح القطع `lineItemId#unitIndex` — نفس صيغة الـ Worker بالحرف');
+  is((rc.scanned || []).every(s => s.mode === 'scan'), 'وضع كل قطعة `scan`');
+  is(!(await panelOpen()), 'اللوحة اتقفلت بعد النجاح');
+  is(await page.locator('#outcomeOverlay.open').count() === 0, 'النجاح الكامل توست مش نافذة');
+  is(await page.$$eval('#rqTableBody tr', t => t.length) === before - 1,
+     '🔴 الصف اتشال من الطابور بعد النجاح');
+  is((await txt('#sessionBody')).includes('#54727'), 'صف الجلسة اتضاف باسم الأوردر');
 
-  // ── 🔴 الملغي **بينجح** — عكس أداة المكتب ──
-  const before2 = await page.$$eval('#rqTableBody tr', t => t.length);
+  // ── ② قطعة غلط + أوردر تاني والأوردر مفتوح + ناقصة بإقرار (الملغي مؤهل) ──
   await scan(page, '7212244533571');
-  is(await page.locator('#outcomeOverlay.open').count() === 0,
-     '🔴 سكان الأوردر الملغي **نجاح بتوست** — مفيش نافذة رفض زي أداة المكتب');
-  is(await page.$$eval('#rqTableBody tr', t => t.length) === before2 - 1,
-     'وصف الملغي اتشال من الطابور بعد النجاح');
-
-  // ── بوسطة: **النص نفسه هو البند** ──
-  await scan(page, '7212244533574');
-  is(await page.locator('#outcomeOverlay.open').count() === 1, 'مرتجع بوسطة بيفتح نافذة رفض');
-  const t1 = await page.locator('#outcomeModal').textContent() || '';
-  is(t1.includes('قسم مرتجعات بوسطة'),
-     '🔴 نص الرفض بيوجّه لأداة بوسطة بالاسم — مش بيقول «مرفوض» وخلاص', t1.slice(0, 140));
-  is(await page.locator('#outcomeModal.fail').count() === 1, 'النافذة حمرا (رفض)');
-  await page.mouse.click(5, 5);
-  await page.waitForTimeout(250);
-  is(await page.locator('#outcomeOverlay.open').count() === 1, 'الضغط برّه النافذة مايقفلهاش');
-  await page.locator('#outcomeFtr button').first().click();
-  await page.waitForTimeout(250);
-  is(await page.evaluate(() => document.activeElement?.id) === 'scanInput',
-     'الفوكس بيرجع لمربع السكان بعد القفل');
-
-  // ── ما اتغلّفش — **مفيش طرد يرجع** ──
-  await scan(page, '7212244533575');
-  const t2 = await page.locator('#outcomeModal').textContent() || '';
-  is(t2.includes('ما اتغلّفش') && t2.includes('مفيش طرد يرجع'),
-     '🔴 رفض «ما اتغلّفش» بيقول إن مفيش طرد أصلاً — مش «الأوردر مش مؤهل»', t2.slice(0, 140));
-  await page.locator('#outcomeFtr button').first().click();
-  await page.waitForTimeout(200);
-
-  // ── خلاص متعمل: محايد، ومش بيتعدّ فشل ──
+  is(await panelOpen(), '🔴 الأوردر الملغي **مؤهل** — اللوحة اتفتحت (عكس أداة المكتب)');
+  await page.evaluate(() => { window.__beeps = []; });
+  await scan(page, '99999999');
+  is(receiveCalls.length === 1, 'قطعة مش من الأوردر = صفر كتابة');
+  is((await page.evaluate(() => window.__beeps.slice())).includes(300), 'وبنغمة الفشل (300)');
+  is(await txt('#recvProg') === '0 / 1', 'والعدّاد ما اتحرّكش');
+  const ic = itemsCalls.length;
   await scan(page, '7212244533576');
-  const t3 = await page.locator('#outcomeModal').textContent() || '';
-  is(t3.includes('في المخزن خلاص'), 'حالة «خلاص متعمل» بنصّها');
-  is(await page.locator('#outcomeModal.fail').count() === 0 &&
-     await page.locator('#outcomeModal.warn').count() === 0,
-     '🔴 «خلاص متعمل» **محايدة** — لا حمرا ولا صفرا (`constants` §12)');
-  const pills = await page.locator('#sessionPills').textContent() || '';
-  is(pills.includes('خلاص متعمل'), 'عدّاد مستقل لـ«خلاص متعمل»');
-  await page.locator('#outcomeFtr button').first().click();
-  await page.waitForTimeout(200);
+  is(itemsCalls.length === ic, 'سكان أوردر تاني والأوردر مفتوح مابيفتحش أوردر تاني');
+  await page.locator('#recvBody button[data-act="miss"]').first().click();
+  await page.waitForTimeout(150);
+  is(!(await page.locator('#recvFinishBtn').isDisabled()), 'بعد تعليم «ناقصة» الإنهاء اتفتح');
+  is(receiveCalls.length === 1, 'تعليم ناقصة مابيعملش إنهاء تلقائي');
+  await page.locator('#recvFinishBtn').click();
+  await page.waitForTimeout(250);
+  is((await txt('#outcomeModal')).includes('ناقصة'), 'نافذة إقرار الناقص بتعرض القطعة');
+  is(receiveCalls.length === 1, 'مفيش نداء قبل الإقرار');
+  await page.locator('#outcomeFtr button:has-text("ناقصة فعلاً")').click();
+  await page.waitForTimeout(700);
+  const rc2 = receiveCalls[1] || {};
+  is(rc2.missingAck === true && (rc2.missing || [])[0] === 'gid://shopify/LineItem/3#1',
+     '🔴 الإقرار بيبعت `missingAck:true` والمفتاح الناقص', JSON.stringify(rc2).slice(0, 200));
+  is((await txt('#outcomeModal')).includes('قطعة ناقصة'), 'النتيجة «تم بتحذير» بتقول عدد الناقص');
+  await closeModal();
+  is(await page.evaluate(() => document.activeElement?.id) === 'scanInput', 'الفوكس رجع لمربع السكان');
 
-  // ── حالة شاذة: إقرار قبل الكتابة ──
-  scanCalls.length = 0;
+  // ── ③ حالة شاذة: إقرار قبل فتح الاستلام + يدوي + تراجع ──
   await scan(page, '7212244533578');
-  is(scanCalls.length === 1 && scanCalls[0].ack === false,
-     'أول نداء للحالة الشاذة بـ`ack:false` — مفيش كتابة');
-  const t4 = await page.locator('#outcomeModal').textContent() || '';
-  is(t4.includes('محتاج مراجعة') && t4.includes('مرتجعين/ملغيين'),
-     'نافذة التحذير بتعرض التفاصيل بالاسم');
-  await page.locator('#outcomeFtr button:has-text("سجّل برضه")').click();
+  is(itemsCalls.at(-1).ack === false && !(await panelOpen()), 'الحالة الشاذة: `ack:false` ومفيش لوحة');
+  is((await txt('#outcomeModal')).includes('مرتجعين/ملغيين'), 'نافذة التحذير بالتفاصيل');
+  await page.locator('#outcomeFtr button:has-text("كمّل برضه")').click();
   await page.waitForTimeout(900);
-  is(scanCalls.length === 2 && scanCalls[1].ack === true,
-     '🔴 الإقرار بيبعت `ack:true` — الكتابة بعد الإقرار بس');
-  is((await page.locator('#sessionBody').textContent() || '').includes('تم بتحذير'),
-     'الصف اتسجّل بنتيجة «تم بتحذير»');
+  is(itemsCalls.at(-1).ack === true && await panelOpen(), 'بعد الإقرار `ack:true` واللوحة اتفتحت');
+  await page.locator('#recvBody button[data-act="manual"]').first().click();
+  await page.waitForTimeout(120);
+  is((await txt('#recvBody')).includes('يدوي'), 'الاستلام اليدوي بيتعلّم «يدوي»');
+  await page.locator('#recvBody button[data-act="undo"]').first().click();
+  await page.waitForTimeout(120);
+  is(await txt('#recvProg') === '0 / 1', 'التراجع بيرجّع القطعة مستنية');
+  await page.locator('#recvBody button[data-act="manual"]').first().click();
+  await page.waitForTimeout(120);
+  await page.locator('#recvFinishBtn').click();
+  await page.waitForTimeout(700);
+  const rc3 = receiveCalls.at(-1) || {};
+  is(rc3.ack === true && rc3.scanned?.[0]?.mode === 'manual', '🔴 `receive_order` بيكمّل الإقرار (`ack:true`) ووضع القطعة `manual`');
+  await closeModal();
 
-  // ── أوردر مش موجود ──
+  // ── ④ قطع ما اتحددتش — تأكيد يدوي ──
+  await scan(page, '7212244533572');
+  is((await txt('#recvNote')).includes('ما قدرناش نحدد'), 'تحذير «القطع ما اتحددتش» ظاهر');
+  is(await txt('#recvProg') === '—' && !(await page.locator('#recvFinishBtn').isDisabled()),
+     'العدّاد `—` والإنهاء مفتوح (تأكيد يدوي)');
+  await page.locator('#recvFinishBtn').click();
+  await page.waitForTimeout(250);
+  const nR = receiveCalls.length;
+  await page.locator('#outcomeFtr button:has-text("سجّل الاستلام")').click();
+  await page.waitForTimeout(700);
+  is(receiveCalls.length === nR + 1 && receiveCalls.at(-1).itemsUnknownAck === true,
+     '`itemsUnknownAck:true` بيتبعت بعد التأكيد بس');
+  if (await page.locator('#outcomeOverlay.open').count()) await closeModal();
+
+  // ── ⑤ القطع اتغيّرت (409) — مفيش كتابة واللوحة بتتقفل ──
+  await scan(page, '7212244533573');
+  is((await txt('#recvBody')).includes('مالهاش باركود'), 'قطعة بلا باركود بتتقال بالنص');
+  await page.locator('#recvBody button[data-act="manual"]').first().click();
+  await page.waitForTimeout(120);
+  await page.locator('#recvFinishBtn').click();
+  await page.waitForTimeout(700);
+  is((await txt('#outcomeModal')).includes('اتغيّر'), '🔴 409 «القطع اتغيّرت» بيتقال — مش «تم»');
+  is(!(await panelOpen()), 'واللوحة اتقفلت عشان يسكن الأوردر تاني');
+  await closeModal();
+
+  // ── ⑥ إلغاء الاستلام ──
+  await scan(page, '7212244533570');
+  await scan(page, '11111111');
+  const nR2 = receiveCalls.length;
+  await page.locator('#recvCancelBtn').click();
+  await page.waitForTimeout(200);
+  is(!(await panelOpen()) && receiveCalls.length === nR2, 'الإلغاء (بتأكيد) بيقفل اللوحة بصفر كتابة');
+  is(await page.evaluate(() => window.shellIsBusy()) === false, 'والخروج التلقائي رجع شغّال');
+
+  // ── ⑦ الرفض و«خلاص متعمل» ──
+  await scan(page, '7212244533574');
+  is((await txt('#outcomeModal')).includes('قسم مرتجعات بوسطة') && await page.locator('#outcomeModal.fail').count() === 1,
+     '🔴 بوسطة: نافذة رفض حمرا بتوجّه لأداة بوسطة بالاسم');
+  await page.mouse.click(5, 5); await page.waitForTimeout(200);
+  is(await page.locator('#outcomeOverlay.open').count() === 1, 'الضغط برّه النافذة مايقفلهاش');
+  await closeModal();
+  await scan(page, '7212244533575');
+  const t2 = await txt('#outcomeModal');
+  is(t2.includes('ما اتغلّفش') && t2.includes('مفيش طرد يرجع'), 'رفض «ما اتغلّفش» بيقول إن مفيش طرد أصلاً');
+  await closeModal();
+  await scan(page, '7212244533576');
+  is((await txt('#outcomeModal')).includes('في المخزن خلاص') &&
+     await page.locator('#outcomeModal.fail').count() === 0 && await page.locator('#outcomeModal.warn').count() === 0,
+     '🔴 «خلاص متعمل» محايدة (`constants` §12)');
+  is((await txt('#sessionPills')).includes('خلاص متعمل'), 'عدّاد مستقل لـ«خلاص متعمل»');
+  await closeModal();
   await scan(page, '9999999999999');
-  const t5 = await page.locator('#outcomeModal').textContent() || '';
-  is(t5.includes('مفيش أوردر'), 'الأوردر المش موجود بيتقال بالسبب مش بيتجاهل');
-  await page.locator('#outcomeFtr button').first().click();
+  is((await txt('#outcomeModal')).includes('مفيش أوردر'), 'الأوردر المش موجود بيتقال بالسبب');
+  await closeModal();
+  is(scanCalls.length === 0, '🔴 ولا نداء `scan` واحد طول الجلسة — المسار كله `order_items`/`receive_order`');
 
   is(errors.length === 0, 'صفر أخطاء في الكونسول', errors.join(' | '));
+  await ctx.close();
+}
+
+// ══════════════════════════════════════════════════════════════
+// ③-ب «قطع مستنية الرجوع للمخزن» — دفتر D1 + السكان السايب
+// ══════════════════════════════════════════════════════════════
+console.log('③-ب قطع مستنية الرجوع للمخزن');
+{
+  RI = RI_SEED(); riCalls.length = 0;
+  const { page, ctx, errors } = await newPage();
+  page.on('dialog', d => d.accept());
+  await page.goto(`${BASE}/Package-Transfer-To-Warehouse.html`);
+  await page.waitForTimeout(1200);
+  const txt = async (s) => ((await page.locator(s).textContent()) || '').trim();
+  const closeModal = async () => { await page.locator('#outcomeFtr button').first().click(); await page.waitForTimeout(250); };
+
+  is(await txt('#riCount') === '4', 'العدّاد = المستنية + الناقصة (٤)', await txt('#riCount'));
+  is(await page.$$eval('#riTableBody tr', t => t.length) === 4, 'صف لكل قطعة');
+  is((await txt('#riTableBody')).includes('تسليم جزئي') && (await txt('#riTableBody')).includes('ناقصة'),
+     'المصدر والحالة معروضين');
+  await scan(page, '44444444');
+  is(riCalls[0]?.barcode === '44444444' && !riCalls[0]?.id, 'سكان باركود قطعة بينادي `receive_item` بالباركود');
+  is(itemsCalls.filter(c => c.code === '44444444').length === 0, 'ومابيفتحش أوردر');
+  is((await txt('#sessionBody')).includes('#60001'), '🔴 أقدم سطر اتقفل الأول (#60001 قبل #60002)');
+  is(await txt('#riCount') === '3', 'العدّاد نزل ٣');
+  await scan(page, '44444444');
+  is((await txt('#sessionBody')).includes('#60002'), 'السكانة التانية قفلت #60002');
+  await scan(page, '55555555');
+  is((await txt('#sessionBody')).includes('كانت ناقصة'), 'القطعة الناقصة بتتقفل وبتتقال «كانت ناقصة»');
+  is(await txt('#riCount') === '1', 'العدّاد ١');
+  await scan(page, '44444444');
+  is((await txt('#outcomeModal')).includes('مفيش قطعة مستنية'), 'باركود مالوش سطر مستني بيتقال بالنص');
+  await closeModal();
+  await page.locator('#riTableBody button[data-ri-id="14"]').click();
+  await page.waitForTimeout(700);
+  is(riCalls.at(-1)?.id === 14, 'الاستلام اليدوي (بتأكيد) بيبعت `id`');
+  is(await txt('#riCount') === '0' && (await txt('#riEmpty')).includes('مفيش قطع'), 'القايمة فضيت بالنص');
+  is(errors.length === 0, 'صفر أخطاء في الكونسول', errors.join(' | '));
+
+  // صف الرئيسية == القايمة (درس R1)
+  RI = RI_SEED();
+  const home = await ctx.newPage();
+  await home.route('**/*.workers.dev/**', makeStub());
+  await home.addInitScript(() => {
+    try {
+      localStorage.setItem('warehouse_ops_worker_secret', 'test-secret-0123456789');
+      sessionStorage.setItem('woc_session', JSON.stringify(
+        { v:1, username:'tester', displayName:'الموظف التجريبي', loginAt:new Date().toISOString() }));
+      sessionStorage.removeItem('woc_queue_return_items');
+    } catch {}
+  });
+  await home.goto(`${BASE}/index.html`);
+  await home.waitForTimeout(2200);
+  const hc = ((await home.locator('#cntReturnItems').textContent()) || '').trim();
+  is(hc === '4', '🔴 صف «قطع مستنية الرجوع» في الرئيسية == الدفتر (٣ مستنية + ١ ناقصة)', hc);
+  const chips = ((await home.locator('#chipsReturnItems').textContent()) || '');
+  is(chips.includes('تسليم جزئي') && chips.includes('ناقصة'), 'مربعا «تسليم جزئي» و«ناقصة» في الصف', chips);
+  const href = await home.locator('#rowReturnItems').getAttribute('href');
+  is(String(href).includes('#riBox'), 'الصف بيفتح الصفحة على القايمة', String(href));
   await ctx.close();
 }
 
@@ -548,17 +777,16 @@ console.log('④ نغمات playBeep');
   const { page, ctx } = await newPage();
   await page.goto(`${BASE}/Package-Transfer-To-Warehouse.html`);
   await page.waitForTimeout(1000);
-
   await page.evaluate(() => { window.__beeps = []; });
-  await scan(page, '7212244533570');
+  await scan(page, '7212244533571');
+  await scan(page, '33333333');
+  await page.waitForTimeout(400);
   const okBeeps = await page.evaluate(() => window.__beeps.slice());
-  is(okBeeps.includes(880), 'النجاح بيطلّع نغمة `success` (880)', JSON.stringify(okBeeps));
-
+  is(okBeeps.includes(1400) && okBeeps.includes(880), 'فتح الأوردر وسكان القطعة `scan` (1400) والإنهاء `success` (880)', JSON.stringify(okBeeps));
   await page.evaluate(() => { window.__beeps = []; });
   await scan(page, '7212244533574');
   const failBeeps = await page.evaluate(() => window.__beeps.slice());
-  is(failBeeps.includes(300) && !failBeeps.includes(880),
-     'الرفض بيطلّع نغمة `error` النازلة (300) مش نغمة النجاح', JSON.stringify(failBeeps));
+  is(failBeeps.includes(300) && !failBeeps.includes(880), 'الرفض بيطلّع نغمة `error` (300)', JSON.stringify(failBeeps));
   await ctx.close();
 }
 

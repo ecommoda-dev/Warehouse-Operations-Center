@@ -2,13 +2,13 @@
 
 # مركز عمليات المخزن — Warehouse Operations Center (`Warehouse-Operations-Center`)
 
-![version](https://img.shields.io/badge/version-v1.50.0-blue)
+![version](https://img.shields.io/badge/version-v1.51.0-blue)
 
 **بتعمل إيه:** هب واحد لمحطة المخزن. الموظف بيدخل **مرة واحدة**، وبعدين
 بيتنقّل بين الطباعة والتغليف وحذف المنتج وتسليمات بوسطة وسكانر المرتجعات
 ورحلة الأوردر من غير ما يدخل تاني ومن غير ما يفتح تبويبات متفرقة.
 **مين بيستخدمها:** المخزن
-**الإصدار:** `v1.50.0` — **واحد للهب كله** (`TOOL_VERSION` في `shared/hub-config.js`)
+**الإصدار:** `v1.51.0` — **واحد للهب كله** (`TOOL_VERSION` في `shared/hub-config.js`)
 
 > 🔴 **الهب واجهة + Worker دخول بس — من v1.32.0.** الريبو ده بقى فيه
 > `index.js` و`wrangler.toml`، **بس نطاقهم محصور في الدخول والخروج بس**
@@ -79,6 +79,33 @@
 ## 🧩 النواة المشتركة — المرجع في هب الشحن
 
 `core.js` · `core.css` · `home.js` **نسختين متطابقتين بالبايت** مع `Delivery-COD-Operations-Center` (`bash docs/core-twin-check.sh`)، والشرح الكامل (جدول الملفات · ترتيب التحميل · المولّدات · الفحوصات) في قسم **«النواة المشتركة بين الهبّين»** في `CLAUDE.md` بتاعه — ما بيتكررش هنا. اللي خاص بالمخزن: `shared/hub-config.js` · `hub.css` · `home-config.js` · **`gates.js`** (بوابات القنوات والمكتب والمرتجعات §BOSTA-GATE · §OFFICE-GATE · §WAREHOUSE-GATE؛ و§COURIER-GROUP بقى في `core.js`). ⛔ هب المخزن مالوش مولّدات (صفحاته مكتوبة بإيد).
+
+## 📦 تمريرة v1.51.0 — الاستلام قطعة قطعة + «قطع مستنية الرجوع للمخزن» (طلب أحمد 22-10-2026)
+
+**الفكرة:** القطع اللي بترجع للمخزن من **التسليم الجزئي** (الأوردر بيفضل `Shipped` فعمره ما بيظهر في طابور المرتجعات) أو اللي بتوصل **ناقصة** مع أوردر مرتجع/ملغي — بقى ليها دفتر D1 وقايمة وصف في الرئيسية. ومعاه «قسم استلام المرتجعات» بقى بيستلم الطرد **قطعة قطعة**.
+
+| الجزء | فين |
+|---|---|
+| الدفتر `warehouse_return_items` (D1 مشترك) | المخطط في `Package-Transfer-To-Warehouse/schema/warehouse_return_items.sql` — 🔴 **بيتعمل يدويًا مرة واحدة** |
+| كاتب `pending` | `partial-delivery-worker` **v1.1.0** (بعد كل حذف اتأكد) |
+| الاستلام والقايمة | `package-transfer-to-warehouse-worker` **v1.5.0**: `order_items` · `receive_order` · `get_return_items` · `receive_item` |
+| الصفحة | `Package-Transfer-To-Warehouse.html` — لوحة `#recvBox` (§RECV-JS) + قايمة `#riBox` (§RI-JS) |
+| الصف في الرئيسية | `home-config.js` → `queues.returnItems` (في «قسم المرتجعات» بعد «رجوع للمخزن») · `hub.css` (`id-retitems` · `qc-ri-*`) · كاش `ECO_CACHE_RETURN_ITEMS` |
+| `ECO_WORKERS.warehouse.min` | **`1.5.0`** — الصفحة معتمدة على الـ endpoints الجديدة |
+| الفحص | `docs/warehouse-check.mjs` (**١٣٣ بند** — ③ اتكتب من جديد + ③-ب) · `home-check` (٧٧) |
+
+- 🔴 **سكان باركود الأوردر مابقاش بيكتب** — بيفتح لوحة بقطع الطرد (`order_items` · قراءة). كل قطعة بتتسكن (أو «ناقصة» / «استلام يدوي»)، وآخر قطعة = `receive_order` لوحده. **العهدة `Warehouse` بتتكتب بعد القطع بس.** الرفض و«خلاص متعمل» زي ما كانوا (صف `rejected`).
+- 🔴 **التوجيه بالطول:** باركود ٨–٩ أرقام = **قطعة** (`isItemBarcode`) · غير كده = أوردر. وطول ما لوحة مفتوحة، القطعة بتتطابق مع **قطع الأوردر ده بس** (قطعة غلط = رفض بنغمة فشل وصفر كتابة)، وسكان أوردر تاني ممنوع لحد ما تخلّص أو تلغي.
+- 🔴 **قطعة سايبة** (من غير لوحة) = `receive_item` بيقفل **أقدم** سطر (`pending` قبل `missing`) — قرار أحمد. «استلام يدوي» من القايمة بتأكيد.
+- 🔴 **الناقص** = إقرار في نافذة → الطرد «في المخزن» والقطعة سطر `missing` في القايمة. الـ Worker بيرفض (409) أي ناقص بلا إقرار وأي قطعة مش متغطية وأي مفتاح مش في القطع الحيّة — **قبل** أي كتابة.
+- 🔴 **رقم الصف = المستنية + الناقصة**، بنفس `derive` في الصفحة وفي الرئيسية (درس R1) — وفيه بند بيقارن الرقمين.
+- ⚠️ **`shellIsBusy`** بقى `scanBusy || لوحة فيها قطعة متعلّمة` — الخروج التلقائي كان هيمسح القطع المسكونة.
+- ⚠️ **عمود «عدد القطع» اتشال من الطابور** (قرار أحمد).
+- 🔴 **باج اتمسك في الفحص:** اللوحة كانت بتترسم والسكانة لسه `scanBusy`، فزرارا «إنهاء»/«إلغاء» بيفضلوا مقفولين — وأوردر قطعه ما اتحددتش (`itemsUnknown`) **ماكانش ليه أي طريق للإنهاء**. اتصلح بإعادة رسم في `finally` بتاع `openOrder`.
+- ⚠️ **التتبّع من يوم النشر** (مفيش backfill). **صفر تعديل** في `Order-Status-Updater` · `Order-Cancel` · هب الشحن.
+- 🔴 **ترتيب النشر — حاجز:** ① SQL الجدول في D1 Console · ② `package-transfer-to-warehouse-worker` v1.5.0 (+ تأكد `read_returns` من `diag`) · ③ `partial-delivery-worker` v1.1.0 · ④ الهب. قبل ② الحارس بيسمّي الـ Worker («نسخة قديمة») وصف القطع بيقول «تعذّر».
+- ⚠️ **ما اتجرّبش على D1 ولا شوبيفاي الحقيقيين** — الـ Workers اتقاسوا على SQLite + شوبيفاي وهمية (٤٤ + ٢٦ بند)، والصفحة على Worker وهمي.
+- ⚠️ `audit-check.mjs` فيه بند فاشل **قبل التمريرة دي** («المربع في قسم «أخرى»») — مش من التعديل ده.
 
 ## 📤 تمريرة v1.50.0 — «رفع بوسطة» دخلت المخزن (طلب أحمد 22-10-2026)
 
@@ -183,7 +210,7 @@ tool في D1 : warehouse_ops_center      ← login · logout بس
 | `Bosta-Orders-Shipped-Scanner.html` | **قسم تسليمات بوسطة** — طابور «جاهز للتسليم» + سكانر | `bosta-orders-shipped-scanner` | **`3.5.0`** | M (1200) |
 | `Bosta-Orders-Returned-Scanner.html` | **قسم مرتجعات بوسطة** — استلام راجع | `bosta-orders-returned-scanner` | **`3.4.0`** | M (1200) |
 | `Package-Transfer-To-Office.html` | **قسم تسليمات المكتب** — نقل الطرد من المخزن للمكتب | `package-transfer-to-office-worker` | **`1.1.0`** | M (1200) |
-| `Package-Transfer-To-Warehouse.html` | **قسم استلام المرتجعات** — رجوع الطرد الراجع للمخزن | `package-transfer-to-warehouse-worker` | **`1.0.0`** | M (1200) |
+| `Package-Transfer-To-Warehouse.html` | **قسم استلام المرتجعات** — رجوع الطرد الراجع للمخزن **قطعة قطعة** + «قطع مستنية الرجوع للمخزن» (v1.51.0) | `package-transfer-to-warehouse-worker` | **`1.5.0`** | M (1200) |
 | `Inventory-Audit-Updater.html` | **جرد المخزون** — جرد فردي · أولويات الجرد · جرد جماعي بالسكانر · سجل | `inventory-audit-updater-worker` | **`6.2.1`** | L (1400) |
 | `Bosta-Orders-Upload.html` | 📤 **رفع بوسطة** (v1.50.0 · شحن · استرجاع · استبدال · **أول صف في «قسم تجهيز الأوردر»** بعدّاد · **نسخة متطابقة بالبايت** مع هب الشحن والتحصيل) | `bosta-orders-upload-worker` | **`2.23.0`** | M (1200) |
 
@@ -3038,7 +3065,7 @@ Orders-Packing-Checker.html  →  Order-Printer.html?order=<num>&from=pack
 | **تسليمات بوسطة** | `get_config` · `diag` · `get_employees` · **`lookup` (POST)** · **`update` (POST)** · **`get_ready_to_ship`** (v3.5.0 — قراءة بحتة) · `get_logs*` |
 | **سكانر المرتجعات** | `get_config` · `diag` · `get_employees` · **`lookup` (POST)** · **`update` (POST)** · `get_logs*` |
 | **تسليمات المكتب** | `get_config` · `diag` · `get_employees` · **`get_ready_to_office`** · **`scan` (POST)** · `get_logs*` |
-| **استلام المرتجعات** | `get_config` · `diag` · `get_employees` · **`get_ready_to_warehouse`** · **`scan` (POST)** · `get_logs*` |
+| **استلام المرتجعات** | `get_config` · `diag` · `get_employees` · **`get_ready_to_warehouse`** · **`order_items` · `receive_order` · `receive_item` (POST)** · **`get_return_items`** (v1.51.0 — والصفحة مابقتش بتنادي `scan`) · `get_logs*` |
 | **جرد المخزون** | `get_config` · `diag` · `get_employees` (فلتر السجل بس) · `list_skus` · `lookup_barcode` · `get_details` · `get_audit_date` · `get_audit_priorities` · **`get_bulk_index`** · **`bulk_compare` (POST)** · **`bulk_adjust` (POST)** · **`adjust_inventory` (POST)** · **`set_audit_date` (POST)** · `get_logs*` — **والهب مابينادش `check_employee`/`register_pin`/`verify_employee`/`log_logout` عليه** |
 | **رفع بوسطة** | `get_orders` · `fetch_candidates` (POST) · `get_districts` · `upload` · `upload_re` · `cancel_re` · `clear_upload_marks` · `check_export_duplicates` · `record_export` · `confirm_upload` · `get_logs*` · `diag` · `get_config` — الهب بينادي **التلات الأولانيين من الرئيسية** والباقي من الصفحة؛ **والدخول/الخروج مابيتنادوش عليه** |
 
@@ -3220,9 +3247,9 @@ node docs/sku-barcode-check.mjs      # Order-SKU-Barcode-Printer.html — ١٤٧
 node docs/pack-check.mjs             # Orders-Packing-Checker.html        — ٤٩ بند (جديد v1.21.0 · +٦ في v1.35.1)
 node docs/scanners-check.mjs        # bosta-shipped + bosta-returned — ٧٩ بند (جديد v1.22.0)
 node docs/office-check.mjs           # Package-Transfer-To-Office.html — ٦٤ بند (جديد v1.26.0)
-node docs/warehouse-check.mjs        # Package-Transfer-To-Warehouse.html — ٨٣ بند (جديد v1.28.0)
+node docs/warehouse-check.mjs        # Package-Transfer-To-Warehouse.html — ١٣٣ بند (جديد v1.28.0 · الاستلام قطعة قطعة v1.51.0)
 node docs/audit-check.mjs            # Inventory-Audit-Updater.html — ٧٥ بند (جديد v1.39.0)
-node docs/home-check.mjs             # index.html (الشاشة الرئيسية) — ٥٥ بند (§HOME-DONE/§HOME-CHIPS · +٨ كاش/بلا تلقائي v1.43.0)
+node docs/home-check.mjs             # index.html (الشاشة الرئيسية) — ٧٧ بند (§HOME-DONE/§HOME-CHIPS · +٨ كاش/بلا تلقائي v1.43.0 · صف القطع v1.51.0)
 node docs/idle-check.mjs             # الخروج التلقائي §IDLE — ٢٥ بند (جديد v1.43.0)
 ```
 

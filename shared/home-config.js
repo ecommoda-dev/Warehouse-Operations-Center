@@ -93,7 +93,7 @@ const ECO_HOME = {
     { id: 'Deliver', cls: 'sec-deliver', summary: true, svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h12M12 6l6 6-6 6"/></svg>`,
       title: 'قسم التسليمات', sub: 'بوسطة والمكتب', queues: ['bosta', 'office'] },
     { id: 'Returns', cls: 'sec-returns', summary: true, svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>`,
-      title: 'قسم المرتجعات', sub: 'رجوع للمخزن ومرتجعات بوسطة', queues: ['warehouse', 'bostaReturns'] },
+      title: 'قسم المرتجعات', sub: 'رجوع للمخزن ومرتجعات بوسطة', queues: ['warehouse', 'returnItems', 'bostaReturns'] },
     { id: 'Helper', cls: 'sec-tools', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg>`,
       title: 'أدوات مساعدة', sub: 'عطلان وباركود',
       tools: [
@@ -206,6 +206,26 @@ const ECO_HOME = {
         cacheKey: ECO_CACHE_WAREHOUSE,
         fetchRaw: () => ecoApi(ECO_WORKERS.warehouse).apiGet('get_ready_to_warehouse'),
         derive: data => ({ total: ecoWarehouseQueue(data.orders || []).length, chips: [] }),
+      }),
+    },
+    // 🔴 «قطع مستنية الرجوع للمخزن» (v1.51.0 · صف لوحده بقرار أحمد 22-10-2026) — من دفتر D1
+    //    `warehouse_return_items` (Worker استلام المرتجعات · `get_return_items`). الرقم = القطع المستنية
+    //    (التسليم الجزئي — الأوردر بيفضل `Shipped` فعمره ما بيظهر في الصف اللي فوق) + الناقصة من أوردرات
+    //    اتسلّمت ناقصة. ⚠️ الوحدة **قطعة** مش أوردر. وصفر شوبيفاي في الجلب ده (D1 بس).
+    returnItems: {
+      href: 'Package-Transfer-To-Warehouse.html#riBox', idCls: 'id-retitems', unit: 'قطعة', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>`,
+      name: 'قطع مستنية الرجوع للمخزن', code: 'تسليم جزئي · قطع ناقصة',
+      err: 'تعذّر جلب دفتر القطع الراجعة',
+      ...ecoRawQueue({
+        cacheKey: ECO_CACHE_RETURN_ITEMS,
+        fetchRaw: () => ecoApi(ECO_WORKERS.warehouse).apiGet('get_return_items'),
+        derive: data => {
+          const p = data.counts?.pending || 0, m = data.counts?.missing || 0;
+          return { total: p + m, truncated: !!data.truncated, chips: [
+            { cls: 'qc-ri-pending', label: 'تسليم جزئي', n: p, grp: true },
+            { cls: 'qc-ri-missing', label: 'ناقصة', n: m, grp: true },
+          ] };
+        },
       }),
     },
     // 🔴 «مرتجعات بوسطة» — صف **بلا طابور** (`link: true`): مفيش عدّاد ولا تحديث. الأداة **هدّامة**
