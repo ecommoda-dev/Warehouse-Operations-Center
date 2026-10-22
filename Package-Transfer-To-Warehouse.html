@@ -152,6 +152,11 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
       · `.eco-rbtn`) — اللوحة دي في **أربع** شاشات دلوقتي (الرئيسية ·
       التغليف · الطباعة · هنا)، ونسخة CSS خامسة معناها إن الشكل يفترق مع
       أول تعديل (درس R1). */
+/* §SESSION — زرار البدء الأخضر الكبير (نفس روح «ابدأ الجرد») */
+.start-card { display: flex; justify-content: center; padding: 28px 16px; }
+.start-btn { min-width: 320px; padding: 22px 40px; border: 0; border-radius: var(--radius); background: var(--green); color: var(--on-accent); font-family: var(--font-body); font-size: 22px; font-weight: 800; cursor: pointer; box-shadow: var(--shadow); transition: background .15s; }
+.start-btn:hover { background: var(--green-dark); }
+.start-btn:focus-visible { outline: 3px solid var(--green-border, var(--green)); outline-offset: 2px; }
 .rq-box { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); overflow: hidden; }
 .rq-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
 .rq-title { font-size: 13.5px; font-weight: 700; color: var(--text-primary); }
@@ -822,9 +827,20 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
          🔴 **ومفيش مربع إدخال يدوي** بقرار — المدخل الوحيد هو السكانر.
             ⚠️ الثمن لازم يتقال: باركود متقطّع أو مطموس مالوش طريق تاني من
             الشاشة دي، والموظف بيحتاج يسجّل الأوردر من الأدمن. -->
-    <div class="card" id="scanCard" style="margin-bottom:16px;">
+    <!-- ══ §SESSION — «ابدأ تسجيل المرتجعات» (v1.53.1 · طلب أحمد 22-10-2026) ══
+         🔴 **الجلسة مفصولة عن الطابور:** قبل البدء الصفحة فيها الزرار الأخضر
+            والطابور بس. بعد الضغط: السكانر وجدول الجلسة **فاضيين** ومفيش غير
+            اللي الموظف بيسجّله هو — والطابور مخفي. «إنهاء الجلسة» بترجّع الشاشة
+            الأولى وبتمسح جدول الجلسة (السجل الدائم في تاب «السجل» + D1).
+         ⛔ **عرض بحت:** الحارس الحقيقي لسه في الـ Worker، ومفيش تغيير في الكتابة. -->
+    <div class="card start-card" id="startCard" style="margin-bottom:16px;">
+      <button class="start-btn" id="startSessionBtn" type="button" onclick="startSession()">▶ ابدأ تسجيل المرتجعات</button>
+    </div>
+
+    <div class="card" id="scanCard" style="margin-bottom:16px; display:none;">
       <div class="card-header">
         <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+          <button class="btn btn-outline" id="endSessionBtn" type="button" onclick="endSession()">⏹ إنهاء الجلسة</button>
           <h2>📷 امسح باركود الأوردر الراجع</h2>
           <div class="count-badge">
             <span class="count-num" id="doneCount">0</span>
@@ -894,6 +910,10 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           </div>
         </div>
 
+      </div>
+    </div><!-- /#scanCard -->
+
+    <div class="card-body" style="padding:0;">
         <!-- ══ §WAREHOUSE-QUEUE — «جاهز للرجوع للمخزن» ══════════════════
              🔴 **عرض بحت** — مفيش مربعات اختيار ومفيش «أضف للدفعة».
              🔴 **والحكم مش هنا:** الأهلية بتتحسب من `ecoWarehouseGate` في
@@ -950,7 +970,6 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
             </div>
           </div>
         </div>
-      </div>
     </div>
 
   </div><!-- /panelScanner -->
@@ -1537,6 +1556,7 @@ function routeScanRi(code) {
 function isItemBarcode(code) { return /^\d{8,9}$/.test(String(code).trim()); }
 
 function routeScan(code) {
+  if (!sessionActive) return;          // §SESSION — السكان مقفول قبل «ابدأ تسجيل المرتجعات»
   if (recv) {
     if (isItemBarcode(code)) { recvScanUnit(code); return; }
     playBeep('warn');
@@ -1564,6 +1584,32 @@ let scanBusy    = false;       // بيمنع سكانتين متوازيتين �
 // قطع اتعلّمت (v1.51.0) — الخروج كان هيمسح اللي اتسكن من غير ما يتسجّل.
 let recv = null;   // لوحة الاستلام المفتوحة (§RECV-JS) — { code, ack, order, machine, cycleKey, itemsUnknown, units }
 window.shellIsBusy = () => scanBusy || (!!recv && recv.units.some(u => u.state !== 'wait'));
+// ─── §SESSION — جلسة تسجيل المرتجعات (v1.53.1) ───
+// الشاشة الأولى: زرار البدء + الطابور. بعد البدء: السكانر وجدول الجلسة بس (فاضيين).
+let sessionActive = false;
+function applySessionUI() {
+  document.getElementById('startCard').style.display = sessionActive ? 'none' : '';
+  document.getElementById('scanCard').style.display  = sessionActive ? '' : 'none';
+  document.getElementById('rqBox').parentElement.style.display = sessionActive ? 'none' : '';
+}
+function startSession() {
+  sessionRows = [];
+  renderSession();
+  sessionActive = true;
+  applySessionUI();
+  focusScan();
+}
+function endSession() {
+  if (scanBusy || isOutcomeOpen()) return;
+  if (recv) { showToast('فيه أوردر مفتوح للاستلام — خلّصه أو ألغيه الأول', 'warn'); return; }
+  const n = sessionRows.filter(r => r.result === 'success' || r.result === 'warning').length;
+  sessionActive = false;
+  sessionRows = [];
+  renderSession();
+  applySessionUI();
+  showToast(n ? `انتهت الجلسة — اتسجّل ${n} أوردر` : 'انتهت الجلسة', 'success');
+  rqLoad(true);                        // الطابور بيتحدّث بعد اللي اتسجّل
+}
 let pendingAck  = null;        // الأوردر المستني إقرار (نافذة التحذير مفتوحة)
 
 const OUTCOME_LABEL = {
@@ -3062,7 +3108,8 @@ buildTabChipMenu();
 updateTabChip();
 measureSticky();                         // ← بعد رسم التابات والـ chip
 
-focusScan();   // السكانر جاهز من أول لحظة
+applySessionUI();   // §SESSION — الشاشة الأولى: زرار البدء + الطابور
+focusScan();
 rqLoad(true);                            // الطابور — قراءة بحتة
 riLoad(true).then(() => {               // دفتر القطع الراجعة — قراءة D1 بحتة (v1.51.0)
   // جاي من صف الرئيسية (`#riBox`) — انزل للقايمة بعد ما تترسم
