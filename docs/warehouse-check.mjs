@@ -418,6 +418,28 @@ console.log('① الجلسة والهيدر الموحّد');
   is(await page.locator('#scanInput').isVisible() && !(await page.locator('#rqBox').isVisible()) && !(await page.locator('#startSessionBtn').isVisible()) && !(await page.locator('#sessionWrap').isVisible()),
      '🔴 بعد البدء: السكانر ظاهر وجدول الجلسة فاضي والطابور مخفي');
   is(await page.evaluate(() => document.activeElement?.id) === 'scanInput', 'الفوكس على مربع السكان بعد البدء');
+  // §PICKER (v1.53.2): اختيار أوردر من القايمة بدل السكان
+  is(await page.locator('#pickOrderBtn').isVisible(), 'زرار «اختيار من القائمة» ظاهر جنب السكانر');
+  await page.click('#pickOrderBtn');
+  const pickN = await page.locator('#pickList .pick-row').count();
+  is(await page.locator('#pickOverlay').evaluate(e => e.classList.contains('open')) && pickN === (await page.evaluate(() => rqState.orders.length)) && pickN > 0,
+     '🔴 النافذة فيها نفس أوردرات الطابور', String(pickN));
+  is(await page.locator('#pickAddBtn').isDisabled(), 'زرار «إضافة» متعطّل قبل الاختيار');
+  await page.locator('#pickList .pick-row').first().click();
+  is(!(await page.locator('#pickAddBtn').isDisabled()), 'زرار «إضافة» اتفتح بعد الاختيار');
+  await page.click('#pickAddBtn');
+  await page.waitForTimeout(900);
+  is(await page.locator('#recvBox').isVisible() && !(await page.locator('#pickOverlay').evaluate(e => e.classList.contains('open'))),
+     '🔴 الإضافة من القايمة فتحت لوحة الاستلام (نفس مسار السكان)');
+  is(!((await page.locator('#recvTableWrap thead').innerText()).includes('المنتج') && !(await page.locator('#recvTableWrap thead').innerText()).includes('باركود')) &&
+     (await page.locator('#recvTableWrap thead th').allInnerTexts()).every(t => t.trim() !== 'المنتج'),
+     '🔴 عمود «المنتج» اتشال من لوحة الاستلام');
+  is((await page.evaluate(() => getComputedStyle(document.getElementById('recvFinishBtn')).backgroundColor)) === 'rgb(220, 38, 38)' ||
+     (await page.evaluate(() => getComputedStyle(document.getElementById('endSessionBtn')).backgroundColor)) === 'rgb(220, 38, 38)',
+     'زراري «إنهاء الجلسة»/«إنهاء الاستلام» حمر');
+  is((await page.locator('#recvBody').innerText()).includes('في انتظار التسجيل') && !(await page.locator('#recvBody').innerText()).includes('مستنية'),
+     'الحالة «⏳ في انتظار التسجيل»');
+  await page.click('#recvCancelBtn');
   await page.click('#endSessionBtn');
   is(await page.locator('#startSessionBtn').isVisible() && await page.locator('#rqBox').isVisible() && !(await page.locator('#scanInput').isVisible()),
      '«إنهاء الجلسة» بترجّع الشاشة الأولى');
