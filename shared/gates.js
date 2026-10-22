@@ -179,8 +179,8 @@ function ecoOfficeQueue(orders) {
   for (const o of orders || []) {
     const g = ecoOfficeGate(o);
     if (g.eligible) out.push({ ...o, machine: g.machine,
-                               packedAt: g.machine === 's1' ? o.packedAtS1 : o.packedAtS2,
-                               packedBy: g.machine === 's1' ? o.packedByS1 : o.packedByS2,
+                               packedAt: o.packedAtS1 || null,
+                               packedBy: o.packedByS1 || null,
                                whereabouts: (g.machine === 's1' ? o.whereaboutsS1 : o.whereaboutsS2) || null });
   }
   out.sort((a, b) => String(a.packedAt || '').localeCompare(String(b.packedAt || '')));
@@ -247,13 +247,18 @@ function ecoWarehouseGate(o) {
   if (!machine)
     return { eligible: false, machine: null, code: 'status', reason: 'لا مرتجع ولا ملغي' };
 
-  // ③ متغلّف فعلاً — **بميتافيلد الماكينة بتاعتها**
-  // 🔴 صف S2 بيتفحص بـ`s2_packing_date_time` مش `s1_…` (نفس درس بوابة المكتب:
-  //    ٦ من ٦ صفوف S2 كانت هتعدّي، والصح ٢).
-  // ⚠️ **ومعنى الشرط هنا أقوى:** أوردر اتلغى قبل ما يتغلّف **مفيهوش طرد
-  //    أصلاً** — مفيش حاجة ترجع على الرف.
-  const packedAt = machine === 's1' ? o.packedAtS1 : o.packedAtS2;
-  if (!packedAt)
+  // ③ متغلّف فعلاً — **وقت تغليف الشحنة الأصلية (S1)** على الماكينتين
+  // 🔴 **v1.52.0 (قرار أحمد 22-10-2026):** الشرط كان بيفحص `s2_packing_date_time`
+  //    على صف S2، فكل **استرجاع خالص** (`#53764`) كان بيترفض ومش بيظهر في
+  //    الطابور — مع إن الطرد الراجع هو الشحنة الأصلية اللي اتغلّفت وخرجت، ومفيش
+  //    طرد S2 اتغلّف أصلاً. فحص `s2_…` صح في بوابة المكتب (الطرد **الخارج**)،
+  //    **غلط هنا** (الطرد **الراجع**). ⛔ ممنوع الرجوع لـ`machine === 's1' ? …S1 : …S2`.
+  // ⚠️ ومش بنفرّق بين استرجاع واستبدال: `exchangeLineItems` الفاضي مش دليل إنها
+  //    استرجاع (`ecommoda-order-lifecycle` قاعدة ٨).
+  // ⚠️ **ومعنى الشرط هنا أقوى:** أوردر اتلغى قبل ما يتغلّف **مفيهوش طرد أصلاً**
+  //    — مفيش حاجة ترجع على الرف.
+  // ⛔ نفس الشرط في `evaluate` بتاع الـ Worker (`packedAtOf`) في نفس التمريرة.
+  if (!o.packedAtS1)
     return { eligible: false, machine, code: 'not_packed', reason: 'ما اتغلّفش — مفيش طرد يرجع' };
 
   // ④ العهدة الحالية — **`Office` وبس** (قرار أحمد 19-09-2026)
@@ -299,8 +304,8 @@ function ecoWarehouseQueue(orders) {
   for (const o of orders || []) {
     const g = ecoWarehouseGate(o);
     if (g.eligible) out.push({ ...o, machine: g.machine,
-                               packedAt: g.machine === 's1' ? o.packedAtS1 : o.packedAtS2,
-                               packedBy: g.machine === 's1' ? o.packedByS1 : o.packedByS2,
+                               packedAt: o.packedAtS1 || null,
+                               packedBy: o.packedByS1 || null,
                                whereabouts: (g.machine === 's1' ? o.whereaboutsS1 : o.whereaboutsS2) || null });
   }
   out.sort((a, b) => String(a.packedAt || '').localeCompare(String(b.packedAt || '')));
