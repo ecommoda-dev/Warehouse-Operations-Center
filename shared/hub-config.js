@@ -188,9 +188,15 @@ const ECO_WORKERS = {
   //    (`stockaudit_worker_secret`)، والهب بيبعت سر المجموعة من مفتاح واحد (#39).
   //    من غير الخطوة اليدوية دي كل نداء من الصفحة بيرجّع `401`.
   audit:    { url: 'https://inventory-audit-updater-worker.ecommoda-dev.workers.dev', min: '6.2.1', label: 'جرد المخزون' },
+  // 🔴 رفع بوسطة — انضم للهب في v1.50.0 (نفس صفحة `Bosta-Orders-Upload.html` المتطابقة بالبايت مع هب الشحن والتحصيل).
+  // `2.23.0` = **أول نسخة بتقبل سر مجموعة `warehouse_ops`** (`WORKER_SECRET_WAREHOUSE`) وبتسجّل `extra.via` في D1.
+  // على نسخة أقدم كل نداء من هنا بيرجّع `401` (السر ده مش معروف عندها) — فالحارس هنا مش بيمسك تدهور آمن، هو بيسمّي الأداة.
+  // ⚠️ الـ Worker ده **عضو في مجموعتين**: `delivery_cod_ops` (`WORKER_SECRET`) و`warehouse_ops` (`WORKER_SECRET_WAREHOUSE`) —
+  //    تدوير أي من المجموعتين لازم يشمله. الخطوة اليدوية: `WORKER_SECRET_WAREHOUSE` = قيمة `warehouse_ops` → Promote.
+  bostaUpload: { url: 'https://bosta-orders-upload-worker.ecommoda-dev.workers.dev', min: '2.23.0', label: 'رفع بوسطة' },
 };
 
-const TOOL_VERSION = 'v1.49.0';                     // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.50.0';                     // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const SHOP_HANDLE  = '6c7e1a-53';
 
@@ -214,18 +220,25 @@ const ECO_CACHE_PACK   = 'woc_queue_pack';    // كاش طابور التغلي�
 const ECO_CACHE_BOSTA     = 'woc_queue_bosta';      // كاش طابور تسليمات بوسطة — رد `get_ready_to_ship` خام (v1.43.0)
 const ECO_CACHE_OFFICE    = 'woc_queue_office';     // كاش طابور تسليمات المكتب — رد `get_ready_to_office` خام
 const ECO_CACHE_WAREHOUSE = 'woc_queue_warehouse';  // كاش طابور استلام المرتجعات — رد `get_ready_to_warehouse` خام
+const ECO_CACHE_BOSTA_UPLOAD = 'woc_queue_bosta_upload';  // عدّادات «رفع بوسطة» التلاتة (شحن · استرجاع · استبدال) — ⛔ مش `ECO_CACHE_BOSTA` (ده كاش طابور تسليمات بوسطة)
 const ECO_CACHE_DONE      = 'woc_done_';            // + مفتاح الطابور: عدّاد «خلص النهارده / أمس» (نفس عمر كاش الطابور)
 const ECO_IDLE_KEY     = 'woc_last_activity';  // §IDLE — آخر نشاط (sessionStorage، لكل تاب لوحده)
 
 // 🔴 إعداد الـ core لهب المخزن — الحقول دي هي كل اللي الـ core بيقراه عن الهب.
 const ECO_HUB = {
+  name: 'مركز عمليات المخزن',   // بيتكتب في عنوان تاب الصفحات المتطابقة بين الهبّين (Bosta-Orders-Upload.html)
   icon: '📦',                       // الأيقونة الافتراضية للهيدر
   // مفاتيح sessionStorage اللي بتتمسح مع الخروج (الجلسة وآخر نشاط بيتمسحوا في الـ core)
   clearKeys: [
-    ECO_CACHE_PRINT, ECO_CACHE_PACK, ECO_CACHE_BOSTA, ECO_CACHE_OFFICE, ECO_CACHE_WAREHOUSE,
+    ECO_CACHE_PRINT, ECO_CACHE_PACK, ECO_CACHE_BOSTA, ECO_CACHE_OFFICE, ECO_CACHE_WAREHOUSE, ECO_CACHE_BOSTA_UPLOAD,
     ...['print', 'pack', 'bosta'].map(k => ECO_CACHE_DONE + k),
   ],
-  isBusy: null,                     // صفحات المخزن بتعرّف `window.shellIsBusy` بنفسها
+  // صفحات المخزن بتعرّف `window.shellIsBusy` بنفسها — ماعدا `Bosta-Orders-Upload.html`: نسخة متطابقة بالبايت مع هب الشحن
+  // فمابتعرّفهاش، وعلم الدفعة عندها (`uploadRunning`) بيتقرا بالاسم من هنا (`let` على مستوى السكربت بيتشاف في نفس النطاق).
+  isBusy() {
+    if (typeof uploadRunning !== 'undefined' && uploadRunning) return true;   // Bosta-Orders-Upload
+    return false;
+  },
   secretNote:  "السر المشترك لمجموعة <code>warehouse_ops</code> — قيمة واحدة لكل الـ Workers",
-  workersNote: "order-printer-worker · orders-packing-checker-worker · order-item-remover-worker · order-sku-barcode-printer-worker · bosta-orders-shipped-scanner · bosta-orders-returned-scanner · package-transfer-to-office-worker · package-transfer-to-warehouse-worker · inventory-audit-updater-worker",
+  workersNote: "order-printer-worker · orders-packing-checker-worker · order-item-remover-worker · order-sku-barcode-printer-worker · bosta-orders-shipped-scanner · bosta-orders-returned-scanner · package-transfer-to-office-worker · package-transfer-to-warehouse-worker · inventory-audit-updater-worker · bosta-orders-upload-worker",
 };
