@@ -2885,20 +2885,22 @@ function rqRemove(orderId) {
   if (!orderId) return;
   const before = rqState.orders.length;
   rqState.orders = rqState.orders.filter(o => String(o.orderId) !== String(orderId));
-  if (rqState.orders.length !== before) rqRender();
+  if (rqState.orders.length !== before) { try { sessionStorage.removeItem(ECO_CACHE_WAREHOUSE); } catch {} rqRender(); }   // الكاش اتأخر عن الواقع بعد تسجيل ناجح — الفتح الجاي بيجيب طازة
 }
 
 // ⚠️ `loading` بيمنع نداءين متوازيين (ضغطتين ورا بعض).
-async function rqLoad(silent) {
+async function rqLoad(silent, pre) {
   if (rqState.loading) return;
   rqState.loading = true;
   ecoFreshUnitLoading('rqFresh', true);
 
   try {
-    const data = await apiGet('get_ready_to_warehouse');
+    // §CACHE-TTL: pre = كاش أحدث من ١٠ دقايق (صفر نداء) — غير كده جلب جديد وبيتكتب في الكاش.
+    const data = pre ? pre.data : await apiGet('get_ready_to_warehouse');
+    if (!pre) cacheSet(ECO_CACHE_WAREHOUSE, data);
     // 🔴 **المصدر الوحيد للأهلية** — الـ shell، مش الصفحة.
     rqState.orders = ecoWarehouseQueue(data.orders || []);
-    rqState.at     = new Date();
+    rqState.at     = pre ? new Date(pre.at) : new Date();
     rqState.failed = false;
     document.getElementById('rqFail').style.display = 'none';
 
@@ -3010,18 +3012,18 @@ function riRemove(id) {
   if (!id) return;
   const before = riState.items.length;
   riState.items = riState.items.filter(x => x.id !== id);
-  if (riState.items.length !== before) riRender();
+  if (riState.items.length !== before) { try { sessionStorage.removeItem(ECO_CACHE_RETURN_ITEMS); } catch {} riRender(); }
 }
 
-async function riLoad(silent) {
+async function riLoad(silent, pre) {
   if (riState.loading) return;
   riState.loading = true;
   ecoFreshUnitLoading('riFresh', true);
   try {
-    const data = await apiGet('get_return_items');
-    cacheSet(ECO_CACHE_RETURN_ITEMS, data);   // نفس كاش صف الرئيسية — بتفتح على رقم أحدث
+    const data = pre ? pre.data : await apiGet('get_return_items');
+    if (!pre) cacheSet(ECO_CACHE_RETURN_ITEMS, data);   // نفس كاش صف الرئيسية — بتفتح على رقم أحدث
     riState.items  = data.items || [];
-    riState.at     = new Date();
+    riState.at     = pre ? new Date(pre.at) : new Date();
     riState.failed = false;
     document.getElementById('riFail').style.display = 'none';
     const trunc = document.getElementById('riTrunc');
@@ -3072,8 +3074,8 @@ measureSticky();                         // ← بعد رسم التابات و�
 
 renderSession();   // §UNIFIED — الـ pills والشريطين من أول لحظة
 focusScan();
-rqLoad(true);                            // الطابور — قراءة بحتة
-riLoad(true).then(() => {               // دفتر القطع الراجعة — قراءة D1 بحتة (v1.51.0)
+(function openFromCache(){ const c = cacheGet(ECO_CACHE_WAREHOUSE); if (c && c.data && c.ageMs >= 0 && c.ageMs < ECO_CACHE_TTL_MS) { rqLoad(true, c); } else { rqLoad(true); } })();                            // الطابور — قراءة بحتة
+(function(){ const c = cacheGet(ECO_CACHE_RETURN_ITEMS); return (c && c.data && c.ageMs >= 0 && c.ageMs < ECO_CACHE_TTL_MS) ? riLoad(true, c) : riLoad(true); })().then(() => {               // دفتر القطع الراجعة — قراءة D1 بحتة (v1.51.0)
   // جاي من صف الرئيسية (`#riBox`) — انزل للقايمة بعد ما تترسم
   // (v1.52.0: القايمة بقت في تاب لوحده — بنفتحه الأول)
   if (location.hash === '#riBox') { switchMainTab('partial'); document.getElementById('riBox')?.scrollIntoView({ block: 'start' }); }

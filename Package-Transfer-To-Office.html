@@ -2305,20 +2305,22 @@ function rqRemove(orderId) {
   if (!orderId) return;
   const before = rqState.orders.length;
   rqState.orders = rqState.orders.filter(o => String(o.orderId) !== String(orderId));
-  if (rqState.orders.length !== before) rqRender();
+  if (rqState.orders.length !== before) { try { sessionStorage.removeItem(ECO_CACHE_OFFICE); } catch {} rqRender(); }   // الكاش اتأخر عن الواقع بعد تسجيل ناجح — الفتح الجاي بيجيب طازة
 }
 
 // ⚠️ `loading` بيمنع نداءين متوازيين (ضغطتين ورا بعض).
-async function rqLoad(silent) {
+async function rqLoad(silent, pre) {
   if (rqState.loading) return;
   rqState.loading = true;
   ecoFreshUnitLoading('rqFresh', true);
 
   try {
-    const data = await apiGet('get_ready_to_office');
+    // §CACHE-TTL: pre = كاش أحدث من ١٠ دقايق (صفر نداء) — غير كده جلب جديد وبيتكتب في الكاش.
+    const data = pre ? pre.data : await apiGet('get_ready_to_office');
+    if (!pre) cacheSet(ECO_CACHE_OFFICE, data);
     // 🔴 **المصدر الوحيد للأهلية** — الـ shell، مش الصفحة.
     rqState.orders = ecoOfficeQueue(data.orders || []);
-    rqState.at     = new Date();
+    rqState.at     = pre ? new Date(pre.at) : new Date();
     rqState.failed = false;
     document.getElementById('rqFail').style.display = 'none';
 
@@ -2417,7 +2419,7 @@ updateTabChip();
 measureSticky();                         // ← بعد رسم التابات والـ chip
 
 document.getElementById('scanInput')?.focus();   // السكانر جاهز من أول لحظة
-rqLoad(true);                            // الطابور — قراءة بحتة
+(function openFromCache(){ const c = cacheGet(ECO_CACHE_OFFICE); if (c && c.data && c.ageMs >= 0 && c.ageMs < ECO_CACHE_TTL_MS) { rqLoad(true, c); } else { rqLoad(true); } })();                            // الطابور — قراءة بحتة
 </script>
 </body>
 </html>
