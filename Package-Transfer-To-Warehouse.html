@@ -871,10 +871,13 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
         <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
           <button class="btn btn-danger-outline" id="endSessionBtn" type="button" onclick="endSession()">⏹ إنهاء الجلسة</button>
           <h2>📷 امسح باركود الأوردر الراجع</h2>
-          <div class="count-badge">
-            <span class="count-num" id="doneCount">0</span>
-            <span class="count-lbl">اتسجّل في الجلسة دي</span>
-          </div>
+          <!-- المتبقي في الطابور + آخر تحديث — والضغط عليه بيحدّث الطابور (الطابور نفسه مخفي في الجلسة) -->
+          <button class="eco-rbtn" id="sessRemainBtn" type="button" onclick="rqLoad(false)"
+            title="المتبقي في طابور «جاهز للرجوع للمخزن» — اضغط للتحديث">
+            <span class="eco-rbtn-ico">↺</span><span>المتبقي</span>
+            <span class="eco-rbtn-badge" id="sessRemainN">—</span>
+            <span id="sessRemainAgo" style="font-weight:600;opacity:.9;">لسه ما اتحدّثش</span>
+          </button>
         </div>
         <div class="pills-row" id="sessionPills"></div>
       </div>
@@ -898,7 +901,6 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
               <div class="recv-title" id="recvTitle">📦 استلام منتجات الشحنة</div>
               <div class="recv-sub" id="recvSub"></div>
             </div>
-            <div class="recv-prog" id="recvProg" aria-live="polite">0 / 0</div>
           </div>
           <div class="recv-note" id="recvNote" style="display:none;"></div>
           <div class="table-wrap" id="recvTableWrap">
@@ -1830,7 +1832,6 @@ function recvRender() {
     `<span>${esc(rqStatusOf({ ...o, machine: recv.machine }).text)}</span>`
     + `<span>·</span><span>${recv.machine === 's2' ? 'S2' : 'S1'}</span>`;
   const n = recvCounts();
-  document.getElementById('recvProg').textContent = recv.itemsUnknown ? '—' : `${n.done + n.miss} / ${n.total}`;
 
   const note = document.getElementById('recvNote');
   const notes = [];
@@ -2093,9 +2094,6 @@ function renderSession() {
   const body = document.getElementById('sessionBody');
   const n = { success: 0, warning: 0, error: 0, rejected: 0, already: 0 };
   for (const r of sessionRows) if (n[r.result] !== undefined) n[r.result]++;
-
-  document.getElementById('doneCount').textContent =
-    (n.success + n.warning).toLocaleString('en-US');
 
   // ⚠️ المربعات بتظهر **بس لما يكون فيها فعلاً** — مربع بصفر بيتعوّد عليه
   //    الموظف فبيبطّل يشوفه (نفس مبدأ مربعات «بلا قناة» في `Order-Printer.html`).
@@ -2871,6 +2869,10 @@ function rqSetFresh() {
   const btn   = document.getElementById('rqBtn');
   if (agoEl) { agoEl.className = 'eco-ago ' + info.cls; agoEl.textContent = info.text; }
   if (btn)   btn.classList.toggle('is-stale', info.stale);
+  const sAgo = document.getElementById('sessRemainAgo');
+  if (sAgo)  sAgo.textContent = info.text;
+  const sBtn = document.getElementById('sessRemainBtn');
+  if (sBtn)  sBtn.classList.toggle('is-stale', info.stale);
   const stamp = document.getElementById('rqStamp');
   if (stamp) {
     stamp.innerHTML = rqState.at
@@ -2894,6 +2896,8 @@ function rqRender() {
   const shown = rqState.at ? String(rows.length) : '—';
   if (cntEl) cntEl.textContent = shown;
   if (badge) badge.textContent = shown;
+  const sN = document.getElementById('sessRemainN');
+  if (sN) sN.textContent = shown;
 
   if (!rows.length) {
     wrap.style.display  = 'none';
@@ -3000,7 +3004,9 @@ async function rqLoad(silent) {
   if (rqState.loading) return;
   rqState.loading = true;
   const btn = document.getElementById('rqBtn');
+  const sBtn = document.getElementById('sessRemainBtn');
   if (btn) { btn.disabled = true; btn.classList.add('loading'); }
+  if (sBtn) { sBtn.disabled = true; sBtn.classList.add('loading'); }
 
   try {
     const data = await apiGet('get_ready_to_warehouse');
@@ -3039,6 +3045,7 @@ async function rqLoad(silent) {
   } finally {
     rqState.loading = false;
     if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
+    if (sBtn) { sBtn.disabled = false; sBtn.classList.remove('loading'); }
     rqRender();
     rqSetFresh();
     if (!silent) focusScan();   // الفوكس يرجع للسكانر

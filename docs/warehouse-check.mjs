@@ -642,7 +642,7 @@ console.log('③ السكان — الاستلام قطعة قطعة (v1.51.0)')
   is(await page.locator('button:has-text("إضافة يدوي")').count() === 0,
      'مفيش زرار إدخال يدوي — السكانر هو المدخل الوحيد');
   is(await page.locator('#btnUpdate').count() === 0, 'مفيش زرار تنفيذ دفعة');
-  const heads = await page.$$eval('#rqTable thead th, table thead th', t => t.map(x => x.textContent.trim()));
+  const heads = await page.$$eval('#rqTableWrap thead th', t => t.map(x => x.textContent.trim()));
   is(!heads.some(h => h.includes('عدد القطع')), 'عمود «عدد القطع» اتشال من الطابور', heads.join(' | '));
   is(!(await panelOpen()), 'لوحة الاستلام مخفية قبل أي سكان');
 
@@ -654,13 +654,17 @@ console.log('③ السكان — الاستلام قطعة قطعة (v1.51.0)')
   is(scanCalls.length === 0, '🔴 مفيش نداء `scan` (كتابة) من سكان الأوردر — الكتابة بعد القطع بس');
   is(receiveCalls.length === 0, 'ومفيش `receive_order` قبل سكان القطع');
   is(await panelOpen(), 'لوحة الاستلام اتفتحت');
+  is(await page.locator('#sessRemainBtn').isVisible() && (await txt('#sessRemainN')) === (await txt('#rqCount')) && (await txt('#sessRemainN')) !== '—',
+     'زرار «المتبقي» ظاهر في الجلسة ورقمه == عدّاد الطابور');
+  is((await txt('#sessRemainAgo')).length > 0 && (await txt('#sessRemainAgo')) !== 'لسه ما اتحدّثش', 'وبيقول «آخر تحديث» بعد الجلب');
+  is(await page.locator('#doneCount').count() === 0, 'مربع «اتسجّل في الجلسة دي» المكرر اتشال');
   is(!(await page.locator('#recvCancelBtn').isDisabled()), '🔴 زرار الإلغاء مفتوح بعد فتح اللوحة (اترسمت بعد ما السكانة خلصت)');
   is(await page.$$eval('#recvBody tr', t => t.length) === 3, 'اللوحة فيها ٣ قطع (A×1 + B×2) — صف لكل قطعة');
-  is(await txt('#recvProg') === '0 / 3', 'العدّاد 0 / 3', await txt('#recvProg'));
+  is(await page.locator('#recvProg').count() === 0, 'عدّاد القطع (0 / N) اتشال من اللوحة');
   is(await page.locator('#recvFinishBtn').isDisabled(), 'زرار الإنهاء مقفول طول ما فيه قطع مستنية');
   is(await page.evaluate(() => window.shellIsBusy()) === false, 'الخروج التلقائي مش موقوف قبل أي علامة');
   await scan(page, '11111111');
-  is(await txt('#recvProg') === '1 / 3', 'سكان قطعة A → 1 / 3');
+  is(await page.locator('#recvBody .recv-row.u-done').count() === 1, 'سكان قطعة A → قطعة واحدة اتسجلت');
   is(await page.evaluate(() => window.shellIsBusy()) === true, '🔴 الخروج التلقائي موقوف بعد ما قطعة اتعلّمت');
   is(receiveCalls.length === 0, 'سكان القطعة جوّه الأوردر مابيكتبش لوحده');
   await scan(page, '22222222');
@@ -687,7 +691,7 @@ console.log('③ السكان — الاستلام قطعة قطعة (v1.51.0)')
   await scan(page, '99999999');
   is(receiveCalls.length === 1, 'قطعة مش من الأوردر = صفر كتابة');
   is((await page.evaluate(() => window.__beeps.slice())).includes(300), 'وبنغمة الفشل (300)');
-  is(await txt('#recvProg') === '0 / 1', 'والعدّاد ما اتحرّكش');
+  is(await page.locator('#recvBody .recv-row.u-done').count() === 0, 'ومفيش قطعة اتسجلت');
   const ic = itemsCalls.length;
   await scan(page, '7212244533576');
   is(itemsCalls.length === ic, 'سكان أوردر تاني والأوردر مفتوح مابيفتحش أوردر تاني');
@@ -720,7 +724,7 @@ console.log('③ السكان — الاستلام قطعة قطعة (v1.51.0)')
   is((await txt('#recvBody')).includes('يدوي'), 'الاستلام اليدوي بيتعلّم «يدوي»');
   await page.locator('#recvBody button[data-act="undo"]').first().click();
   await page.waitForTimeout(120);
-  is(await txt('#recvProg') === '0 / 1', 'التراجع بيرجّع القطعة مستنية');
+  is(await page.locator('#recvBody .recv-row.u-done').count() === 0, 'التراجع بيرجّع القطعة مستنية');
   await page.locator('#recvBody button[data-act="manual"]').first().click();
   await page.waitForTimeout(120);
   await page.locator('#recvFinishBtn').click();
@@ -732,8 +736,8 @@ console.log('③ السكان — الاستلام قطعة قطعة (v1.51.0)')
   // ── ④ قطع ما اتحددتش — تأكيد يدوي ──
   await scan(page, '7212244533572');
   is((await txt('#recvNote')).includes('ما قدرناش نحدد'), 'تحذير «القطع ما اتحددتش» ظاهر');
-  is(await txt('#recvProg') === '—' && !(await page.locator('#recvFinishBtn').isDisabled()),
-     'العدّاد `—` والإنهاء مفتوح (تأكيد يدوي)');
+  is(!(await page.locator('#recvFinishBtn').isDisabled()),
+     'الإنهاء مفتوح (تأكيد يدوي)');
   await page.locator('#recvFinishBtn').click();
   await page.waitForTimeout(250);
   const nR = receiveCalls.length;
@@ -745,7 +749,8 @@ console.log('③ السكان — الاستلام قطعة قطعة (v1.51.0)')
 
   // ── ⑤ القطع اتغيّرت (409) — مفيش كتابة واللوحة بتتقفل ──
   await scan(page, '7212244533573');
-  is((await txt('#recvBody')).includes('مالهاش باركود'), 'قطعة بلا باركود بتتقال بالنص');
+  is(await page.locator('#recvBody .recv-row').count() >= 1 && !(await txt('#recvBody')).includes('مالهاش باركود'),
+     'عمود الباركود اتشال من لوحة الاستلام (الصف بيتعرض بـ SKU وصورة بس)');
   await page.locator('#recvBody button[data-act="manual"]').first().click();
   await page.waitForTimeout(120);
   await page.locator('#recvFinishBtn').click();
