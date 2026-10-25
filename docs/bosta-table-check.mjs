@@ -204,7 +204,7 @@ const gap=await page.evaluate(()=>{const t=document.getElementById('tblMain'),w=
 const gap2=await page.evaluate(()=>{const t=document.getElementById('tblMain'),w=document.getElementById('tblWrap');return w.clientWidth-t.getBoundingClientRect().width});
 is(Math.abs(gap2)<=2,'بعد تصغير عمود مفيش فراغ بعد آخر عمود: '+gap2);
 // refresh keeps widths
-await page.click('.act-btn.refresh >> nth=0'); await page.waitForTimeout(500);
+await page.click('#mainFreshBtn'); await page.waitForTimeout(500);
 const re=(await page.$$eval('#tblMain colgroup col',c=>c.map(x=>parseInt(x.style.width))))[ci];
 is(re===afterFit,'العرض بيفضل بعد refresh: '+re);
 // sticky behavior with scroll: add many rows? check thead top stays
@@ -256,5 +256,52 @@ const SEC=await page.evaluate(()=>localStorage.getItem('warehouse_ops_worker_sec
 is(auths.length>0&&SEC&&auths.every(a=>a==='Bearer '+SEC),'🔴 كل النداءات بسر مجموعة المخزن بالظبط',JSON.stringify(auths.slice(0,2)));
 is(await page.evaluate(()=>getSecret()===localStorage.getItem('warehouse_ops_worker_secret')),'السر من مفتاح المخزن `warehouse_ops_worker_secret`');
 is(await page.evaluate(()=>ecoSession.username==='Ahmed_Ibraheem' && !!sessionStorage.getItem('woc_session') && !sessionStorage.getItem('dco_session')),'الجلسة من `woc_session` بس');
+
+// ── §CACHE-ROWS + §FRESH-UNIT — «رفع بوسطة»: كاش الصفوف (١٠ د) + الوحدة الموحّدة + التأكد قبل الرفع (طلب أحمد 25-10-2026) ──
+console.log('\n── رفع بوسطة: كاش الصفوف + الوحدة الموحّدة + التأكد قبل الرفع ──');
+{
+  const g = (extra) => calls.filter(c=>c.a==='get_orders'&&(!extra||extra(c)));
+  const a = await mk(); const p = a.page;
+  calls.length = 0;
+  await p.goto(BASE+'/Bosta-Orders-Upload.html'); await p.waitForSelector('#tblBody tr:not(.empty-row)',{timeout:8000}); await p.waitForTimeout(700);
+  is(g().length===1,'أول فتح: نداء `get_orders` واحد',String(g().length));
+  is(await p.$('#mainFresh .eco-qref')!==null&&await p.$('#mainFresh .eco-agebox')!==null,'🔴 زرار التحديث و«آخر تحديث منذ:» بنفس ماركب صف الرئيسية (`.eco-qref` + `.eco-agebox`)');
+  is(await p.$('#mainFresh .eco-rbtn-badge, #mainRefreshBtn')===null,'⛔ بلا بادج رقم ولا زرار `eco-rbtn` القديم');
+  is((await p.$eval('#mainFreshBtn',e=>e.textContent.replace(/\s/g,'')))==='↻تحديث','نص الزرار «↻ تحديث»');
+  is(await p.$$eval('.tbl-bar-left .act-btn',b=>b.filter(x=>x.textContent.includes('تحديث')&&x.getAttribute('onclick')?.includes('loadOrders')).length)===0,'⛔ زرار «↺ تحديث» المكرر في صف جدول الرفع اتشال');
+  is(await p.$eval('#mainFresh',e=>/age-(fresh|ok)/.test(e.className)),'الوحدة بلون مرحلة العمر بعد الجلب');
+  await p.reload(); await p.waitForSelector('#tblBody tr:not(.empty-row)',{timeout:8000}); await p.waitForTimeout(900);
+  is(g().length===1,'🔴 الفتح التاني (كاش < ١٠ د) = صفر نداء `get_orders` جديد',String(g().length));
+  is((await p.$eval('#mainFreshAgo',e=>e.textContent)).trim()!=='لسه ما اتحدّثش','الختم من الكاش (بوقته الحقيقي)');
+  const KEY = await p.evaluate(()=>ECO_CACHE_UPLOAD_ROWS.s1);
+  await p.evaluate((k)=>{ const c=JSON.parse(sessionStorage.getItem(k)); c.at=new Date(Date.now()-11*60000).toISOString(); sessionStorage.setItem(k,JSON.stringify(c)); },KEY);
+  await p.reload(); await p.waitForSelector('#tblBody tr:not(.empty-row)',{timeout:8000}); await p.waitForTimeout(700);
+  is(g().length===2,'كاش أقدم من ١٠ دقايق = جلب جديد',String(g().length));
+  // زرار «تحديث» = جلب بـ refresh=1
+  await p.click('#mainFreshBtn'); await p.waitForTimeout(900);
+  is(g(c=>c.q.refresh==='1').length>=1,'زرار «تحديث» بيجيب بـ `refresh=1` (تجاوز كاش الـ Worker)');
+  // 🔴 خيار ب: الرفع من عرض الكاش بيجيب نسخة طازة ويقارن — الأوردر اتغيّرت حالته فبيوقف
+  await p.reload(); await p.waitForSelector('#tblBody tr:not(.empty-row)',{timeout:8000}); await p.waitForTimeout(700);
+  calls.length = 0;
+  rows[0].alreadyUploaded = true;
+  await p.evaluate((id)=>{ selected.add(id); }, rows[0].orderId);
+  await p.evaluate(()=>{ startUpload(); }); await p.waitForTimeout(1200);
+  is(g(c=>c.q.refresh==='1').length===1,'🔴 قبل الرفع: جلب طازة (`refresh=1`) للتأكد',JSON.stringify(calls.map(c=>c.a)));
+  is(!calls.some(c=>c.a==='upload'),'🔴 الأوردر اتغيّر (`alreadyUploaded`) = **صفر نداء رفع**');
+  is(await p.evaluate(()=>selected.size===0),'التحديد اتمسح والقايمة اتحدّثت — الموظف يراجع ويختار تاني');
+  is((await p.$eval('.toast-container',e=>e.textContent)).includes('اتغيّرت'),'توست بيقول إن الحالة اتغيّرت');
+  rows[0].alreadyUploaded = undefined; delete rows[0].alreadyUploaded;
+  await a.ctx.close();
+  // مفيش تغيير → بيكمّل (وبعد جلب طازة واحد بس)
+  const b = await mk(); const q = b.page;
+  await q.goto(BASE+'/Bosta-Orders-Upload.html'); await q.waitForSelector('#tblBody tr:not(.empty-row)',{timeout:8000}); await q.waitForTimeout(500);
+  await q.reload(); await q.waitForSelector('#tblBody tr:not(.empty-row)',{timeout:8000}); await q.waitForTimeout(700);
+  calls.length = 0;
+  await q.evaluate((id)=>{ selected.add(id); }, rows[1].orderId);
+  await q.evaluate(()=>{ startUpload(); }); await q.waitForTimeout(1200);
+  is(g(c=>c.q.refresh==='1').length===1,'مفيش تغيير: جلب طازة واحد قبل الرفع',JSON.stringify(calls.map(c=>c.a)));
+  is(!(await q.$eval('.toast-container',e=>e.textContent)).includes('اتغيّرت'),'ومفيش تحذير تغيّر — الرفع بيكمّل');
+  await b.ctx.close();
+}
 is(errs.length===0,'صفر أخطاء كونسول',errs.join(' | '));
 console.log(`\n${pass} ✅  ${fail} ❌`); await browser.close(); server.close(); process.exit(fail?1:0);

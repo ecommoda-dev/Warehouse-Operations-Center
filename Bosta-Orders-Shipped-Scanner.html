@@ -933,19 +933,8 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
               <span class="count-num" id="rqCount">—</span>
               <span class="count-lbl">أوردر</span>
             </div>
-            <div class="rq-act">
-              <div class="eco-fresh">
-                <div class="eco-fresh-row">
-                  <span class="eco-fresh-lbl">آخر تحديث</span>
-                  <span class="eco-ago" id="rqAgo">لسه ما اتحدّثش</span>
-                </div>
-                <div class="eco-fresh-row" id="rqStamp"><span class="eco-stamp-chip">—</span></div>
-              </div>
-              <button class="eco-rbtn" id="rqBtn" type="button" onclick="rqLoad(false)">
-                <span class="eco-rbtn-ico">↺</span><span>تحديث</span>
-                <span class="eco-rbtn-badge" id="rqBadge">—</span>
-              </button>
-            </div>
+            <!-- 🔴 §FRESH-UNIT (طلب أحمد 25-10-2026): نفس وحدة صف الرئيسية بالحرف — `ecoFreshUnitHTML` في `shared/core.js`، بلا بادج رقم -->
+<div class="rq-act" id="rqFreshMount"></div>
           </div>
           <div id="rqFail" class="rq-fail" style="display:none;"></div>
           <div id="rqTrunc" class="rq-warn" style="display:none;"></div>
@@ -3149,20 +3138,8 @@ const RQ_TICK_MS         = 30 * 1000;        // نبضة عرض — صفر شب�
 
 const rqState = { orders: [], at: null, loading: false, failed: false };
 
-function rqSetFresh() {
-  const info  = agoInfo(rqState.at, Date.now());
-  const agoEl = document.getElementById('rqAgo');
-  const btn   = document.getElementById('rqBtn');
-  if (agoEl) { agoEl.className = 'eco-ago ' + info.cls; agoEl.textContent = info.text; }
-  if (btn)   btn.classList.toggle('is-stale', info.stale);
-  const stamp = document.getElementById('rqStamp');
-  if (stamp) {
-    stamp.innerHTML = rqState.at
-      ? `<span class="eco-stamp-chip">${esc(formatDate(rqState.at.toISOString()))}</span>` +
-        `<span class="eco-stamp-chip">${esc(formatTimeOnly(rqState.at.toISOString()))}</span>`
-      : '<span class="eco-stamp-chip">—</span>';
-  }
-}
+function rqSetFresh() { ecoFreshUnitSet('rqFresh', rqState.at); }
+document.getElementById('rqFreshMount').innerHTML = ecoFreshUnitHTML({ id: 'rqFresh', onclick: 'rqLoad(false)' });
 
 // ⚠️ العدّاد قبل أول جلب ناجح = `—` **مش `0`** — «ما اتحدّثش» ≠ «مفيش شغل»
 //    (قاعدة ٣ في الشاشة الرئيسية بالحرف).
@@ -3172,12 +3149,10 @@ function rqRender() {
   const wrap   = document.getElementById('rqTableWrap');
   const empty  = document.getElementById('rqEmpty');
   const cntEl  = document.getElementById('rqCount');
-  const badge  = document.getElementById('rqBadge');
   if (!tbody) return;
 
   const shown = rqState.at ? String(rows.length) : '—';
   if (cntEl) cntEl.textContent = shown;
-  if (badge) badge.textContent = shown;
 
   if (!rows.length) {
     wrap.style.display  = 'none';
@@ -3214,8 +3189,7 @@ function rqRender() {
 async function rqLoad(silent) {
   if (rqState.loading) return;
   rqState.loading = true;
-  const btn = document.getElementById('rqBtn');
-  if (btn) { btn.disabled = true; btn.classList.add('loading'); }
+  ecoFreshUnitLoading('rqFresh', true);
 
   try {
     const data = await apiGet('get_ready_to_ship');
@@ -3239,7 +3213,7 @@ async function rqLoad(silent) {
     fail.textContent = `⚠️ تعذّر تحميل طابور التسليم — ${err.message}. السكان شغّال عادي.`;
   } finally {
     rqState.loading = false;
-    if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
+    ecoFreshUnitLoading('rqFresh', false);
     rqRender();
     rqSetFresh();
     if (!silent) document.getElementById('scanInput')?.focus();   // الفوكس يرجع للسكانر

@@ -386,6 +386,65 @@ function agoInfo(at, now) {
   return { cls: 'ago-stale', text: `⏱ منذ ${arHour(Math.floor(mins / 60))} — الرقم قديم، حدّث`, stale: true };
 }
 
+// ══════════════════════════════════════════════════════════════
+// §FRESH-UNIT — «آخر تحديث منذ:» + زرار «تحديث» — **الوحدة الموحّدة** (طلب أحمد 25-10-2026)
+// ══════════════════════════════════════════════════════════════
+// نفس شكل وسلوك مربع وزرار صف الطابور في الرئيسية بالحرف (`.eco-agebox` + `.eco-qref`)، وبقت **الوحدة الوحيدة**
+// في كل أدوات الطوابير: بلون مرحلة العمر (`agoInfo` — ⛔ سلّم تاني ممنوع)، الشريط بيتملا مع الدقايق، وبلا بادج رقم.
+// 🔴 `ecoFreshUnitHTML` بيرجّع الماركب، و`ecoFreshUnitSet(id, at)` هي المصدر الوحيد للرسم — الجلب النهائي والكاش
+//    والنبضة (٣٠ ث · صفر شبكة) كلهم بينادوها. `ecoFreshUnitLoading(id, on)` بتقفل الزرار وبتحرّك الشريط.
+const ECO_CLOCK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+function ageValueHtml(mins) {
+  if (mins < 1)  return '<b>لحظات</b>';
+  if (mins < 60) return `<b>${mins}</b>${mins >= 3 && mins <= 10 ? 'دقايق' : 'دقيقة'}`;
+  const h = Math.floor(mins / 60);
+  return h <= 2 ? `<b>${esc(arHour(h))}</b>` : `<b>${h}</b>${h <= 10 ? 'ساعات' : 'ساعة'}`;
+}
+const ECO_FRESH = {};   // id → { at: Date|null, loading }
+function ecoFreshUnitHTML({ id, onclick, btnId }) {
+  return `<div class="eco-fresh-unit age-none" id="${esc(id)}">
+    <div class="eco-agebox">
+      <div class="eco-agebox-top"><span class="eco-agebox-lbl">آخر تحديث منذ:</span><span class="eco-agebox-time" id="${esc(id)}Stamp">—</span></div>
+      <div class="eco-agebox-val" id="${esc(id)}Ago"><span>لسه ما اتحدّثش</span></div>
+      <div class="eco-agebar" aria-hidden="true"><i></i></div>
+    </div>
+    <button class="eco-qref" id="${esc(btnId || id + 'Btn')}" type="button" onclick="${esc(onclick)}">
+      <span class="eco-qref-ico" aria-hidden="true">↻</span><span class="eco-qref-tx">تحديث</span>
+    </button>
+  </div>`;
+}
+// `at`: Date | null | undefined (undefined = أعد الرسم بآخر وقت معروف — النبضة)
+function ecoFreshUnitSet(id, at, now = Date.now()) {
+  const st = ECO_FRESH[id] || (ECO_FRESH[id] = { at: null, loading: false });
+  if (at !== undefined) st.at = at ? (at instanceof Date ? at : new Date(at)) : null;
+  const unit = document.getElementById(id);
+  if (!unit) return;
+  const has  = !!st.at && !isNaN(st.at.getTime());
+  const info = agoInfo(has ? st.at : null, now);
+  const lvl  = has ? info.cls.replace('ago-', '') : 'none';
+  const mins = has ? Math.max(0, Math.floor((now - st.at.getTime()) / 60000)) : 0;
+  unit.classList.remove('age-none', 'age-fresh', 'age-ok', 'age-warn', 'age-stale');
+  unit.classList.add('age-' + lvl);
+  unit.style.setProperty('--fill', String(has ? Math.min(mins / 60, 1) : 0));   // الدقايق ÷ ٦٠ — بيقف عند ساعة
+  unit.classList.toggle('is-loading', st.loading);
+  const ago = document.getElementById(id + 'Ago');
+  if (ago) ago.innerHTML = st.loading ? '<span>جاري التحديث…</span>' : has ? '<span>' + ageValueHtml(mins) + '</span>' : '<span>لسه ما اتحدّثش</span>';
+  const iso = has ? st.at.toISOString() : null;
+  const p = iso ? cairoParts(iso) : null;
+  const stamp = document.getElementById(id + 'Stamp');
+  if (stamp) {
+    stamp.innerHTML = p ? ECO_CLOCK_SVG + esc(_ampm(p)) : '—';
+    stamp.closest('.eco-agebox').title = p ? `آخر تحديث ${formatDate(iso)} ${_ampm(p)}` : '';
+  }
+  const btn = unit.querySelector('.eco-qref');
+  if (btn) btn.disabled = st.loading;
+}
+function ecoFreshUnitLoading(id, on) {
+  const st = ECO_FRESH[id] || (ECO_FRESH[id] = { at: null, loading: false });
+  st.loading = !!on;
+  ecoFreshUnitSet(id);
+}
+
 // ── العمر بفرق **الأيام التقويمية** بتوقيت القاهرة ────────────
 //
 // 🔴 مش `(الآن − الوقت) / 86400000`. أوردر اتعمل ١١ مساءً بيبقى «منذ أمس»

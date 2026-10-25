@@ -1910,24 +1910,10 @@ body.col-resizing,body.col-resizing *{cursor:col-resize !important;user-select:n
   <div class="job-bar" id="jobBar">
     <div></div>
     <div class="job-btns" id="jobBtns"></div>
-    <!-- 🔴 «آخر تحديث» + زرار التحديث — نفس الكتلة بالحرف اللي في قسم
-         الجاهز للشحن (`.eco-fresh` · `.eco-rbtn` من `shared/core.css`)،
-         وبتحدّث الوضع الحالي **والتلات عدّادات** مع بعض (طلب أحمد
-         26-09-2026). ⛔ وزرار «تحديث» القديم اللي كان في هيدر الصفحة
-         اتشال — كان مكرر مع زرار «تحديث» في شريط الجدول وزرار سجل
-         العمليات، والكتلة دي بقت المصدر الوحيد لـ«آخر تحديث». -->
-    <div class="job-bar-act">
-      <div class="eco-fresh">
-        <div class="eco-fresh-row">
-          <span class="eco-fresh-lbl">آخر تحديث</span>
-          <span class="eco-ago" id="mainAgo">لسه ما اتحدّثش</span>
-        </div>
-        <div class="eco-fresh-row" id="mainStamp"><span class="eco-stamp-chip">—</span></div>
-      </div>
-      <button class="eco-rbtn" id="mainRefreshBtn" type="button" onclick="refreshMain()">
-        <span class="eco-rbtn-ico">↺</span><span>تحديث</span>
-      </button>
-    </div>
+    <!-- 🔴 §FRESH-UNIT (طلب أحمد 25-10-2026): «آخر تحديث منذ:» + زرار «تحديث» **نفس وحدة صف الرئيسية بالحرف**
+         (`ecoFreshUnitHTML` في `shared/core.js` — بتتبني في الـ JS تحت)، وبلا بادج رقم. بتحدّث الوضع الحالي
+         **والتلات عدّادات** مع بعض (طلب أحمد 26-09-2026). ⛔ زرار «تحديث» في شريط الجدول اتشال — كان مكرر. -->
+    <div class="job-bar-act" id="mainFreshMount"></div>
   </div>
 
   <!-- ══ مربعات «حالة العنوان» — فوق الجدول ومربوطة بيه (طلب أحمد
@@ -2092,7 +2078,6 @@ body.col-resizing,body.col-resizing *{cursor:col-resize !important;user-select:n
              (v1.34.0 · #47) بعد ما هيدر الفلاتر اتشال. -->
         <button class="clear-btn inactive" id="clearAllBtn" type="button"
                 onclick="event.stopPropagation(); clearAllFilters();">✕ مسح كل الفلاتر</button>
-        <button class="act-btn refresh" onclick="event.stopPropagation(); loadOrders(true);">↺ تحديث</button>
         <button class="act-btn export"  onclick="event.stopPropagation(); exportOrdersXLSX();">⬇ تصدير XLSX</button>
         <!-- ⚠️ الخطة البديلة. الملف ده هو ملف بوسطة نفسه (٢٠ عمود) اللي بيترفع
              على داشبورد بوسطة بالإيد — بيفضل موجود عشان لو عقد الـ API اتغيّر
@@ -2569,20 +2554,7 @@ const fmtNum = n => Number(n || 0).toLocaleString('en-US');
 // 🔴 نفس دالة `agoInfo` بتاعة قسم الجاهز للشحن — مصدر واحد للسلّم اللوني
 //    في الهب كله (§ «مصدر واحد للريبو كله» في `shared/core.js`).
 let mainLoadedAt = null;
-function setMainFresh() {
-  const info  = agoInfo(mainLoadedAt, Date.now());
-  const agoEl = document.getElementById('mainAgo');
-  const btn   = document.getElementById('mainRefreshBtn');
-  if (agoEl) { agoEl.className = 'eco-ago ' + info.cls; agoEl.textContent = info.text; }
-  if (btn)   btn.classList.toggle('is-stale', info.stale);
-  const stamp = document.getElementById('mainStamp');
-  if (stamp) {
-    stamp.innerHTML = mainLoadedAt
-      ? `<span class="eco-stamp-chip">${esc(formatDate(mainLoadedAt.toISOString()))}</span>` +
-        `<span class="eco-stamp-chip">${esc(formatTimeOnly(mainLoadedAt.toISOString()))}</span>`
-      : '<span class="eco-stamp-chip">—</span>';
-  }
-}
+function setMainFresh() { ecoFreshUnitSet('mainFresh', mainLoadedAt); }
 // نبضة عرض بحت كل ٣٠ ثانية — صفر نداء شبكة، بس بتحدّث «منذ كام» في مكانها
 setInterval(setMainFresh, 30000);
 
@@ -2603,12 +2575,26 @@ function jobCountOf(rows) {
     reupload: rows.filter(UPLOAD_TABS.reupload).length,
   };
 }
-async function fetchJobCount(key) {
+// 🔴 §CACHE-ROWS (طلب أحمد 25-10-2026 — خيار ب): رد كل وضع بيتخزّن خام في `sessionStorage` (`ECO_CACHE_UPLOAD_ROWS`)،
+//    والصفحة بترسم منه لو أحدث من `ECO_CACHE_TTL_MS` (١٠ دقايق) بدل جلب جديد عند كل فتح/تبديل وضع.
+//    ⚠️ الكاش للعرض بس — **قبل أي رفع** `verifyBeforeUpload` بتجيب نسخة طازة وتقارن `alreadyUploaded`
+//    (الأداة بتعمل شحنات بوسطة بفلوس، ولقطة قديمة ممكن تخلّي موظف يرفع أوردر اترفع من جهاز تاني).
+function rowsCacheFresh(key) {
+  const c = cacheGet(ECO_CACHE_UPLOAD_ROWS[key]);
+  return c && c.data && Array.isArray(c.data.rows) && c.ageMs >= 0 && c.ageMs < ECO_CACHE_TTL_MS ? c : null;
+}
+async function fetchOrdersRaw(key, force) {
   const j = JOBS[key];
+  return key === 's1'
+    ? apiGet(j.listAction, force ? { refresh: '1' } : {})
+    : apiPost(j.listAction, { jobType: j.key, employee: currentEmployee?.username || null });
+}
+async function fetchJobCount(key, force) {
   try {
-    const d = key === 's1'
-      ? await apiGet(j.listAction)
-      : await apiPost(j.listAction, { jobType: j.key, employee: currentEmployee?.username || null });
+    const hit = force ? null : rowsCacheFresh(key);
+    if (hit) return jobCountOf(hit.data.rows);          // من الكاش — صفر نداء، ورقم الرئيسية متحدّث بالفعل من نفس الجلب
+    const d = await fetchOrdersRaw(key, false);
+    cacheSet(ECO_CACHE_UPLOAD_ROWS[key], d);
     const c = jobCountOf(d.rows || []);
     bostaCacheSet(key, c.main);       // رقم الرئيسية بيتحدّث من نفس الجلب (v1.38.0)
     return c;
@@ -2619,18 +2605,17 @@ async function fetchJobCount(key) {
 // عشان «تحديث» يعني «كل حاجة فوق اتزامنت» بالحرف.
 async function refreshJobCounts(includeCurrent) {
   const keys = includeCurrent ? Object.keys(JOBS) : Object.keys(JOBS).filter(k => k !== currentJobKey);
-  const results = await Promise.all(keys.map(fetchJobCount));
+  const results = await Promise.all(keys.map(k => fetchJobCount(k, !!includeCurrent)));
   keys.forEach((k, i) => { jobCounts[k] = results[i]; });
   renderJobBar();
 }
 async function refreshMain() {
-  const btn = document.getElementById('mainRefreshBtn');
-  if (btn) { btn.disabled = true; btn.classList.add('loading'); }
+  ecoFreshUnitLoading('mainFresh', true);
   try {
     await loadOrders(true);
     await refreshJobCounts(true);
   } finally {
-    if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
+    ecoFreshUnitLoading('mainFresh', false);
   }
 }
 
@@ -4446,24 +4431,42 @@ async function switchJob(key) {
   msRenderList('s1');
   renderChips();
   renderAddrChips();
-  await loadOrders(false);
+  await loadOrders(false, true);
 }
 
 // ─── §TOOL-JS::load ───
 // وضع واحد لكل نداء: `get_orders` للشحن العادي و`fetch_candidates` للاسترجاع
 // والاستبدال. 🔴 **مش استعلام واحد مدموج** — دول مكنتين حالة مختلفتين وفلترين
 // مختلفين، والدمج كان هيخلي فلتر واحد غلط يفضّي الشاشتين مع بعض.
-async function loadOrders(force) {
+let mainFromNetwork = false;   // آخر عرض جه من الشبكة (true) ولا من الكاش (false)
+let lastVerifiedAt  = 0;       // آخر مرة `verifyBeforeUpload` اتأكدت من الشبكة
+// `force`: زرار «تحديث» (بيعدّي `refresh=1` للـ Worker). `useCache`: الفتح/تبديل الوضع بس — كاش أحدث من ١٠ دقايق = صفر نداء.
+async function loadOrders(force, useCache) {
   const banner = document.getElementById('loadErrorBanner');
   banner.style.display = 'none';
   renderTableHead();
+  if (useCache) {
+    const hit = rowsCacheFresh(currentJobKey);
+    if (hit) { applyOrdersResponse(hit.data, new Date(hit.at), false); return; }
+  }
   document.getElementById('tblBody').innerHTML =
     `<tr class="empty-row"><td colspan="${tableColumns().length}"><span class="loading-spinner"></span></td></tr>`;
   try {
-    const j = job();
-    const d = isRE()
-      ? await apiPost(j.listAction, { jobType: j.key, employee: currentEmployee?.username || null })
-      : await apiGet(j.listAction, force ? { refresh: '1' } : {});
+    const d = await fetchOrdersRaw(currentJobKey, force);
+    cacheSet(ECO_CACHE_UPLOAD_ROWS[currentJobKey], d);
+    applyOrdersResponse(d, new Date(), true);
+  } catch (e) {
+    allRows = [];
+    renderTable([]);
+    banner.style.display = '';
+    banner.textContent = `تعذّر تحميل الأوردرات: ${e.message}`;
+    showToast(e.message, 'error', 7000);
+    renderAddrChips();
+  }
+}
+
+// الرسم من رد الـ Worker (من الشبكة أو من الكاش) — مسار واحد للاتنين (نسختين = يفترقوا).
+function applyOrdersResponse(d, at, fromNetwork) {
     allRows = d.rows || [];
     selected.clear();
     districtOverride = {};
@@ -4481,22 +4484,47 @@ async function loadOrders(force) {
     // 🔴 «آخر تحديث» ومربعات «حالة العنوان» ومربعات الأوضاع (طلب أحمد
     //    26-09-2026) — الوضع النشط عدده من `allRows.length` على طول، مفيش
     //    داعي نداء تاني.
-    mainLoadedAt = new Date();
+    //    ⚠️ الختم = **وقت الجلب الفعلي** (وقت الكاش لو الرسم منه) — «منذ ٨ دقايق» هي الحقيقة.
+    mainLoadedAt = at;
+    mainFromNetwork = !!fromNetwork;
     jobCounts[currentJobKey] = jobCountOf(allRows);
     // 🔴 **كاش الرئيسية** (v1.38.0) — رقم «لم يتم الرفع» للوضع ده بيتكتب من
     //    نفس الجلب، فصف «رفع بوسطة» في الرئيسية بياخده بصفر نداء. نفس شرط
     //    `UPLOAD_TABS.main` اللي الرئيسية بتعدّ بيه (`bostaCacheSet` في الـ shell).
-    bostaCacheSet(currentJobKey, jobCounts[currentJobKey].main);
+    //    ⚠️ من الكاش **ما بنكتبش** — هو أصلًا اتكتب وقت الجلب بوقته، ورسمه تاني كان هيدّيه ختم جديد كذّاب.
+    if (fromNetwork) bostaCacheSet(currentJobKey, jobCounts[currentJobKey].main);
     setMainFresh();
     renderJobBar();
     renderAddrChips();
+}
+
+// 🔴 خيار ب (طلب أحمد 25-10-2026) — **قبل أي رفع** نتأكد من آخر حالة: لو العرض جه من الكاش (أو قديم) بنجيب نسخة
+//    طازة وبنقارن الصفوف المحدّدة: اختفت أو `alreadyUploaded` اتغيّر = **نوقف الرفع** ونعرض البيانات الجديدة
+//    ونقول للموظف يراجع (شحنة بفلوس على أوردر اترفع من جهاز تاني = تكرار). لو مفيش تغيير بنكمّل والتحديد
+//    والتعديلات اليدوية على المناطق بتفضل زي ما هي.
+async function verifyBeforeUpload(rows) {
+  if (mainFromNetwork && Date.now() - (mainLoadedAt?.getTime() || 0) < 60000) return true;   // طازة بالفعل
+  if (Date.now() - lastVerifiedAt < 60000) return true;                                          // اتأكدنا من أقل من دقيقة
+  uploadVerifying = true;
+  ecoFreshUnitLoading('mainFresh', true);
+  try {
+    const d = await fetchOrdersRaw(currentJobKey, true);
+    cacheSet(ECO_CACHE_UPLOAD_ROWS[currentJobKey], d);
+    const fresh = new Map((d.rows || []).map(r => [r.orderId, !!r.alreadyUploaded]));
+    const changed = rows.filter(r => !fresh.has(r.orderId) || fresh.get(r.orderId) !== !!r.alreadyUploaded);
+    if (changed.length) {
+      applyOrdersResponse(d, new Date(), true);   // العرض الجديد (والتحديد اتمسح — الموظف يراجع ويختار تاني)
+      showToast(`⚠️ حالة ${fmtNum(changed.length)} أوردر اتغيّرت من وقت آخر تحديث (${changed.slice(0, 5).map(r => '#' + r.orderNumber).join('، ')}${changed.length > 5 ? '…' : ''}) — اتحدّثت القايمة، راجع واختار تاني قبل الرفع`, 'warning', 9000);
+      return false;
+    }
+    lastVerifiedAt = Date.now();
+    return true;
   } catch (e) {
-    allRows = [];
-    renderTable([]);
-    banner.style.display = '';
-    banner.textContent = `تعذّر تحميل الأوردرات: ${e.message}`;
-    showToast(e.message, 'error', 7000);
-    renderAddrChips();
+    showToast(`تعذّر التأكد من آخر حالة قبل الرفع — ${e.message}. حدّث وجرّب تاني`, 'error', 7000);
+    return false;
+  } finally {
+    uploadVerifying = false;
+    ecoFreshUnitLoading('mainFresh', false);
   }
 }
 
@@ -5607,15 +5635,17 @@ function closeDistrictPicker() {
 
 // ─── §TOOL-JS::upload ───
 let uploadRunning = false;
+let uploadVerifying = false;   // نداء `verifyBeforeUpload` شغّال — يمنع ضغطتين ورا بعض
 let lastResults   = [];
 let pendingUpload = null;   // { ready:[], dups:[] }
 // نتيجة مستنية عشان نافذة الرفض مفتوحة — بتتفتح أول ما تتقفل
 let resultsPending = false;
 
-function startUpload() {
-  if (uploadRunning) return;
+async function startUpload() {
+  if (uploadRunning || uploadVerifying) return;
   const rows = allRows.filter(r => selected.has(r.orderId));
   if (!rows.length) { showToast('محدّدش أي أوردر', 'warning'); return; }
+  if (!(await verifyBeforeUpload(rows))) return;   // §CACHE-ROWS — آخر حالة قبل أي شحنة بفلوس
 
   const blocked = rows.filter(r => !rowUploadable(r));
   const ok      = rows.filter(r => rowUploadable(r));
@@ -6698,6 +6728,7 @@ updateFilterIconState();
 updateLogFilterIconState();
 updateSelectionUI();
 renderJobBar();
+document.getElementById('mainFreshMount').innerHTML = ecoFreshUnitHTML({ id: 'mainFresh', onclick: 'refreshMain()' });
 setMainFresh();
 renderAddrChips();
 renderTableHead();
@@ -6714,7 +6745,7 @@ loadEmployeeFilterOptions();
 // 🔴 عدّادَي الوضعين التانيين بيتجابوا في الخلفية بعد ما الوضع الافتراضي
 //    (شحن عادي) يخلص تحميله — بلا ما يأخّروا أول رسم للجدول (طلب أحمد
 //    26-09-2026).
-loadOrders(false).then(() => refreshJobCounts(false));
+loadOrders(false, true).then(() => refreshJobCounts(false));
 </script>
 
 </body>

@@ -285,8 +285,8 @@ console.log('\n══ مسار السكان — Bosta-Orders-Shipped-Scanner.htm
      `العدّاد بيقول ${READY_ROWS.length} — نفس اللي الـ Worker رجّعه`, rqCount);
   is(rqRows === READY_ROWS.length,
      '🔴 صفوف الجدول == اللي رجع بالحرف — الصفحة مابتفلترش ولا صف', String(rqRows));
-  is((await page.locator('#rqBadge').innerText()).trim() === rqCount,
-     'وبادج زرار التحديث == العدّاد');
+  is(await page.locator('#rqFresh .eco-rbtn-badge, #rqBadge').count() === 0 && await page.locator('#rqFresh .eco-qref').count() === 1,
+     '⛔ بلا بادج رقم · وزرار التحديث بشكل زرار الرئيسية (§FRESH-UNIT)');
 
   const rqHtml = await page.locator('#rqTableBody').innerHTML();
   is(rqHtml.includes('#54567') && rqHtml.includes('#53099'),

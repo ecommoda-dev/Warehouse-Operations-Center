@@ -579,43 +579,8 @@
 /* لوحة التحديث بقت **جوّه** صندوق العدّ (v2.4.0) — الهيدر المنفصل اتشال */
 .rdy-actions{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;margin-inline-start:auto}
 
-/* ── لوحة «آخر تحديث» — الختم + العدّاد النسبي جنب بعض ──
-   العدّاد بيلوّن نفسه بالقِدَم: طابور عمره نص ساعة مش نفس طابور
-   اتحدّث من دقيقة، والفرق ده لازم يبان من غير ما الموظف يحسبه. */
-.rdy-fresh{display:flex;flex-direction:column;justify-content:center;gap:5px;
-  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
-  box-shadow:var(--shadow);padding:7px 11px}
-.rdy-fresh-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-.rdy-fresh-label{font-size:10.5px;font-weight:700;color:var(--text-muted)}
-.rdy-stamp{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
-.rdy-stamp-chip{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;
-  background:var(--surface-2);border:1px solid var(--border);
-  font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--text-secondary);white-space:nowrap}
-.rdy-ago{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:20px;
-  font-size:11px;font-weight:800;white-space:nowrap;border:1px solid var(--border);
-  background:var(--surface-2);color:var(--text-secondary)}
-.rdy-ago.ago-fresh{background:var(--green-light);color:var(--green-dark);border-color:var(--green-border)}
-.rdy-ago.ago-ok{background:var(--accent-light);color:var(--accent-dark);border-color:var(--accent-border)}
-.rdy-ago.ago-warn{background:var(--amber-light);color:var(--amber-dark);border-color:var(--amber-border)}
-.rdy-ago.ago-stale{background:var(--red-light);color:var(--red-dark);border-color:var(--red-border)}
-
-/* ── زرار التحديث الرئيسي + بادج العدد ──
-   البادج بيقول «الطابور فيه كام» من غير ما الموظف ينزل للجدول. */
-.rdy-refresh-btn{display:inline-flex;align-items:center;gap:7px;cursor:pointer;
-  padding:9px 15px;border-radius:var(--radius-sm);border:1px solid var(--accent);
-  background:var(--accent);color:var(--on-accent);font-family:var(--font-body);
-  font-size:12.5px;font-weight:800;box-shadow:var(--shadow);transition:background .15s,transform .1s}
-.rdy-refresh-btn:hover:not(:disabled){background:var(--accent-dark)}
-.rdy-refresh-btn:active:not(:disabled){transform:translateY(1px)}
-.rdy-refresh-btn:disabled{opacity:.6;cursor:not-allowed}
-.rdy-refresh-btn.is-stale{border-color:var(--amber);background:var(--amber)}
-.rdy-refresh-btn.is-stale:hover:not(:disabled){background:var(--amber-dark)}
-.rdy-refresh-icon{font-size:15px;line-height:1;display:inline-block}
-.rdy-refresh-btn.loading .rdy-refresh-icon{animation:rdySpin .8s linear infinite}
-.rdy-refresh-badge{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:20px;
-  padding:0 6px;border-radius:20px;background:var(--on-accent);color:var(--accent-dark);
-  font-family:var(--font-mono);font-size:11.5px;font-weight:800;line-height:1}
-.rdy-refresh-btn.is-stale .rdy-refresh-badge{color:var(--amber-dark)}
+/* ── «آخر تحديث منذ:» + زرار «تحديث» — §FRESH-UNIT من `shared/core.css` (طلب أحمد 25-10-2026) ──
+   اتشالت نسخة الصفحة (`.rdy-fresh` · `.rdy-ago` · `.rdy-refresh-btn`) — الوحدة بقت نفس وحدة الرئيسية بالحرف. */
 
 /* بانر «تعذّر الاستعلام» ≠ «مش موجود» */
 .partial-banner{display:none;margin:0 0 10px;padding:11px 14px;border-radius:9px;background:var(--red-light);
@@ -1487,22 +1452,7 @@
            صفر والموظف مش هيعرف يرجّع. الألوان **نفس ألوان عمود المندوب**. -->
       <div class="rdy-courier-chips" id="rdyCourierChips"></div>
 
-      <div class="rdy-actions">
-        <div class="rdy-fresh">
-          <div class="rdy-fresh-row">
-            <span class="rdy-fresh-label">آخر تحديث</span>
-            <span class="rdy-ago" id="rdyUpdatedAgo">لسه ما اتحدّثش</span>
-          </div>
-          <div class="rdy-stamp" id="rdyUpdatedAt">
-            <span class="rdy-stamp-chip">—</span>
-          </div>
-        </div>
-        <button class="rdy-refresh-btn" id="rdyRefreshMainBtn" onclick="rdyLoadOrders()">
-          <span class="rdy-refresh-icon">↺</span>
-          <span>تحديث</span>
-          <span class="rdy-refresh-badge" id="rdyRefreshBadge">—</span>
-        </button>
-      </div>
+      <div class="rdy-actions" id="rdyFreshMount"></div>
     </div>
 
     <div id="rdyStateIdle" class="state-box">
@@ -1679,7 +1629,6 @@
           </div>
         </div>
         <div class="tbl-bar-left">
-          <button class="act-btn" id="rdyRefreshBtn" onclick="event.stopPropagation(); rdyLoadOrders();">↺ تحديث</button>
         </div>
       </div>
 
@@ -3824,37 +3773,7 @@ function rdyTick() {
 let rdyLastLoadedAt = null;
 
 function rdyRenderFreshness(now = new Date()) {
-  const atEl  = document.getElementById('rdyUpdatedAt');
-  const agoEl = document.getElementById('rdyUpdatedAgo');
-  const btn   = document.getElementById('rdyRefreshMainBtn');
-  if (!atEl || !agoEl) return;
-
-  if (!rdyLastLoadedAt) {
-    atEl.innerHTML   = '<span class="rdy-stamp-chip">—</span>';
-    agoEl.textContent = 'لسه ما اتحدّثش';
-    agoEl.className   = 'rdy-ago';
-    if (btn) btn.classList.remove('is-stale');
-    return;
-  }
-
-  const iso = rdyLastLoadedAt.toISOString();
-  atEl.innerHTML =
-    `<span class="rdy-stamp-chip">${rdyEsc(formatDate(iso))}</span>` +
-    `<span class="rdy-stamp-chip">${rdyEsc(formatTimeOnly(iso))}</span>`;
-
-  const mins = Math.max(0, Math.floor((now.getTime() - rdyLastLoadedAt.getTime()) / 60000));
-  let cls, text;
-  if      (mins < 1)  { cls = 'ago-fresh'; text = '⏱ منذ لحظات'; }
-  else if (mins < 5)  { cls = 'ago-fresh'; text = `⏱ منذ ${rdyArMin(mins)}`; }
-  else if (mins < 15) { cls = 'ago-ok';    text = `⏱ منذ ${rdyArMin(mins)}`; }
-  else if (mins < 60) { cls = 'ago-warn';  text = `⏱ منذ ${rdyArMin(mins)} — يفضّل تحدّث`; }
-  else {
-    const hrs = Math.floor(mins / 60);
-    cls = 'ago-stale'; text = `⏱ منذ ${rdyArHour(hrs)} — الطابور قديم، حدّث`;
-  }
-  agoEl.className   = `rdy-ago ${cls}`;
-  agoEl.textContent = text;
-  if (btn) btn.classList.toggle('is-stale', mins >= 15);
+  ecoFreshUnitSet('rdyFresh', rdyLastLoadedAt, now.getTime ? now.getTime() : now);
 }
 
 // ─── §READY-JS::states ───
@@ -3913,19 +3832,7 @@ function rdyRenderPartialBanner(failed, truncated) {
 }
 
 // ─── §READY-JS::loadOrders ───
-function rdySetRefreshing(active) {
-  const btn = document.getElementById('rdyRefreshBtn');
-  if (btn) btn.disabled = active;
-  // زرار الهيدر الرئيسي — نفس القفل، وأيقونته بتلف أثناء الجلب
-  const main = document.getElementById('rdyRefreshMainBtn');
-  if (main) { main.disabled = active; main.classList.toggle('loading', active); }
-}
-
-// بادج الزرار — عدد الأوردرات المحمّلة في الطابور. `null` = لسه ما اتحدّثش.
-function rdySetRefreshBadge(n) {
-  const b = document.getElementById('rdyRefreshBadge');
-  if (b) b.textContent = n === null ? '—' : Number(n || 0).toLocaleString('en-US');
-}
+function rdySetRefreshing(active) { ecoFreshUnitLoading('rdyFresh', active); }
 
 // ⚠️ قبل أول جلب ناجح الأعداد بتبقى «—» **مش «0»** — صندوق العدّ بقى ظاهر
 //    في كل الحالات (شايل زرار التحديث)، و«0» هنا معناها «مفيش شغل» وهي
@@ -3984,7 +3891,6 @@ function rdyRenderFrom(data, atIso) {
     // ⚠️ ختم «آخر تحديث» بيتسجّل حتى لو الطابور رجع فاضي — «اتحدّث ورجع
     //    صفر» معلومة، و«ما اتحدّثش» معلومة تانية خالص.
     rdyLastLoadedAt = new Date(atIso || Date.now());
-    rdySetRefreshBadge(rdyAllOrders.length);
     rdyRenderFreshness();
     rdyStartTicker();
 
@@ -4067,7 +3973,6 @@ function rdyResetAll() {
   rdyStopTicker();
   rdyLastLoadedAt = null;
   rdyDirty = false;
-  rdySetRefreshBadge(null);
   rdySetCounts(null, null);
   rdyRenderFreshness();
   Object.keys(rdyMsState).forEach(k => { rdyMsState[k].selected.clear(); rdyMsState[k].items = []; });
@@ -4801,6 +4706,7 @@ window.addEventListener('afterprint', () => {
 // Init
 // ══════════════════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('rdyFreshMount').innerHTML = ecoFreshUnitHTML({ id: 'rdyFresh', onclick: 'rdyLoadOrders()' });
   document.getElementById('headerMount').innerHTML = ecoHeader({
     // ⚠️ الاسم المعروض بس — قيمة `tool` في D1 لسه `pack_checker`
     //    والـ Worker ما اتلمسش (قرار أحمد 06-09-2026).
