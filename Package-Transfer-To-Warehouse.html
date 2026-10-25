@@ -227,6 +227,9 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .u-state.s-done { color: var(--green-dark); }
 .u-state.s-miss { color: var(--red-dark); }
 .u-acts { display: inline-flex; gap: 6px; }
+.recv-img { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); cursor: zoom-in; display: block; }
+.img-full-ov { position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,.88); display: flex; align-items: center; justify-content: center; cursor: zoom-out; }
+.img-full-ov img { max-width: 100vw; max-height: 100vh; object-fit: contain; }
 
 /* ══ §RI — «قطع مستنية الرجوع للمخزن» (دفتر D1 · v1.51.0) ══
    نفس شكل `.rq-box` (الطابور فوقه) — نفس المعلومة بشكلين = الموظف بيتعلّمها مرتين. */
@@ -881,7 +884,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <input id="scanInput" class="scan-input" type="text"
             placeholder="امسح باركود الأوردر الراجع هنا..." autocomplete="off" autofocus
             aria-label="باركود الأوردر" />
-          <button class="btn btn-primary pick-btn" id="pickOrderBtn" type="button" onclick="openOrderPicker()">📋 اختيار من القائمة</button>
+          <button class="btn btn-primary pick-btn" id="pickOrderBtn" type="button" onclick="openOrderPicker()">📋 تسجيل أوردر يدوي</button>
         </div>
 
         <!-- ══ §RECV — الاستلام قطعة قطعة (v1.51.0 · طلب أحمد 22-10-2026) ══════
@@ -892,7 +895,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
         <div class="recv-box" id="recvBox" style="display:none;">
           <div class="recv-head">
             <div>
-              <div class="recv-title">📦 استلام قطع الطرد</div>
+              <div class="recv-title" id="recvTitle">📦 استلام منتجات الشحنة</div>
               <div class="recv-sub" id="recvSub"></div>
             </div>
             <div class="recv-prog" id="recvProg" aria-live="polite">0 / 0</div>
@@ -902,9 +905,9 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
             <table class="data-table">
               <thead>
                 <tr>
+                  <th>الصورة</th>
                   <th>SKU</th>
-                  <th>باركود المنتج</th>
-                  <th>القطعة</th>
+                  <th>عدد القطع</th>
                   <th>الحالة</th>
                   <th>إجراء</th>
                 </tr>
@@ -1799,7 +1802,7 @@ function recvOpen(res, code, ack) {
   for (const it of (res.items || [])) {
     for (let u = 1; u <= it.qty; u++) {
       units.push({ key: `${it.lineItemId}#${u}`, unitIndex: u, qty: it.qty,
-        sku: it.sku, title: it.title, barcode: it.barcode, state: 'wait', mode: null });
+        sku: it.sku, title: it.title, barcode: it.barcode, imageUrl: it.imageUrl || null, state: 'wait', mode: null });
     }
   }
   recv = { code, ack, order: res.order, machine: res.machine, cycleKey: res.cycleKey,
@@ -1820,9 +1823,12 @@ function recvRender() {
   if (!recv) { box.style.display = 'none'; document.getElementById('recvBody').innerHTML = ''; return; }
   box.style.display = '';
   const o = recv.order || {};
+  // الحالة بتشيل نوع الدورة بالفعل («مرتجع (استبدال/استرجاع)») فمابنكرّرش اسم الماكينة — بس رمزها (S1/S2).
+  document.getElementById('recvTitle').innerHTML =
+    `📦 استلام منتجات الشحنة للأوردر رقم ${orderLink(o.orderName, o.orderId)}`;
   document.getElementById('recvSub').innerHTML =
-    `${orderLink(o.orderName, o.orderId)}<span>·</span><b>${esc(machineText(recv.machine))}</b>`
-    + `<span>·</span><span>${esc(rqStatusOf({ ...o, machine: recv.machine }).text)}</span>`;
+    `<span>${esc(rqStatusOf({ ...o, machine: recv.machine }).text)}</span>`
+    + `<span>·</span><span>${recv.machine === 's2' ? 'S2' : 'S1'}</span>`;
   const n = recvCounts();
   document.getElementById('recvProg').textContent = recv.itemsUnknown ? '—' : `${n.done + n.miss} / ${n.total}`;
 
@@ -1848,8 +1854,8 @@ function recvRender() {
       : `<button class="btn btn-outline btn-sm" type="button" data-act="undo" data-key="${esc(u.key)}">↩ تراجع</button>`;
     const cls = u.state === 'done' ? 'u-done' : u.state === 'miss' ? 'u-miss' : '';
     return `<tr class="recv-row ${cls}${recv.flash === u.key ? ' u-flash' : ''}" data-key="${esc(u.key)}">
+      <td>${u.imageUrl ? `<img class="recv-img" src="${esc(u.imageUrl)}" alt="" loading="lazy" data-full="${esc(u.imageUrl)}">` : '—'}</td>
       <td class="col-mono">${esc(u.sku || '—')}</td>
-      <td class="col-num">${u.barcode ? esc(u.barcode) : '<span class="u-state s-miss">مالهاش باركود</span>'}</td>
       <td class="col-num">${u.qty > 1 ? `${u.unitIndex} من ${u.qty}` : '1'}</td>
       <td>${st}</td>
       <td><span class="u-acts">${acts}</span></td>
@@ -1862,6 +1868,8 @@ function recvRender() {
 }
 
 document.getElementById('recvBody').addEventListener('click', e => {
+  const img = e.target.closest('img.recv-img');
+  if (img) { openImageFull(img.dataset.full); return; }
   const b = e.target.closest('button[data-act]');
   if (!b || !recv || scanBusy) return;
   const u = recv.units.find(x => x.key === b.dataset.key);
@@ -1893,6 +1901,19 @@ function recvScanUnit(code) {
   recvRender();
   const n = recvCounts();
   if (n.wait === 0 && n.miss === 0) recvFinish();
+}
+
+// صورة المنتج بحجم الشاشة — ضغطة في أي حتة أو Esc بتقفلها
+function openImageFull(url) {
+  if (!url) return;
+  const ov = document.createElement('div');
+  ov.className = 'img-full-ov';
+  ov.innerHTML = `<img src="${esc(url)}" alt="">`;
+  const close = () => { ov.remove(); document.removeEventListener('keydown', onKey, true); focusScan(); };
+  const onKey = ev => { if (ev.key === 'Escape') { ev.stopPropagation(); close(); } };
+  ov.addEventListener('click', close);
+  document.addEventListener('keydown', onKey, true);
+  document.body.appendChild(ov);
 }
 
 function recvCancel() {
