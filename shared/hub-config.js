@@ -180,7 +180,7 @@ const ECO_WORKERS = {
   // 🔴 `min: '1.6.0'` (v1.52.0) — الطابور بقى بعمود «العنوان» (`address` في رد `get_ready_to_warehouse`) بدل «العميل»
   //    و«تاريخ الأوردر»، وحارس التغليف بقى على `s1_packing_date_time` للماكينتين (الاسترجاع الخالص كان بيترفض).
   //    على Worker `1.5.x` عمود العنوان بيقول `—` على **كل** صف، والاسترجاع الخالص لسه بيترفض — **بلا أي خطأ** — فالحارس بيسمّي النسخة.
-  warehouse:{ url: 'https://package-transfer-to-warehouse-worker.ecommoda-dev.workers.dev', min: '1.6.0', label: 'قسم استلام المرتجعات' },
+  warehouse:{ url: 'https://package-transfer-to-warehouse-worker.ecommoda-dev.workers.dev', min: '1.6.0', label: 'مرتجعات + لواغي المكتب' },
   // 🔴 جرد المخزون — انضم للهب في v1.39.0 (الأداة المستقلة `Inventory-Audit-Updater`).
   // `6.2.1` = نفس `MIN_WORKER_VERSION` اللي كانت في الأداة المستقلة بالحرف — الصفحة
   // **معتمدة عليه فعلاً** (Standards #29): تاب الجرد الجماعي بيقرا `bulk_compare`
@@ -202,7 +202,7 @@ const ECO_WORKERS = {
   bostaUpload: { url: 'https://bosta-orders-upload-worker.ecommoda-dev.workers.dev', min: '2.23.0', label: 'رفع بوسطة' },
 };
 
-const TOOL_VERSION = 'v1.56.0';                     // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.57.0';                     // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const SHOP_HANDLE  = '6c7e1a-53';
 

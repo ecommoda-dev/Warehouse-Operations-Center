@@ -390,7 +390,7 @@ console.log('① الجلسة والهيدر الموحّد');
 
   is(await page.locator('#loginOverlay').count() === 0,
      'مفيش شاشة دخول في الصفحة — الدخول في `index.html` بس');
-  is((await page.locator('.app-title-text h1').first().textContent() || '').includes('قسم استلام المرتجعات'),
+  is((await page.locator('.app-title-text h1').first().textContent() || '').includes('مرتجعات + لواغي المكتب'),
      'الهيدر الموحّد بعنوان الأداة');
   is(await page.locator('.hbtn-home').count() === 1, 'زرار 🏠 الرئيسية موجود');
   is((await page.locator('.hbtn[aria-label="تسجيل الخروج"]').count()) === 1,
@@ -403,7 +403,7 @@ console.log('① الجلسة والهيدر الموحّد');
 
   // 🔴 حارس النسخة لازم يسمّي **الـ Worker بتاع الأداة دي** — الهب بينادي
   //    تمن Workers، ورسالة بلا اسم بتخلّي الموظف يدوّر فيهم كلهم.
-  is((await page.locator('#aboutWorkers').textContent() || '').includes('قسم استلام المرتجعات'),
+  is((await page.locator('#aboutWorkers').textContent() || '').includes('مرتجعات + لواغي المكتب'),
      'جدول الـ Workers في «عن الأداة» اتملّى باسم الأداة');
   is(!(await page.locator('#aboutWorkers').textContent() || '').includes('قسم تسليمات المكتب'),
      '🔴 `PAGE_WORKERS` فيها Worker واحد — مش Worker أداة المكتب كمان');
@@ -433,8 +433,8 @@ console.log('① الجلسة والهيدر الموحّد');
   // العنوان فوق مربع الإدخال خالص (v1.55.0)
   is(await page.evaluate(() => {
        const h = document.getElementById('queueHead'), c = document.getElementById('scanCard');
-       return !!h && !!(h.compareDocumentPosition(c) & Node.DOCUMENT_POSITION_FOLLOWING) && h.textContent.includes('جاهز للرجوع للمخزن');
-     }), '🔴 عنوان «🏭 جاهز للرجوع للمخزن» فوق مربع الإدخال');
+       return !!h && !!(h.compareDocumentPosition(c) & Node.DOCUMENT_POSITION_FOLLOWING) && !h.textContent.includes('جاهز للرجوع للمخزن') && !h.querySelector('.queue-title');
+     }), '🔴 السطر التوضيحي فوق مربع الإدخال، وعنوان «🏭 جاهز للرجوع للمخزن» اتشال (v1.57.0)');
   is(await page.evaluate(() => !document.getElementById('rqBox').textContent.includes('مرتجع أو ملغي ·')) && (await page.locator('#rqSub').textContent()).includes('مرتجع أو ملغي'),
      'السطر التوضيحي (`#rqSub`) في العنوان مش جوّه كارت الجدول');
   // معيار الجداول: كارت موحّد + صف «النتائج» بنفس رقم العدّاد + بلا table-layout ثابت ولا ellipsis
@@ -571,16 +571,15 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
   is(tUnk === 'استبدال/استرجاع', '🔴 `s2Cycle` فاضي → «استبدال/استرجاع» مش تخمين', tUnk);
   is(tS1 === 'عادي', 'صف S1 لسه «عادي»', tS1);
 
-  // عمود «موقع الشحنة» — العهدة قبل السكانة
-  is((await rowTxt('#54727')).includes('في المكتب'), 'عمود العهدة بيقول «في المكتب» للراجع من المكتب');
+  // v1.57.0: عمود «موقع الشحنة» اتشال (الطابور = «في المكتب» بس) — الفلتر لسه في البوابة
   is(!rowsTxt.some(t => t.includes('مش مسجّل') || t.includes('مع المندوب')),
      '🔴 صفر صف بعهدة غير «في المكتب» — الفلتر بيشتغل على القيمة مش على وجودها',
      rowsTxt.join(' | ').slice(0, 300));
 
   // 🔴 **أعمدة الجدول** — الاسم الموحّد، و`updatedAt` اتشال بالكامل (v1.30.0)
   const heads = await page.$$eval('#rqTableWrap thead th', ths => ths.map(t => t.textContent.trim()));
-  is(heads.includes('موقع الشحنة'),
-     '🔴 العمود اسمه «موقع الشحنة» — نفس اسمه في طابور المكتب بالحرف', heads.join(' | '));
+  is(!heads.includes('موقع الشحنة'),
+     '🔴 عمود «موقع الشحنة» اتشال (v1.57.0) — كل صف في الطابور «في المكتب»', heads.join(' | '));
   is(!heads.some(h => h.includes('آخر تحديث')),
      '🔴 مفيش عمود «آخر تحديث» ولا «الوقت منذ آخر تحديث» — `updatedAt` كان تقريب بيتقري تسجيل',
      heads.join(' | '));
@@ -596,8 +595,8 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
   is(!(await page.$('#rqTableBody .age-badge')), 'ولا بادج «عمر الأوردر» في الجدول');
   const cells = await page.$$eval('#rqTableBody tr:first-child td', td => td.length);
   is(cells === heads.length, 'خلايا الصف == أعمدة الهيدر', `${cells} ≠ ${heads.length}`);
-  // 🔴 §UNIFIED — نفس الأعمدة السبعة لكل الصفوف
-  is(heads.join('|') === 'رقم الأوردر|العنوان|نوع الأوردر|موقع الشحنة|النتيجة|الوقت|إجراء',
+  // 🔴 §UNIFIED — نفس الأعمدة لكل الصفوف
+  is(heads.join('|') === 'رقم الأوردر|العنوان|نوع الأوردر|النتيجة|الوقت|إجراء',
      '🔴 الأعمدة بالترتيب المتفق عليه (بلا «الحالة») + عمود «إجراء» (➕ إضافة) في الآخر', heads.join(' | '));
   is((await rowTxt('#54727')).includes('⏳ في انتظار التسجيل') && !(await rowTxt('#54727')).includes('مستنية'), 'صف الطابور عمود «النتيجة» فيه «⏳ في انتظار التسجيل»');
   // ⛔ ولا أثر لـ`updatedAt` في الصفحة نفسها
@@ -965,7 +964,7 @@ console.log('⑤ السجل والفحص الذاتي');
   await page.click('button:has-text("فحص")');
   await page.waitForTimeout(900);
   const diagTxt = await page.locator('.settings-overlay').textContent() || '';
-  is(diagTxt.includes('قسم استلام المرتجعات'), 'الفحص الذاتي بيسمّي الـ Worker');
+  is(diagTxt.includes('مرتجعات + لواغي المكتب'), 'الفحص الذاتي بيسمّي الـ Worker');
   is(diagTxt.includes('قيمة «Warehouse» مش في قايمة الاختيار'),
      '`hint` بيتعرض تحت الفحص الفاشل');
   is(diagTxt.includes('2026-04-01'),
