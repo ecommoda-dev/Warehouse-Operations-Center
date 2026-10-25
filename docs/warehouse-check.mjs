@@ -422,18 +422,35 @@ console.log('① الجلسة والهيدر الموحّد');
      '🔴 مربع السكان لازق في أول البطاقة — مفيش مساحة فاضية فوقه', String(await page.evaluate(() => document.getElementById('scanInput').getBoundingClientRect().top - document.getElementById('scanCard').getBoundingClientRect().top)));
   is(await page.locator('#sessionWrap').count() === 0 && await page.locator('#rqTableWrap table').count() === 1,
      'جدول الطابور فيه جدول واحد، وجدول «اتسجّلت» منفصل عنه (#doneBox)');
-  // §PICKER (v1.53.2): اختيار أوردر من القايمة بدل السكان
-  is(await page.locator('#pickOrderBtn').isVisible(), 'زرار «اختيار من القائمة» ظاهر جنب السكانر');
-  await page.click('#pickOrderBtn');
-  const pickN = await page.locator('#pickList .pick-row').count();
-  is(await page.locator('#pickOverlay').evaluate(e => e.classList.contains('open')) && pickN === (await page.evaluate(() => rqState.orders.length)) && pickN > 0,
-     '🔴 النافذة فيها نفس أوردرات الطابور', String(pickN));
-  is(await page.locator('#pickAddBtn').count() === 0 && await page.locator('#pickList .pick-row button[data-pick-id]').count() === pickN,
-     '🔴 زرار «إضافة» جنب كل أوردر ومفيش زرار إضافة تحت');
-  await page.locator('#pickList .pick-row button[data-pick-id]').first().click();
+  // §ADD-BTN (v1.55.0): زرار «➕ إضافة» في كل صف بدل نافذة «اختيار من القائمة»
+  is(await page.locator('#pickOrderBtn').count() === 0 && await page.locator('#pickOverlay').count() === 0,
+     '🔴 زرار «تسجيل أوردر يدوي» ونافذة الاختيار اتشالوا');
+  const addN = await page.locator('#rqTableBody button[data-add-id]').count();
+  is(addN === (await page.evaluate(() => rqState.orders.length)) && addN > 0,
+     '🔴 زرار «➕ إضافة» في كل صف من الطابور', String(addN));
+  is((await page.locator('#rqTableWrap thead th').allInnerTexts()).map(t => t.trim()).includes('إجراء'),
+     'عمود «إجراء» في رأس الجدول');
+  // العنوان فوق مربع الإدخال خالص (v1.55.0)
+  is(await page.evaluate(() => {
+       const h = document.getElementById('queueHead'), c = document.getElementById('scanCard');
+       return !!h && !!(h.compareDocumentPosition(c) & Node.DOCUMENT_POSITION_FOLLOWING) && h.textContent.includes('جاهز للرجوع للمخزن');
+     }), '🔴 عنوان «🏭 جاهز للرجوع للمخزن» فوق مربع الإدخال');
+  is(await page.evaluate(() => !document.getElementById('rqBox').textContent.includes('مرتجع أو ملغي ·')) && (await page.locator('#rqSub').textContent()).includes('مرتجع أو ملغي'),
+     'السطر التوضيحي (`#rqSub`) في العنوان مش جوّه كارت الجدول');
+  // معيار الجداول: كارت موحّد + صف «النتائج» بنفس رقم العدّاد + بلا table-layout ثابت ولا ellipsis
+  is(await page.locator('#rqBox.unified-section .tbl-bar #rqResults').count() === 1 &&
+     (await page.locator('#rqResults').textContent()) === (await page.locator('#rqCount').textContent()),
+     '🔴 صف «النتائج» في كارت موحّد ورقمه = عدّاد الطابور');
+  is(await page.evaluate(() => {
+       const c = document.querySelector('#rqTableBody td.col-addr'); const cs = getComputedStyle(c);
+       return cs.textOverflow !== 'ellipsis' && cs.whiteSpace !== 'nowrap';
+     }), '🔴 العنوان بيلتف (مفيش ellipsis ولا nowrap)');
+  is(await page.locator('#rqTableWrap table.eco-tbl-on').count() === 1 && await page.locator('#rqTableWrap thead .eco-hf').count() >= 4,
+     'فلاتر رأس العمود شغّالة على جدول الطابور (قمع في الأعمدة القابلة للفلترة)');
+  await page.locator('#rqTableBody button[data-add-id]').first().click();
   await page.waitForTimeout(900);
-  is(await page.locator('#recvBox').isVisible() && !(await page.locator('#pickOverlay').evaluate(e => e.classList.contains('open'))),
-     '🔴 الإضافة من القايمة فتحت لوحة الاستلام (نفس مسار السكان)');
+  is(await page.locator('#recvBox').isVisible(),
+     '🔴 «➕ إضافة» فتحت لوحة الاستلام (نفس مسار السكان)');
   is(!((await page.locator('#recvTableWrap thead').innerText()).includes('المنتج') && !(await page.locator('#recvTableWrap thead').innerText()).includes('باركود')) &&
      (await page.locator('#recvTableWrap thead th').allInnerTexts()).every(t => t.trim() !== 'المنتج'),
      '🔴 عمود «المنتج» اتشال من لوحة الاستلام');
@@ -580,8 +597,8 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
   const cells = await page.$$eval('#rqTableBody tr:first-child td', td => td.length);
   is(cells === heads.length, 'خلايا الصف == أعمدة الهيدر', `${cells} ≠ ${heads.length}`);
   // 🔴 §UNIFIED — نفس الأعمدة السبعة لكل الصفوف
-  is(heads.join('|') === 'رقم الأوردر|العنوان|نوع الأوردر|الحالة|موقع الشحنة|النتيجة|الوقت',
-     '🔴 الأعمدة السبعة بالترتيب المتفق عليه', heads.join(' | '));
+  is(heads.join('|') === 'رقم الأوردر|العنوان|نوع الأوردر|الحالة|موقع الشحنة|النتيجة|الوقت|إجراء',
+     '🔴 الأعمدة السبعة بالترتيب المتفق عليه + عمود «إجراء» (➕ إضافة) في الآخر', heads.join(' | '));
   is((await rowTxt('#54727')).includes('⏳ في انتظار التسجيل') && !(await rowTxt('#54727')).includes('مستنية'), 'صف الطابور عمود «النتيجة» فيه «⏳ في انتظار التسجيل»');
   // ⛔ ولا أثر لـ`updatedAt` في الصفحة نفسها
   const pageSrc = await page.content();
@@ -706,7 +723,7 @@ console.log('③ السكان — الاستلام قطعة قطعة (v1.51.0)')
      'الضغط على عنوان «اتسجّلت» بيفتح الجدول');
   const dHeads = await page.$$eval('#doneTableWrap thead th', t => t.map(x => x.textContent.trim()));
   const pHeads = await page.$$eval('#rqTableWrap thead th', t => t.map(x => x.textContent.trim()));
-  is(dHeads.length === 7 && dHeads.join('|') === pHeads.join('|'), '🔴 جدول «اتسجّلت» كامل بنفس الأعمدة السبعة بتاعة جدول الطابور', dHeads.join(' | '));
+  is(dHeads.length === 7 && dHeads.join('|') === pHeads.slice(0, 7).join('|'), '🔴 جدول «اتسجّلت» كامل بنفس الأعمدة السبعة بتاعة جدول الطابور', dHeads.join(' | '));
   is(await page.evaluate(() => document.activeElement?.id) === 'scanInput', 'والفوكس بيرجع للسكانر');
   const order = await page.evaluate(() => document.getElementById('doneBox').compareDocumentPosition(document.getElementById('rqBox')) & Node.DOCUMENT_POSITION_FOLLOWING);
   is(!!order, 'جدول «اتسجّلت» فوق جدول الطابور');
