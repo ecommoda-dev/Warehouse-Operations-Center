@@ -290,6 +290,7 @@ const DIAG = { ok:false, version:'1.5.0', checks:[
 const ORDERS_SINCE = '2026-04-01';
 const scanCalls = [];
 const logCalls  = [];
+const countCalls = [];
 function makeStub() {
   return async (route) => {
     const url = new URL(route.request().url());
@@ -325,6 +326,7 @@ function makeStub() {
     else if (action === 'receive_item') {
       const b = JSON.parse(route.request().postData() || '{}'); riCalls.push(b); body = receiveItemReply(b);
     }
+    else if (action === 'get_logs_count')  { countCalls.push(url.toString()); body = { ok:true, total:1 }; }
     else if (action === 'get_logs')        { logCalls.push(url.toString()); body = { ok:true, entries:[{ timestamp:'2026-10-25T10:00:00Z', employee:'ahmed', type:'update', order_name:'#58355', order_id:'1', value_before:'Office', value_after:'Warehouse', extra: JSON.stringify({ machine:'S2', result:'success', items:[{sku:'SKU-A',qty:2},{sku:'SKU-B',qty:1,missing:1}] }) }] }; }
     else if (action === 'get_logs_count')  body = { ok:true, total:0 };
     else if (action === 'get_logs_export') body = { ok:true, entries:[], cap:2000, total:0, truncated:false };
@@ -955,13 +957,15 @@ console.log('⑤ السجل والفحص الذاتي');
   await page.waitForTimeout(700);
 
   const heads = await page.$$eval('#panelLog thead th', th => th.map(t => t.textContent.replace(/[^؀-ۿ →]/g,'').trim()));
-  is(heads.length === 8 && !heads.some(h => h.includes('من →')) && heads.some(h => h.includes('المنتجات')), 'جدول السجل ٨ أعمدة: بلا «من → إلى» وبعمود «المنتجات (SKU × العدد)»', heads.join(' · '));
+  is(heads.length === 9 && !heads.some(h => h.includes('من →')) && heads.some(h => h.includes('المنتجات')) && heads.some(h => h.includes('نوع العملية')), 'جدول السجل ٩ أعمدة (فيها «نوع العملية»): بلا «من → إلى» وبعمود «المنتجات (SKU × العدد)»', heads.join(' · '));
   const logTxt = await page.locator('#logTableBody').innerText();
   is(logTxt.includes('SKU-A') && logTxt.includes('2') && logTxt.includes('SKU-B') && logTxt.includes('ناقصة') && !logTxt.includes('→'),
      '🔴 السجل بيعرض SKU × العدد (والناقص) وبلا «من → إلى»', logTxt.slice(0,120));
-  const empOpts = await page.locator('#msList-emp .ms-item').count();
+  await page.click('#thEmp .th-flt');
+  const empOpts = await page.locator('.srv-pop input[data-v]').count();
   is(empOpts >= 1, 'فلتر الموظف اتملّى من `get_employees`', String(empOpts));
-  const typeOpts = await page.locator('#msList-type').textContent() || '';
+  await page.click('#thType .th-flt');
+  const typeOpts = await page.locator('.srv-pop').textContent() || '';
   is(typeOpts.includes('تسجيل رجوع للمخزن') && typeOpts.includes('مرفوض'),
      'فلتر «نوع العملية» بقيم الأداة دي');
 
@@ -969,8 +973,7 @@ console.log('⑤ السجل والفحص الذاتي');
   //    `metafields_change` المشترك بـ`type = 'update'`؛ أي قيمة تانية بترجّع
   //    **صفر صف** والجدول بيقول «لا توجد نتائج» على سجل مليان، بلا أي خطأ.
   logCalls.length = 0;
-  await page.click('#msBtn-type');
-  await page.click('#msList-type .ms-item:has-text("تسجيل رجوع للمخزن")');
+  await page.click('.srv-pop label:has-text("تسجيل رجوع للمخزن")');
   await page.waitForTimeout(800);
   const sent = logCalls.map(u => new URL(u).searchParams.get('types')).filter(Boolean);
   is(sent.length > 0 && sent.every(v => v === 'update'),
@@ -1007,7 +1010,7 @@ console.log('⑥ مراجعة المعيار — v1.60.0');
   // Step 2 بند ٧: صفر placeholder (لا في مربعَي السكان ولا في حقل السنة)
   is(await page.evaluate(() => document.querySelectorAll('[placeholder]').length) === 0,
      '🔴 صفر `placeholder` في الصفحة (aria-label هو الوصف)');
-  is(await page.evaluate(() => ['scanInput', 'scanInputRi', 'logSearch', 'rangeDateFrom', 'rangeDateTo', 'monthSelectYearManual']
+  is(await page.evaluate(() => ['scanInput', 'scanInputRi']
        .every(id => document.getElementById(id)?.getAttribute('aria-label'))),
      'كل حقول الإدخال ليها `aria-label`');
 
@@ -1042,26 +1045,116 @@ console.log('⑥ مراجعة المعيار — v1.60.0');
   await page.click('#tabLog');
   await page.waitForTimeout(700);
   logCalls.length = 0;
-  await page.click('#msBtn-emp');
-  const empHtml = await page.locator('#msList-emp').innerHTML();
+  await page.click('#thEmp .th-flt');
+  const empHtml = await page.locator('.srv-pop').innerHTML();
   is(!empHtml.includes('<i>') && empHtml.includes('&lt;i&gt;'), '🔴 اسم الموظف بيتهرّب قبل `innerHTML`');
-  await page.click('#msList-emp .ms-item:has-text("O\'Neil")');
+  await page.click('.srv-pop label:has-text("O\'Neil")');
   await page.waitForTimeout(800);
   const empSent = logCalls.map(u => new URL(u).searchParams.get('employees')).filter(Boolean);
   is(empSent.length > 0 && empSent.every(v => v === "o'neil"), '🔴 موظف باسم فيه `\'` بيتبعت للـ Worker سليم', JSON.stringify(empSent));
-  is(await page.locator('#chipsRow-emp .ms-chip').count() === 1 && !(await page.locator('#chipsRow-emp').innerHTML()).includes('<i>'),
+  is(await page.locator('#srvChips .ms-chip').count() === 1 && !(await page.locator('#srvChips').innerHTML()).includes('<i>'),
      'chip الموظف اتعرض متهرّب');
-  await page.click('#chipsRow-emp .ms-chip button');
+  await page.click('#srvChips .ms-chip button');
   await page.waitForTimeout(600);
-  is(await page.locator('#chipsRow-emp .ms-chip').count() === 0, '✕ على الـ chip بيشيل الفلتر برضه');
+  is(await page.locator('#srvChips .ms-chip').count() === 0, '✕ على الـ chip بيشيل الفلتر برضه');
 
   // فترة سريعة: «آخر 7 أيام» = ٧ أيام شاملة اليوم (بعد ما الحساب اتحوّل لـ `ecoAddDays`)
   logCalls.length = 0;
-  await page.click('#rangePresetBtn');
-  await page.click('.range-preset-item[data-preset="last7"]');
+  await page.click('#thDate .th-flt');
+  await page.click('.srv-preset[data-preset="last7"]');
   await page.waitForTimeout(800);
-  const [df, dt] = await page.evaluate(() => [document.getElementById('rangeDateFrom').value, document.getElementById('rangeDateTo').value]);
+  const lastU = new URL(logCalls[logCalls.length - 1]);
+  const [df, dt] = [lastU.searchParams.get('dateFrom'), lastU.searchParams.get('dateTo')];
   is(!!df && !!dt && Math.round((Date.parse(dt) - Date.parse(df)) / 86400000) === 6, 'فترة «آخر 7 أيام» = ٦ أيام فرق (٧ شاملة اليوم)', `${df} → ${dt}`);
+  is(errors.length === 0, 'صفر أخطاء في الكونسول', errors.join(' | '));
+  await ctx.close();
+}
+
+// ══════════════════════════════════════════════════════════════
+// ⑦ §SRV-FILTERS — مكوّن فلاتر رأس العمود (v1.61.0)
+// ══════════════════════════════════════════════════════════════
+console.log('⑦ فلاتر رأس العمود (server-side)');
+{
+  const { page, ctx, errors } = await newPage();
+  await page.goto(`${BASE}/Package-Transfer-To-Warehouse.html`);
+  await page.waitForTimeout(900);
+  await page.click('#tabLog');
+  await page.waitForTimeout(700);
+  const q = (u) => new URL(u).searchParams;
+
+  is(await page.evaluate(() => document.querySelectorAll('#panelLog .flt-header, #panelLog .flt-body, #panelLog .ms-btn').length) === 0,
+     'قسم الفلاتر القديم فوق الجدول اتشال');
+  is(await page.locator('#panelLog thead .th-flt').count() === 6, 'قمع في ٦ أعمدة (تاريخ · موظف · أوردر · نوع · طرد · نتيجة)');
+  is(await page.locator('#panelLog thead .eco-hf').count() === 0, '🔴 مفيش قمع client-side (`eco-hf`) على نفس العمود');
+  is(await page.locator('#srvChipsZone').isHidden(), 'منطقة الشيبس مخفية لما مفيش فلتر');
+  is(await page.evaluate(() => [...document.querySelectorAll('#panelLog .th-flt')].every(b => b.getAttribute('aria-label') && b.classList.contains('eco-tbl-skip'))),
+     'كل قمع ليه `aria-label` و`eco-tbl-skip`');
+
+  // النافذة بتفضل مفتوحة بعد الاختيار (multi-select) وبتتقفل بـ Esc وبالضغط برّه
+  await page.click('#thResult .th-flt');
+  await page.click('.srv-pop label:has-text("✓ تم")');
+  await page.click('.srv-pop label:has-text("⛔ مرفوض")');
+  is(await page.locator('.srv-pop.open').count() === 1 && await page.locator('.srv-pop input[data-v]:checked').count() === 2,
+     'النافذة بتفضل مفتوحة بعد أول اختيار (multi-select) — حارس `document.contains`');
+  is(await page.locator('#thResult .th-cnt').textContent() === '2', 'عدّاد الاختيارات على القمع');
+  await page.keyboard.press('Escape');
+  is(await page.locator('.srv-pop.open').count() === 0, 'Esc بيقفل النافذة');
+  await page.waitForTimeout(500);
+  logCalls.length = 0;
+  await page.click('#thMachine .th-flt');
+  await page.click('.srv-pop label:has-text("(S2)")');
+  await page.waitForTimeout(700);
+  await page.click('#panelLog .tbl-bar-right');   // ضغطة برّه النافذة
+  is(await page.locator('.srv-pop.open').count() === 0, 'الضغط برّه بيقفل النافذة');
+  const sp = q(logCalls[logCalls.length - 1]);
+  is(sp.get('results') === 'success,rejected' && sp.get('machines') === 'S2',
+     '🔴 الفلاتر المتعددة بتتبعت مجمّعة للـ Worker', `${sp.get('results')} | ${sp.get('machines')}`);
+  const cntCall = countCalls[countCalls.length - 1];
+  is(cntCall && q(cntCall).get('results') === 'success,rejected', 'نفس الفلاتر للعدّ (`get_logs_count`)');
+  is(await page.locator('#srvChipsZone').isVisible() && await page.locator('#srvChips .ms-chips-row').count() === 2,
+     'سطر شيبس لكل فلتر شغّال، واسم الفلتر مرة واحدة');
+
+  // بحث نصي (رقم أوردر / ملاحظة)
+  logCalls.length = 0;
+  await page.click('#thOrder .th-flt');
+  await page.fill('.srv-pop input[data-act="text"]', '53764');
+  await page.waitForTimeout(800);
+  is(logCalls.some(u => q(u).get('search') === '53764'), 'بحث الأوردر بيتبعت `search`');
+  await page.keyboard.press('Escape');
+
+  // تاريخ: من/إلى + شهر محدد
+  logCalls.length = 0;
+  await page.click('#thDate .th-flt');
+  await page.fill('.srv-pop input[data-act="from"]', '2026-10-01');
+  await page.fill('.srv-pop input[data-act="to"]', '2026-10-15');
+  await page.waitForTimeout(800);
+  const dl = q(logCalls[logCalls.length - 1]);
+  is(dl.get('dateFrom') === '2026-10-01' && dl.get('dateTo') === '2026-10-15', 'من/إلى بيتبعتوا `dateFrom`/`dateTo`');
+  is(await page.locator('.srv-pop.wide').count() === 1, 'نافذة التاريخ عريضة (٣٤٠px)');
+  await page.fill('.srv-pop input[data-act="month"]', '2026-02');
+  await page.waitForTimeout(800);
+  const ml = q(logCalls[logCalls.length - 1]);
+  is(ml.get('dateFrom') === '2026-02-01' && ml.get('dateTo') === '2026-02-28', 'شهر محدد = أول الشهر وآخره', `${ml.get('dateFrom')} → ${ml.get('dateTo')}`);
+  await page.keyboard.press('Escape');
+
+  // الترتيب لسه شغّال من نفس الترويسة، والقمع مابيرتّبش
+  logCalls.length = 0;
+  await page.click('#thEmp .th-lbl');
+  await page.waitForTimeout(600);
+  is(logCalls.some(u => q(u).get('sortBy') === 'employee'), 'الضغط على اسم العمود بيرتّب (server-side)');
+  logCalls.length = 0;
+  await page.click('#thEmp .th-flt');
+  await page.waitForTimeout(300);
+  is(!logCalls.some(u => q(u).get('sortBy') === 'employee' && q(u).get('sortDir') === 'desc'), 'ضغطة القمع ما بترتّبش');
+  await page.keyboard.press('Escape');
+
+  // مسح الكل
+  logCalls.length = 0;
+  await page.click('#clearAllBtn');
+  await page.waitForTimeout(700);
+  const cl = q(logCalls[logCalls.length - 1]);
+  is(!cl.get('results') && !cl.get('machines') && !cl.get('search') && !cl.get('dateFrom') && await page.locator('#srvChipsZone').isHidden(),
+     '«مسح كل الفلاتر» بيصفّر الباراميترات ويخفي الشيبس');
   is(errors.length === 0, 'صفر أخطاء في الكونسول', errors.join(' | '));
   await ctx.close();
 }

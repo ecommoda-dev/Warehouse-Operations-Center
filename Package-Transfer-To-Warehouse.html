@@ -11,6 +11,7 @@
   <!-- 🔴 قاعدة الأسبقية: الـ shell أولاً، وستايل الصفحة بعده وبيغلب -->
   <link rel="stylesheet" href="shared/core.css">
   <link rel="stylesheet" href="shared/hub.css">
+  <link rel="stylesheet" href="shared/srv-filters.css">
 <style>
 /* ⚠️ الاستثناء الوحيد المسموح لكتلة توكنز في صفحة: `--container-max` لوحدها.
    الصفحة دي Tier M — تاب السجل جدول، فمايجوزش تفضل Tier S. */
@@ -272,132 +273,8 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
   border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 16px; }
 .section-divider { border-top: 1px solid var(--border); }
 
-.flt-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px;
-  background: var(--surface-2); cursor: pointer; user-select: none; transition: background .12s;
-  border-radius: var(--radius) var(--radius) 0 0; }
-.flt-header:hover { background: var(--surface-hover); }
-.flt-header-right { display: flex; align-items: center; gap: 10px; }
-.flt-icon { width: 34px; height: 22.5px; color: var(--text-muted); transition: color .2s; flex-shrink: 0; }
-.flt-icon.active { color: var(--accent); }
-.flt-toggle { font-size: 13px; color: var(--text-muted); transition: transform .25s; }
-.flt-toggle.open { transform: rotate(180deg); }
-.flt-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
-.flt-body.collapsed { display: none; }
-.flt-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
-.flt-g { display: flex; flex-direction: column; gap: 3px; }
-.flt-label { font-size: 10px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .4px; white-space: nowrap; }
-
-.clear-btn { display: flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: var(--radius-sm);
-  font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; transition: all .15s;
-  white-space: nowrap; height: 34px;
-  border: 1px solid var(--red-border); color: var(--red); background: var(--red-light); }
-.clear-btn:hover { background: var(--red); color: var(--on-accent); border-color: var(--red); }
-.clear-btn.inactive { border-color: var(--border); color: var(--text-muted); background: var(--surface-2);
-  cursor: not-allowed; opacity: .6; }
-.clear-btn.inactive:hover { background: var(--surface-2); color: var(--text-muted); border-color: var(--border); }
-
-/* مربع البحث — الأيقونة شمال + padding-left، بدون overlap مع الكتابة العربية */
-.search-wrap { position: relative; max-width: 280px; flex: 1; min-width: 200px; }
-.search-input { width: 100%; border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
-  padding: 8px 12px 8px 34px; font-family: inherit; font-size: 13px; height: 36px; box-sizing: border-box;
-  outline: none; background: var(--surface); transition: border-color .15s, background .15s; }
-.search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(37,99,235,.08); }
-.search-input.has-value { border-color: var(--accent); background: var(--accent-light); }
-.search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
-  font-size: 14px; color: var(--text-muted); pointer-events: none; }
-
-/* multi-select */
-.ms-wrap { position: relative; }
-.ms-btn { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 170px;
-  height: 34px; padding: 6px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
-  background: var(--surface); font-family: inherit; font-size: 12px; font-weight: 600;
-  color: var(--text-primary); cursor: pointer; transition: all .15s; white-space: nowrap; }
-.ms-btn:hover { border-color: var(--accent); }
-.ms-btn.has-selection { border-color: var(--accent); color: var(--accent-dark); background: var(--accent-light); }
-.ms-btn.open { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(37,99,235,.08); }
-.ms-btn .ms-count { font-family: var(--font-mono); font-size: 10.5px; font-weight: 700;
-  color: var(--on-accent); background: var(--accent); border-radius: 20px; padding: 1px 7px;
-  min-width: 18px; text-align: center; }
-.ms-btn .ms-arrow { font-size: 9px; color: var(--text-muted); transition: transform .2s; flex-shrink: 0; }
-.ms-btn.open .ms-arrow { transform: rotate(180deg); }
-.ms-menu { position: absolute; top: calc(100% + 4px); right: 0; z-index: 200; width: 250px; max-width: 85vw;
-  background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
-  box-shadow: 0 8px 28px rgba(0,0,0,.14); display: none; flex-direction: column; overflow: hidden; }
-.ms-menu.open { display: flex; }
-.ms-ftr-top { display: flex; justify-content: space-between; align-items: center; gap: 8px;
-  padding: 7px 10px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
-.ms-ftr-clear { font-size: 11.5px; font-weight: 700; color: var(--red); background: none; border: none;
-  cursor: pointer; padding: 4px 6px; border-radius: 5px; }
-.ms-ftr-clear:hover { background: var(--red-light); }
-.ms-ftr-count { font-size: 11px; color: var(--text-muted); }
-.ms-search-wrap { padding: 8px; border-bottom: 1px solid var(--border); }
-.ms-search { width: 100%; height: 32px; border: 1px solid var(--border-strong); border-radius: 6px;
-  padding: 0 10px; font-family: inherit; font-size: 12px; outline: none; background: var(--surface-2); }
-.ms-search:focus { border-color: var(--accent); background: var(--surface); }
-.ms-selectall-row { display: flex; align-items: center; gap: 8px; padding: 7px 12px;
-  border-bottom: 1px solid var(--border); background: var(--surface-2); font-size: 12px; font-weight: 700;
-  cursor: pointer; user-select: none; }
-.ms-selectall-row:hover { background: var(--surface-hover); }
-.ms-list { max-height: 200px; overflow-y: auto; padding: 4px; }
-.ms-item { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 6px;
-  font-size: 12.5px; cursor: pointer; user-select: none; transition: background .1s; }
-.ms-item:hover { background: var(--surface-2); }
-.ms-item.checked { background: var(--accent-light); }
-.ms-item input[type=checkbox], .ms-selectall-row input[type=checkbox] {
-  width: 15px; height: 15px; cursor: pointer; accent-color: var(--accent); flex-shrink: 0; }
-.ms-item .ms-item-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ms-item .ms-item-mono { font-family: var(--font-mono); direction: ltr; }
-.ms-empty { padding: 16px; text-align: center; font-size: 12px; color: var(--text-muted); }
-
-.ms-chips-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.ms-chips-row:empty { display: none; }
-.chips-label { font-size: 11.5px; font-weight: 700; color: var(--text-secondary); white-space: nowrap; }
-.ms-chip { display: flex; align-items: center; gap: 5px; background: var(--accent-light);
-  color: var(--accent-dark); border: 1px solid var(--accent-border); border-radius: 20px;
-  padding: 3px 6px 3px 10px; font-size: 11.5px; font-weight: 600; }
-.ms-chip button { border: none; background: var(--accent-border); color: var(--accent-dark);
-  width: 16px; height: 16px; border-radius: 50%; font-size: 11px; cursor: pointer; line-height: 1; }
-.ms-chip button:hover { background: var(--accent); color: var(--on-accent); }
-
-/* فلتر الفترة السريعة */
-.range-preset-wrap { position: relative; }
-.range-preset-btn { display: flex; align-items: center; gap: 6px; height: 34px; padding: 6px 10px;
-  border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface);
-  font-family: inherit; font-size: 12px; font-weight: 600; color: var(--text-secondary);
-  cursor: pointer; white-space: nowrap; }
-.range-preset-btn.has-preset { border-color: var(--accent); color: var(--accent-dark); background: var(--accent-light); }
-.range-preset-menu { position: absolute; top: calc(100% + 4px); right: 0; z-index: 200; width: 190px;
-  background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
-  box-shadow: 0 8px 28px rgba(0,0,0,.14); display: none; padding: 4px; }
-.range-preset-menu.open { display: block; }
-.range-preset-clear-row { padding: 6px 8px; border-bottom: 1px solid var(--border); }
-.range-preset-clear-row button { font-size: 11.5px; font-weight: 700; color: var(--red); background: none;
-  border: none; cursor: pointer; padding: 4px 6px; border-radius: 5px; }
-.range-preset-clear-row button:hover { background: var(--red-light); }
-.range-preset-item { display: flex; justify-content: space-between; align-items: center; gap: 8px;
-  padding: 7px 10px; font-size: 12px; border-radius: 6px; cursor: pointer; color: var(--text-primary); }
-.range-preset-item:hover { background: var(--surface-2); }
-.range-preset-item.active { background: var(--accent-light); color: var(--accent-dark); font-weight: 700; }
-.range-preset-item .pr-check { display: none; color: var(--accent); font-size: 11px; }
-.range-preset-item.active .pr-check { display: inline; }
-.range-preset-sep { height: 1px; background: var(--border); margin: 4px 2px; }
-.range-preset-item.has-sub { position: relative; }
-.range-preset-item.has-sub .pr-sub-arrow { font-size: 11px; color: var(--text-muted); transition: color .15s; }
-.range-preset-item.has-sub:hover .pr-sub-arrow,
-.range-preset-item.has-sub.open .pr-sub-arrow { color: var(--accent); }
-.month-submenu { position: absolute; top: -4px; right: calc(100% + 6px); width: 220px;
-  background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
-  box-shadow: 0 8px 28px rgba(0,0,0,.14); display: none; padding: 12px; z-index: 210; }
-.month-submenu.open { display: block; }
-.month-select-row { display: flex; gap: 8px; }
-.month-select { flex: 1; height: 34px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
-  padding: 0 6px; font-family: inherit; font-size: 12.5px; color: var(--text-primary);
-  background: var(--surface); outline: none; cursor: pointer; }
-.month-select.filled { border-color: var(--accent); background: var(--accent-light); color: var(--accent-dark); }
-.month-select-hint { font-size: 10.5px; color: var(--text-muted); line-height: 1.5; margin-top: 8px; }
-.range-date-wrap input[type=date] { width: 150px; height: 34px; border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm); padding: 6px 10px; font-family: var(--font-mono); font-size: 12px;
-  color: var(--text-primary); background: var(--surface); outline: none; cursor: pointer; }
+/* الفلاتر في رأس العمود — shared/srv-filters.css (§SRV-FILTERS) */
+.data-table th .th-lbl { vertical-align: middle; }
 
 /* صف الجدول + الأكشنز */
 .tbl-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px;
@@ -487,7 +364,16 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
            واحد للنسخة (Standards #24). الرقم هنا **مش** مكتوب بإيد. -->
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.60.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.61.0</span>
+          <span class="cl-ver-date">25-10-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🔎 <b>مرتجعات + لواغي المكتب — تاب «سجل العمليات»:</b> الفلاتر اتنقلت لرأس كل عمود (مكوّن مشترك <code>shared/srv-filters.js</code>) بدل قسم الفلاتر فوق الجدول: التاريخ (فترات سريعة + شهر محدد + من/إلى) · الموظف · رقم الأوردر/الملاحظة · نوع العملية (عمود جديد) · الطرد · النتيجة. الفلترة لسه server-side (النتائج والعدّ والتصدير بنفس القيم)، والشيبس وزرار «مسح كل الفلاتر» بيظهروا لما يكون فيه فلتر شغّال.</span></li>
+        </ul>
+      </div>
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.60.0</span>
           <span class="cl-ver-date">25-10-2026</span>
         </div>
         <ul class="cl-items">
@@ -821,7 +707,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
             <li><code>§WAREHOUSE-QUEUE-JS</code> — الطابور: <code>rqLoad</code> + <code>§CACHE-TTL</code> (كاش أحدث من ١٠ دقايق = صفر نداء) و<code>§FRESH-UNIT</code> (وحدة «آخر تحديث» + «تحديث»). <b>مفيش تحديث تلقائي</b></li>
             <li><code>§TOOL-JS::confirm</code> — إلغاء الاستلام والاستلام اليدوي بنافذة <code>showOutcome</code> بتسمّي الأثر (مفيش <code>confirm</code> المتصفح)</li>
             <li><code>§LOG-JS</code> — القسم الموحّد: فلاتر multi-select + فترة سريعة + جدول + صفحات + تصدير</li>
-            <li><code>§LOG-JS::logParams</code> — المصدر الوحيد لفلاتر التلات نداءات</li>
+            <li><code>§LOG-JS::logParams</code> — المصدر الوحيد لفلاتر التلات نداءات (<code>srvLog.params()</code> من <code>shared/srv-filters.js</code>)</li>
             <li><code>§SHELL-JS::freezeOnScroll</code> — قفل الهيدر وشريط التابات بعتبة <b>مقيسة</b> مش رقم ثابت</li>
             <li><code>§SCAN::evaluate</code> (Worker) — 🔴 <b>الحارس الحقيقي</b>: بيقرا الأوردر حيًّا وقت الضغطة</li>
             <li><code>§SCAN::resolveOrder</code> (Worker) — الرقم الطويل قراءة بمفتاح، والقصير <b>بحث بمطابقة تامة</b> على الاسم الراجع</li>
@@ -1132,188 +1018,11 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
   <div id="panelLog" class="tab-panel">
     <div class="unified-section">
 
-      <!-- ─── هيدر الفلاتر: سهم الطي أقصى اليمين + أيقونة funnel بدون كلمة "الفلاتر" ─── -->
-      <div class="flt-header" onclick="toggleFilters()">
-        <div class="flt-header-right">
-          <span class="flt-toggle open" id="fltToggleIcon">▲</span>
-          <svg class="flt-icon" id="fltIcon" viewBox="0 0 36 24" fill="none"
-               stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="2 3 13 3 8.3 10.2 8.3 19 6.7 19 6.7 10.2 2 3"></polygon>
-            <line x1="18" y1="5"  x2="33" y2="5"></line>
-            <line x1="18" y1="11" x2="29" y2="11"></line>
-            <line x1="18" y1="17" x2="25" y2="17"></line>
-          </svg>
-        </div>
-        <button class="clear-btn inactive" id="clearAllBtn"
-          onclick="event.stopPropagation(); clearAllFilters();">✕ مسح كل الفلاتر</button>
+      <!-- §SRV-FILTERS: الفلاتر في رأس كل عمود (shared/srv-filters.js) — هنا بس الشيبس وزرار المسح -->
+      <div class="chips-zone" id="srvChipsZone" hidden>
+        <div class="chips-rows" id="srvChips"></div>
+        <button type="button" class="clear-btn" id="clearAllBtn">✕ مسح كل الفلاتر</button>
       </div>
-
-      <div class="flt-body" id="fltBody">
-
-        <!-- صف 1: فلاتر الاختيار المتعدد -->
-        <div class="flt-row">
-          <div class="flt-g">
-            <span class="flt-label">نوع العملية</span>
-            <div class="ms-wrap" id="msWrap-type">
-              <button class="ms-btn" id="msBtn-type" onclick="msToggle('type')">
-                <span id="msBtnLabel-type">الكل</span><span class="ms-arrow">▾</span>
-              </button>
-              <div class="ms-menu" id="msMenu-type">
-                <div class="ms-ftr-top">
-                  <button class="ms-ftr-clear" onclick="msClear('type')">مسح الاختيار</button>
-                  <span class="ms-ftr-count" id="msFtrCount-type"></span>
-                </div>
-                <div class="ms-selectall-row" onclick="msToggleSelectAll('type')">
-                  <input type="checkbox" id="msSelectAll-type" onclick="event.stopPropagation()"
-                    onchange="msToggleSelectAll('type', this.checked)">
-                  <span id="msSelectAllLabel-type">تحديد الكل</span>
-                </div>
-                <div class="ms-list" id="msList-type"></div>
-              </div>
-            </div>
-          </div>
-          <div class="flt-g">
-            <span class="flt-label">النتيجة</span>
-            <div class="ms-wrap" id="msWrap-result">
-              <button class="ms-btn" id="msBtn-result" onclick="msToggle('result')">
-                <span id="msBtnLabel-result">الكل</span><span class="ms-arrow">▾</span>
-              </button>
-              <div class="ms-menu" id="msMenu-result">
-                <div class="ms-ftr-top">
-                  <button class="ms-ftr-clear" onclick="msClear('result')">مسح الاختيار</button>
-                  <span class="ms-ftr-count" id="msFtrCount-result"></span>
-                </div>
-                <div class="ms-selectall-row" onclick="msToggleSelectAll('result')">
-                  <input type="checkbox" id="msSelectAll-result" onclick="event.stopPropagation()"
-                    onchange="msToggleSelectAll('result', this.checked)">
-                  <span id="msSelectAllLabel-result">تحديد الكل</span>
-                </div>
-                <div class="ms-list" id="msList-result"></div>
-              </div>
-            </div>
-          </div>
-          <div class="flt-g">
-            <span class="flt-label">الطرد</span>
-            <div class="ms-wrap" id="msWrap-machine">
-              <button class="ms-btn" id="msBtn-machine" onclick="msToggle('machine')">
-                <span id="msBtnLabel-machine">الكل</span><span class="ms-arrow">▾</span>
-              </button>
-              <div class="ms-menu" id="msMenu-machine">
-                <div class="ms-ftr-top">
-                  <button class="ms-ftr-clear" onclick="msClear('machine')">مسح الاختيار</button>
-                  <span class="ms-ftr-count" id="msFtrCount-machine"></span>
-                </div>
-                <div class="ms-selectall-row" onclick="msToggleSelectAll('machine')">
-                  <input type="checkbox" id="msSelectAll-machine" onclick="event.stopPropagation()"
-                    onchange="msToggleSelectAll('machine', this.checked)">
-                  <span id="msSelectAllLabel-machine">تحديد الكل</span>
-                </div>
-                <div class="ms-list" id="msList-machine"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- صف 2 (الترتيب الإلزامي): بحث ← فترة سريعة ← من ← إلى ← الموظف -->
-        <div class="flt-row">
-          <div class="flt-g" style="min-width:240px;">
-            <span class="flt-label">بحث برقم أوردر أو ملاحظة</span>
-            <div class="search-wrap">
-              <input type="text" class="search-input" id="logSearch" aria-label="بحث برقم أوردر أو ملاحظة" oninput="onLogSearchInput(this)" />
-              <span class="search-icon">🔍</span>
-            </div>
-          </div>
-
-          <div class="flt-g">
-            <span class="flt-label">فترة سريعة</span>
-            <div class="range-preset-wrap" id="rangePresetWrap">
-              <button class="range-preset-btn" id="rangePresetBtn" onclick="toggleRangePresetMenu(event)">
-                <span id="rangePresetLabel">⚡ اختار فترة</span><span class="pr-arrow">▾</span>
-              </button>
-              <div class="range-preset-menu" id="rangePresetMenu">
-                <!-- ✕ مسح الاختيار إلزامي — بيرجّع لحالة "بلا فلتر" (مش لأي افتراضي) -->
-                <div class="range-preset-clear-row">
-                  <button onclick="clearRangePreset()">✕ مسح الاختيار</button>
-                </div>
-                <div class="range-preset-item" data-preset="today"      onclick="applyRangePreset('today')"><span>اليوم</span><span class="pr-check">✓</span></div>
-                <div class="range-preset-item" data-preset="yesterday"  onclick="applyRangePreset('yesterday')"><span>أمس</span><span class="pr-check">✓</span></div>
-                <div class="range-preset-sep"></div>
-                <div class="range-preset-item" data-preset="last3"      onclick="applyRangePreset('last3')"><span>آخر 3 أيام</span><span class="pr-check">✓</span></div>
-                <div class="range-preset-item" data-preset="last7"      onclick="applyRangePreset('last7')"><span>آخر 7 أيام</span><span class="pr-check">✓</span></div>
-                <div class="range-preset-item" data-preset="last30"     onclick="applyRangePreset('last30')"><span>آخر 30 يوم</span><span class="pr-check">✓</span></div>
-                <div class="range-preset-item" data-preset="last90"     onclick="applyRangePreset('last90')"><span>آخر 90 يوم</span><span class="pr-check">✓</span></div>
-                <div class="range-preset-sep"></div>
-                <!-- 📅 شهر محدد — مكانه ثابت فوق "الشهر الحالي" مباشرة -->
-                <div class="range-preset-item has-sub" id="monthSpecificItem" onclick="toggleMonthSubmenu(event)">
-                  <span>📅 شهر محدد</span><span class="pr-sub-arrow">‹</span>
-                  <div class="month-submenu" id="monthSubmenu" onclick="event.stopPropagation();">
-                    <div class="month-select-row">
-                      <select class="month-select" id="monthSelectMonth" onchange="onMonthYearChange()">
-                        <option value="">الشهر</option>
-                        <option value="1">يناير</option><option value="2">فبراير</option><option value="3">مارس</option>
-                        <option value="4">أبريل</option><option value="5">مايو</option><option value="6">يونيو</option>
-                        <option value="7">يوليو</option><option value="8">أغسطس</option><option value="9">سبتمبر</option>
-                        <option value="10">أكتوبر</option><option value="11">نوفمبر</option><option value="12">ديسمبر</option>
-                      </select>
-                      <select class="month-select" id="monthSelectYear" onchange="onYearSelectChange()"></select>
-                    </div>
-                    <input type="number" class="month-select" id="monthSelectYearManual" style="display:none;margin-top:8px;"
-                      aria-label="السنة (4 أرقام)" oninput="onMonthYearManualInput()">
-                    <div class="month-select-hint">اختَر الشهر والسنة — يتطبّق الفلتر تلقائيًا بمجرد اختيار الاتنين. لسنة أقدم اختَر "سنة تانية..." واكتبها (4 أرقام، مثال 2019).</div>
-                  </div>
-                </div>
-                <div class="range-preset-item" data-preset="thisMonth"   onclick="applyRangePreset('thisMonth')"><span>الشهر الحالي</span><span class="pr-check">✓</span></div>
-                <div class="range-preset-item" data-preset="lastMonth"   onclick="applyRangePreset('lastMonth')"><span>الشهر السابق</span><span class="pr-check">✓</span></div>
-                <div class="range-preset-item" data-preset="thisQuarter" onclick="applyRangePreset('thisQuarter')"><span>الربع الحالي</span><span class="pr-check">✓</span></div>
-                <div class="range-preset-sep"></div>
-                <div class="range-preset-item" data-preset="thisYear"    onclick="applyRangePreset('thisYear')"><span>العام الحالي</span><span class="pr-check">✓</span></div>
-                <div class="range-preset-item" data-preset="lastYear"    onclick="applyRangePreset('lastYear')"><span>العام السابق</span><span class="pr-check">✓</span></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="flt-g">
-            <span class="flt-label">من تاريخ</span>
-            <div class="range-date-wrap">
-              <input type="date" id="rangeDateFrom" aria-label="من تاريخ" onclick="this.showPicker&&this.showPicker();" onchange="onRangeDateChange()">
-            </div>
-          </div>
-          <div class="flt-g">
-            <span class="flt-label">إلى تاريخ</span>
-            <div class="range-date-wrap">
-              <input type="date" id="rangeDateTo" aria-label="إلى تاريخ" onclick="this.showPicker&&this.showPicker();" onchange="onRangeDateChange()">
-            </div>
-          </div>
-
-          <div class="flt-g">
-            <span class="flt-label">الموظف</span>
-            <div class="ms-wrap" id="msWrap-emp">
-              <button class="ms-btn" id="msBtn-emp" onclick="msToggle('emp')">
-                <span id="msBtnLabel-emp">كل الموظفين</span><span class="ms-arrow">▾</span>
-              </button>
-              <div class="ms-menu" id="msMenu-emp">
-                <div class="ms-ftr-top">
-                  <button class="ms-ftr-clear" onclick="msClear('emp')">مسح الاختيار</button>
-                  <span class="ms-ftr-count" id="msFtrCount-emp"></span>
-                </div>
-                <div class="ms-selectall-row" onclick="msToggleSelectAll('emp')">
-                  <input type="checkbox" id="msSelectAll-emp" onclick="event.stopPropagation()"
-                    onchange="msToggleSelectAll('emp', this.checked)">
-                  <span id="msSelectAllLabel-emp">تحديد الكل</span>
-                </div>
-                <div class="ms-list" id="msList-emp"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Chips — سطر منفصل لكل فلتر، واسم الفلتر مرة واحدة في أول السطر -->
-        <div class="ms-chips-row" id="chipsRow-type"></div>
-        <div class="ms-chips-row" id="chipsRow-emp"></div>
-
-      </div>
-
-      <div class="section-divider"></div>
 
       <!-- ─── صف الجدول: سهم الطي أقصى اليمين + "النتائج" + الأكشنز ─── -->
       <div class="tbl-bar" onclick="toggleTable()">
@@ -1337,18 +1046,19 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
         </div>
         <div class="tbl-scroll">
           <table class="data-table">
-            <thead><tr>
-              <th class="sortable-th" data-sort-key="date"      onclick="toggleSort('date')">التاريخ<span class="sort-icon" data-sort-key="date"></span></th>
-              <th class="sortable-th" data-sort-key="time"      onclick="toggleSort('time')">الوقت<span class="sort-icon" data-sort-key="time"></span></th>
-              <th class="sortable-th" data-sort-key="employee"  onclick="toggleSort('employee')">الموظف<span class="sort-icon" data-sort-key="employee"></span></th>
-              <th class="sortable-th" data-sort-key="orderName" onclick="toggleSort('orderName')">رقم الأوردر<span class="sort-icon" data-sort-key="orderName"></span></th>
-              <th class="sortable-th" data-sort-key="machine"   onclick="toggleSort('machine')">الطرد<span class="sort-icon" data-sort-key="machine"></span></th>
-              <th>المنتجات (SKU × العدد)</th>
-              <th class="sortable-th" data-sort-key="result"    onclick="toggleSort('result')">النتيجة<span class="sort-icon" data-sort-key="result"></span></th>
-              <th>السبب / ملاحظة</th>
+<thead><tr>
+              <th id="thDate" class="sortable-th" data-sort-key="date" onclick="toggleSort('date')"><span class="th-lbl">التاريخ</span><span class="sort-icon" data-sort-key="date"></span></th>
+              <th class="sortable-th" data-eco-nofilter data-sort-key="time" onclick="toggleSort('time')">الوقت<span class="sort-icon" data-sort-key="time"></span></th>
+              <th id="thEmp" class="sortable-th" data-sort-key="employee" onclick="toggleSort('employee')"><span class="th-lbl">الموظف</span><span class="sort-icon" data-sort-key="employee"></span></th>
+              <th id="thOrder" class="sortable-th" data-sort-key="orderName" onclick="toggleSort('orderName')"><span class="th-lbl">رقم الأوردر</span><span class="sort-icon" data-sort-key="orderName"></span></th>
+              <th id="thType">نوع العملية</th>
+              <th id="thMachine" class="sortable-th" data-sort-key="machine" onclick="toggleSort('machine')"><span class="th-lbl">الطرد</span><span class="sort-icon" data-sort-key="machine"></span></th>
+              <th data-eco-nofilter>المنتجات (SKU × العدد)</th>
+              <th id="thResult" class="sortable-th" data-sort-key="result" onclick="toggleSort('result')"><span class="th-lbl">النتيجة</span><span class="sort-icon" data-sort-key="result"></span></th>
+              <th data-eco-nofilter>السبب / ملاحظة</th>
             </tr></thead>
             <tbody id="logTableBody">
-              <tr class="empty-row"><td colspan="8">لا يوجد سجل بعد — اضغط تحديث</td></tr>
+              <tr class="empty-row"><td colspan="9">لا يوجد سجل بعد — اضغط تحديث</td></tr>
             </tbody>
           </table>
         </div>
@@ -1371,6 +1081,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 <!-- 🔴 نسخة واحدة مضمّنة — ممنوع محتوى الملف ده يتنسخ هنا -->
 <script src="shared/hub-config.js"></script>
 <script src="shared/core.js"></script>
+<script src="shared/srv-filters.js"></script>
 <script>document.addEventListener("DOMContentLoaded", ecoTablesAuto);</script>
 <script src="shared/gates.js"></script>
 <script>document.getElementById('sharedMount').innerHTML = ecoSharedModals();</script>
@@ -1424,11 +1135,6 @@ function onSettingsSaved() {
 // ══════════════════════════════════════════════════════════════
 // §AUTH-JS — **اتشال**: الدخول في `index.html` بس
 // ══════════════════════════════════════════════════════════════
-// ── Active-state coloring for text search inputs ────────────────────────────────
-function toggleSearchActiveState(el) {
-  el.classList.toggle('has-value', el.value.trim().length > 0);
-}
-
 // ══════════════════════════════════════════════════════════════
 // Main Tabs
 // ══════════════════════════════════════════════════════════════
@@ -2153,49 +1859,38 @@ const LOG_PAGE_SIZE = 100;
 
 let logCurrentPage = 1;
 let logTotalCount  = 0;
-let logSearchTimer = null;
 let logRows        = [];      // صفوف الصفحة الحالية بعد التطبيع — مصدر الترتيب
 
-// ─── §LOG-JS::filters — multi-select state (بند ٢١: كل الفلاتر multi-select) ───
-const msState = {
-  // ⚠️ القيم دي **قيم `type` في D1**، والأداة بتكتب تحت سجل
-  //    `metafields_change` المشترك — فالقيمتين مسجّلتين أصلاً وصفر قيمة
-  //    جديدة. والفصل عن سكانرَي بوسطة بيحصل في الـ Worker بـ
-  //    `extra.sourceTool`، **مش** بفلتر من هنا.
-  type: { items: [
-            { value: 'update',   label: 'تسجيل رجوع للمخزن' },
-            { value: 'rejected', label: 'مرفوض (ما اتكتبش)' },
-          ], selected: new Set(), search: '' },
-  result: { items: [
-            { value: 'success',  label: '✓ تم' },
-            { value: 'warning',  label: '⚠ تم بتحذير' },
-            { value: 'error',    label: '✗ فشل' },
-            { value: 'rejected', label: '⛔ مرفوض' },
-            { value: 'already',  label: '⏭ خلاص متعمل' },
-          ], selected: new Set(), search: '' },
-  // ⚠️ «الطرد» مش «حالة الأوردر» — S1 الشحنة الأصلية و S2 طرد الاستبدال/
-  //    الاسترجاع. أوردر واحد ممكن يكون ليه الاتنين في وقتين مختلفين.
-  machine: { items: [
-            { value: 'S1', label: 'الشحنة الأصلية (S1)' },
-            { value: 'S2', label: 'استبدال/استرجاع (S2)' },
-          ], selected: new Set(), search: '' },
-  emp:  { items: [], selected: new Set(), search: '' },
-};
-const filterLabels = { type: 'نوع العملية', result: 'النتيجة', machine: 'الطرد', emp: 'الموظف' };
-
-let searchTerm = '';
-let dateFrom = null, dateTo = null;
-let dateFilterActive = false;   // الحالة المحايدة = بلا فلتر تاريخ خالص (بند ٢٢)
+// ─── §LOG-JS::filters — فلاتر رأس العمود (shared/srv-filters.js · §SRV-FILTERS) ───
+// ⚠️ القيم دي **قيم `type` في D1**، والأداة بتكتب تحت سجل `metafields_change` المشترك —
+//    فالقيمتين مسجّلتين أصلاً وصفر قيمة جديدة. والفصل عن سكانرَي بوسطة بيحصل في
+//    الـ Worker بـ `extra.sourceTool`، **مش** بفلتر من هنا.
+// ⚠️ «الطرد» مش «حالة الأوردر» — S1 الشحنة الأصلية و S2 طرد الاستبدال/الاسترجاع.
+const srvLog = ecoSrvFilters({
+  chips: '#srvChips', zone: '#srvChipsZone', clearBtn: '#clearAllBtn',
+  onChange: () => onLogFilterChange(),
+  columns: [
+    { key: 'date',    th: '#thDate',    type: 'date', label: 'التاريخ' },
+    { key: 'emp',     th: '#thEmp',     type: 'list', label: 'الموظف', param: 'employees', items: [] },
+    { key: 'search',  th: '#thOrder',   type: 'text', label: 'بحث برقم أوردر أو ملاحظة', param: 'search' },
+    { key: 'type',    th: '#thType',    type: 'list', label: 'نوع العملية', param: 'types', items: [
+        { value: 'update',   label: 'تسجيل رجوع للمخزن' },
+        { value: 'rejected', label: 'مرفوض (ما اتكتبش)' } ] },
+    { key: 'machine', th: '#thMachine', type: 'list', label: 'الطرد', param: 'machines', items: [
+        { value: 'S1', label: 'الشحنة الأصلية (S1)' },
+        { value: 'S2', label: 'استبدال/استرجاع (S2)' } ] },
+    { key: 'result',  th: '#thResult',  type: 'list', label: 'النتيجة', param: 'results', items: [
+        { value: 'success',  label: '✓ تم' },
+        { value: 'warning',  label: '⚠ تم بتحذير' },
+        { value: 'error',    label: '✗ فشل' },
+        { value: 'rejected', label: '⛔ مرفوض' },
+        { value: 'already',  label: '⏭ خلاص متعمل' } ] },
+  ],
+});
 
 // ─── §LOG-JS::collapse ───
-let fltOpen = true;
-function toggleFilters() {
-  fltOpen = !fltOpen;
-  document.getElementById('fltBody').classList.toggle('collapsed', !fltOpen);
-  document.getElementById('fltToggleIcon').classList.toggle('open', fltOpen);
-}
-let tblOpen = true;
 // طي/فتح جدول الطابور (v1.55.0) — نفس سلوك `toggleTable` بتاع السجل، بـ ids مستقلة
+let tblOpen = true;
 let rqTblOpen = true;
 function toggleRqTable() {
   rqTblOpen = !rqTblOpen;
@@ -2207,311 +1902,6 @@ function toggleTable() {
   tblOpen = !tblOpen;
   document.getElementById('tblBodyWrap').classList.toggle('collapsed', !tblOpen);
   document.getElementById('tblToggleIcon').classList.toggle('open', tblOpen);
-}
-
-// ⚠️ !!value مش !== null — الفلاتر اللي مالهاش rangeFrom قيمتها undefined،
-// و undefined !== null بترجع true فالزرار كان هيفضل نشط للأبد (بند ٣).
-function anyFilterActive() {
-  const msActive = Object.keys(msState).some(k =>
-    msState[k].selected.size > 0 || !!msState[k].rangeFrom || !!msState[k].rangeTo);
-  return msActive || searchTerm.trim().length > 0 || dateFilterActive;
-}
-
-function updateFilterIconState() {
-  const active = anyFilterActive();
-  document.getElementById('fltIcon').classList.toggle('active', active);
-  document.getElementById('clearAllBtn').classList.toggle('inactive', !active);
-}
-
-// ─── §LOG-JS::multiSelect ───
-function msRenderList(key) {
-  const st = msState[key];
-  const listEl = document.getElementById(`msList-${key}`);
-  const q = st.search.trim().toLowerCase();
-  const visible = q ? st.items.filter(it => it.label.toLowerCase().includes(q)) : st.items;
-
-  listEl.innerHTML = !visible.length
-    ? '<div class="ms-empty">لا توجد نتائج مطابقة للبحث</div>'
-    : visible.map(it => {
-        const checked = st.selected.has(it.value);
-        // ⚠️ القيمة والاسم بييجوا من الـ Worker (أسماء الموظفين) — بتتهرّب وبتتمرّر `data-*`
-        //    مش جوّه نص `onclick` (اسم فيه `'` كان بيكسر الفلتر في صمت).
-        return `<div class="ms-item ${checked ? 'checked' : ''}" data-k="${esc(key)}" data-v="${esc(it.value)}" onclick="msToggleItem(this.dataset.k, this.dataset.v)">
-          <input type="checkbox" ${checked ? 'checked' : ''} onclick="event.stopPropagation(); const r = this.closest('.ms-item'); msToggleItem(r.dataset.k, r.dataset.v)">
-          <span class="ms-item-label">${esc(it.label)}</span>
-        </div>`;
-      }).join('');
-
-  const allVisibleChecked = visible.length > 0 && visible.every(it => st.selected.has(it.value));
-  const saEl = document.getElementById(`msSelectAll-${key}`);
-  if (saEl) saEl.checked = allVisibleChecked;
-  const saLbl = document.getElementById(`msSelectAllLabel-${key}`);
-  if (saLbl) saLbl.textContent = q ? `تحديد كل نتائج البحث (${visible.length})` : 'تحديد الكل';
-  msUpdateButtonLabel(key);
-  const cnt = document.getElementById(`msFtrCount-${key}`);
-  if (cnt) cnt.textContent = `${st.selected.size} مختار`;
-}
-
-function msUpdateButtonLabel(key) {
-  const st  = msState[key];
-  const btn = document.getElementById(`msBtn-${key}`);
-  const lbl = document.getElementById(`msBtnLabel-${key}`);
-  const n   = st.selected.size;
-  btn.classList.toggle('has-selection', n > 0);
-  const dflt = key === 'emp' ? 'كل الموظفين' : 'الكل';
-  if (n === 0)      lbl.textContent = dflt;
-  else if (n === 1) {
-    const item = st.items.find(it => it.value === [...st.selected][0]);
-    lbl.textContent = item ? item.label : [...st.selected][0];
-  }
-  else lbl.innerHTML = `${n} محددين <span class="ms-count">${n}</span>`;
-}
-
-function msToggle(key) {
-  const menu = document.getElementById(`msMenu-${key}`), btn = document.getElementById(`msBtn-${key}`);
-  const willOpen = !menu.classList.contains('open');
-  Object.keys(msState).forEach(k => {
-    document.getElementById(`msMenu-${k}`).classList.remove('open');
-    document.getElementById(`msBtn-${k}`).classList.remove('open');
-  });
-  if (willOpen) { menu.classList.add('open'); btn.classList.add('open'); }
-}
-
-function msToggleItem(key, value) {
-  const st = msState[key];
-  st.selected.has(value) ? st.selected.delete(value) : st.selected.add(value);
-  msRenderList(key); renderChips(); onLogFilterChange();
-}
-
-function msToggleSelectAll(key, forceState) {
-  const st = msState[key];
-  const q = st.search.trim().toLowerCase();
-  const visible = q ? st.items.filter(it => it.label.toLowerCase().includes(q)) : st.items;
-  const allChecked = visible.length > 0 && visible.every(it => st.selected.has(it.value));
-  const shouldCheck = forceState !== undefined ? forceState : !allChecked;
-  visible.forEach(it => shouldCheck ? st.selected.add(it.value) : st.selected.delete(it.value));
-  msRenderList(key); renderChips(); onLogFilterChange();
-}
-
-function msFilterList(key, value) { msState[key].search = value; msRenderList(key); }
-
-function msClear(key) {
-  msState[key].selected.clear();
-  msRenderList(key); renderChips(); onLogFilterChange();
-}
-
-// ⚠️ الحارس الأول إلزامي (Standards #32): اختيار عنصر بيعمل re-render، فالعنصر
-// المضغوط بيتشال من الـ DOM قبل ما الحدث يوصل هنا — و wrap.contains(detached)
-// بترجّع false، فالقائمة كانت هتتقفل بعد **أول** اختيار ويبقى الفلتر
-// multi-select بالاسم بس.
-document.addEventListener('click', (e) => {
-  if (!document.contains(e.target)) return;   // ← لا تشيله
-  Object.keys(msState).forEach(k => {
-    const wrap = document.getElementById(`msWrap-${k}`);
-    if (wrap && !wrap.contains(e.target)) {
-      document.getElementById(`msMenu-${k}`).classList.remove('open');
-      document.getElementById(`msBtn-${k}`).classList.remove('open');
-    }
-  });
-});
-
-// اسم الفلتر مرة واحدة في أول السطر — مش مكرر جوّه كل chip (بند ٢٣)
-function renderChips() {
-  Object.keys(msState).forEach(key => {
-    const row = document.getElementById(`chipsRow-${key}`);
-    if (!row) return;
-    const label = filterLabels[key] || key;
-    const chips = [...msState[key].selected].map(val => {
-      const item = msState[key].items.find(it => it.value === val);
-      const v = item ? item.label : val;
-      return `<span class="ms-chip">${esc(v)}<button type="button" aria-label="شيل ${esc(v)}" data-k="${esc(key)}" data-v="${esc(val)}" onclick="msToggleItem(this.dataset.k, this.dataset.v)">✕</button></span>`;
-    }).join('');
-    row.innerHTML = chips ? `<span class="chips-label">${esc(label)}:</span>${chips}` : '';
-  });
-}
-
-// ─── §LOG-JS::dateRange ───
-const RANGE_PRESET_LABELS = {
-  today:'اليوم', yesterday:'أمس', last3:'آخر 3 أيام', last7:'آخر 7 أيام',
-  last30:'آخر 30 يوم', last90:'آخر 90 يوم', thisMonth:'الشهر الحالي',
-  lastMonth:'الشهر السابق', thisQuarter:'الربع الحالي', thisYear:'العام الحالي', lastYear:'العام السابق',
-};
-const RANGE_MONTH_NAMES = ['','يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-let activePreset = '';
-let rangeDebounce = null;
-
-// ⚠️ `ecoAddDays` و`cairoDayStr` من `core.js` (نسخة واحدة — درس R1). `cairoNow()` بترجّع Date
-//    مُزاحة لتوقيت القاهرة (تتقرا بـ `getUTC*` بس)، و`ymdUTC` بتكتب تاريخ Date من النوع ده.
-function cairoNow()          { return toCairo(new Date().toISOString()); }
-function ymdUTC(d)           { const p = n => String(n).padStart(2,'0');
-                               return `${d.getUTCFullYear()}-${p(d.getUTCMonth()+1)}-${p(d.getUTCDate())}`; }
-
-function toggleRangePresetMenu(e) {
-  e.stopPropagation();
-  const menu = document.getElementById('rangePresetMenu'), btn = document.getElementById('rangePresetBtn');
-  const isOpen = menu.classList.contains('open');
-  menu.classList.toggle('open', !isOpen); btn.classList.toggle('open', !isOpen);
-}
-// قائمة الفترة السريعة مابتعملش re-render، فمش محتاجة حارس document.contains
-document.addEventListener('click', () => {
-  document.getElementById('rangePresetMenu')?.classList.remove('open');
-  document.getElementById('rangePresetBtn')?.classList.remove('open');
-  closeMonthSubmenu();
-});
-
-function computePresetRange(preset) {
-  const now = cairoNow();
-  const today = cairoDayStr(new Date());
-  switch (preset) {
-    case 'today':     return { from: today, to: today };
-    case 'yesterday': { const y = ecoAddDays(today, -1); return { from: y, to: y }; }
-    case 'last3':     return { from: ecoAddDays(today, -2),  to: today };
-    case 'last7':     return { from: ecoAddDays(today, -6),  to: today };
-    case 'last30':    return { from: ecoAddDays(today, -29), to: today };
-    case 'last90':    return { from: ecoAddDays(today, -89), to: today };
-    case 'thisMonth': return { from: `${now.getUTCFullYear()}-${String(now.getUTCMonth()+1).padStart(2,'0')}-01`, to: today };
-    case 'lastMonth': {
-      const firstThis = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-      const lastPrev  = new Date(firstThis); lastPrev.setUTCDate(0);
-      const firstPrev = new Date(Date.UTC(lastPrev.getUTCFullYear(), lastPrev.getUTCMonth(), 1));
-      return { from: ymdUTC(firstPrev), to: ymdUTC(lastPrev) };
-    }
-    case 'thisQuarter': {
-      const q = Math.floor(now.getUTCMonth() / 3);
-      return { from: ymdUTC(new Date(Date.UTC(now.getUTCFullYear(), q*3, 1))), to: today };
-    }
-    case 'thisYear':  return { from: `${now.getUTCFullYear()}-01-01`, to: today };
-    case 'lastYear':  { const y = now.getUTCFullYear() - 1; return { from: `${y}-01-01`, to: `${y}-12-31` }; }
-    default: return null;
-  }
-}
-
-function applyRangePreset(preset) {
-  document.getElementById('rangePresetMenu').classList.remove('open');
-  document.getElementById('rangePresetBtn').classList.remove('open');
-  resetMonthSpecific();
-  const range = computePresetRange(preset);
-  if (!range) return;
-  activePreset = preset;
-  dateFrom = range.from; dateTo = range.to;
-  dateFilterActive = true;   // أي فترة يختارها المستخدم (حتى "اليوم") = فلتر مفعّل
-  document.getElementById('rangeDateFrom').value = range.from;
-  document.getElementById('rangeDateTo').value   = range.to;
-  document.querySelectorAll('.range-preset-item').forEach(el => el.classList.toggle('active', el.dataset.preset === preset));
-  document.getElementById('rangePresetLabel').textContent = `⚡ ${RANGE_PRESET_LABELS[preset]}`;
-  document.getElementById('rangePresetBtn').classList.add('has-preset');
-  onLogFilterChange();
-}
-
-function onRangeDateChange() {
-  activePreset = '';
-  resetMonthSpecific();
-  document.querySelectorAll('.range-preset-item').forEach(el => el.classList.remove('active'));
-  document.getElementById('rangePresetLabel').textContent = '⚡ اختار فترة';
-
-  dateFrom = document.getElementById('rangeDateFrom').value || null;
-  dateTo   = document.getElementById('rangeDateTo').value   || null;
-  dateFilterActive = !!(dateFrom || dateTo);
-  document.getElementById('rangePresetBtn').classList.toggle('has-preset', dateFilterActive);
-
-  clearTimeout(rangeDebounce);
-  rangeDebounce = setTimeout(onLogFilterChange, 400);
-}
-
-// الحالة المحايدة الوحيدة — تُستخدم في "مسح الاختيار" و"مسح كل الفلاتر"
-function resetDateFilter() {
-  activePreset = ''; dateFrom = null; dateTo = null; dateFilterActive = false;
-  document.getElementById('rangeDateFrom').value = '';
-  document.getElementById('rangeDateTo').value   = '';
-  document.getElementById('rangePresetLabel').textContent = '⚡ اختار فترة';
-  document.getElementById('rangePresetBtn').classList.remove('has-preset');
-  document.querySelectorAll('.range-preset-item').forEach(el => el.classList.remove('active'));
-  resetMonthSpecific();
-}
-
-function clearRangePreset() {
-  resetDateFilter();
-  document.getElementById('rangePresetMenu').classList.remove('open');
-  onLogFilterChange();
-}
-
-// "📅 شهر محدد" — السنة الحالية + آخر سنتين + إدخال يدوي لأي سنة أقدم
-function ensureRangeYearOptions() {
-  const sel = document.getElementById('monthSelectYear');
-  if (!sel || sel.options.length) return;
-  const y = cairoNow().getUTCFullYear();
-  sel.innerHTML = '<option value="">السنة</option>'
-    + [y, y-1, y-2].map(v => `<option value="${v}">${v}</option>`).join('')
-    + '<option value="__other">سنة تانية...</option>';
-}
-function resetMonthSpecific() {
-  const mSel = document.getElementById('monthSelectMonth');
-  const ySel = document.getElementById('monthSelectYear');
-  const yMan = document.getElementById('monthSelectYearManual');
-  if (mSel) { mSel.value = ''; mSel.classList.remove('filled'); }
-  if (ySel) { ySel.value = ''; ySel.classList.remove('filled'); }
-  if (yMan) { yMan.value = ''; yMan.style.display = 'none'; }
-}
-function toggleMonthSubmenu(e) {
-  e.stopPropagation();
-  ensureRangeYearOptions();
-  const sub = document.getElementById('monthSubmenu'), item = document.getElementById('monthSpecificItem');
-  const isOpen = sub.classList.contains('open');
-  sub.classList.toggle('open', !isOpen); item.classList.toggle('open', !isOpen);
-}
-function closeMonthSubmenu() {
-  document.getElementById('monthSubmenu')?.classList.remove('open');
-  document.getElementById('monthSpecificItem')?.classList.remove('open');
-}
-function onYearSelectChange() {
-  const sel = document.getElementById('monthSelectYear'), manual = document.getElementById('monthSelectYearManual');
-  if (sel.value === '__other') { manual.style.display = 'block'; manual.value = ''; sel.classList.remove('filled'); manual.focus(); }
-  else { manual.style.display = 'none'; manual.value = ''; onMonthYearChange(); }
-}
-function onMonthYearManualInput() { onMonthYearChange(); }
-function onMonthYearChange() {
-  const monthSel = document.getElementById('monthSelectMonth');
-  const yearSel  = document.getElementById('monthSelectYear');
-  const manual   = document.getElementById('monthSelectYearManual');
-  const month = monthSel.value;
-  const year  = yearSel.value === '__other' ? manual.value.trim() : yearSel.value;
-  monthSel.classList.toggle('filled', !!month);
-  yearSel.classList.toggle('filled', !!yearSel.value && yearSel.value !== '__other');
-  if (!month || !year || year.length !== 4 || isNaN(Number(year))) return;
-  applySpecificMonth(Number(year), Number(month));
-}
-function applySpecificMonth(year, month) {
-  const from = `${year}-${String(month).padStart(2,'0')}-01`;
-  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
-  const to = `${year}-${String(month).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`;
-  activePreset = 'specificMonth';
-  dateFrom = from; dateTo = to; dateFilterActive = true;
-  document.getElementById('rangeDateFrom').value = from;
-  document.getElementById('rangeDateTo').value   = to;
-  document.querySelectorAll('.range-preset-item').forEach(el => el.classList.toggle('active', el.id === 'monthSpecificItem'));
-  document.getElementById('rangePresetLabel').textContent = `📅 ${RANGE_MONTH_NAMES[month]} ${year}`;
-  document.getElementById('rangePresetBtn').classList.add('has-preset');
-  closeMonthSubmenu();
-  document.getElementById('rangePresetMenu').classList.remove('open');
-  document.getElementById('rangePresetBtn').classList.remove('open');
-  onLogFilterChange();
-}
-
-// ─── §LOG-JS::search ───
-function onLogSearchInput(el) {
-  toggleSearchActiveState(el);
-  clearTimeout(logSearchTimer);
-  logSearchTimer = setTimeout(() => { searchTerm = el.value; onLogFilterChange(); }, 400);
-}
-
-function clearAllFilters() {
-  Object.keys(msState).forEach(k => { msState[k].selected.clear(); msRenderList(k); });
-  const searchEl = document.getElementById('logSearch');
-  searchEl.value = ''; searchTerm = '';
-  toggleSearchActiveState(searchEl);
-  renderChips();
-  resetDateFilter();
-  onLogFilterChange();
 }
 
 // ─── §LOG-JS::sort — مستقل تمامًا عن الفلاتر (بند ٢٥) ───
@@ -2552,21 +1942,7 @@ function applySort(rows) { return rows; }
 
 // ─── §LOG-JS::logParams — المصدر الوحيد لفلاتر التلات نداءات ───
 // ⚠️ التعريف المكرر هو اللي بيخلي التصدير ينزّل غير المعروض. مصدر واحد بس.
-function logParams() {
-  const p = {};
-  const employees = [...msState.emp.selected];
-  const types     = [...msState.type.selected];
-  const results   = [...msState.result.selected];
-  const machines  = [...msState.machine.selected];
-  if (employees.length) p.employees = employees.join(',');
-  if (types.length)     p.types     = types.join(',');
-  if (results.length)   p.results   = results.join(',');
-  if (machines.length)  p.machines  = machines.join(',');
-  if (searchTerm.trim()) p.search   = searchTerm.trim();
-  if (dateFilterActive && dateFrom) p.dateFrom = dateFrom;
-  if (dateFilterActive && dateTo)   p.dateTo   = dateTo;
-  return p;
-}
+function logParams() { return srvLog.params(); }
 
 // ⚠️ الترتيب بيتبعت لـ `get_logs` **بس** — مش للعدّ ولا للتصدير. العدّ مالوش
 // ترتيب أصلاً، والتصدير بياخد ترتيبه من السيرفر برضه بس من غير ما نخلط
@@ -2583,7 +1959,6 @@ function clearExportWarn() {
 function onLogFilterChange() {
   logCurrentPage = 1;
   clearExportWarn();
-  updateFilterIconState();
   fetchLog();
 }
 
@@ -2596,18 +1971,16 @@ async function loadLog() {
 async function populateLogEmployeeFilter() {
   try {
     const data = await apiGet('get_employees');
-    msState.emp.items = (data.employees || []).map(e => ({ value: e.username, label: e.display_name }));
-    msRenderList('emp');
+    srvLog.setItems('emp', (data.employees || []).map(e => ({ value: e.username, label: e.display_name })));
   } catch { /* الفلتر بيفضل فاضي — مش سبب لتعطيل السجل */ }
 }
 
 async function fetchLog() {
-  updateFilterIconState();
   const offset = (logCurrentPage - 1) * LOG_PAGE_SIZE;
   const base   = logParams();
 
   document.getElementById('logTableBody').innerHTML =
-    '<tr class="empty-row"><td colspan="8">' + ecoLoadingHTML('⏳ جاري تحميل السجل برجاء الانتظار ...', true) + '</td></tr>';
+    '<tr class="empty-row"><td colspan="9">' + ecoLoadingHTML('⏳ جاري تحميل السجل برجاء الانتظار ...', true) + '</td></tr>';
   document.getElementById('paginationRow').style.display = 'none';
 
   try {
@@ -2636,7 +2009,7 @@ async function fetchLog() {
   } catch (err) {
     document.getElementById('filteredCount').textContent = '—';
     document.getElementById('logTableBody').innerHTML =
-      `<tr class="empty-row"><td colspan="8">❌ فشل التحميل: ${esc(err.message)}</td></tr>`;
+      `<tr class="empty-row"><td colspan="9">❌ فشل التحميل: ${esc(err.message)}</td></tr>`;
   }
 }
 
@@ -2654,8 +2027,7 @@ function goPage(dir) {
 // وإلا بالـ username زي ما هو. ممنوع أي قائمة أسماء مكتوبة في الكود.
 function employeeDisplayName(username) {
   if (!username) return '';
-  const item = msState.emp.items.find(it => it.value === username);
-  return item ? item.label : username;
+  return srvLog.label('emp', username);
 }
 
 function normalizeLogRows(entries) {
@@ -2699,7 +2071,7 @@ function renderLogTable(rows) {
   const sorted = applySort(rows);
 
   if (!sorted.length) {
-    body.innerHTML = '<tr class="empty-row"><td colspan="8">لا توجد نتائج تطابق الفلاتر</td></tr>';
+    body.innerHTML = '<tr class="empty-row"><td colspan="9">لا توجد نتائج تطابق الفلاتر</td></tr>';
     return;
   }
 
@@ -2708,6 +2080,10 @@ function renderLogTable(rows) {
         r.machine === 'S1' ? `<span class="badge badge-accent col-num">S1</span>`
       : r.machine === 'S2' ? `<span class="badge badge-purple col-num">S2</span>`
       : `<span class="badge badge-neutral">${esc(r.machine || '—')}</span>`;
+
+    const typeBadge = r.raw.type === 'rejected' ? '<span class="badge badge-purple">مرفوض</span>'
+                    : r.raw.type === 'update'   ? '<span class="badge badge-accent">تسجيل رجوع</span>'
+                    : `<span class="badge badge-neutral">${esc(r.raw.type || '—')}</span>`;
 
     // المنتجات: extra.items من Worker 1.9.0 ([{sku, qty, missing?}]) — الصفوف الأقدم بلا تفاصيل = —
     const items = Array.isArray(r.extra.items) ? r.extra.items : [];
@@ -2720,6 +2096,7 @@ function renderLogTable(rows) {
       <td class="col-num">${r.date ? formatTimeOnly(r.raw.timestamp) : '—'}</td>
       <td>${esc(r.employee || '—')}</td>
       <td>${r.orderName ? orderLink(r.orderName, r.orderId) : '—'}</td>
+      <td>${typeBadge}</td>
       <td>${machineBadge}</td>
       <td class="log-items">${itemsHtml}</td>
       <td>${resultBadge(r.result)}</td>
@@ -2748,6 +2125,7 @@ async function exportLogXLSX() {
       { header: 'الوقت',       key: 'time',      width: 14 },
       { header: 'الموظف',      key: 'employee',  width: 16 },
       { header: 'رقم الأوردر', key: 'orderName', width: 14 },
+      { header: 'نوع العملية', key: 'type',      width: 16 },
       { header: 'الطرد',       key: 'machine',   width: 12 },
       { header: 'المنتجات',    key: 'items',     width: 40 },
       { header: 'النتيجة',     key: 'result',    width: 14 },
@@ -2767,6 +2145,7 @@ async function exportLogXLSX() {
         time:      r.raw.timestamp ? formatTimeForExport(r.raw.timestamp) : '—',
         employee:  r.employee  || '—',
         orderName: r.orderName || '—',
+        type:      r.raw.type === 'rejected' ? 'مرفوض' : r.raw.type === 'update' ? 'تسجيل رجوع' : (r.raw.type || '—'),
         machine:   r.machine   || '—',
         items:     Array.isArray(r.extra.items) && r.extra.items.length ? r.extra.items.map(it => `${it.sku} × ${it.qty}${it.missing ? ` (${it.missing} ناقصة)` : ''}`).join(' | ') : '—',
         result:    RESULT_LABELS[r.result] || '—',
@@ -3107,10 +2486,6 @@ renderVersionUI();                       // بعد ما الهيدر يتحقن 
 checkWorkerVersion(PAGE_WORKERS);        // حارس نسخة الـ Worker (حد أدنى، مش تطابق)
 renderAboutWorkers();
 
-Object.keys(msState).forEach(k => msRenderList(k));
-renderChips();
-resetDateFilter();                       // بلا فلتر تاريخ خالص من أول تحميل
-updateFilterIconState();
 updateSortHeaderUI();
 
 buildTabChipMenu();
