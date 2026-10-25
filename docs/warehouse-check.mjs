@@ -415,10 +415,13 @@ console.log('① الجلسة والهيدر الموحّد');
      '🔴 السكانر والطابور ظاهرين مع بعض من أول لحظة');
   is(await page.locator('#sessRemainBtn').count() === 0, 'زرار «المتبقي» اتشال — «تحديث» في رأس الطابور هو المصدر');
   is(await page.evaluate(() => document.activeElement?.id) === 'scanInput', 'الفوكس على مربع السكان من أول لحظة');
-  is(await page.locator('#doneBand').isHidden() && await page.locator('#pendBand').isHidden(),
-     'الشريطين مخفيين طول ما مفيش صف اتسجّل');
+  is(await page.locator('#doneBox').isHidden(), 'جدول «اتسجّلت» مخفي طول ما مفيش صف اتسجّل');
+  is(await page.locator('#scanCard .card-header').count() === 0 && await page.locator('#scanCard h2').count() === 0,
+     '🔴 مفيش رأس (عنوان ولا عدّادات) فوق مربع السكان');
+  is((await page.evaluate(() => document.getElementById('scanInput').getBoundingClientRect().top - document.getElementById('scanCard').getBoundingClientRect().top)) < 30,
+     '🔴 مربع السكان لازق في أول البطاقة — مفيش مساحة فاضية فوقه', String(await page.evaluate(() => document.getElementById('scanInput').getBoundingClientRect().top - document.getElementById('scanCard').getBoundingClientRect().top)));
   is(await page.locator('#sessionWrap').count() === 0 && await page.locator('#rqTableWrap table').count() === 1,
-     '🔴 جدول واحد بس — مفيش جدول جلسة منفصل');
+     'جدول الطابور فيه جدول واحد، وجدول «اتسجّلت» منفصل عنه (#doneBox)');
   // §PICKER (v1.53.2): اختيار أوردر من القايمة بدل السكان
   is(await page.locator('#pickOrderBtn').isVisible(), 'زرار «اختيار من القائمة» ظاهر جنب السكانر');
   await page.click('#pickOrderBtn');
@@ -579,7 +582,7 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
   // 🔴 §UNIFIED — نفس الأعمدة السبعة لكل الصفوف
   is(heads.join('|') === 'رقم الأوردر|العنوان|نوع الأوردر|الحالة|موقع الشحنة|النتيجة|الوقت',
      '🔴 الأعمدة السبعة بالترتيب المتفق عليه', heads.join(' | '));
-  is((await rowTxt('#54727')).includes('⏳ مستنية'), 'صف الطابور عمود «النتيجة» فيه «⏳ مستنية»');
+  is((await rowTxt('#54727')).includes('⏳ في انتظار التسجيل') && !(await rowTxt('#54727')).includes('مستنية'), 'صف الطابور عمود «النتيجة» فيه «⏳ في انتظار التسجيل»');
   // ⛔ ولا أثر لـ`updatedAt` في الصفحة نفسها
   const pageSrc = await page.content();
   is(!/data-rq-upd|rqSinceUpdate/.test(pageSrc),
@@ -692,18 +695,21 @@ console.log('③ السكان — الاستلام قطعة قطعة (v1.51.0)')
   const dcells = await drow.locator('td').allInnerTexts();
   is(dcells.length === 7 && dcells[1].includes('شارع التحرير') && dcells[2].trim() === 'عادي' && dcells[3].includes('مرتجع') && dcells[4].includes('في المخزن') && dcells[5].includes('تم'),
      '🔴 صف «اتسجّلت»: نفس الأعمدة السبعة · عنوان ونوع وحالة الأوردر محفوظين · «موقع الشحنة» بقى «في المخزن» · النتيجة «تم»', dcells.join(' | '));
-  is(await page.locator('#doneBand').isVisible() && await page.locator('#pendBand').isVisible() && (await txt('#doneCnt')) === '1',
-     '🔴 شريطا «اتسجّلت» و«مستنية» ظهروا وعدّاد «اتسجّلت» = ١');
-  is(await page.locator('#sessionBody').isHidden() && await page.locator('#doneToggle').getAttribute('aria-expanded') === 'false',
-     'شريط «اتسجّلت» مطوي افتراضيًا');
+  is(await page.locator('#doneBox').isVisible() && (await txt('#doneCnt')) === '1',
+     '🔴 جدول «اتسجّلت» ظهر وعدّاده = ١');
+  is(await page.locator('#doneTableWrap').isHidden() && await page.locator('#doneToggle').getAttribute('aria-expanded') === 'false',
+     '🔴 جدول «اتسجّلت» مطوي افتراضيًا');
   const prog = (await txt('#sessProgTxt'));
   is(await page.locator('#sessProg').isVisible() && /اتسجّل 1 من \d+/.test(prog), 'شريط التقدّم «اتسجّل ١ من N»', prog);
   await page.click('#doneToggle');
-  is(await page.locator('#sessionBody').isVisible() && await page.locator('#doneToggle').getAttribute('aria-expanded') === 'true',
-     'الضغط على شريط «اتسجّلت» بيفتحه');
+  is(await page.locator('#doneTableWrap').isVisible() && await page.locator('#doneToggle').getAttribute('aria-expanded') === 'true',
+     'الضغط على عنوان «اتسجّلت» بيفتح الجدول');
+  const dHeads = await page.$$eval('#doneTableWrap thead th', t => t.map(x => x.textContent.trim()));
+  const pHeads = await page.$$eval('#rqTableWrap thead th', t => t.map(x => x.textContent.trim()));
+  is(dHeads.length === 7 && dHeads.join('|') === pHeads.join('|'), '🔴 جدول «اتسجّلت» كامل بنفس الأعمدة السبعة بتاعة جدول الطابور', dHeads.join(' | '));
   is(await page.evaluate(() => document.activeElement?.id) === 'scanInput', 'والفوكس بيرجع للسكانر');
-  const firstBand = await page.$$eval('#rqTableWrap tbody', t => t.map(x => x.id || x.querySelector('tr')?.id));
-  is(firstBand.join(',') === 'doneBand,sessionBody,pendBand,rqTableBody', 'ترتيب الشرايح: اتسجّلت ثم مستنية', firstBand.join(','));
+  const order = await page.evaluate(() => document.getElementById('doneBox').compareDocumentPosition(document.getElementById('rqBox')) & Node.DOCUMENT_POSITION_FOLLOWING);
+  is(!!order, 'جدول «اتسجّلت» فوق جدول الطابور');
   // 🔴 العرض الضيق (تحت ٧٦٠px): صف من سطرين بدل scroll أفقي، والهيدر مخفي
   await page.setViewportSize({ width:520, height:900 });
   await page.waitForTimeout(250);
@@ -713,7 +719,7 @@ console.log('③ السكان — الاستلام قطعة قطعة (v1.51.0)')
   is(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'ومفيش scroll أفقي في الصفحة كلها');
   await page.setViewportSize({ width:1280, height:720 });
 
-  // ── ② قطعة غلط + أوردر تاني والأوردر مفتوح + ناقصة بإقرار (الملغي مؤهل) ──
+  // ── ② قطعة غلط + أوردر تاني والأوردر مفتوح (الملغي مؤهل) ──
   await scan(page, '7212244533571');
   is(await panelOpen(), '🔴 الأوردر الملغي **مؤهل** — اللوحة اتفتحت (عكس أداة المكتب)');
   await page.evaluate(() => { window.__beeps = []; });
@@ -724,21 +730,18 @@ console.log('③ السكان — الاستلام قطعة قطعة (v1.51.0)')
   const ic = itemsCalls.length;
   await scan(page, '7212244533576');
   is(itemsCalls.length === ic, 'سكان أوردر تاني والأوردر مفتوح مابيفتحش أوردر تاني');
-  await page.locator('#recvBody button[data-act="miss"]').first().click();
-  await page.waitForTimeout(150);
-  is(!(await page.locator('#recvFinishBtn').isDisabled()), 'بعد تعليم «ناقصة» الإنهاء اتفتح');
-  is(receiveCalls.length === 1, 'تعليم ناقصة مابيعملش إنهاء تلقائي');
+  // 🔴 v1.54.1 — زرار «ناقصة» اتشال من لوحة الاستلام (قرار أحمد 25-10-2026)
+  is(await page.locator('#recvBody button[data-act="miss"]').count() === 0 && !(await txt('#recvBody')).includes('ناقصة'),
+     '🔴 مفيش زرار «ناقصة» في لوحة الاستلام');
+  is(await page.locator('#recvFinishBtn').isDisabled(), 'الإنهاء مقفول طول ما فيه قطع مستنية');
+  const nUnits = await page.locator('#recvBody .recv-row').count();
+  for (let i = 0; i < nUnits; i++) { await page.locator('#recvBody button[data-act="manual"]').first().click(); await page.waitForTimeout(100); }
+  is(!(await page.locator('#recvFinishBtn').isDisabled()), 'بعد استلام كل القطع الإنهاء اتفتح');
   await page.locator('#recvFinishBtn').click();
-  await page.waitForTimeout(250);
-  is((await txt('#outcomeModal')).includes('ناقصة'), 'نافذة إقرار الناقص بتعرض القطعة');
-  is(receiveCalls.length === 1, 'مفيش نداء قبل الإقرار');
-  await page.locator('#outcomeFtr button:has-text("ناقصة فعلاً")').click();
   await page.waitForTimeout(700);
   const rc2 = receiveCalls[1] || {};
-  is(rc2.missingAck === true && (rc2.missing || [])[0] === 'gid://shopify/LineItem/3#1',
-     '🔴 الإقرار بيبعت `missingAck:true` والمفتاح الناقص', JSON.stringify(rc2).slice(0, 200));
-  is((await txt('#outcomeModal')).includes('قطعة ناقصة'), 'النتيجة «تم بتحذير» بتقول عدد الناقص');
-  await closeModal();
+  is(receiveCalls.length === 2 && !rc2.missingAck && (rc2.missing || []).length === 0 && (rc2.scanned || []).length === nUnits,
+     '🔴 `receive_order` اتبعت بكل القطع وصفر ناقص وبلا `missingAck`', JSON.stringify(rc2).slice(0, 200));
   is(await page.evaluate(() => document.activeElement?.id) === 'scanInput', 'الفوكس رجع لمربع السكان');
 
   // ── ③ حالة شاذة: إقرار قبل فتح الاستلام + يدوي + تراجع ──
