@@ -311,3 +311,84 @@ function ecoWarehouseQueue(orders) {
   out.sort((a, b) => String(a.packedAt || '').localeCompare(String(b.packedAt || '')));
   return out;
 }
+
+// ══════════════════════════════════════════════════════════════
+// ✏️ §EDITED-GATE — «أوردرات معدّلة» و«تحويل بوسطة» (v1.62.0 · طلب أحمد 25-10-2026)
+// ══════════════════════════════════════════════════════════════
+//
+// 🔴 **الطرد هنا خارج مش راجع**: أوردر اتطبع واتغلّف وراح المكتب، وبعدين اتعدّل (`Confirmed + Edit`)
+//    أو رجع `Confirmed` / S2 `Confirmed + EXCHANGE` — فالطرد اللي في المكتب بمحتوى قديم ولازم يرجع
+//    المخزن يتغلّف من جديد. الفعل: السكان يكتب `Warehouse` (نفس `scan` بـ`mode`).
+// ⛔ **مش نسخة من §WAREHOUSE-GATE**: هناك الحالة `Returned`/`Cancelled` والملغي شرط أهلية والتغليف
+//    بـ`s1_…` على الماكينتين. هنا الحالة `Confirmed…` و**الملغي مستبعَد** (شغل تاب المرتجعات) و
+//    **التغليف بميتافيلد الماكينة** (`s2_…` لـS2 — الطرد الخارج).
+// 🔴 **استعلام واحد مشترك للتابين** (`get_ready_edited`)، والتقسيم هنا بالمندوب/الزون:
+//    · `edited`       — مش Bosta · قاهرة+جيزة أو شو روم
+//    · `edited_bosta` — **Bosta** · **`Other_Regions`** (اتغلّف لمندوب وراح المكتب وبعدين اتحوّل لبوسطة)
+//    ⚠️ أوردر مندوبه Bosta وزونه لسه قاهرة+جيزة مش في أي تاب منهم (بقاعدة أحمد) — والسكان بيحكم عليه الـ Worker.
+// ⛔ نفس القاعدة في `evaluateEdited` في `package-transfer-to-warehouse-worker` في نفس التمريرة (درس R1).
+// 🔴 بوابة عرض مش حارس كتابة — الحارس الحقيقي في الـ Worker وقت السكان.
+const ECO_EDITED_S1 = ['Confirmed', 'Confirmed + Edit'];
+const ECO_EDITED_S2 = ['Confirmed + EXCHANGE'];
+const ECO_EDITED_ZONES = ['Cairo+Giza', 'Show_Room'];
+const ECO_EDITED_BOSTA_ZONE = 'Other_Regions';
+
+// mode: 'edited' | 'edited_bosta'
+function ecoEditedGate(o, mode) {
+  if (!o) return { eligible: false, machine: null, code: 'none', reason: 'مفيش أوردر' };
+  const bostaTab = mode === 'edited_bosta';
+
+  // ① النطاق
+  if (bostaTab) {
+    if (o.courier !== 'Bosta')
+      return { eligible: false, machine: null, code: 'not_bosta', reason: 'المندوب مش Bosta' };
+    if (o.zone !== ECO_EDITED_BOSTA_ZONE)
+      return { eligible: false, machine: null, code: 'zone', reason: `زون «${o.zone || 'فاضي'}» مش ${ECO_EDITED_BOSTA_ZONE}` };
+  } else {
+    if (o.courier === 'Bosta' || o.zone === ECO_EDITED_BOSTA_ZONE)
+      return { eligible: false, machine: null, code: 'bosta', reason: 'أوردر بوسطة — مكانه «تحويل بوسطة»' };
+    if (!ECO_EDITED_ZONES.includes(o.zone || ''))
+      return { eligible: false, machine: null, code: 'zone', reason: `زون «${o.zone || 'فاضي'}» مش من نطاق الأداة` };
+  }
+
+  // ② الملغي/المرتجع — شغل تاب «مرتجعات + لواغي»
+  if (o.cancelledAt || ECO_WH_S1_ELIGIBLE.includes(o.s1 || ''))
+    return { eligible: false, machine: null, code: 'cancelled', reason: 'ملغي أو مرتجع — مكانه «مرتجعات + لواغي»' };
+
+  // ③ الماكينة — S1 الأول
+  const machine = ECO_EDITED_S1.includes(o.s1 || '') ? 's1' : (ECO_EDITED_S2.includes(o.s2 || '') ? 's2' : null);
+  if (!machine)
+    return { eligible: false, machine: null, code: 'status', reason: 'مش معدّل' };
+
+  // ④ متغلّف فعلاً — **بميتافيلد الماكينة بتاعتها** (الطرد خارج)
+  // 🔴 عكس §WAREHOUSE-GATE: هناك `packedAtS1` على الماكينتين لأن الطرد راجع؛ هنا S2 طرده الخارج
+  //    هو اللي اتغلّف في دورة S2. ⛔ ممنوع الرجوع لـ`packedAtS1` على الماكينتين.
+  const packedAt = machine === 's1' ? o.packedAtS1 : o.packedAtS2;
+  if (!packedAt)
+    return { eligible: false, machine, code: 'not_packed', reason: 'ما اتغلّفش' };
+
+  // ⑤ العهدة — `Office` وبس (فلتر عرض زي المرتجعات؛ الـ Worker بيقبل الباقي)
+  const cur = machine === 's1' ? o.whereaboutsS1 : o.whereaboutsS2;
+  if (cur === ECO_WHEREABOUTS.WAREHOUSE)
+    return { eligible: false, machine, code: 'already_warehouse', reason: 'في المخزن خلاص' };
+  if (cur !== ECO_WHEREABOUTS.OFFICE)
+    return { eligible: false, machine, code: 'not_in_office',
+             reason: cur ? `عهدة «${cur}» — الطابور بيعرض اللي في المكتب بس` : 'العهدة مش مسجّلة' };
+
+  return { eligible: true, machine, code: 'ok', reason: '' };
+}
+
+// الأقدم تغليفًا الأول — بوقت تغليف الماكينة (نفس شرط الأهلية).
+function ecoEditedQueue(orders, mode) {
+  const out = [];
+  for (const o of orders || []) {
+    const g = ecoEditedGate(o, mode);
+    if (!g.eligible) continue;
+    out.push({ ...o, machine: g.machine,
+               packedAt: (g.machine === 's1' ? o.packedAtS1 : o.packedAtS2) || null,
+               packedBy: (g.machine === 's1' ? o.packedByS1 : o.packedByS2) || null,
+               whereabouts: (g.machine === 's1' ? o.whereaboutsS1 : o.whereaboutsS2) || null });
+  }
+  out.sort((a, b) => String(a.packedAt || '').localeCompare(String(b.packedAt || '')));
+  return out;
+}

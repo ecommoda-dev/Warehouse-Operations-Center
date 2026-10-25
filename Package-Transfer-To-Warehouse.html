@@ -345,6 +345,8 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
   <div class="main-tabs-bar" id="mainTabsBar">
     <button class="main-tab-btn active" id="tabScanner" onclick="switchMainTab('scanner')">📷 مرتجعات + لواغي</button>
+    <button class="main-tab-btn"        id="tabEdited"  onclick="switchMainTab('edited')">✏️ أوردرات معدّلة</button>
+    <button class="main-tab-btn"        id="tabBosta"   onclick="switchMainTab('bosta')">🚚 تحويل بوسطة</button>
     <button class="main-tab-btn"        id="tabPartial" onclick="switchMainTab('partial')">📦 منتجات التسليم الجزئي</button>
     <button class="main-tab-btn"        id="tabLog"     onclick="switchMainTab('log')">📋 سجل العمليات</button>
   </div>
@@ -364,7 +366,18 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
            واحد للنسخة (Standards #24). الرقم هنا **مش** مكتوب بإيد. -->
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.61.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.62.0</span>
+          <span class="cl-ver-date">25-10-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>✏️ <b>تاب «أوردرات معدّلة»:</b> أوردر اتطبع واتغلّف وراح المكتب وبعدين اتعدّل (<code>Confirmed</code> · <code>Confirmed + Edit</code> · S2 <code>Confirmed + EXCHANGE</code>) — الطرد اللي في المكتب بمحتوى قديم. السكان بيسجّله «في المخزن» عشان يتغلّف من جديد. بنفس شروط «مرتجعات + لواغي» (مش بوسطة · قاهرة+جيزة/شو روم · عهدة المكتب · نافذة ٢٥٠ يوم) <b>ماعدا</b> إن التغليف بوقت تغليف الماكينة (S2 بـ<code>s2_…</code>) والملغي مستبعَد.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🚚 <b>تاب «تحويل بوسطة»:</b> نفس التاب اللي فوق بس للأوردرات اللي مندوبها <code>Bosta</code> وزونها <code>Other_Regions</code> (اتغلّفت لمندوب وراحت المكتب وبعدين اتحوّلت لبوسطة).</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>التابين بيجيبوا من استعلام واحد مشترك</b> (<code>get_ready_edited</code> · كاش واحد) والتقسيم بالمندوب/الزون في <code>ecoEditedGate</code>. الجلب كسول عند أول فتح لأي منهم. السكان بيكتب على طول من غير سكان قطع (قطع الطرد المعدّل مالهاش مصدر في شوبيفاي). ⚠️ يحتاج Promote لـ Worker <code>1.10.0</code> (<code>warehouse.min</code> اترفع).</span></li>
+        </ul>
+      </div>
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.61.0</span>
           <span class="cl-ver-date">25-10-2026</span>
         </div>
         <ul class="cl-items">
@@ -949,6 +962,131 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
   </div><!-- /panelScanner -->
 
+  <!-- ══ PANELS: «أوردرات معدّلة» + «تحويل بوسطة» (v1.62.0 · طلب أحمد 25-10-2026) ══════════
+       أوردر اتطبع واتغلّف وراح المكتب وبعدين اتعدّل (`Confirmed`/`Confirmed + Edit`/S2 `Confirmed + EXCHANGE`)
+       فالطرد اللي في المكتب بمحتوى قديم — السكان بيكتب `Warehouse` عشان يرجع يتغلّف من جديد.
+       🔴 **استعلام واحد مشترك للتابين** (`get_ready_edited` · كاش `ECO_CACHE_EDITED`) والتقسيم في `ecoEditedGate` (`shared/gates.js`):
+          «أوردرات معدّلة» = مش Bosta · قاهرة+جيزة/شو روم — «تحويل بوسطة» = Bosta · `Other_Regions`.
+       ⛔ **الحكم مش هنا:** الأهلية من `ecoEditedGate`، والحارس الحقيقي في الـ Worker (`scan` بـ`mode`).
+       ⚠️ **السكان هنا بيكتب على طول** (`scan`) من غير سكان قطع — قطع الطرد المعدّل مالهاش مصدر في شوبيفاي. -->
+  <div id="panelEdited" class="tab-panel">
+    <div class="queue-head"><div class="queue-sub" id="edSub">معدّل بعد الطباعة/التغليف · مسجّل إنه في المكتب · قاهرة+جيزة وشو روم</div></div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-body" style="padding:0;">
+        <div class="scan-row">
+          <input id="edScanInput" class="scan-input" type="text" autocomplete="off" aria-label="باركود الأوردر" />
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body" style="padding:0;">
+      <div class="unified-section" id="edBox">
+        <div class="rq-head">
+          <div class="count-badge">
+            <span class="count-num" id="edCount">—</span>
+            <span class="count-lbl">أوردر</span>
+          </div>
+          <div class="rq-act" id="edFreshMount"></div>
+        </div>
+        <div id="edFail" class="rq-fail" style="display:none;"></div>
+        <div id="edTrunc" class="rq-warn" style="display:none;"></div>
+
+        <div class="tbl-bar" onclick="edToggleTable('ed')">
+          <div class="tbl-bar-right">
+            <span class="tbl-toggle open" id="edToggleIcon">▲</span>
+            <div class="results-wrap">
+              <span class="results-label">النتائج:</span>
+              <span class="results-count" id="edResults">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tbl-body-wrap" id="edBodyWrap">
+          <div class="tbl-scroll">
+            <div class="table-wrap" id="edTableWrap" style="display:none;">
+              <table class="data-table rq-unified">
+                <thead>
+                  <tr>
+                    <th>رقم الأوردر</th>
+                    <th>العنوان</th>
+                    <th>نوع الأوردر</th>
+                    <th>الحالة</th>
+                    <th>تاريخ التغليف</th>
+                    <th>إجراء</th>
+                  </tr>
+                </thead>
+                <tbody id="edTableBody"></tbody>
+              </table>
+            </div>
+            <div id="edEmpty" class="rq-empty">
+              <div class="eco-loadbox" role="status" aria-live="polite"><span class="eco-load-spin" aria-hidden="true"></span><div class="eco-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /panelEdited -->
+
+  <div id="panelBosta" class="tab-panel">
+    <div class="queue-head"><div class="queue-sub" id="ebSub">معدّل ومتحوّل لبوسطة (Bosta · Other_Regions) · مسجّل إنه في المكتب</div></div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-body" style="padding:0;">
+        <div class="scan-row">
+          <input id="ebScanInput" class="scan-input" type="text" autocomplete="off" aria-label="باركود الأوردر" />
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body" style="padding:0;">
+      <div class="unified-section" id="ebBox">
+        <div class="rq-head">
+          <div class="count-badge">
+            <span class="count-num" id="ebCount">—</span>
+            <span class="count-lbl">أوردر</span>
+          </div>
+          <div class="rq-act" id="ebFreshMount"></div>
+        </div>
+        <div id="ebFail" class="rq-fail" style="display:none;"></div>
+        <div id="ebTrunc" class="rq-warn" style="display:none;"></div>
+
+        <div class="tbl-bar" onclick="edToggleTable('eb')">
+          <div class="tbl-bar-right">
+            <span class="tbl-toggle open" id="ebToggleIcon">▲</span>
+            <div class="results-wrap">
+              <span class="results-label">النتائج:</span>
+              <span class="results-count" id="ebResults">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tbl-body-wrap" id="ebBodyWrap">
+          <div class="tbl-scroll">
+            <div class="table-wrap" id="ebTableWrap" style="display:none;">
+              <table class="data-table rq-unified">
+                <thead>
+                  <tr>
+                    <th>رقم الأوردر</th>
+                    <th>العنوان</th>
+                    <th>نوع الأوردر</th>
+                    <th>الحالة</th>
+                    <th>تاريخ التغليف</th>
+                    <th>إجراء</th>
+                  </tr>
+                </thead>
+                <tbody id="ebTableBody"></tbody>
+              </table>
+            </div>
+            <div id="ebEmpty" class="rq-empty">
+              <div class="eco-loadbox" role="status" aria-live="polite"><span class="eco-load-spin" aria-hidden="true"></span><div class="eco-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /panelBosta -->
+
   <!-- ══ PANEL: PARTIAL — «منتجات التسليم الجزئي» (v1.52.0 · طلب أحمد 22-10-2026) ══
        تاب لوحده لقايمة «قطع مستنية الرجوع للمخزن» — تاب «الأوردرات» فيه السكانر
        وطابور الأوردرات بس. وفيه مربع سكان قطع **خاص بالتاب ده** (نفس `receiveLooseItem`
@@ -1138,19 +1276,21 @@ function onSettingsSaved() {
 // ══════════════════════════════════════════════════════════════
 // Main Tabs
 // ══════════════════════════════════════════════════════════════
-const TAB_IDS = ['scanner', 'partial', 'log'];
+const TAB_IDS = ['scanner', 'edited', 'bosta', 'partial', 'log'];
 let currentTab = 'scanner';
 
+const TAB_PANEL_ID = { scanner: 'panelScanner', edited: 'panelEdited', bosta: 'panelBosta', partial: 'panelPartial', log: 'panelLog' };
 function switchMainTab(tab) {
   currentTab = tab;
-  document.getElementById('tabScanner').classList.toggle('active', tab === 'scanner');
-  document.getElementById('tabPartial').classList.toggle('active', tab === 'partial');
-  document.getElementById('tabLog')    .classList.toggle('active', tab === 'log');
-  document.getElementById('panelScanner').classList.toggle('active', tab === 'scanner');
-  document.getElementById('panelPartial').classList.toggle('active', tab === 'partial');
-  document.getElementById('panelLog')    .classList.toggle('active', tab === 'log');
+  for (const id of TAB_IDS) {
+    document.getElementById(TAB_BTN_ID[id]).classList.toggle('active', tab === id);
+    document.getElementById(TAB_PANEL_ID[id]).classList.toggle('active', tab === id);
+  }
   if (tab === 'log') loadLog();
-  else focusScan();
+  else {
+    if (tab === 'edited' || tab === 'bosta') edEnsureLoaded();   // §EDITED-JS — الجلب كسول عند أول فتح
+    focusScan();
+  }
   updateTabChip();
   closeTabChipMenu();
 }
@@ -1203,7 +1343,7 @@ window.addEventListener('resize', () => {
 });
 
 // ─── §SHELL-JS::tabChip — بديل شريط التابات المقفول وقت الـ Sticky ───
-const TAB_BTN_ID = { scanner: 'tabScanner', partial: 'tabPartial', log: 'tabLog' };
+const TAB_BTN_ID = { scanner: 'tabScanner', edited: 'tabEdited', bosta: 'tabBosta', partial: 'tabPartial', log: 'tabLog' };
 
 function updateTabChip() {
   const label = document.getElementById(TAB_BTN_ID[currentTab]).textContent.trim();
@@ -1268,6 +1408,8 @@ document.addEventListener('click', e => {
 
 const scanInputEl   = document.getElementById('scanInput');
 const scanInputRiEl = document.getElementById('scanInputRi');   // v1.52.0 — تاب «منتجات التسليم الجزئي»
+const edScanInputEl = document.getElementById('edScanInput');   // v1.62.0 — تاب «أوردرات معدّلة»
+const ebScanInputEl = document.getElementById('ebScanInput');   // v1.62.0 — تاب «تحويل بوسطة»
 
 // 🔴 **مربعا سكان — واحد في كل تاب — ومسار واحد ورا الاتنين** (`routeScan`).
 //    مربع تاب «الأوردرات» بيقبل أوردر وقطعة؛ مربع تاب «منتجات التسليم الجزئي»
@@ -1276,6 +1418,8 @@ const scanInputRiEl = document.getElementById('scanInputRi');   // v1.52.0 — �
 function activeScanInput() {
   if (currentTab === 'partial') return scanInputRiEl;
   if (currentTab === 'scanner') return scanInputEl;
+  if (currentTab === 'edited')  return edScanInputEl;
+  if (currentTab === 'bosta')   return ebScanInputEl;
   return null;
 }
 function focusScan() { activeScanInput()?.focus(); }
@@ -1314,6 +1458,8 @@ function bindScanInput(el, onScan) {
 }
 bindScanInput(scanInputEl, val => routeScan(val));
 bindScanInput(scanInputRiEl, val => routeScanRi(val));
+bindScanInput(edScanInputEl, val => edScan('edited', val));
+bindScanInput(ebScanInputEl, val => edScan('edited_bosta', val));
 
 function routeScanRi(code) {
   if (recv) {
@@ -1768,6 +1914,8 @@ async function receiveLooseItem(code, id) {
 function setScanBusyUI(busy) {
   scanInputEl.disabled = busy;
   scanInputRiEl.disabled = busy;
+  edScanInputEl.disabled = busy;
+  ebScanInputEl.disabled = busy;
   if (!busy) focusScan();
 }
 
@@ -2359,6 +2507,204 @@ async function rqLoad(silent, pre) {
 // النبضة عرض بحت — بتحدّث «منذ كام» في لوحة «آخر تحديث» **بلا أي نداء شبكة**.
 // (بادج عمر الأوردر اتشال مع عمود «تاريخ الأوردر» — v1.52.0.)
 setInterval(rqSetFresh, RQ_TICK_MS);
+
+// ══════════════════════════════════════════════════════════════
+// §EDITED-JS — «أوردرات معدّلة» + «تحويل بوسطة» (v1.62.0 · طلب أحمد 25-10-2026)
+// ══════════════════════════════════════════════════════════════
+// 🔴 **استعلام واحد مشترك للتابين** — `get_ready_edited` · كاش `ECO_CACHE_EDITED` · حالة واحدة (`edState`)،
+//    وكل تاب بيرسم **حصته** بـ`ecoEditedQueue(orders, mode)` من `shared/gates.js` §EDITED-GATE.
+//    ⛔ ممنوع أي شرط أهلية مكتوب هنا (درس R1) — والحارس الحقيقي في الـ Worker (`scan` بـ`mode`).
+// ⚠️ **السكان بيكتب على طول** (`scan`) — مفيش سكان قطع ولا دفتر: قطع الطرد المعدّل مالهاش مصدر في شوبيفاي.
+//    و`mode` هو اللي بيحدد الحكم في الـ Worker: أوردر بوسطة في تاب «أوردرات معدّلة» (أو العكس) بيترفض بسبب مكتوب.
+// ⚠️ الجلب كسول: أول فتح لأي تاب منهم (أو «تحديث»)، والكاش أقصاه `ECO_CACHE_TTL_MS`. الكاش للعرض بس.
+const ED_VIEWS = {
+  edited:       { p: 'ed', tab: 'edited' },
+  edited_bosta: { p: 'eb', tab: 'bosta'  },
+};
+const edState = { orders: [], at: null, loading: false, failed: false, loaded: false };
+const edTblOpen = { ed: true, eb: true };
+
+for (const v of Object.values(ED_VIEWS)) {
+  document.getElementById(v.p + 'FreshMount').innerHTML = ecoFreshUnitHTML({ id: v.p + 'Fresh', onclick: 'edLoad(false)' });
+}
+function edSetFresh() { for (const v of Object.values(ED_VIEWS)) ecoFreshUnitSet(v.p + 'Fresh', edState.at); }
+setInterval(edSetFresh, RQ_TICK_MS);   // نبضة عرض بس — صفر شبكة
+
+function edToggleTable(p) {
+  edTblOpen[p] = !edTblOpen[p];
+  document.getElementById(p + 'BodyWrap').classList.toggle('collapsed', !edTblOpen[p]);
+  document.getElementById(p + 'ToggleIcon').classList.toggle('open', edTblOpen[p]);
+}
+
+function edTypeLabel(o) {
+  if (o.machine !== 's2') return 'عادي';
+  return 'استبدال';
+}
+function edStatusLabel(o) { return (o.machine === 's2' ? o.s2 : o.s1) || '—'; }
+
+function edRenderView(mode) {
+  const { p } = ED_VIEWS[mode];
+  const rows  = ecoEditedQueue(edState.orders, mode);
+  const tbody = document.getElementById(p + 'TableBody');
+  const empty = document.getElementById(p + 'Empty');
+  const wrap  = document.getElementById(p + 'TableWrap');
+  const shown = edState.at ? String(rows.length) : '—';
+  document.getElementById(p + 'Count').textContent   = shown;
+  document.getElementById(p + 'Results').textContent = shown;
+
+  if (!rows.length) {
+    tbody.innerHTML = '';
+    wrap.style.display = 'none';
+    empty.style.display = '';
+    // 🔴 الرسالة بتسمّي شرط القايمة — «مفيش شغل» مش بتتقال (الطابور بيعرض اللي عهدته Office بس).
+    empty.innerHTML = edState.at
+      ? '<div class="ico">✅</div><div>مفيش طرد معدّل مسجّل إنه في المكتب مستني رجوع</div>'
+        + '<div style="margin-top:6px;font-size:12px;">الطابور بيعرض اللي عهدته «في المكتب» بس — '
+        + 'وأي طرد معدّل تاني <b>بيتسكن عادي</b> والـ Worker هو اللي بيحكم.</div>'
+      : (edState.failed
+          ? '<div class="ico">⚠️</div><div>تعذّر تحميل الطابور — اضغط «تحديث»</div>'
+          : ecoLoadingHTML());
+    return;
+  }
+  wrap.style.display = '';
+  empty.style.display = 'none';
+  tbody.innerHTML = rows.map(o => `<tr class="rq-row">
+      <td>${orderLink(o.orderName, o.orderId)}</td>
+      <td class="col-addr" title="${esc(o.address || '')}">${esc(o.address || '—')}</td>
+      <td><span class="type-text ${o.machine === 's2' ? 'type-s2' : 'type-s1'}">${esc(edTypeLabel(o))}</span></td>
+      <td>${esc(edStatusLabel(o))}</td>
+      <td>${esc(o.packedAt ? formatDate(o.packedAt) : '—')}</td>
+      <td><button class="btn btn-primary btn-sm rq-add-btn" type="button" data-ed-add="${esc(String(o.orderId))}" data-ed-mode="${mode}">➕ إضافة</button></td>
+    </tr>`).join('');
+}
+function edRender() { edRenderView('edited'); edRenderView('edited_bosta'); }
+
+for (const [mode, v] of Object.entries(ED_VIEWS)) {
+  document.getElementById(v.p + 'TableBody').addEventListener('click', e => {
+    const btn = e.target.closest('[data-ed-add]');
+    if (!btn) return;
+    if (scanBusy || recv) { showToast('خلّص الأوردر المفتوح الأول', 'warning'); return; }
+    edScan(mode, btn.dataset.edAdd);
+  });
+}
+
+// 🔴 نزع سلاح الصف بعد النجاح — الشاشة لازم تتغيّر (٥٩ صف فشل كذّاب في سكانر المرتجعات).
+function edRemove(orderId) {
+  if (!orderId) return;
+  const before = edState.orders.length;
+  edState.orders = edState.orders.filter(o => String(o.orderId) !== String(orderId));
+  if (edState.orders.length !== before) { try { sessionStorage.removeItem(ECO_CACHE_EDITED); } catch {} edRender(); }
+}
+
+async function edLoad(silent, pre) {
+  if (edState.loading) return;
+  edState.loading = true;
+  for (const v of Object.values(ED_VIEWS)) ecoFreshUnitLoading(v.p + 'Fresh', true);
+  try {
+    const data = pre ? pre.data : await apiGet('get_ready_edited');
+    if (!pre) cacheSet(ECO_CACHE_EDITED, data);
+    edState.orders = data.orders || [];
+    edState.at     = pre ? new Date(pre.at) : new Date();
+    edState.failed = false;
+    edState.loaded = true;
+    const since = ecoYmdToDMY(data.ordersSince);   // ⛔ من الرد مش مكتوب بالإيد (درس R1)
+    for (const [mode, v] of Object.entries(ED_VIEWS)) {
+      document.getElementById(v.p + 'Fail').style.display = 'none';
+      const trunc = document.getElementById(v.p + 'Trunc');
+      trunc.style.display = data.truncated ? '' : 'none';
+      if (data.truncated) trunc.textContent = '⚠️ فيه أوردرات أكتر من الحد المعروض — فيه طرود مش ظاهرة في القايمة. اسكن عادي، والـ Worker هو اللي بيحكم.';
+      const sub = document.getElementById(v.p + 'Sub');
+      if (sub && since) sub.textContent += (sub.textContent.includes('أوردرات من') ? '' : ` · أوردرات من ${since}`);
+    }
+  } catch (err) {
+    edState.failed = true;
+    for (const v of Object.values(ED_VIEWS)) {
+      const fail = document.getElementById(v.p + 'Fail');
+      fail.style.display = '';
+      fail.textContent = `⚠️ تعذّر تحميل الطابور — ${err.message}. السكان شغّال عادي.`;
+    }
+  } finally {
+    edState.loading = false;
+    for (const v of Object.values(ED_VIEWS)) ecoFreshUnitLoading(v.p + 'Fresh', false);
+    edRender();
+    edSetFresh();
+    if (!silent) focusScan();
+  }
+}
+
+// §CACHE-TTL — كاش أحدث من ١٠ دقايق = صفر نداء، وغير كده جلب جديد. الكسل: بيتنادى أول فتح لأي تاب منهم بس.
+function edEnsureLoaded() {
+  if (edState.loaded || edState.loading) return;
+  const c = cacheGet(ECO_CACHE_EDITED);
+  if (c && c.data && c.ageMs >= 0 && c.ageMs < ECO_CACHE_TTL_MS) edLoad(true, c); else edLoad(true);
+}
+
+// ─── §EDITED-JS::scan — فعل واحد: `scan` بـ`mode` ← الـ Worker بيحكم ويكتب `Warehouse` ───
+async function edScan(mode, code, ack) {
+  if (scanBusy) { showToast('استنى لحد ما السكانة اللي قبلها تخلص', 'warning'); return; }
+  if (isOutcomeOpen() && !ack) return;
+  scanBusy = true;
+  setScanBusyUI(true);
+  try {
+    const res = await apiPost('scan', { code, ack: ack === true, mode, employee: currentEmployee.username });
+
+    if (res.result === 'needs_ack') {
+      playBeep('warn');
+      showOutcome({
+        tone: 'warn', title: '⚠️ محتاج مراجعة قبل التسجيل',
+        order: res.order, machine: res.machine, lines: res.warnings || [res.message],
+        note: 'التسجيل مش هيتم غير لما تضغط «سجّل برضه».',
+        buttons: [
+          { label: '✅ سجّل برضه', cls: 'btn-primary', primary: true, onClick: () => { closeOutcome(); edScan(mode, code, true); } },
+          { label: '✕ إلغاء', cls: 'btn-red', onClick: closeOutcome },
+        ],
+      });
+      return;
+    }
+    if (res.result === 'success' || res.result === 'warning') {
+      playBeep(res.result === 'warning' ? 'warn' : 'success');
+      edRemove(res.order?.orderId);
+      if (res.logged === false) {
+        showToast(`تم تسجيل ${res.order?.orderName || ''} — ⚠️ بس ما اتكتبش في السجل: ${res.logError || ''}`, 'warning', 8000);
+      } else if (res.result === 'warning') {
+        showOutcome({ tone: 'warn', title: '⚠️ الطرد اتسجّل «في المخزن» — مع ملاحظات',
+          order: res.order, machine: res.machine, lines: res.warnings || [] });
+      } else {
+        showToast(`✅ ${res.order?.orderName || ''} → رجع المخزن`, 'success');
+      }
+      return;
+    }
+    if (res.result === 'already') {
+      playBeep('warn');
+      edRemove(res.order?.orderId);
+      showOutcome({ tone: 'neutral', title: '⏭ الطرد ده مسجّل في المخزن خلاص',
+        order: res.order, machine: res.machine, lines: [res.message],
+        note: 'مفيش حاجة كانت مطلوبة — مش فشل ومش رفض.' });
+      return;
+    }
+    if (res.result === 'error') {
+      playBeep('error');
+      showOutcome({ tone: 'fail', title: '❌ التسجيل ما اتمش', order: res.order, machine: res.machine,
+        lines: [res.message || 'فشل غير معروف'], note: 'الكتابة على شوبيفاي اترفضت — جرّب تسكن تاني.' });
+      return;
+    }
+    // rejected
+    playBeep('error');
+    showOutcome({ tone: 'fail', title: '⛔ الأوردر ده مش هيتسجّل', order: res.order, machine: res.machine,
+      lines: [res.message],
+      note: res.code === 'cancelled' ? 'الأوردر الملغي/المرتجع بيتسجّل من تاب «مرتجعات + لواغي».'
+          : (res.code === 'bosta' || res.code === 'not_bosta') ? 'اختار التاب التاني حسب المندوب: «أوردرات معدّلة» لغير بوسطة، «تحويل بوسطة» لبوسطة.'
+          : null });
+  } catch (err) {
+    playBeep('error');
+    // 🔴 «ما ردّش» ≠ «ما اتنفّذش» — الكتابة ممكن تكون تمّت فعلاً.
+    showOutcome({ tone: 'fail', title: '❌ النداء فشل', lines: [err.message],
+      note: 'راجع تاب «سجل العمليات» قبل ما تعيد — ممكن تكون اتسجّلت فعلاً.' });
+  } finally {
+    scanBusy = false;
+    setScanBusyUI(false);
+  }
+}
 
 // ══════════════════════════════════════════════════════════════
 // §RI-JS — «قطع مستنية الرجوع للمخزن» (دفتر D1 · v1.51.0)
