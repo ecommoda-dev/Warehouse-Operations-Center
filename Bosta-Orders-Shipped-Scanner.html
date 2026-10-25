@@ -2121,6 +2121,9 @@ async function startUpdate() {
           // عارض الحالة القديمة، والصف يبقى طبيعيًا "خلاص اتشحن".
           if (res.field === 'custom.manual_status')      r.s1 = res.valueAfter || r.s1;
           else if (res.field === 'custom.status_2_r_e')  r.s2 = res.valueAfter || r.s2;
+          // الطابور المعروض (والكاش) اتأخر عن الواقع — مسح الكاش + إعادة جلب واحدة بعد الدفعة.
+          try { sessionStorage.removeItem(ECO_CACHE_BOSTA); } catch {}
+          clearTimeout(window._rqRefetchT); window._rqRefetchT = setTimeout(() => rqLoad(true), 1500);
           r.valid   = false;
           r.already = true;
           r.rejectReason = 'الأوردر ده اتشحن في الدفعة دي — مفيش حاجة مطلوبة';
@@ -3186,15 +3189,17 @@ function rqRender() {
 }
 
 // ⚠️ `loading` بيمنع نداءين متوازيين (ضغطتين ورا بعض).
-async function rqLoad(silent) {
+async function rqLoad(silent, pre) {
   if (rqState.loading) return;
   rqState.loading = true;
   ecoFreshUnitLoading('rqFresh', true);
 
   try {
-    const data = await apiGet('get_ready_to_ship');
+    // §CACHE-TTL: pre = كاش أحدث من ١٠ دقايق (صفر نداء) — غير كده جلب جديد وبيتكتب في الكاش.
+    const data = pre ? pre.data : await apiGet('get_ready_to_ship');
+    if (!pre) cacheSet(ECO_CACHE_BOSTA, data);
     rqState.orders = Array.isArray(data.orders) ? data.orders : [];
-    rqState.at     = new Date();
+    rqState.at     = pre ? new Date(pre.at) : new Date();
     rqState.failed = false;
     document.getElementById('rqFail').style.display = 'none';
 
@@ -3269,7 +3274,7 @@ updateTabChip();
 measureSticky();                         // ← بعد رسم التابات والـ chip، وإلا القياس بيطلع غلط
 
 document.getElementById('scanInput')?.focus();   // السكانر جاهز من أول لحظة
-rqLoad(true);                            // طابور «جاهز للتسليم لبوسطة» — قراءة بحتة
+(function openFromCache(){ const c = cacheGet(ECO_CACHE_BOSTA); if (c && c.data && c.ageMs >= 0 && c.ageMs < ECO_CACHE_TTL_MS) { rqLoad(true, c); } else { rqLoad(true); } })();                            // طابور «جاهز للتسليم لبوسطة» — قراءة بحتة
 </script>
 </body>
 </html>

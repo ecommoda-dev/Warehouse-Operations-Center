@@ -2,13 +2,13 @@
 
 # مركز عمليات المخزن — Warehouse Operations Center (`Warehouse-Operations-Center`)
 
-![version](https://img.shields.io/badge/version-v1.58.0-blue)
+![version](https://img.shields.io/badge/version-v1.59.0-blue)
 
 **بتعمل إيه:** هب واحد لمحطة المخزن. الموظف بيدخل **مرة واحدة**، وبعدين
 بيتنقّل بين الطباعة والتغليف وحذف المنتج وتسليمات بوسطة وسكانر المرتجعات
 ورحلة الأوردر من غير ما يدخل تاني ومن غير ما يفتح تبويبات متفرقة.
 **مين بيستخدمها:** المخزن
-**الإصدار:** `v1.58.0` — **واحد للهب كله** (`TOOL_VERSION` في `shared/hub-config.js`)
+**الإصدار:** `v1.59.0` — **واحد للهب كله** (`TOOL_VERSION` في `shared/hub-config.js`)
 
 > 🔴 **الهب واجهة + Worker دخول بس — من v1.32.0.** الريبو ده بقى فيه
 > `index.js` و`wrangler.toml`، **بس نطاقهم محصور في الدخول والخروج بس**
@@ -79,6 +79,15 @@
 ## 🧩 النواة المشتركة — المرجع في هب الشحن
 
 `core.js` · `core.css` · `home.js` **نسختين متطابقتين بالبايت** مع `Delivery-COD-Operations-Center` (`bash docs/core-twin-check.sh`)، والشرح الكامل (جدول الملفات · ترتيب التحميل · المولّدات · الفحوصات) في قسم **«النواة المشتركة بين الهبّين»** في `CLAUDE.md` بتاعه — ما بيتكررش هنا. اللي خاص بالمخزن: `shared/hub-config.js` · `hub.css` · `home-config.js` · **`gates.js`** (بوابات القنوات والمكتب والمرتجعات §BOSTA-GATE · §OFFICE-GATE · §WAREHOUSE-GATE؛ و§COURIER-GROUP بقى في `core.js`). ⛔ هب المخزن مالوش مولّدات (صفحاته مكتوبة بإيد).
+
+## ⏱️ تمريرة v1.59.0 — أدوات السكان بتفتح من الكاش (طلب أحمد 25-10-2026)
+
+> ⚠️ **بتلغي** استثناء v1.58.0 («أدوات الكتابة بسكان بتجيب عند الفتح»).
+
+- 🔴 `Bosta-Orders-Shipped-Scanner` · `Package-Transfer-To-Office` · `Package-Transfer-To-Warehouse` (الطابور + دفتر القطع `riLoad`): لو كاش الرئيسية (`ECO_CACHE_BOSTA`/`OFFICE`/`WAREHOUSE`/`RETURN_ITEMS`) أحدث من `ECO_CACHE_TTL_MS` بيتفتح بصفر نداء، والختم = وقت الجلب الفعلي. غير كده بيجيب وبيكتب الكاش (`rqLoad(silent, pre)`).
+- 🔴 **التسجيل الناجح بيمسح الكاش** (`rqRemove`/`riRemove`، وفي تسليمات بوسطة بعد نجاح الدفعة + إعادة جلب واحدة) — الفتح الجاي بيجيب طازة. زرار «تحديث» بيجيب دايمًا.
+- ⛔ **الكاش للعرض بس** — الحارس الحقيقي لسه الـ Worker وقت السكان (بيقرا الأوردر حيًّا).
+- ✅ بنود §CACHE-TTL في `scanners-check` (83) · `office-check` (69) · `warehouse-check`.
 
 ## 🔄 تمريرة v1.58.0 — توحيد التحديث والكاش وزرار «تحديث» في أدوات الطوابير + حفظ طي الأقسام (طلب أحمد 25-10-2026)
 

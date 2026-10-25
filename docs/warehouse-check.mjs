@@ -974,6 +974,28 @@ console.log('⑤ السجل والفحص الذاتي');
   await ctx.close();
 }
 
+
+// ══ §CACHE-TTL (v1.59.0) — الفتح من الكاش لو أحدث من ١٠ دقايق ══
+console.log('§CACHE-TTL — كاش الطابور عند الفتح');
+{
+  const { page, ctx } = await newPage();
+  let n = 0;
+  page.on('request', r => { if (r.url().includes('action=get_ready_to_warehouse')) n++; });
+  await page.goto(`${BASE}/Package-Transfer-To-Warehouse.html`);
+  await page.waitForTimeout(1200);
+  const first = n;
+  is(first === 1, 'أول فتح بلا كاش = نداء واحد', String(first));
+  await page.reload(); await page.waitForTimeout(1200);
+  is(n === first, '🔴 الفتح التاني (كاش أحدث من ١٠ د) = صفر نداء', String(n - first));
+  await page.evaluate((k) => { const c = JSON.parse(sessionStorage.getItem(k)); c.at = new Date(Date.now() - 11*60000).toISOString(); sessionStorage.setItem(k, JSON.stringify(c)); }, 'woc_queue_warehouse');
+  await page.reload(); await page.waitForTimeout(1200);
+  is(n === first + 1, 'كاش أقدم من ١٠ د = جلب جديد', String(n - first));
+  const before = n;
+  await page.click('#rqFresh .eco-qref, #rqFresh button'); await page.waitForTimeout(900);
+  is(n === before + 1, 'زرار «تحديث» بيجيب طازة دايمًا', String(n - before));
+  await ctx.close();
+}
+
 await browser.close();
 server.close();
 console.log(`\n${fail ? '❌' : '✅'} النتيجة: ${pass} عدّى · ${fail} فشل`);
