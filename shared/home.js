@@ -132,9 +132,10 @@ function homeSectionHTML(s) {
   const body = s.queues
     ? `<div class="eco-rows">${s.queues.map(homeQueueRowHTML).join('')}\n    </div>`
     : `<div class="eco-tools-grid">${(s.tools || []).map(homeToolHTML).join('')}\n    </div>`;
+  const col = !!foldRead()[s.id];   // 🔴 §FOLD — الحالة المحفوظة (sessionStorage) — بتتقري وقت البناء، فمفيش وميض
   return `
-  <section class="eco-home-sec ${esc(s.cls)}${sum ? ' has-sum' : ''}" id="sec${s.id}">
-    <div class="eco-home-sec-hd" role="button" tabindex="0" aria-expanded="true" aria-controls="secBody${s.id}" data-sec-toggle>
+  <section class="eco-home-sec ${esc(s.cls)}${sum ? ' has-sum' : ''}${col ? ' is-collapsed' : ''}" id="sec${s.id}">
+    <div class="eco-home-sec-hd" role="button" tabindex="0" aria-expanded="${col ? 'false' : 'true'}" aria-controls="secBody${s.id}" data-sec-toggle>
       <i class="eco-sec-sp" aria-hidden="true"></i><i class="eco-sec-ln" aria-hidden="true"></i>
       <div class="eco-sec-mid">
         <span class="eco-home-sec-ico">${s.svg}</span>
@@ -166,7 +167,11 @@ function ecoHomeMount(root = document.getElementById('homeRoot')) {
     }
     if (s.queues) HOME_SECS['sum' + s.id] = s.queues.slice();   // 🎨 بما فيهم صفوف «فتح الأداة» (بلاطة بلا رقم)
   }
-  root.innerHTML = ECO_HOME.sections.map(homeSectionHTML).join('');
+  root.innerHTML = `
+  <div class="eco-fold-bar">
+    <button type="button" class="eco-fold-btn" data-fold-all="open">افتح الكل</button>
+    <button type="button" class="eco-fold-btn" data-fold-all="close">اقفل الكل</button>
+  </div>` + ECO_HOME.sections.map(homeSectionHTML).join('');
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -412,13 +417,6 @@ function renderDone(key) {
 //    اللي بيتحسب هنا هو **الدقايق** (للنص الكبير والشريط).
 // ⚠️ بعد قرار أحمد (توحيد الهبّين): **مفيش حافة ملوّنة** على الصف — لون العمر على الخلفية والمربع
 //    والزرار بس.
-const ECO_CLOCK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
-function ageValueHtml(mins) {
-  if (mins < 1)  return '<b>لحظات</b>';
-  if (mins < 60) return `<b>${mins}</b>${mins >= 3 && mins <= 10 ? 'دقايق' : 'دقيقة'}`;
-  const h = Math.floor(mins / 60);
-  return h <= 2 ? `<b>${esc(arHour(h))}</b>` : `<b>${h}</b>${h <= 10 ? 'ساعات' : 'ساعة'}`;
-}
 // 🎨 ملخّص القسم وهو مطوي — اسم كل صف ورقمه، وتحته المدة بلون عمره ("4 دقيقة"). ⚠️ **نفس `homeQ`
 //    ونفس `agoInfo`** — مفيش سلّم تاني ولا نداء شبكة. الصف اللي ما اتجابش `—` مش `0`، والفاشل
 //    «تعذّر». الاسم ولون الهوية بيتقروا من الصف نفسه (مصدر واحد).
@@ -482,16 +480,39 @@ function startHomeTicker() {
 // ══════════════════════════════════════════════════════════════
 // §FOLD — طي الأقسام
 // ══════════════════════════════════════════════════════════════
-// ⚠️ **كله مفتوح عند الفتح** (قرار أحمد) و**الحالة مابتتخزّنش** — الريفريش بيرجّعها مفتوحة. والصفوف
-//    المخفية `visibility:hidden` بعد الحركة (CSS)، فمابتاخدش تاب ولا قارئ شاشة وهي مطوية.
+// 🔴 **الحالة بتتحفظ في `sessionStorage`** (قرار أحمد 25-10-2026 — كانت «كله مفتوح عند الفتح ومابتتخزّنش»):
+//    مفتاح لكل هب (`ECO_FOLD_KEY`)، والمخزّن `{ <secId>: true }` للأقسام **المطوية بس** — القسم المفتوح مالوش مدخل.
+//    لكل تاب لوحده وبيتمسح بقفل التاب (زي الجلسة). كل قراءة/كتابة جوّه `try/catch` (الوضع الخاص بيرمي)،
+//    والفشل = كله مفتوح زي الأول. والصفوف المخفية `visibility:hidden` بعد الحركة (CSS)، فمابتاخدش تاب
+//    ولا قارئ شاشة وهي مطوية.
+function foldRead() {
+  try { const o = JSON.parse(sessionStorage.getItem(ECO_FOLD_KEY) || '{}'); return o && typeof o === 'object' ? o : {}; }
+  catch { return {}; }
+}
+function foldWrite(o) { try { sessionStorage.setItem(ECO_FOLD_KEY, JSON.stringify(o)); } catch { /* الحفظ تحسين مش شرط */ } }
+function setSecCollapsed(sec, c) {
+  sec.classList.toggle('is-collapsed', c);
+  const h = sec.querySelector('[data-sec-toggle]');
+  if (h) h.setAttribute('aria-expanded', String(!c));
+}
+function saveFold() {
+  const o = {};
+  document.querySelectorAll('.eco-home-sec.is-collapsed').forEach(el => { o[el.id.replace(/^sec/, '')] = true; });
+  foldWrite(o);
+}
 function toggleHomeSec(h) {
   const sec = h.closest('.eco-home-sec');
-  const c = !sec.classList.contains('is-collapsed');
-  sec.classList.toggle('is-collapsed', c);
-  h.setAttribute('aria-expanded', String(!c));
+  setSecCollapsed(sec, !sec.classList.contains('is-collapsed'));
+  saveFold();
+}
+function foldAll(collapsed) {
+  document.querySelectorAll('.eco-home-sec').forEach(sec => setSecCollapsed(sec, collapsed));
+  saveFold();
 }
 document.addEventListener('click', e => {
   if (e.target.closest && e.target.closest('.eco-sm')) return;   // 🎨 بلاطة الملخّص = لينك للأداة — مايفتحش/يقفلش القسم
+  const fa = e.target.closest && e.target.closest('[data-fold-all]');
+  if (fa) { foldAll(fa.dataset.foldAll === 'close'); return; }
   const h = e.target.closest && e.target.closest('[data-sec-toggle]');
   if (h) { toggleHomeSec(h); return; }
   // زرار «تحديث» جوّه الصف (الصف نفسه لينك) — `preventDefault` عشان مايفتحش الصفحة.

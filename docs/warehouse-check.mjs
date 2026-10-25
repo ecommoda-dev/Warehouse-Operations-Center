@@ -542,9 +542,9 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
      names.join(' · '));
 
   const cnt = (await page.locator('#rqCount').textContent() || '').trim();
-  const badge = (await page.locator('#rqBadge').textContent() || '').trim();
   is(cnt === String(ELIGIBLE_NAMES.length), 'العدّاد == صفوف الجدول', cnt);
-  is(badge === cnt, 'بادج زرار التحديث == العدّاد', `${badge} ≠ ${cnt}`);
+  is(await page.locator('#rqFresh .eco-rbtn-badge, #rqBadge').count() === 0, '⛔ بادج الرقم جوّه زرار التحديث اتشال (§FRESH-UNIT)');
+  is(await page.locator('#rqFresh .eco-qref').count() === 1, 'زرار التحديث بشكل زرار الرئيسية (`.eco-qref`)');
 
   // 🔴 البند اللي بيقفل درس R1: الصفحة بتعدّ من **نفس** دالة الـ shell
   const gateCount = await page.evaluate((raw) => ecoWarehouseQueue(raw).length, RAW);
@@ -623,7 +623,7 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
 
   is(await page.locator('#rqTableBody input[type=checkbox]').count() === 0,
      'مفيش مربعات اختيار — الطابور عرض بحت');
-  is((await page.locator('#rqAgo').textContent() || '') !== 'لسه ما اتحدّثش',
+  is((await page.locator('#rqFreshAgo').textContent() || '') !== 'لسه ما اتحدّثش',
      'لوحة «آخر تحديث» اتملّت بعد الجلب');
   is(errors.length === 0, 'صفر أخطاء في الكونسول', errors.join(' | '));
 
@@ -677,9 +677,9 @@ console.log('③ السكان — الاستلام قطعة قطعة (v1.51.0)')
   is(scanCalls.length === 0, '🔴 مفيش نداء `scan` (كتابة) من سكان الأوردر — الكتابة بعد القطع بس');
   is(receiveCalls.length === 0, 'ومفيش `receive_order` قبل سكان القطع');
   is(await panelOpen(), 'لوحة الاستلام اتفتحت');
-  is((await txt('#rqBadge')) === (await txt('#rqCount')) && (await txt('#rqCount')) !== '—',
-     'بادج «تحديث» في رأس الطابور == العدّاد');
-  is((await txt('#rqAgo')).length > 0 && (await txt('#rqAgo')) !== 'لسه ما اتحدّثش', 'ولوحة «آخر تحديث» اتملّت بعد الجلب');
+  is((await txt('#rqCount')) !== '—', 'العدّاد اتملّى');
+  is(await page.locator('#rqFresh .eco-rbtn-badge, #rqBadge, #riBadge').count() === 0, '⛔ بلا بادج رقم على أي زرار تحديث (§FRESH-UNIT)');
+  is((await txt('#rqFreshAgo')).length > 0 && (await txt('#rqFreshAgo')) !== 'لسه ما اتحدّثش', 'ولوحة «آخر تحديث» اتملّت بعد الجلب');
   is(await page.locator('#doneCount').count() === 0, 'مربع «اتسجّل في الجلسة دي» المكرر اتشال');
   is(!(await page.locator('#recvCancelBtn').isDisabled()), '🔴 زرار الإلغاء مفتوح بعد فتح اللوحة (اترسمت بعد ما السكانة خلصت)');
   is(await page.$$eval('#recvBody tr', t => t.length) === 3, 'اللوحة فيها ٣ قطع (A×1 + B×2) — صف لكل قطعة');

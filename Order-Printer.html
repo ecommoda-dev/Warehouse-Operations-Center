@@ -864,25 +864,10 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           ⚠️ المنطقة غير محددة <span class="chan-n" id="chanN-none">—</span></button>
       </div>
 
-      <!-- ── لوحة «آخر تحديث» + زرار التحديث — **وحدة واحدة** ──
-           🔴 الكلاسات (`.eco-fresh` · `.eco-ago` · `.eco-stamp-chip` ·
-              `.eco-rbtn`) من `shared/core.css` — **مش نسخة هنا**. اللوحة
-              دي موجودة في تلات شاشات دلوقتي (الرئيسية · التغليف · الطباعة)،
-              ونسخة CSS رابعة معناها إن الشكل يفترق مع أول تعديل (درس R1).
-           ⚠️ `align-items:stretch` على `.prt-actions` هو اللي بيخلّي الزرار
-              بنفس ارتفاع اللوحة بالظبط — زي `.rdy-actions` و`.eco-row-act`. -->
-      <div class="prt-actions">
-        <div class="eco-fresh">
-          <div class="eco-fresh-row">
-            <span class="eco-fresh-lbl">آخر تحديث</span>
-            <span class="eco-ago" id="prtUpdatedAgo">لسه ما اتحدّثش</span>
-          </div>
-          <div class="eco-fresh-row" id="prtUpdatedAt"><span class="eco-stamp-chip">—</span></div>
-        </div>
-        <button class="eco-rbtn" id="prtRefreshBtn" onclick="handleRefresh()">
-          <span class="eco-rbtn-ico">↺</span><span>تحديث</span><span class="eco-rbtn-badge" id="prtRefreshBadge">—</span>
-        </button>
-      </div>
+      <!-- ── «آخر تحديث منذ:» + زرار «تحديث» — **الوحدة الموحّدة** (§FRESH-UNIT · طلب أحمد 25-10-2026) ──
+           🔴 نفس وحدة صف الرئيسية بالحرف (`ecoFreshUnitHTML` في `shared/core.js` — بتتبني في الـ JS) وبلا بادج رقم.
+              ⛔ مفيش نسخة CSS/ماركب هنا (درس R1). -->
+      <div class="prt-actions" id="prtFreshMount"></div>
     </div>
 
     <!-- ─── §AWB — الشريط الاحتياطي لفتح البوليصة ───
@@ -1059,7 +1044,6 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           </div>
         </div>
         <div class="tbl-bar-left">
-          <button class="act-btn refresh" onclick="event.stopPropagation(); loadOrders(true);">↺ تحديث</button>
           <button class="act-btn bulk" id="selectAllVisibleBtn" onclick="event.stopPropagation(); selectAllVisible();">☑ تحديد كل النتائج</button>
         </div>
       </div>
@@ -2825,6 +2809,7 @@ async function loadOrders(forceRefresh = false) {
 
     allLogs = logsData.entries || [];
     logsLoaded = true;
+    cacheSet(ECO_CACHE_PRINT_LOGS, logsData);   // §CACHE-ROWS — نفس الجلب بيغذّي كاش السجل
     buildLogPrintCounts();
     renderLogTruncationWarning(logsData, { toast: true });
 
@@ -2870,30 +2855,11 @@ function stampUpdated(iso) {
   prtRenderFreshness();
 }
 
-function prtRenderFreshness(now = Date.now()) {
-  const agoEl = document.getElementById("prtUpdatedAgo");
-  const atEl  = document.getElementById("prtUpdatedAt");
-  const btn   = document.getElementById("prtRefreshBtn");
-  if (!agoEl || !atEl) return;
-  const info = agoInfo(prtLastLoadedAt, now);
-  agoEl.className   = `eco-ago ${info.cls}`;
-  agoEl.textContent = info.text;
-  const iso = prtLastLoadedAt ? prtLastLoadedAt.toISOString() : null;
-  atEl.innerHTML = iso
-    ? `<span class="eco-stamp-chip">${escHtml(formatDate(iso))}</span>`
-      + `<span class="eco-stamp-chip">${escHtml(formatTimeOnly(iso))}</span>`
-    : '<span class="eco-stamp-chip">—</span>';
-  if (btn) btn.classList.toggle("is-stale", info.stale);
-}
+function prtRenderFreshness(now = Date.now()) { ecoFreshUnitSet("prtFresh", prtLastLoadedAt, now); }
 
 // قفل الزرار أثناء الجلب — ضغطتين متتاليتين = نداءين متوازيين على
 // أتقل endpoint في الستاك.
-function prtSetRefreshing(on) {
-  const btn = document.getElementById("prtRefreshBtn");
-  if (!btn) return;
-  btn.disabled = on;
-  btn.classList.toggle("loading", on);
-}
+function prtSetRefreshing(on) { ecoFreshUnitLoading("prtFresh", on); }
 
 // ─── النبضة — عرض بحت، **صفر نداء شبكة** ───
 // ⚠️ بتحدّث عدّاد «منذ كام» وبادجات عمر الأوردر **في مكانها**
@@ -3037,7 +3003,6 @@ function renderChannelCounts() {
   const total = Object.keys(CHANNELS).reduce((a, k) => a + (counts[k] || 0), 0);
   const put = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
   put("prtCountTotal",   total.toLocaleString("en-US"));
-  put("prtRefreshBadge", total.toLocaleString("en-US"));
   return counts;
 }
 
@@ -4311,11 +4276,20 @@ function showLogs(id) {
   });
 }
 
-async function loadLogs() {
+// 🔴 §CACHE-ROWS (طلب أحمد 25-10-2026): `useCache` (الفتح بس) — كاش السجل أحدث من `ECO_CACHE_TTL_MS` (١٠ دقايق) =
+//    صفر نداء. كل استدعاء تاني (بعد الطباعة · زرار «تحديث» · «إعادة المحاولة») بيجيب من الشبكة.
+//    ⛔ بوابة المراجعة (`findRecentlyPrinted`) **لسه بتجيب سجل طازة** وقت الطباعة نفسها — تحذير مبني على بيانات قديمة
+//    أسوأ من مفيش تحذير. ⚠️ ومفيش `stampUpdated()` هنا: ختم «آخر تحديث» بتاع **الطابور** — جلب السجل مايبقاش يقول إن الطابور جديد.
+async function loadLogs(useCache) {
   if (!isConfigured()) { openSettings(); return; }
-  showLogs("logsLoadingState");
+  let data = null;
+  if (useCache) {
+    const c = cacheGet(ECO_CACHE_PRINT_LOGS);
+    if (c && c.data && Array.isArray(c.data.entries) && c.ageMs >= 0 && c.ageMs < ECO_CACHE_TTL_MS) data = c.data;
+  }
+  if (!data) showLogs("logsLoadingState");
   try {
-    const data = await apiPath("/logs", {});
+    if (!data) { data = await apiPath("/logs", {}); cacheSet(ECO_CACHE_PRINT_LOGS, data); }
     allLogs    = data.entries || [];
     logsLoaded = true;
     buildLogPrintCounts();
@@ -4324,7 +4298,6 @@ async function loadLogs() {
     updateLogKPIs();
     applyLogFilters();
     applyPrintFilters();
-    stampUpdated();
     showLogs("logsDashboard");
   } catch (err) {
     document.getElementById("logsErrorMsg").textContent = err.message;
@@ -4850,6 +4823,7 @@ function renderFooter() {
 // §INIT — الجلسة اتأكدت فوق (`requireSession`)، فالتحميل بيحصل هنا
 // ══════════════════════════════════════════════════════════════
 window.addEventListener("load", () => {
+  document.getElementById("prtFreshMount").innerHTML = ecoFreshUnitHTML({ id: "prtFresh", onclick: "handleRefresh()" });
   renderVersionUI();
   document.getElementById("headerMount").innerHTML = ecoHeader({
     icon: '🖨️', title: 'قسم الطباعة', subtitle: 'مركز عمليات المخزن',
@@ -4888,7 +4862,7 @@ window.addEventListener("load", () => {
   if (cached) { renderOrdersFrom(cached.data); markFreshness(cached.at); }
   const queueReady = (!cached || cached.ageMs > ECO_CACHE_TTL_MS) ? loadOrders() : Promise.resolve();
 
-  const logsReady = loadLogs();   // عدّاد «مرات الطباعة» + خريطة آخر طباعة
+  const logsReady = loadLogs(true);   // عدّاد «مرات الطباعة» + خريطة آخر طباعة (من الكاش لو أحدث من ١٠ دقايق)
 
   // ⚠️ `allSettled` مش `all` — فشل الطابور أو السجل **مايمنعش** كارت إعادة
   //    الطباعة. الأوردر جاي من الرابط، والفشل ده مالوش علاقة بيه (نفس قاعدة

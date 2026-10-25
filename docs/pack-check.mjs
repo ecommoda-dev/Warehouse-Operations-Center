@@ -268,6 +268,11 @@ is(apTxt.includes('رقم الأوردر') && apTxt.includes('#55427'), 'رقم 
 is(await page.locator('#apPrevInfo a.order-link[href*="/orders/9007"]').count() === 1, 'الرقم لينك لصفحة الأوردر');
 await page.click('#apCloseBtn'); await page.waitForTimeout(250);
 
+console.log('\n⑮ §FRESH-UNIT — زرار «تحديث» و«آخر تحديث منذ:» بنفس ماركب الرئيسية (طلب أحمد 25-10-2026)');
+is(await page.locator('#rdyFresh .eco-qref').count() === 1 && await page.locator('#rdyFresh .eco-agebox').count() === 1, 'الوحدة الموحّدة موجودة (`.eco-qref` + `.eco-agebox`)');
+is(await page.locator('#rdyFresh .eco-rbtn-badge, .rdy-refresh-badge, #rdyRefreshBadge, #rdyRefreshBtn').count() === 0, '⛔ بلا بادج رقم ولا زرار «↺ تحديث» المكرر في صف النتائج');
+is((await page.locator('#rdyFreshAgo').innerText()).trim() !== 'لسه ما اتحدّثش', 'الوحدة اتملّت بعد الجلب');
+
 console.log('\n— الكونسول —');
 is(errors.length === 0, 'صفر خطأ JS', errors.join(' | ').slice(0, 300));
 

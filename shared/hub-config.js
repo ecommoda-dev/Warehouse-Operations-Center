@@ -202,7 +202,7 @@ const ECO_WORKERS = {
   bostaUpload: { url: 'https://bosta-orders-upload-worker.ecommoda-dev.workers.dev', min: '2.23.0', label: 'رفع بوسطة' },
 };
 
-const TOOL_VERSION = 'v1.57.0';                     // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.58.0';                     // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const SHOP_HANDLE  = '6c7e1a-53';
 
@@ -230,6 +230,11 @@ const ECO_CACHE_RETURN_ITEMS = 'woc_queue_return_items';  // كاش دفتر ا�
 const ECO_CACHE_BOSTA_UPLOAD = 'woc_queue_bosta_upload';  // عدّادات «رفع بوسطة» التلاتة (شحن · استرجاع · استبدال) — ⛔ مش `ECO_CACHE_BOSTA` (ده كاش طابور تسليمات بوسطة)
 const ECO_CACHE_DONE      = 'woc_done_';            // + مفتاح الطابور: عدّاد «خلص النهارده / أمس» (نفس عمر كاش الطابور)
 const ECO_IDLE_KEY     = 'woc_last_activity';  // §IDLE — آخر نشاط (sessionStorage، لكل تاب لوحده)
+const ECO_FOLD_KEY     = 'woc_home_fold';      // §FOLD — الأقسام المطوية في الرئيسية `{ secId: true }` (sessionStorage · طلب أحمد 25-10-2026)
+// 🔴 كاش **صفوف/سجل** الصفحات (مش عدّادات الرئيسية) — الصفحة بترسم منه لو أحدث من ١٠ دقايق بدل جلب جديد عند كل فتح.
+//    فيه أسماء وتليفونات عملاء → بيتمسح مع الخروج (`clearKeys`).
+const ECO_CACHE_UPLOAD_ROWS = { s1: 'woc_upload_rows_s1', return: 'woc_upload_rows_return', exchange: 'woc_upload_rows_exchange' };  // رد `get_orders`/`fetch_candidates` خام لكل وضع في «رفع بوسطة»
+const ECO_CACHE_PRINT_LOGS  = 'woc_print_logs';    // رد `POST /logs` خام — سجل الطباعة (عدّاد «مرات الطباعة» وآخر طباعة)
 
 // 🔴 إعداد الـ core لهب المخزن — الحقول دي هي كل اللي الـ core بيقراه عن الهب.
 const ECO_HUB = {
@@ -238,6 +243,7 @@ const ECO_HUB = {
   // مفاتيح sessionStorage اللي بتتمسح مع الخروج (الجلسة وآخر نشاط بيتمسحوا في الـ core)
   clearKeys: [
     ECO_CACHE_PRINT, ECO_CACHE_PACK, ECO_CACHE_BOSTA, ECO_CACHE_OFFICE, ECO_CACHE_WAREHOUSE, ECO_CACHE_RETURN_ITEMS, ECO_CACHE_BOSTA_UPLOAD,
+    ...Object.values(ECO_CACHE_UPLOAD_ROWS), ECO_CACHE_PRINT_LOGS,
     ...['print', 'pack', 'bosta'].map(k => ECO_CACHE_DONE + k),
   ],
   // صفحات المخزن بتعرّف `window.shellIsBusy` بنفسها — ماعدا `Bosta-Orders-Upload.html`: نسخة متطابقة بالبايت مع هب الشحن

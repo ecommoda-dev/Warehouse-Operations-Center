@@ -274,9 +274,9 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
      'صف S2 المتغلّف فعلاً (وقت تغليف S2 موجود) **ظاهر**');
 
   const cnt = (await page.locator('#rqCount').textContent() || '').trim();
-  const badge = (await page.locator('#rqBadge').textContent() || '').trim();
   is(cnt === String(ELIGIBLE_NAMES.length), 'العدّاد == صفوف الجدول', cnt);
-  is(badge === cnt, 'بادج زرار التحديث == العدّاد', `${badge} ≠ ${cnt}`);
+  is(await page.locator('#rqFresh .eco-rbtn-badge, #rqBadge').count() === 0, '⛔ بادج الرقم جوّه زرار التحديث اتشال (§FRESH-UNIT)');
+  is(await page.locator('#rqFresh .eco-qref').count() === 1, 'زرار التحديث بشكل زرار الرئيسية (`.eco-qref`)');
 
   // 🔴 البند اللي بيقفل درس R1: الصفحة بتعدّ من **نفس** دالة الـ shell
   const gateCount = await page.evaluate((raw) => ecoOfficeQueue(raw).length, RAW);
@@ -290,7 +290,7 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
 
   is(await page.locator('#rqTableBody input[type=checkbox]').count() === 0,
      'مفيش مربعات اختيار — الطابور عرض بحت');
-  is((await page.locator('#rqAgo').textContent() || '') !== 'لسه ما اتحدّثش',
+  is((await page.locator('#rqFreshAgo').textContent() || '') !== 'لسه ما اتحدّثش',
      'لوحة «آخر تحديث» اتملّت بعد الجلب');
 
   // 🔴 عمود «موقع الشحنة» (v1.30.0) — نفس اسم عمود طابور المرتجعات بالحرف

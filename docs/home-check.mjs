@@ -447,6 +447,36 @@ console.log('⑧ «رفع بوسطة» — أول صف في «تجهيز الأ�
   await ctx.close();
 }
 
+
+console.log('⑩ §FOLD — حفظ حالة الطي (sessionStorage) + «افتح الكل / اقفل الكل» (طلب أحمد 25-10-2026)');
+{
+  const { page, ctx, errors } = await openHome({});
+  const st = () => page.evaluate(() => [...document.querySelectorAll('.eco-home-sec')].map(s => ({ id: s.id, c: s.classList.contains('is-collapsed'), e: s.querySelector('[data-sec-toggle]').getAttribute('aria-expanded') })));
+  const stored = () => page.evaluate(() => sessionStorage.getItem('woc_home_fold'));
+  const reload = async () => { await page.reload(); await page.waitForTimeout(1300); };
+  is((await st()).every(x => !x.c && x.e === 'true') && (await st()).length === 5, 'أول فتح (بلا حالة محفوظة): الخمس أقسام مفتوحة');
+  is(await page.$$eval('.eco-fold-bar .eco-fold-btn', b => b.map(x => x.textContent.trim()).join('|')) === 'افتح الكل|اقفل الكل', 'زرارين «افتح الكل» و«اقفل الكل» فوق الأقسام');
+  await page.locator('#secPrep [data-sec-toggle] .eco-sec-chev').click(); await page.waitForTimeout(300);
+  is(JSON.parse(await stored()).Prep === true, 'طي قسم = بيتحفظ في `sessionStorage` (المطوي بس)', await stored());
+  await reload();
+  let s2 = await st();
+  is(s2.find(x => x.id === 'secPrep').c && s2.find(x => x.id === 'secPrep').e === 'false' && s2.filter(x => !x.c).length === 4, '🔴 الريفريش بيرجّع القسم **مطوي** والباقي مفتوح (و`aria-expanded` متظبط)', JSON.stringify(s2));
+  is(await page.evaluate(() => getComputedStyle(document.querySelector('#secPrep .eco-sec-in')).visibility) === 'hidden', 'والصفوف المطوية مخفية (مفيش تاب ولا قارئ شاشة)');
+  await page.click('[data-fold-all="close"]'); await page.waitForTimeout(300);
+  is((await st()).every(x => x.c && x.e === 'false'), '«اقفل الكل» بيطوي كل الأقسام');
+  await reload();
+  is((await st()).every(x => x.c), '…والحالة بتتحفظ بعد الريفريش');
+  is(await page.$$eval('#homeRoot .eco-sm', a => a.length) > 0, 'الملخّص المطوي (بلاطات) لسه بيتعرض');
+  await page.click('[data-fold-all="open"]'); await page.waitForTimeout(300);
+  is((await st()).every(x => !x.c && x.e === 'true') && (await stored()) === '{}', '«افتح الكل» بيفتح الكل وبيصفّر المحفوظ');
+  await reload();
+  is((await st()).every(x => !x.c), '…وبعد الريفريش كله مفتوح');
+  await page.evaluate(() => sessionStorage.setItem('woc_home_fold', '{bad json'));
+  await reload();
+  is((await st()).every(x => !x.c) && errors.length === 0, '🔴 قيمة مخزّنة باظت: كله مفتوح وصفر خطأ في الكونسول', errors.join(' | '));
+  await ctx.close();
+}
+
 await browser.close(); server.close();
 console.log(`\n${fail ? '❌' : '✅'} ${pass} عدّى · ${fail} فشل`);
 process.exit(fail ? 1 : 0);

@@ -629,7 +629,25 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .eco-qrow .eco-card-code{color:var(--idc);background:var(--idc-light);border-color:var(--idc-border);margin-top:3px;padding:1px 10px;font-size:12.5px}
 .eco-qrow .eco-count:not(.pending):not(.failed){color:var(--idc);border-bottom-color:var(--idc)}
 .eco-qrow .eco-count.failed{font-size:20px}
-@media (prefers-reduced-motion: reduce){.eco-qrow,.eco-qrow *,.eco-sec-body,.eco-sec-in,.eco-sec-chev svg,.eco-home-sec-hd{transition:none!important;animation:none!important}}
+/* ── §FRESH-UNIT — الوحدة الموحّدة «آخر تحديث منذ:» + زرار «تحديث» (طلب أحمد 25-10-2026) ──
+   نفس `.eco-agebox` و`.eco-qref` بتوع صف الرئيسية بالحرف — بس **بحاوية** `.eco-fresh-unit` بدل `.eco-qrow`
+   (الحاوية هي اللي بتشيل مرحلة العمر `age-*` و`--fill`). ⛔ مفيش سلّم ألوان تاني: نفس قيم `.eco-qrow.age-*` فوق. */
+.eco-fresh-unit{--fill:0;display:flex;align-items:stretch;gap:8px;flex:0 0 auto}
+.eco-fresh-unit.age-fresh{--age:var(--green);--age-light:var(--green-light);--age-border:var(--green-border);--age-dark:var(--green-dark)}
+.eco-fresh-unit.age-ok{--age:var(--accent);--age-light:var(--accent-light);--age-border:var(--accent-border);--age-dark:var(--accent-dark)}
+.eco-fresh-unit.age-warn{--age:var(--amber);--age-light:var(--amber-light);--age-border:var(--amber-border);--age-dark:var(--amber-dark)}
+.eco-fresh-unit.age-stale{--age:var(--red);--age-light:var(--red-light);--age-border:var(--red-border);--age-dark:var(--red-dark)}
+.eco-fresh-unit.age-fresh .eco-qref,.eco-fresh-unit.age-ok .eco-qref,.eco-fresh-unit.age-warn .eco-qref,.eco-fresh-unit.age-stale .eco-qref{background:var(--age);border-color:var(--age)}
+.eco-fresh-unit .eco-qref:disabled{cursor:wait;background:var(--surface);color:var(--accent-dark);border:1.5px dashed var(--accent)}
+.eco-fresh-unit.is-loading .eco-agebar i{width:35%;background:var(--accent);animation:ecoIndet 1.1s ease-in-out infinite}
+/* صفحات بلا صندوق عدّ (متابعة التأجيلات · متابعة شحنات بوسطة): الوحدة في شريط لوحدها تحت الهيدر */
+.eco-fresh-bar{display:flex;margin-bottom:12px}
+/* §FOLD — «افتح الكل / اقفل الكل» فوق أقسام الرئيسية */
+.eco-fold-bar{display:flex;gap:8px;margin-bottom:10px}
+.eco-fold-btn{padding:5px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--text-secondary);font-family:var(--font-body);font-size:11.5px;font-weight:800;cursor:pointer;transition:border-color .15s,color .15s}
+.eco-fold-btn:hover{border-color:var(--accent);color:var(--accent-dark)}
+.eco-fold-btn:focus-visible{outline:none;box-shadow:0 0 0 3px var(--focus-ring)}
+@media (prefers-reduced-motion: reduce){.eco-fresh-unit *,.eco-qrow,.eco-qrow *,.eco-sec-body,.eco-sec-in,.eco-sec-chev svg,.eco-home-sec-hd{transition:none!important;animation:none!important}}
 @media (max-width:720px){
   .eco-row-id,.eco-row-mid{min-width:0}
   .eco-row-act{margin-inline-start:0;width:100%}

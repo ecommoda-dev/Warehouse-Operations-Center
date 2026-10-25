@@ -134,6 +134,7 @@ await page.addInitScript(() => {
 
 const J = (o) => ({ status:200, contentType:'application/json', body: JSON.stringify(o) });
 
+let LOGS_CALLS = 0;   // §CACHE-ROWS — عدد نداءات `/logs`
 await page.route('**order-printer-worker.ecommoda-dev.workers.dev/**', async (route) => {
   const req = route.request(); const url = new URL(req.url());
   const action = url.searchParams.get('action') || '';
@@ -157,6 +158,7 @@ await page.route('**order-printer-worker.ecommoda-dev.workers.dev/**', async (ro
       printingTimeS1:'2026-09-05T09:00:00Z', packingTimeS1:null, printingTimeS2:null, packingTimeS2:null,
       zone:'Other_Regions', zoneKnown:true, channel:'awb',
       total:1000, totalOriginal:1000, itemsQty:2, tags:['Printed(S1)'], isPrinted:true, printedAny:true } }));
+  if (url.pathname === '/logs') LOGS_CALLS++;
   if (url.pathname === '/logs') return route.fulfill(J({ok:true, entries:LOGS, count:LOGS.length, total:LOGS.length, cap:5000, truncated:false}));
   if (action === 'bosta_lookup') {
     // 🔴 الـ Worker الوهمي بيصنّف **بالماكينة** زي Worker v2.8.0 بالظبط:
@@ -261,17 +263,17 @@ check('🔴 سطر «اختر قناة» اتشال بالكامل', (await page
   const rows = (await page.$$('#printTableBody tr')).length;
   check('🔴 الرقم الكبير == صفوف الجدول', (await page.textContent('#prtCountTotal')).trim() === String(rows),
         `${await page.textContent('#prtCountTotal')} vs ${rows}`);
-  check('🔴 بادج زرار التحديث == صفوف الجدول',
-        (await page.textContent('#prtRefreshBadge')).trim() === String(rows),
-        await page.textContent('#prtRefreshBadge'));
+  check('⛔ بادج الرقم جوّه زرار التحديث اتشال (§FRESH-UNIT — مطابق لزرار الرئيسية)',
+        (await page.$$('#prtFresh .eco-rbtn-badge')).length === 0 && (await page.$$('#prtRefreshBadge')).length === 0);
 }
-check('لوحة «آخر تحديث» ظاهرة', await page.isVisible('#prtUpdatedAgo'));
+check('لوحة «آخر تحديث» ظاهرة', await page.isVisible('#prtFreshAgo'));
 check('🔴 عدّاد القِدَم اتملّى بعد الجلب (مش «لسه ما اتحدّثش»)',
-      !(await page.textContent('#prtUpdatedAgo')).includes('لسه ما اتحدّثش'),
-      await page.textContent('#prtUpdatedAgo'));
-check('ختم التاريخ والوقت اتكتب', (await page.$$('#prtUpdatedAt .eco-stamp-chip')).length === 2,
-      String((await page.$$('#prtUpdatedAt .eco-stamp-chip')).length));
-check('زرار التحديث في الصندوق موجود', await page.isVisible('#prtRefreshBtn'));
+      !(await page.textContent('#prtFreshAgo')).includes('لسه ما اتحدّثش'),
+      await page.textContent('#prtFreshAgo'));
+check('ختم الساعة اتكتب (مش «—»)', (await page.textContent('#prtFreshStamp')).trim() !== '—',
+      await page.textContent('#prtFreshStamp'));
+check('زرار التحديث في الصندوق موجود وبشكل زرار الرئيسية (`.eco-qref`)', await page.isVisible('#prtFresh .eco-qref'));
+check('⛔ زرار «↺ تحديث» المكرر في صف النتائج اتشال', (await page.$$('.tbl-bar-left [onclick*="loadOrders(true)"]')).length === 0);
 // 🔴 مصدر واحد للختم — الهيدر مابقاش فيه نسخة تانية منه ولا زرار تحديث تاني.
 check('🔴 ختم الهيدر القديم اتشال', (await page.$$('#lastUpdated')).length === 0);
 
@@ -746,6 +748,18 @@ check('🔴 فلتر «نوع الفاتورة» = بوسطة بيسيب صفّ�
       (await page.$$('#logsTableBody tr')).length === 2,
       String((await page.$$('#logsTableBody tr')).length));
 await page.click('#msBtn-lChan'); await page.waitForTimeout(150);
+
+// ③-هـ §CACHE-ROWS (طلب أحمد 25-10-2026) — سجل الطباعة بيترسم من الكاش (١٠ د) عند الفتح
+{
+  await page.reload(); await page.waitForTimeout(1800);
+  const L0 = LOGS_CALLS;
+  await page.reload(); await page.waitForTimeout(1800);
+  check('🔴 الفتح التاني (كاش السجل < ١٠ د) = صفر نداء `/logs` جديد', LOGS_CALLS === L0, `${L0} → ${LOGS_CALLS}`);
+  check('وعدّاد «مرات الطباعة» لسه متحسب من الكاش (السجل اتحمّل)', await page.evaluate(() => logsLoaded === true && allLogs.length > 0));
+  await page.evaluate(() => { const c = JSON.parse(sessionStorage.getItem(ECO_CACHE_PRINT_LOGS)); c.at = new Date(Date.now() - 11 * 60000).toISOString(); sessionStorage.setItem(ECO_CACHE_PRINT_LOGS, JSON.stringify(c)); });
+  await page.reload(); await page.waitForTimeout(1800);
+  check('كاش السجل أقدم من ١٠ دقايق = جلب جديد', LOGS_CALLS === L0 + 1, `${L0} → ${LOGS_CALLS}`);
+}
 
 check('صفر أخطاء في الكونسول وصفر أخطاء صفحة', errs.length === 0, errs.join(' | '));
 
