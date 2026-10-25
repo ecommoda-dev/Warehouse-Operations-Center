@@ -287,6 +287,44 @@ const DIAG = { ok:false, version:'1.5.0', checks:[
     hint:'قيمة «Warehouse» مش في قايمة الاختيار' },
 ]};
 
+
+// ══════════════════════════════════════════════════════════════
+// v1.62.0 — «أوردرات معدّلة» + «تحويل بوسطة»: الرد الخام للـ endpoint المشترك `get_ready_edited`
+// 🔴 الصفوف دي فيها **المؤهل وغير المؤهل لكل تاب مع بعض** — الواجهة هي اللي بتقسّم (`ecoEditedGate`).
+// ══════════════════════════════════════════════════════════════
+const mkE = (id, name, o) => ({ orderId:id, orderName:name, cancelledAt:null, address:`عنوان ${name}`, itemsQty:1, total:'500.00',
+  zone:'Cairo+Giza', courier:'Saif', s1:'Confirmed + Edit', s2:null, packedAtS1:'2026-10-10T10:00:00Z', packedAtS2:null,
+  packedByS1:'Abo Selim', packedByS2:null, whereaboutsS1:'Office', whereaboutsS2:null, ...o });
+const EDITED_RAW = [
+  mkE('9100000000001', '#60001', { packedAtS1:'2026-10-12T10:00:00Z' }),                       // ✅ edited — Confirmed + Edit
+  mkE('9100000000002', '#60002', { s1:'Confirmed', packedAtS1:'2026-10-11T10:00:00Z' }),      // ✅ edited — Confirmed (الأقدم تغليفًا بعد #60003)
+  mkE('9100000000003', '#60003', { s1:'Delivered', s2:'Confirmed + EXCHANGE', packedAtS1:'2026-09-01T10:00:00Z',
+                                   packedAtS2:'2026-10-09T10:00:00Z', whereaboutsS1:null, whereaboutsS2:'Office' }), // ✅ edited — S2 بوقت تغليف S2
+  // 🔴 ❌ S2 اتغلّف S1 بس (مفيش `s2_packing_date_time`) — لو الشرط اتنسخ من المرتجعات (`packedAtS1`) كان هيعدّي
+  mkE('9100000000004', '#60004', { s1:'Delivered', s2:'Confirmed + EXCHANGE', packedAtS1:'2026-09-01T10:00:00Z',
+                                   packedAtS2:null, whereaboutsS1:null, whereaboutsS2:'Office' }),
+  mkE('9100000000005', '#60005', { courier:'Bosta', zone:'Other_Regions' }),                   // ✅ bosta
+  mkE('9100000000006', '#60006', { courier:'Bosta', zone:'Cairo+Giza' }),                      // ❌ مش في أي تاب (زون مش Other_Regions)
+  mkE('9100000000007', '#60007', { s1:'Returned' }),                                           // ❌ مرتجع — شغل تاب المرتجعات
+  mkE('9100000000008', '#60008', { s1:'Confirmed', cancelledAt:'2026-10-13T10:00:00Z' }),      // ❌ ملغي
+  mkE('9100000000009', '#60009', { whereaboutsS1:'Warehouse' }),                               // ❌ في المخزن خلاص
+  mkE('9100000000010', '#60010', { whereaboutsS1:null }),                                      // ❌ العهدة مش Office
+  mkE('9100000000011', '#60011', { packedAtS1:null }),                                         // ❌ ما اتغلّفش
+];
+const editedCalls = [];
+function editedScanReply(b) {
+  const digits = String(b.code || '').replace(/\D/g, '');
+  const o = EDITED_RAW.find(x => x.orderId === digits || x.orderName.replace(/\D/g, '') === digits);
+  if (!o) return { ok:true, result:'rejected', code:'not_found', message:`مفيش أوردر بالرقم ${digits}`, scanned:b.code };
+  const isB = o.courier === 'Bosta';
+  if (b.mode === 'edited' && (isB || o.zone === 'Other_Regions'))
+    return { ok:true, result:'rejected', code:'bosta', message:'الأوردر ده بوسطة — مكانه تاب «تحويل بوسطة»', order:o };
+  if (b.mode === 'edited_bosta' && !isB)
+    return { ok:true, result:'rejected', code:'not_bosta', message:'المندوب مش Bosta', order:o };
+  return { ok:true, result:'success', code:'written', order:o, machine:o.s1 === 'Confirmed' || o.s1 === 'Confirmed + Edit' ? 's1' : 's2',
+           warnings:[], valueBefore:'Office', valueAfter:'Warehouse', logged:true };
+}
+
 const ORDERS_SINCE = '2026-04-01';
 const scanCalls = [];
 const logCalls  = [];
@@ -304,6 +342,15 @@ function makeStub() {
     else if (action === 'get_ready_to_warehouse')
       body = { ok:true, orders:RAW, truncated:false, ordersSince:ORDERS_SINCE,
                fetchedAt:new Date().toISOString() };
+    else if (action === 'get_ready_edited') {
+      editedCalls.push(url.toString());
+      body = { ok:true, orders:EDITED_RAW, truncated:false, ordersSince:ORDERS_SINCE, fetchedAt:new Date().toISOString() };
+    }
+    else if (action === 'scan' && JSON.parse(route.request().postData() || '{}').mode) {
+      const b = JSON.parse(route.request().postData() || '{}');
+      scanCalls.push(b);
+      body = editedScanReply(b);
+    }
     else if (action === 'scan') {
       const b = JSON.parse(route.request().postData() || '{}');
       scanCalls.push(b);
@@ -844,8 +891,9 @@ console.log('③-ب قطع مستنية الرجوع للمخزن');
   await scan(page, '44444444');
   // 🔴 **v1.52.0 — تاب «منتجات التسليم الجزئي»:** القايمة في تاب لوحده وفيه مربع سكان قطع خاص بيه
   const tabNames = await page.$$eval('#mainTabsBar .main-tab-btn', b => b.map(x => x.textContent.trim()));
-  is(tabNames.length === 3 && tabNames[0].includes('مرتجعات + لواغي') && tabNames[1].includes('منتجات التسليم الجزئي') && tabNames[2].includes('سجل العمليات'),
-     '🔴 التابات: «مرتجعات + لواغي» · «منتجات التسليم الجزئي» · «سجل العمليات»', tabNames.join(' | '));
+  is(tabNames.length === 5 && tabNames[0].includes('مرتجعات + لواغي') && tabNames[1].includes('أوردرات معدّلة') && tabNames[2].includes('تحويل بوسطة')
+     && tabNames[3].includes('منتجات التسليم الجزئي') && tabNames[4].includes('سجل العمليات'),
+     '🔴 التابات: «مرتجعات + لواغي» · «أوردرات معدّلة» · «تحويل بوسطة» · «منتجات التسليم الجزئي» · «سجل العمليات»', tabNames.join(' | '));
   is(!tabNames.some(t => t.includes('السكانر')), 'اسم تاب «السكانر» القديم اتشال', tabNames.join(' | '));
   is(await page.locator('#rqBox').isVisible() && await page.locator('#scanInput').isVisible() && !(await page.locator('#riBox').isVisible()),
      '🔴 تاب «الأوردرات» فيه السكانر وطابور الأوردرات **بس** — قايمة القطع مش فيه');
@@ -1143,6 +1191,105 @@ console.log('⑦ فلاتر رأس العمود (server-side)');
   const cl = q(logCalls[logCalls.length - 1]);
   is(!cl.get('results') && !cl.get('machines') && !cl.get('search') && !cl.get('dateFrom') && await page.locator('#srvChipsZone').isHidden(),
      '«مسح كل الفلاتر» بيصفّر الباراميترات ويخفي الشيبس');
+  is(errors.length === 0, 'صفر أخطاء في الكونسول', errors.join(' | '));
+  await ctx.close();
+}
+
+
+// ══════════════════════════════════════════════════════════════
+// ⑧ «أوردرات معدّلة» + «تحويل بوسطة» (v1.62.0)
+// ══════════════════════════════════════════════════════════════
+console.log('⑧ أوردرات معدّلة + تحويل بوسطة');
+{
+  const { page, ctx, errors } = await newPage();
+  editedCalls.length = 0; scanCalls.length = 0;
+  await page.goto(`${BASE}/Package-Transfer-To-Warehouse.html`);
+  await page.waitForTimeout(1000);
+
+  is(editedCalls.length === 0, '🔴 الجلب كسول — مفيش نداء `get_ready_edited` قبل فتح أي من التابين', String(editedCalls.length));
+  is(await page.evaluate(() => ECO_WORKERS.warehouse.min) === '1.10.0', '`warehouse.min` = 1.10.0');
+
+  // ── البوابة نفسها (وحدات) — مصدر الأهلية الوحيد في shared/gates.js
+  const gate = await page.evaluate((raw) => ({
+    s2NoP2:  ecoEditedGate({ zone:'Cairo+Giza', courier:'Saif', s1:'Delivered', s2:'Confirmed + EXCHANGE', packedAtS1:'x', packedAtS2:null, whereaboutsS2:'Office' }, 'edited').code,
+    s2P2:    ecoEditedGate({ zone:'Cairo+Giza', courier:'Saif', s1:'Delivered', s2:'Confirmed + EXCHANGE', packedAtS1:null, packedAtS2:'x', whereaboutsS2:'Office' }, 'edited').eligible,
+    cancel:  ecoEditedGate({ zone:'Cairo+Giza', s1:'Confirmed', cancelledAt:'x', packedAtS1:'x', whereaboutsS1:'Office' }, 'edited').code,
+    bostaIn: ecoEditedGate({ zone:'Other_Regions', courier:'Bosta', s1:'Confirmed', packedAtS1:'x', whereaboutsS1:'Office' }, 'edited').code,
+    bostaOk: ecoEditedGate({ zone:'Other_Regions', courier:'Bosta', s1:'Confirmed', packedAtS1:'x', whereaboutsS1:'Office' }, 'edited_bosta').eligible,
+    bostaZone: ecoEditedGate({ zone:'Cairo+Giza', courier:'Bosta', s1:'Confirmed', packedAtS1:'x', whereaboutsS1:'Office' }, 'edited_bosta').code,
+    retMode: ecoEditedGate({ zone:'Cairo+Giza', courier:'Saif', s1:'Returned', packedAtS1:'x', whereaboutsS1:'Office' }, 'edited').code,
+    whQueue: ecoWarehouseQueue(raw).map(o => o.orderName).join(','),
+  }), EDITED_RAW);
+  is(gate.s2NoP2 === 'not_packed', '🔴 S2 معدّل بيتفحص بـ`packedAtS2` (الطرد خارج) — اتغلّف S1 بس = مستبعَد', gate.s2NoP2);
+  is(gate.s2P2 === true, 'S2 معدّل ومتغلّف بـ`s2_…` = مؤهل');
+  is(gate.cancel === 'cancelled' && gate.retMode === 'cancelled', '🔴 الملغي والمرتجع مستبعَدين هنا (شغل تاب المرتجعات)', `${gate.cancel} | ${gate.retMode}`);
+  is(gate.bostaIn === 'bosta' && gate.bostaOk === true && gate.bostaZone === 'zone',
+     'بوسطة: Bosta + Other_Regions بس في تاب «تحويل بوسطة»، ومستبعَد من «أوردرات معدّلة»', `${gate.bostaIn} | ${gate.bostaZone}`);
+  is(gate.whQueue === '#60008,#60007' || gate.whQueue === '#60007,#60008',
+     '🔴 طابور المرتجعات (`ecoWarehouseQueue`) بياخد المرتجع/الملغي بس (#60007 #60008) — ولا صف من المعدّلة', gate.whQueue);
+
+  // ── أول فتح للتاب
+  await page.click('#tabEdited');
+  await page.waitForTimeout(900);
+  is(editedCalls.length === 1, 'فتح «أوردرات معدّلة» = نداء واحد', String(editedCalls.length));
+  const edNames = await page.$$eval('#edTableBody tr.rq-row td:first-child', t => t.map(x => x.textContent.trim()));
+  is(JSON.stringify(edNames) === JSON.stringify(['#60003', '#60002', '#60001']),
+     '«أوردرات معدّلة»: ٣ صفوف بترتيب الأقدم تغليفًا (#60003 S2 بوقت تغليف S2)', edNames.join(' '));
+  is(!edNames.includes('#60004'), '🔴 S2 اتغلّف S1 بس مش ظاهر');
+  is(!edNames.some(n => ['#60005', '#60006', '#60007', '#60008', '#60009', '#60010', '#60011'].includes(n)),
+     'بوسطة · ملغي · مرتجع · في المخزن · عهدة تانية · ما اتغلّفش — كلهم مستبعَدين');
+  is(await page.locator('#edCount').textContent() === '3' && await page.locator('#edResults').textContent() === '3', 'العدّاد == صفوف الجدول (٣)');
+  const types = await page.$$eval('#edTableBody tr.rq-row td:nth-child(3)', t => t.map(x => x.textContent.trim()));
+  is(types.join(',') === 'استبدال,عادي,عادي', 'نوع الأوردر: عادي / استبدال', types.join(','));
+  is((await page.locator('#edSub').textContent()).includes('أوردرات من'), 'أرضية التاريخ من الرد (`ordersSince`)');
+
+  // ── التاب التاني من نفس الرد — صفر نداء زيادة
+  await page.click('#tabBosta');
+  await page.waitForTimeout(500);
+  is(editedCalls.length === 1, '🔴 استعلام واحد مشترك — فتح «تحويل بوسطة» ما نادى الـ Worker تاني', String(editedCalls.length));
+  const ebNames = await page.$$eval('#ebTableBody tr.rq-row td:first-child', t => t.map(x => x.textContent.trim()));
+  is(ebNames.join(',') === '#60005' && await page.locator('#ebCount').textContent() === '1', '«تحويل بوسطة»: #60005 بس (Bosta + Other_Regions)', ebNames.join(' '));
+
+  // ── السكان في «تحويل بوسطة»
+  await page.fill('#ebScanInput', '60005');
+  await page.waitForTimeout(900);
+  const c1 = scanCalls[scanCalls.length - 1];
+  is(c1 && c1.mode === 'edited_bosta' && String(c1.code) === '60005' && c1.employee === 'tester', '🔴 `scan` بيبعت `mode: edited_bosta`', JSON.stringify(c1));
+  is(await page.locator('#ebTableBody tr.rq-row').count() === 0 && await page.locator('#ebCount').textContent() === '0',
+     '🔴 الصف اتشال من الطابور بعد النجاح (والعدّاد اتغيّر)');
+  is(await page.locator('#edCount').textContent() === '3', 'تاب «أوردرات معدّلة» ما اتأثرش');
+  is(await page.evaluate(() => sessionStorage.getItem('woc_queue_edited')) === null, 'الكاش اتمسح بعد التسجيل الناجح');
+
+  // ── السكان في «أوردرات معدّلة» بأوردر بوسطة = رفض بسبب
+  await page.click('#tabEdited');
+  await page.waitForTimeout(300);
+  await page.fill('#edScanInput', '60006');
+  await page.waitForTimeout(900);
+  const c2 = scanCalls[scanCalls.length - 1];
+  is(c2 && c2.mode === 'edited', '`scan` بيبعت `mode: edited`', JSON.stringify(c2));
+  is(await page.locator('#outcomeOverlay.open').count() === 1 && (await page.locator('#outcomeHdr').textContent()).includes('مش هيتسجّل')
+     && (await page.locator('#outcomeDetails').textContent()).includes('تحويل بوسطة'), 'أوردر بوسطة في تاب غير بوسطة = رفض بسبب مكتوب');
+  await page.click('#outcomeFtr button');
+  is(await page.locator('#edTableBody tr.rq-row').count() === 3, 'الرفض ما شالش أي صف');
+
+  // ── زرار ➕ إضافة
+  await page.click('#edTableBody tr.rq-row:first-child [data-ed-add]');
+  await page.waitForTimeout(900);
+  const c3 = scanCalls[scanCalls.length - 1];
+  is(c3 && c3.mode === 'edited' && String(c3.code) === '9100000000003', 'زرار «➕ إضافة» بيسكن بنفس المسار (`mode: edited`)', JSON.stringify(c3));
+  is(await page.locator('#edTableBody tr.rq-row').count() === 2, 'الصف اتشال بعد الإضافة');
+
+  // ── تحديث بيجيب طازة
+  const before = editedCalls.length;
+  await page.click('#edFresh .eco-qref, #edFresh button');
+  await page.waitForTimeout(900);
+  is(editedCalls.length === before + 1, 'زرار «تحديث» بيجيب طازة', String(editedCalls.length - before));
+
+  // ── الكاش: فتح تاني بصفر نداء (للتاب)
+  await page.reload(); await page.waitForTimeout(800);
+  const n0 = editedCalls.length;
+  await page.click('#tabBosta'); await page.waitForTimeout(700);
+  is(editedCalls.length === n0 + 1 || editedCalls.length === n0, 'الكاش بيتحترم عند الفتح', String(editedCalls.length - n0));
   is(errors.length === 0, 'صفر أخطاء في الكونسول', errors.join(' | '));
   await ctx.close();
 }
