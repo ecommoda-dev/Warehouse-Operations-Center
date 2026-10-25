@@ -333,8 +333,10 @@ input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-colo
   color: var(--purple); background: var(--purple-light); border: 1.5px solid var(--purple-border); border-radius: var(--radius-sm); }
 /* ⚠️ العيّنة في المرجع بتحط max-height:1000px — بيقص صفحة سجل من ١٠٠ صف
    (≈٣٦٠٠px). الرقم هنا أوسع من أي صفحة ممكنة عشان الطي يشتغل بلا قص. */
-.tbl-body-wrap { max-height: 20000px; overflow: hidden; transition: max-height .3s ease; border-radius: 0 0 var(--radius) var(--radius); }
-.tbl-body-wrap.collapsed { max-height: 0; }
+.tbl-body-wrap { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 1fr; transition: grid-template-rows .3s ease; border-radius: 0 0 var(--radius) var(--radius); }
+.tbl-body-wrap > * { min-height: 0; }
+.tbl-body-wrap.collapsed { grid-template-rows: 0fr; overflow: hidden; }
+.tbl-body-wrap.collapsed > * { overflow: hidden; }
 
 /* ── بانر التصدير المقصوص — ثابت فوق الجدول، مش توست بيختفي (Standards #30) ── */
 .export-warn { margin: 0 0 12px; padding: 10px 14px; border-radius: 9px;
@@ -398,6 +400,19 @@ input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-colo
 }
 .recheck-banner ul { margin: 6px 0 0; padding-inline-start: 20px; }
 .recheck-banner li { margin-bottom: 3px; }
+
+/* ── §TOOL::rq — طابور «راجع من بوسطة» (هب v1.62.0) — نفس شكل `.rq-box` بتاع تسليمات بوسطة ── */
+.rq-box { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); overflow: hidden; margin-top: 16px; }
+.rq-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+.rq-title { font-size: 13.5px; font-weight: 700; color: var(--text-primary); }
+.rq-sub { font-size: 11px; color: var(--text-secondary); }
+.rq-act { margin-inline-start: auto; display: flex; align-items: stretch; gap: 10px; }
+.rq-empty { padding: 26px 16px; text-align: center; color: var(--text-secondary); font-size: 13px; }
+.rq-empty .ico { font-size: 26px; margin-bottom: 6px; }
+.rq-fail { margin: 12px 16px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--red-light); border: 1px solid var(--red-border); color: var(--red-dark); font-size: 12.5px; }
+.rq-warn { margin: 12px 16px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--amber-light); border: 1px solid var(--amber-border); color: var(--amber-dark); font-size: 12.5px; }
+.rq-age  { margin-inline-start: 6px; }
+#rqTableBody td.rq-cust { white-space: normal; max-width: 180px; }
 
 /* ── v3.4 — نافذة التأكيد قبل فعل لا رجعة فيه ── */
 .confirm-modal { border-top: 4px solid var(--red); }
@@ -488,7 +503,7 @@ input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-colo
             class="scanner-input"
             type="text"
             inputmode="numeric"
-            placeholder="امسح الباركود أو اكتب رقم التتبع..."
+            aria-label="امسح الباركود أو اكتب رقم التتبع"
             autocomplete="off"
           />
           <button class="btn btn-outline" onclick="addManual()">يدوي</button>
@@ -496,6 +511,47 @@ input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-colo
         <div id="scanList">
           <div class="empty-state"><div class="icon">🔍</div><div>لم يتم مسح أي أرقام بعد</div></div>
         </div>
+      </div>
+    </div>
+
+    <!-- ══ §TOOL::rq — طابور «راجع من بوسطة» ══
+         الأوردرات اللي بوسطة بتردّها فعلاً: المندوب Bosta + الحالة In-Return (S1 أو S2)
+         + ميتافيلد الـ webhook = «41 · Out For Return». **الحكم كله في الـ Worker**
+         (`get_ready_to_return` · v3.6.0) والصفحة بتعرض اللي راجع بالحرف (درس R1).
+         ⛔ عرض بحت — مش حارس: أوردر مش هنا لسه بيتسكن والـ Worker هو اللي بيحكم. -->
+    <div class="rq-box" id="rqBox">
+      <div class="rq-head">
+        <div>
+          <div class="rq-title">📦 راجع من بوسطة</div>
+          <div class="rq-sub">مندوبه بوسطة · In-Return · حالة بوسطة <bdi dir="ltr">41 · Out For Return</bdi></div>
+        </div>
+        <div class="counter-badge">
+          <span class="num" id="rqCount">—</span>
+          <span class="lbl">أوردر</span>
+        </div>
+        <div class="rq-act" id="rqFreshMount"></div>
+      </div>
+      <div id="rqFail" class="rq-fail" style="display:none;"></div>
+      <div id="rqTrunc" class="rq-warn" style="display:none;"></div>
+      <div id="rqEmpty" class="rq-empty">
+        <div class="eco-loadbox" role="status" aria-live="polite"><span class="eco-load-spin" aria-hidden="true"></span><div class="eco-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div></div>
+      </div>
+      <div class="table-wrap" id="rqTableWrap" style="display:none;">
+        <table>
+          <thead>
+            <tr>
+              <th>رقم الأوردر</th>
+              <th>العميل</th>
+              <th>رقم التتبع</th>
+              <th>نوع الراجع</th>
+              <th>حالة بوسطة</th>
+              <th>آخر تحديث من بوسطة</th>
+              <th>تاريخ الأوردر</th>
+              <th>إجراء</th>
+            </tr>
+          </thead>
+          <tbody id="rqTableBody"></tbody>
+        </table>
       </div>
     </div>
 
@@ -960,6 +1016,17 @@ input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-colo
       <div class="cl-version-block">
         <div class="cl-version-row">
           <span class="cl-ver-badge" id="clLatestVerBadge">v1.35.1</span>
+          <span class="cl-ver-date">25-10-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span><b>طابور «📦 راجع من بوسطة»</b> تحت مربع السكان — الأوردرات اللي بوسطة بتردّها فعلاً: مندوبه <code>Bosta</code> + <code>In-Return</code> (S1 أو S2) + حالة بوسطة <code>41 · Out For Return</code>، برقم التتبع ونوع الراجع وآخر تحديث من بوسطة، وزرار «➕ إضافة للمسح». <b>عرض بحت مش حارس.</b> يحتاج Worker ≥ v3.6.0 (<code>?action=get_ready_to_return</code>)</span></li>
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span><b>إضافة أو حذف رقم أثناء تنفيذ دفعة بقى ممنوع</b>، والخروج التلقائي واقف طول ما دفعة بتتنفّذ، وجدول السجل مابقاش ليه سقف ارتفاع رقمي بيقص الصفوف</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.35.1</span>
           <span class="cl-ver-date">25-09-2026</span>
         </div>
         <ul class="cl-items">
@@ -1385,6 +1452,8 @@ function addManual() {
 // ─── §TOOL-JS::state ───
 let scannedNums = [];
 let resultsData = [];
+// Standards #43 — قفل أثناء تنفيذ الدفعة (نفس index.html بالحرف). بيتقري كمان في `shellIsBusy` تحت.
+let isUpdating = false;
 
 // ─── §SCAN::TN_LEN — حارس الطول ───
 // أرقام تتبع بوسطة بين ٨ و١٣ رقم. بيمسك الحالتين اللي بيحصلوا فعلاً: باركودين
@@ -1393,6 +1462,7 @@ let resultsData = [];
 const TN_MIN_LEN = 8, TN_MAX_LEN = 13;
 
 function addTrackingNumber(num) {
+  if (isUpdating) { showToast('فيه دفعة بتتنفّذ دلوقتي — استنى لحد ما تخلص', 'warning'); return; }
   const clean = String(num).replace(/\D/g, '');
   if (!clean) { showToast('رقم التتبع يجب أن يحتوي على أرقام فقط', 'error'); playBeep('warn'); return; }
   if (clean.length < TN_MIN_LEN || clean.length > TN_MAX_LEN) {
@@ -1411,6 +1481,7 @@ function addTrackingNumber(num) {
 }
 
 function removeScanned(num) {
+  if (isUpdating) { showToast('فيه دفعة بتتنفّذ دلوقتي — استنى لحد ما تخلص', 'warning'); return; }
   scannedNums = scannedNums.filter(n => n !== num);
   // الجدول بيعكس قايمة المسح — صف لرقم اتشال ماينفعش يفضل معروض ولا مختار
   resultsData = resultsData.filter(r => r.trackingNumber !== num);
@@ -1420,6 +1491,7 @@ function removeScanned(num) {
 }
 
 function clearScans() {
+  if (isUpdating) { showToast('فيه دفعة بتتنفّذ دلوقتي — استنى لحد ما تخلص', 'warning'); return; }
   scannedNums = []; resultsData = [];
   renderScanList();
   document.getElementById('lookupBtn').disabled = true;
@@ -1898,6 +1970,7 @@ async function startUpdate() {
   }
 
   btn.innerHTML = `<div class="spinner"></div> جاري التحديث...`;
+  isUpdating = true;     // يتصفّر في finally تحت
   if (toUpdate.length) {
     progressWrap.style.display = '';
     progressText.textContent   = `0 / ${toUpdate.length.toLocaleString('en-US')}`;
@@ -2129,6 +2202,7 @@ async function startUpdate() {
     //    يكون فيه أوردرات اتلغت فعلاً. تاب السجل هو المرجع.
     showToast(`خطأ: ${err.message} — راجع تاب السجل قبل ما تعيد المحاولة`, 'error', 9000);
   } finally {
+    isUpdating = false;
     btn.disabled = false;
     updateUpdateBtn();
     setTimeout(() => { progressWrap.style.display = 'none'; }, 2500);
@@ -2858,6 +2932,114 @@ async function exportLogXLSX() {
   }
 }
 
+// ══════════════════════════════════════════════════════════════
+// §RQ-JS — طابور «راجع من بوسطة» (هب v1.62.0 · طلب أحمد 25-10-2026)
+// ══════════════════════════════════════════════════════════════
+// 🔴 الشروط التلاتة عايشة في الـ Worker (`get_ready_to_return`) — مش هنا. الصفحة
+//    بتعرض اللي راجع بالحرف ومابتفلترش ولا صف (درس R1). ⛔ ممنوع أي فلترة
+//    محلية على `bostaStatus` أو `machine`.
+// ⛔ عرض بحت — مش حارس. `lookup`/`update` زي ما هم بالحرف.
+// ⛔ مفيش تحديث تلقائي: الجلب عند الفتح (كاش أحدث من ١٠ دقايق = صفر نداء) وعند «تحديث».
+const rqState = { orders: [], at: null, loading: false, failed: false };
+
+function rqSetFresh() { ecoFreshUnitSet('rqFresh', rqState.at); }
+document.getElementById('rqFreshMount').innerHTML = ecoFreshUnitHTML({ id: 'rqFresh', onclick: 'rqLoad(false)' });
+
+// ⚠️ العدّاد قبل أول جلب ناجح = `—` مش `0` — «ما اتحدّثش» ≠ «مفيش شغل».
+function rqRender() {
+  const rows  = rqState.orders;
+  const tbody = document.getElementById('rqTableBody');
+  const wrap  = document.getElementById('rqTableWrap');
+  const empty = document.getElementById('rqEmpty');
+  document.getElementById('rqCount').textContent = rqState.at ? String(rows.length) : '—';
+
+  if (!rows.length) {
+    wrap.style.display  = 'none';
+    empty.style.display = '';
+    empty.innerHTML = rqState.at
+      ? '<div class="ico">✅</div><div>مفيش أوردرات بوسطة راجعاها دلوقتي</div>'
+      : (rqState.failed ? '<div class="ico">⚠️</div><div>تعذّر تحميل الطابور — اضغط «تحديث»</div>' : ecoLoadingHTML());
+    return;
+  }
+  empty.style.display = 'none';
+  wrap.style.display  = '';
+  const now = new Date();
+  tbody.innerHTML = rows.map((o, i) => {
+    const age = ecoOrderAge(o.createdAt, now);
+    const machine = o.machine === 'S2'
+      ? '<span class="badge badge-neutral">[S-2] مرتجع بعد التسليم</span>'
+      : '<span class="badge badge-blue">S1 راجع قبل التسليم (RTO)</span>';
+    const inList = o.tracking && scannedNums.includes(String(o.tracking));
+    const action = !o.tracking ? '<span class="tracking-num">—</span>'
+      : inList ? '<span class="badge badge-success">✓ في القايمة</span>'
+      : `<button class="btn btn-outline btn-sm" onclick="rqAddRow(${i})">➕ إضافة للمسح</button>`;
+    return `<tr>
+      <td>${orderLink(o.orderName, o.orderId)}</td>
+      <td class="rq-cust">${esc(o.customer || '—')}</td>
+      <td><span class="tracking-num">${esc(o.tracking || '—')}</span>${o.trackingLegacy ? ' <span class="badge badge-neutral" title="الرقم جاي من الحقل القديم bosta_tracking_number">قديم</span>' : ''}</td>
+      <td>${machine}</td>
+      <td><span class="badge badge-warn">${esc(o.bostaStatus)}</span></td>
+      <td>${o.bostaStatusAt ? esc(formatDateTime(o.bostaStatusAt)) : '—'}</td>
+      <td>${esc(formatDate(o.createdAt))}<span class="time-badge age-badge rq-age ${age.cls}">${esc(age.text)}</span></td>
+      <td>${action}</td>
+    </tr>`;
+  }).join('');
+}
+
+// الإضافة بتعدّي على نفس مسار السكان (addTrackingNumber) — مفيش مسار إضافة تاني.
+function rqAddRow(i) {
+  const o = rqState.orders[i];
+  if (!o || !o.tracking) return;
+  addTrackingNumber(String(o.tracking));
+  rqRender();
+}
+
+// ⚠️ `loading` بيمنع نداءين متوازيين. `pre` = كاش أحدث من ١٠ دقايق (صفر نداء) — §CACHE-TTL.
+async function rqLoad(silent, pre) {
+  if (rqState.loading) return;
+  rqState.loading = true;
+  ecoFreshUnitLoading('rqFresh', true);
+  try {
+    const data = pre ? pre.data : await apiGet('get_ready_to_return');
+    if (!pre) cacheSet(ECO_CACHE_RETURN_QUEUE, data);
+    rqState.orders = Array.isArray(data.orders) ? data.orders : [];
+    rqState.at     = pre ? new Date(pre.at) : new Date();
+    rqState.failed = false;
+    document.getElementById('rqFail').style.display = 'none';
+    const tr = document.getElementById('rqTrunc');
+    tr.style.display = data.truncated ? '' : 'none';
+    if (data.truncated) tr.textContent = '⚠️ الاستعلام وصل لحد الصفحات المسموح — فيه أوردرات راجعة ممكن مش ظاهرة. اسكن عادي، والـ Worker هو اللي بيحكم.';
+  } catch (err) {
+    // الفشل بيتقال، والقايمة القديمة بتفضل لو كان فيه جلب ناجح قبله. والسكان شغّال عادي.
+    rqState.failed = true;
+    const f = document.getElementById('rqFail');
+    f.style.display = '';
+    f.textContent = `⚠️ تعذّر تحميل طابور «راجع من بوسطة» — ${err.message}. السكان شغّال عادي.`;
+  } finally {
+    rqState.loading = false;
+    ecoFreshUnitLoading('rqFresh', false);
+    rqRender();
+    rqSetFresh();
+    if (!silent) scanInputEl?.focus();
+  }
+}
+
+// النبضة عرض بحت — «منذ كام» وبادج العمر بلا أي نداء شبكة.
+setInterval(() => {
+  rqSetFresh();
+  if (!rqState.orders.length) return;
+  const now = new Date();
+  document.querySelectorAll('#rqTableBody .age-badge').forEach((el, i) => {
+    const o = rqState.orders[i]; if (!o) return;
+    const age = ecoOrderAge(o.createdAt, now);
+    el.className = `time-badge age-badge rq-age ${age.cls}`;
+    el.textContent = age.text;
+  });
+}, 30 * 1000);
+
+// §IDLE — الخروج التلقائي (٦٠ د) موقوف طول ما دفعة بتتنفّذ
+window.shellIsBusy = () => isUpdating;
+
 // ─── §TOOL-JS::autoFocus ───
 document.addEventListener('click', e => {
   if (document.querySelector('.settings-overlay.open')) return;
@@ -2902,6 +3084,7 @@ updateTabChip();
 measureSticky();                    // ⚠️ **بعد** رسم التابات والـ chip
 
 scanInputEl?.focus();               // السكانر جاهز من أول لحظة
+(function openFromCache(){ const c = cacheGet(ECO_CACHE_RETURN_QUEUE); if (c && c.data && c.ageMs >= 0 && c.ageMs < ECO_CACHE_TTL_MS) { rqLoad(true, c); } else { rqLoad(true); } })();   // طابور «راجع من بوسطة» — قراءة بحتة
 </script>
 </body>
 </html>

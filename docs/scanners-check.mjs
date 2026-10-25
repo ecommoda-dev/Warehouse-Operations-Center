@@ -82,14 +82,14 @@ const RETURNED_ROWS = [
 //   الشحن  → **مصفوفة** `[{ name, ok, detail, hint }]`
 //   المرتجعات → **كائن** بندوده كائنات جوّاها `ok` (الشكل التالت)
 // ⚠️ **نسخة الـ Worker الوهمي لكل أداة لوحدها** — `shipped.min` بقى
-//    `3.5.0` في v1.23.0 (طابور `get_ready_to_ship`) و`returned.min` لسه
-//    `3.4.0`. رقم واحد للاتنين كان بيولّع «Worker نسخة قديمة» على واحدة
+//    `3.5.0` في v1.23.0 (طابور `get_ready_to_ship`) و`returned.min` بقى
+//    `3.6.0` في v1.62.0 (طابور `get_ready_to_return`). رقم واحد للاتنين كان بيولّع «Worker نسخة قديمة» على واحدة
 //    منهم وبيخلّي البند يفشل لسبب مالوش علاقة بالكود.
 const DIAG_SHIPPED = { ok:false, version:'3.5.0', checks:[
   { name:'متغير WORKER_SECRET', ok:true,  detail:'موجود بطول 40' },
   { name:'صلاحيات تطبيق شوبيفاي', ok:false, detail:'ناقص: read_all_orders', hint:'ضِفها في إعدادات الـ Custom App' },
 ]};
-const DIAG_RETURNED = { ok:false, version:'3.4.0', checks:{
+const DIAG_RETURNED = { ok:false, version:'3.6.0', checks:{
   env:         { ok:true,  missing:[], dbBinding:true },
   d1:          { ok:true,  activeEmployees:8 },
   shopifyAuth: { ok:false, error:'فشل الحصول على توكن', hint:'راجع CLIENT_ID و CLIENT_SECRET ثم Promote' },
@@ -122,7 +122,17 @@ const READY_ROWS = [
     packedBy:'Mohammed Tarek', tracking:'9911223344', trackingLegacy:false },
 ];
 
-function makeStub(rows, diag, readyRows = []) {
+// ── صفوف طابور «راجع من بوسطة» (v1.62.0 — Worker v3.6.0) ──────────
+// 🔴 الفلترة كلها في الـ Worker (courier=Bosta + In-Return + كود 41) — الوهمي بيرجّع
+//    المؤهّل بس. البند اللي بيتقفل: الصفحة **بتعرض اللي راجع بالحرف** ومابتفلترش.
+const RETURN_QUEUE_ROWS = [
+  { orderId:'8100000000001', orderName:'#53539', machine:'S1', createdAt:'2026-10-20T10:00:00Z', customer:'عميل أول',
+    tracking:'8216704439', trackingLegacy:false, bostaStatus:'41 · Out For Return', bostaStatusAt:'2026-10-22T18:08:00Z', whereabouts:'Client' },
+  { orderId:'8100000000002', orderName:'#53540', machine:'S2', createdAt:'2026-10-24T10:00:00Z', customer:'عميل تاني',
+    tracking:'2543339828', trackingLegacy:false, bostaStatus:'41 · Out For Return', bostaStatusAt:'2026-10-25T15:34:00Z', whereabouts:'Courier' },
+];
+
+function makeStub(rows, diag, readyRows = [], returnRows = []) {
   return async (route) => {
     const url    = new URL(route.request().url());
     const action = url.searchParams.get('action');
@@ -135,6 +145,8 @@ function makeStub(rows, diag, readyRows = []) {
                         s2:readyRows.filter(r => r.machine === 'S2').length },
                skipped:{ cancelled:0, not_printed:4, not_packed:19, reprinted_after_pack:1 },
                truncated:false, at:new Date().toISOString() };
+    else if (action === 'get_ready_to_return')
+      body = { ok:true, orders:returnRows, scanned:returnRows.length + 7, truncated:false, serverTime:new Date().toISOString() };
     else if (action === 'diag')       body = diag;
     else if (action === 'get_employees')
       body = { ok:true, employees:[{ username:'tester', display_name:'الموظف التجريبي' }] };
@@ -153,7 +165,7 @@ function makeStub(rows, diag, readyRows = []) {
 // ⚠️ الجلسة بتتزرع بـ `addInitScript` — `requireSession()` بترمي وبتحوّل
 //    لـ `index.html` من غير جلسة في `sessionStorage`، فالاختبار كان هيقيس
 //    **صفحة الدخول** (نفس بند `pack-check.mjs`).
-async function newPage(rows, diag, { withSession = true, readyRows = [] } = {}) {
+async function newPage(rows, diag, { withSession = true, readyRows = [], returnRows = [] } = {}) {
   const ctx  = await browser.newContext();
   const page = await ctx.newPage();
   const errors = [];
@@ -182,7 +194,7 @@ async function newPage(rows, diag, { withSession = true, readyRows = [] } = {}) 
         { v:1, username:'tester', displayName:'الموظف التجريبي', loginAt:new Date().toISOString() }));
     } catch {}
   }, withSession);
-  await page.route('**/*.workers.dev/**', makeStub(rows, diag, readyRows));
+  await page.route('**/*.workers.dev/**', makeStub(rows, diag, readyRows, returnRows));
   return { page, ctx, errors };
 }
 
@@ -426,6 +438,67 @@ console.log('§CACHE-TTL — كاش الطابور عند الفتح');
   const before = n;
   await page.click('#rqFresh .eco-qref, #rqFresh button'); await page.waitForTimeout(900);
   is(n === before + 1, 'زرار «تحديث» بيجيب طازة دايمًا', String(n - before));
+  await ctx.close();
+}
+
+
+// ══ §RETURN-QUEUE (v1.62.0) — طابور «راجع من بوسطة» في Bosta-Orders-Returned-Scanner.html ══
+console.log('\n══ §RETURN-QUEUE — طابور «راجع من بوسطة» ══');
+{
+  const { page, ctx, errors } = await newPage(RETURNED_ROWS, DIAG_RETURNED, { returnRows: RETURN_QUEUE_ROWS });
+  let n = 0;
+  page.on('request', r => { if (r.url().includes('action=get_ready_to_return')) n++; });
+  await page.goto(`${BASE}/Bosta-Orders-Returned-Scanner.html`);
+  await page.waitForTimeout(1000);
+
+  is((await page.locator('#rqCount').innerText()).trim() === String(RETURN_QUEUE_ROWS.length),
+     `العدّاد بيقول ${RETURN_QUEUE_ROWS.length} — نفس اللي الـ Worker رجّعه`);
+  is(await page.locator('#rqTableBody tr').count() === RETURN_QUEUE_ROWS.length,
+     '🔴 صفوف الجدول == اللي رجع بالحرف — الصفحة مابتفلترش ولا صف');
+  const html = await page.locator('#rqTableBody').innerHTML();
+  is(html.includes('#53539') && html.includes('#53540') && html.includes('8216704439') && html.includes('2543339828'),
+     'الأوردرات ورقم التتبع معروضين');
+  is(html.includes('41 · Out For Return'), 'حالة بوسطة معروضة بنصها الخام');
+  is(html.includes('RTO') && html.includes('[S-2]'), 'نوع الراجع: S1 (RTO) و[S-2] مرتجع بعد التسليم — مفرّقين');
+  is(await page.locator('#rqFresh .eco-qref').count() === 1, 'وحدة «آخر تحديث» + زرار التحديث (§FRESH-UNIT)');
+
+  // «➕ إضافة للمسح» بتعدّي على addTrackingNumber (مفيش مسار إضافة تاني)
+  await page.locator('#rqTableBody tr:first-child button').click();
+  is((await page.locator('#scanCount').innerText()).trim() === '1', 'الضغط على «➕ إضافة للمسح» ضاف الرقم لقايمة السكان');
+  is((await page.locator('#rqTableBody tr:first-child td:last-child').innerText()).includes('في القايمة'),
+     'والصف بقى بيقول «✓ في القايمة» (مفيش إضافة مكررة)');
+
+  // #43 — القفل أثناء الدفعة
+  await page.evaluate(() => { isUpdating = true; });
+  await page.evaluate(() => addTrackingNumber('2543339828'));
+  is((await page.locator('#scanCount').innerText()).trim() === '1', '🔴 الإضافة ممنوعة أثناء تنفيذ دفعة (isUpdating)');
+  is(await page.evaluate(() => window.shellIsBusy()) === true, 'والخروج التلقائي واقف (`shellIsBusy`)');
+  await page.evaluate(() => { isUpdating = false; });
+
+  // §CACHE-TTL
+  const first = n;
+  is(first === 1, 'أول فتح بلا كاش = نداء واحد', String(first));
+  await page.reload(); await page.waitForTimeout(1000);
+  is(n === first, '🔴 الفتح التاني (كاش أحدث من ١٠ د) = صفر نداء', String(n - first));
+  await page.click('#rqFresh .eco-qref'); await page.waitForTimeout(800);
+  is(n === first + 1, 'زرار «تحديث» بيجيب طازة دايمًا', String(n - first));
+  is(errors.length === 0, 'صفر خطأ JS', errors.join(' | ').slice(0, 300));
+  await ctx.close();
+}
+
+// ══ §RETURN-QUEUE::fail — فشل الطابور مايمنعش السكان ══
+{
+  const { page, ctx } = await newPage(RETURNED_ROWS, DIAG_RETURNED, { returnRows: [] });
+  await page.route('**/*.workers.dev/**', async (route) => {
+    if (route.request().url().includes('action=get_ready_to_return')) return route.fulfill({ status:500, contentType:'application/json', body:'{"error":"boom"}' });
+    return route.fallback();
+  });
+  await page.goto(`${BASE}/Bosta-Orders-Returned-Scanner.html`);
+  await page.waitForTimeout(1000);
+  is(await page.locator('#rqFail').isVisible(), 'فشل الطابور = بانر أحمر معلن');
+  is((await page.locator('#rqCount').innerText()).trim() === '—', '🔴 العدّاد `—` مش `0` — «تعذّر» ≠ «مفيش شغل»');
+  await page.fill('#scanInput', '8216704439'); await page.waitForTimeout(700);
+  is((await page.locator('#scanCount').innerText()).trim() === '1', 'والسكان شغّال عادي رغم فشل الطابور');
   await ctx.close();
 }
 
