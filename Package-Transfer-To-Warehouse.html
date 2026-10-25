@@ -161,11 +161,42 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .pick-row .pk-name { font-weight: 800; min-width: 70px; }
 .pick-row .pk-addr { flex: 1; font-size: 12px; color: var(--text-secondary); }
 .pick-empty { text-align: center; padding: 24px; color: var(--text-secondary); }
-/* §SESSION — زرار البدء الأخضر الكبير (نفس روح «ابدأ الجرد») */
-.start-card { display: flex; justify-content: center; padding: 28px 16px; }
-.start-btn { min-width: 320px; padding: 22px 40px; border: 0; border-radius: var(--radius); background: var(--green); color: var(--on-accent); font-family: var(--font-body); font-size: 22px; font-weight: 800; cursor: pointer; box-shadow: var(--shadow); transition: background .15s; }
-.start-btn:hover { background: var(--green-dark); }
-.start-btn:focus-visible { outline: 3px solid var(--green-border, var(--green)); outline-offset: 2px; }
+/* ══ §UNIFIED — جدول واحد: «اتسجّلت» فوق و«مستنية» تحتها (v1.54.0 · طلب أحمد 25-10-2026) ══
+   🔴 جدول واحد بنفس الأعمدة السبعة لكل الصفوف — الفرق بين الحالتين في **الشريط الفاصل**
+      مش في معنى العمود. ⛔ ممنوع صف يحط ملاحظة في عمود «العنوان» أو «—» في «النوع» عشان
+      الشكل يتظبط: العمود اللي مالوش قيمة بيقول `—` بصراحة. */
+.sess-prog { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.sess-prog .bar { flex: 1 1 200px; height: 10px; border-radius: 99px; background: var(--surface-2); border: 1px solid var(--border); overflow: hidden; }
+.sess-prog .bar i { display: block; height: 100%; background: var(--green); }
+.sess-prog .txt { font-weight: 700; font-size: 13px; color: var(--text-primary); font-family: var(--font-mono); }
+.rq-unified { table-layout: fixed; }
+.rq-unified thead th { padding: 7px 8px; }
+.rq-unified tbody td { padding: 6px 8px; font-size: 12.5px; overflow-wrap: anywhere; }
+.rq-unified tbody td.col-addr { min-width: 0; max-width: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rq-band-row td { text-align: start; padding: 0; font-weight: 800; font-size: 12.5px; border-inline-start: none; }
+.rq-band-row.pend td { background: var(--surface-2); color: var(--text-secondary); padding: 7px 12px; border-top: 1px solid var(--border); }
+.rq-band-row.done td { background: var(--green-light); color: var(--green-dark); border-top: 1px solid var(--green-border); }
+.band-toggle { display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 12px; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; text-align: start; }
+.band-toggle:focus-visible { outline: 2px solid var(--green); outline-offset: -2px; }
+.band-cnt { min-width: 24px; padding: 0 8px; border-radius: 99px; text-align: center; font-size: 12px; font-family: var(--font-mono); background: var(--green); color: var(--on-accent); }
+.rq-band-row.pend .band-cnt { background: var(--border-strong); color: var(--text-primary); }
+.rq-done-row.is-ok { background: var(--green-light); }
+.rq-note { margin-top: 2px; font-size: 11px; color: var(--text-secondary); white-space: normal; }
+.rq-pend-tag { font-size: 11px; font-weight: 700; color: var(--text-muted); white-space: nowrap; }
+@media (max-width: 760px) {
+  /* صف من سطرين بدل scroll أفقي: رقم الأوردر والنوع والنتيجة فوق، والعنوان والوقت تحت */
+  .rq-unified, .rq-unified tbody, .rq-unified tbody tr.rq-band-row, .rq-unified tbody tr.rq-band-row td { display: block; }
+  .rq-unified colgroup, .rq-unified thead { display: none; }
+  .rq-unified tbody tr.rq-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 2px 10px; align-items: center; padding: 8px 10px; }
+  .rq-unified tbody tr.rq-row td { padding: 0; border: 0; text-align: start; }
+  .rq-unified tbody tr.rq-row td:nth-child(1) { grid-column: 1; grid-row: 1; white-space: nowrap; }
+  .rq-unified tbody tr.rq-row td:nth-child(3) .type-text { white-space: normal; }
+  .rq-unified tbody tr.rq-row td:nth-child(3) { grid-column: 2; grid-row: 1; }
+  .rq-unified tbody tr.rq-row td:nth-child(6) { grid-column: 3; grid-row: 1; }
+  .rq-unified tbody tr.rq-row td:nth-child(2) { grid-column: 1 / 3; grid-row: 2; }
+  .rq-unified tbody tr.rq-row td:nth-child(7) { grid-column: 3; grid-row: 2; }
+  .rq-unified tbody tr.rq-row td:nth-child(4), .rq-unified tbody tr.rq-row td:nth-child(5) { display: none; }
+}
 .rq-box { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); overflow: hidden; }
 .rq-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
 .rq-title { font-size: 13.5px; font-weight: 700; color: var(--text-primary); }
@@ -527,7 +558,21 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
            واحد للنسخة (Standards #24). الرقم هنا **مش** مكتوب بإيد. -->
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.53.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.54.0</span>
+          <span class="cl-ver-date">25-10-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔴 <b>الأوردرات والجلسة بقوا شاشة واحدة.</b> مفيش «ابدأ تسجيل المرتجعات» ولا «إنهاء الجلسة» — <b>السكانر شغّال دايمًا</b> من أول ما الصفحة تفتح، والطابور ظاهر قدامك طول الوقت.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span><b>جدول واحد بنفس الأعمدة لكل الصفوف:</b> رقم الأوردر · العنوان · نوع الأوردر · الحالة · موقع الشحنة · النتيجة · الوقت. فوقه شريط <b>«✅ اتسجّلت في الصفحة دي»</b> (مطوي، بعدّاد — اضغط عليه يتفتح) وتحته شريط <b>«⏳ مستنية الرجوع»</b>. الأوردر اللي اتسجّل بيحتفظ بعنوانه ونوعه وحالته.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>شريط تقدّم «اتسجّل N من M» تحت مربع السكانر. وزرار «المتبقي» اتشال — «تحديث» في رأس الطابور هو اللي بيجيب الرقم.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>الجدول <b>مضغوط</b> (صفوف أقصر)، وعلى الشاشات الضيقة (تحت ٧٦٠px) بيتحوّل لصف من سطرين بدل scroll أفقي.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>⛔ <b>عرض بحت:</b> الحارس والكتابة وصفوف «مرفوض» و«خلاص متعمل» والإقرارات ما اتغيّروش.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.53.0</span>
           <span class="cl-ver-date">22-10-2026</span>
         </div>
         <ul class="cl-items">
@@ -733,7 +778,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
             <li><code>§RECV-JS</code> — لوحة الاستلام قطعة قطعة + <code>receive_order</code>. مفتاح القطعة <code>lineItemId#unitIndex</code> = نفس صيغة الـ Worker بالحرف</li>
             <li><code>§RI-JS</code> + <code>receiveLooseItem</code> — «قطع مستنية الرجوع للمخزن» و<code>receive_item</code>. الرقم بنفس <code>derive</code> صف الرئيسية (<code>home-config.js</code> · <code>ECO_CACHE_RETURN_ITEMS</code>)</li>
             <li><code>§TOOL-JS::outcomeModal</code> — نافذة واحدة بأربع نغمات (مرفوض · خلاص متعمل · إقرار · فشل)، ومدخل واحد <code>showOutcome</code></li>
-            <li><code>§TOOL-JS::session</code> — جدول سكانات الجلسة + العدّادات</li>
+            <li><code>§TOOL-JS::session</code> + <code>§UNIFIED</code> — شريط «اتسجّلت» جوّه جدول الطابور الموحّد + العدّادات وشريط التقدّم (مفيش جلسة بدء/إنهاء)</li>
             <li><code>§WAREHOUSE-QUEUE-JS</code> — الطابور بالتحديث التلقائي وحراسه التلاتة</li>
             <li><code>§LOG-JS</code> — القسم الموحّد: فلاتر multi-select + فترة سريعة + جدول + صفحات + تصدير</li>
             <li><code>§LOG-JS::logParams</code> — المصدر الوحيد لفلاتر التلات نداءات</li>
@@ -856,29 +901,16 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
          🔴 **ومفيش مربع إدخال يدوي** بقرار — المدخل الوحيد هو السكانر.
             ⚠️ الثمن لازم يتقال: باركود متقطّع أو مطموس مالوش طريق تاني من
             الشاشة دي، والموظف بيحتاج يسجّل الأوردر من الأدمن. -->
-    <!-- ══ §SESSION — «ابدأ تسجيل المرتجعات» (v1.53.1 · طلب أحمد 22-10-2026) ══
-         🔴 **الجلسة مفصولة عن الطابور:** قبل البدء الصفحة فيها الزرار الأخضر
-            والطابور بس. بعد الضغط: السكانر وجدول الجلسة **فاضيين** ومفيش غير
-            اللي الموظف بيسجّله هو — والطابور مخفي. «إنهاء الجلسة» بترجّع الشاشة
-            الأولى وبتمسح جدول الجلسة (السجل الدائم في تاب «السجل» + D1).
-         ⛔ **عرض بحت:** الحارس الحقيقي لسه في الـ Worker، ومفيش تغيير في الكتابة. -->
-    <div class="card start-card" id="startCard" style="margin-bottom:16px;">
-      <button class="start-btn" id="startSessionBtn" type="button" onclick="startSession()">▶ ابدأ تسجيل المرتجعات</button>
-    </div>
-
-    <div class="card" id="scanCard" style="margin-bottom:16px; display:none;">
+    <!-- ══ §UNIFIED — شاشة واحدة (v1.54.0 · طلب أحمد 25-10-2026) ══════════════
+         🔴 **السكانر شغّال دايمًا:** مفيش «ابدأ تسجيل المرتجعات» ولا «إنهاء الجلسة».
+            اللي اتسجّل في الصفحة دي بيفضل في جدول واحد مع الطابور (شريط «اتسجّلت» فوق
+            وشريط «مستنية» تحته) لحد ما الصفحة تتقفل أو تتعمل لها ريفريش — والسجل
+            الدائم في تاب «السجل»/D1 زي ما هو.
+         ⛔ **عرض بحت:** الحارس الحقيقي لسه في الـ Worker، ومفيش تغيير في الكتابة ولا
+            في نتايج `rejected`/`already` — نفس الصفوف بنفس الرسايل. -->
+    <div class="card" id="scanCard" style="margin-bottom:16px;">
       <div class="card-header">
-        <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-          <button class="btn btn-danger-outline" id="endSessionBtn" type="button" onclick="endSession()">⏹ إنهاء الجلسة</button>
-          <h2>📷 امسح باركود الأوردر الراجع</h2>
-          <!-- المتبقي في الطابور + آخر تحديث — والضغط عليه بيحدّث الطابور (الطابور نفسه مخفي في الجلسة) -->
-          <button class="eco-rbtn" id="sessRemainBtn" type="button" onclick="rqLoad(false)"
-            title="المتبقي في طابور «جاهز للرجوع للمخزن» — اضغط للتحديث">
-            <span class="eco-rbtn-ico">↺</span><span>المتبقي</span>
-            <span class="eco-rbtn-badge" id="sessRemainN">—</span>
-            <span id="sessRemainAgo" style="font-weight:600;opacity:.9;">لسه ما اتحدّثش</span>
-          </button>
-        </div>
+        <h2>📷 امسح باركود الأوردر الراجع</h2>
         <div class="pills-row" id="sessionPills"></div>
       </div>
 
@@ -888,6 +920,11 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
             placeholder="امسح باركود الأوردر الراجع هنا..." autocomplete="off" autofocus
             aria-label="باركود الأوردر" />
           <button class="btn btn-primary pick-btn" id="pickOrderBtn" type="button" onclick="openOrderPicker()">📋 تسجيل أوردر يدوي</button>
+        </div>
+
+        <div class="sess-prog" id="sessProg" style="display:none;">
+          <div class="bar" role="progressbar" aria-label="تقدّم تسجيل المرتجعات"><i id="sessProgBar" style="width:0%"></i></div>
+          <span class="txt" id="sessProgTxt"></span>
         </div>
 
         <!-- ══ §RECV — الاستلام قطعة قطعة (v1.51.0 · طلب أحمد 22-10-2026) ══════
@@ -920,24 +957,6 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <div class="recv-foot">
             <button class="btn btn-danger-outline" id="recvCancelBtn" type="button" onclick="recvCancel()">✕ إلغاء الاستلام</button>
             <button class="btn btn-success" id="recvFinishBtn" type="button" onclick="recvFinish()" disabled>✅ تسجيل الاستلام</button>
-          </div>
-        </div>
-
-        <!-- جدول سكانات الجلسة — بيظهر بعد أول سكانة بس -->
-        <div id="sessionWrap" style="display:none;">
-          <div class="table-wrap">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>الوقت</th>
-                  <th>رقم الأوردر</th>
-                  <th>الطرد</th>
-                  <th>النتيجة</th>
-                  <th>ملاحظة</th>
-                </tr>
-              </thead>
-              <tbody id="sessionBody"></tbody>
-            </table>
           </div>
         </div>
 
@@ -982,11 +1001,15 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <div id="rqFail" class="rq-fail" style="display:none;"></div>
           <div id="rqTrunc" class="rq-warn" style="display:none;"></div>
           <div class="rq-body">
-            <div id="rqEmpty" class="rq-empty">
-              <div class="eco-loadbox" role="status" aria-live="polite"><span class="eco-load-spin" aria-hidden="true"></span><div class="eco-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div></div>
-            </div>
             <div class="table-wrap" id="rqTableWrap" style="display:none;">
-              <table class="data-table">
+              <!-- 🔴 جدول واحد بسبعة أعمدة لكل الصفوف. أربع `tbody`: شريط «اتسجّلت» + صفوفها
+                   (`#sessionBody`) ثم شريط «مستنية» + صفوفه (`#rqTableBody`). الشريطان بيظهروا
+                   بس لما يكون فيه صفوف اتسجّلت. -->
+              <table class="data-table rq-unified">
+                <colgroup>
+                  <col style="width:9%"><col style="width:26%"><col style="width:10%"><col style="width:13%">
+                  <col style="width:12%"><col style="width:20%"><col style="width:10%">
+                </colgroup>
                 <thead>
                   <tr>
                     <th>رقم الأوردر</th>
@@ -994,10 +1017,26 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
                     <th>نوع الأوردر</th>
                     <th>الحالة</th>
                     <th>موقع الشحنة</th>
+                    <th>النتيجة</th>
+                    <th>الوقت</th>
                   </tr>
                 </thead>
+                <tbody>
+                  <tr class="rq-band-row done" id="doneBand" style="display:none;"><td colspan="7">
+                    <button class="band-toggle" id="doneToggle" type="button" aria-expanded="false" aria-controls="sessionBody">
+                      <span>✅ اتسجّلت في الصفحة دي</span><span class="band-cnt" id="doneCnt">0</span><span id="doneChev" aria-hidden="true">▸</span>
+                    </button>
+                  </td></tr>
+                </tbody>
+                <tbody id="sessionBody" style="display:none;"></tbody>
+                <tbody>
+                  <tr class="rq-band-row pend" id="pendBand" style="display:none;"><td colspan="7">⏳ مستنية الرجوع <span class="band-cnt" id="pendCnt">0</span></td></tr>
+                </tbody>
                 <tbody id="rqTableBody"></tbody>
               </table>
+            </div>
+            <div id="rqEmpty" class="rq-empty">
+              <div class="eco-loadbox" role="status" aria-live="polite"><span class="eco-load-spin" aria-hidden="true"></span><div class="eco-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div></div>
             </div>
           </div>
         </div>
@@ -1586,7 +1625,6 @@ function routeScanRi(code) {
 function isItemBarcode(code) { return /^\d{8,9}$/.test(String(code).trim()); }
 
 function routeScan(code) {
-  if (!sessionActive) return;          // §SESSION — السكان مقفول قبل «ابدأ تسجيل المرتجعات»
   if (recv) {
     if (isItemBarcode(code)) { recvScanUnit(code); return; }
     playBeep('warn');
@@ -1618,7 +1656,6 @@ window.shellIsBusy = () => scanBusy || (!!recv && recv.units.some(u => u.state !
 // نفس مسار السكان بالظبط (`openOrder`) — مفيش كتابة جديدة. القايمة هي `rqState.orders`
 // (نفس طابور «جاهز للرجوع للمخزن»). أوردر واحد في المرة: لوحة الاستلام بتفتح لأوردر واحد.
 function openOrderPicker() {
-  if (!sessionActive) return;
   if (scanBusy || recv) { showToast('خلّص الأوردر المفتوح للاستلام الأول', 'warn'); return; }
   document.getElementById('pickSearch').value = '';
   renderOrderPicker();
@@ -1654,32 +1691,11 @@ document.getElementById('pickList').addEventListener('click', e => {
   openOrder(id, false);
 });
 
-// ─── §SESSION — جلسة تسجيل المرتجعات (v1.53.1) ───
-// الشاشة الأولى: زرار البدء + الطابور. بعد البدء: السكانر وجدول الجلسة بس (فاضيين).
-let sessionActive = false;
-function applySessionUI() {
-  document.getElementById('startCard').style.display = sessionActive ? 'none' : '';
-  document.getElementById('scanCard').style.display  = sessionActive ? '' : 'none';
-  document.getElementById('rqBox').parentElement.style.display = sessionActive ? 'none' : '';
-}
-function startSession() {
-  sessionRows = [];
-  renderSession();
-  sessionActive = true;
-  applySessionUI();
-  focusScan();
-}
-function endSession() {
-  if (scanBusy || isOutcomeOpen()) return;
-  if (recv) { showToast('فيه أوردر مفتوح للاستلام — خلّصه أو ألغيه الأول', 'warn'); return; }
-  const n = sessionRows.filter(r => r.result === 'success' || r.result === 'warning').length;
-  sessionActive = false;
-  sessionRows = [];
-  renderSession();
-  applySessionUI();
-  showToast(n ? `انتهت الجلسة — اتسجّل ${n} أوردر` : 'انتهت الجلسة', 'success');
-  rqLoad(true);                        // الطابور بيتحدّث بعد اللي اتسجّل
-}
+// ─── §UNIFIED — مفيش جلسة (v1.54.0) ───
+// السكانر شغّال دايمًا. `sessionRows` = اللي اتسجّل في الصفحة دي (ريفريش بيمسحه)، وبيتعرض
+// في شريط «اتسجّلت» جوّه جدول الطابور نفسه (`renderSession` + `rqRender`).
+let doneOpen = false;      // شريط «اتسجّلت» مطوي افتراضيًا — الرقم على الشريط والـ pills بيقولوا اللي حصل
+
 let pendingAck  = null;        // الأوردر المستني إقرار (نافذة التحذير مفتوحة)
 
 const OUTCOME_LABEL = {
@@ -2077,20 +2093,46 @@ function setScanBusyUI(busy) {
 
 // ─── §TOOL-JS::session — جدول سكانات الجلسة + العدّادات ───
 function pushSession(res, code) {
+  // ⚠️ `ref` = صف الطابور بتاع الأوردر (لو كان فيه) — عشان صف «اتسجّلت» يحتفظ بعنوانه ونوعه
+  //    وحالته زي ما كان قبل التسجيل. أوردر مش في الطابور (أو قطعة سايبة) = `—` بصراحة.
+  const oid = res.order?.orderId, onm = res.order?.orderName;
+  const ref = rqState.orders.find(o => (oid && String(o.orderId) === String(oid)) || (onm && o.orderName === onm)) || null;
   sessionRows.unshift({
     at:        new Date(),
-    orderName: res.order?.orderName || null,
-    orderId:   res.order?.orderId   || null,
+    orderName: onm || null,
+    orderId:   oid || null,
     scanned:   code,
     machine:   res.machine || null,
     result:    res.result,
     message:   res.message || '',
+    ref,
   });
   renderSession();
 }
 
+// ─── صف «اتسجّلت» — نفس الأعمدة السبعة بتاعة صف الطابور بالظبط ───
+function rqDoneRowHTML(r) {
+  const b   = OUTCOME_LABEL[r.result] || { cls: 'badge-neutral', text: '—' };
+  const ref = r.ref;
+  const typeTxt = ref ? rqTypeLabel(ref) : (r.machine === 's2' ? 'استبدال/استرجاع' : r.machine === 's1' ? 'عادي' : '—');
+  const typeCls = (ref ? ref.machine : r.machine) === 's2' ? 'type-s2' : 'type-s1';
+  const st = ref ? rqStatusOf(ref) : null;
+  // «موقع الشحنة» بعد السكانة: اللي اتسجّل/خلاص متعمل = `Warehouse`، والباقي (رفض/فشل) هو اللي كان قبلها
+  const wasWritten = r.machine && (r.result === 'success' || r.result === 'warning' || r.result === 'already');
+  const wh = wasWritten ? rqWhereaboutsText('Warehouse') : (ref ? rqWhereaboutsText(ref.whereabouts) : null);
+  const ok = r.result === 'success' || r.result === 'warning';
+  return `<tr class="rq-row rq-done-row ${ok ? 'is-ok' : ''}">
+      <td>${r.orderName ? orderLink(r.orderName, r.orderId) : `<span class="col-num">${esc(r.scanned)}</span>`}</td>
+      <td class="col-addr" title="${esc(ref?.address || '')}">${esc(ref?.address || '—')}</td>
+      <td>${typeTxt === '—' ? '—' : `<span class="type-text ${typeCls}">${esc(typeTxt)}</span>`}</td>
+      <td>${st ? `<span class="badge ${st.cls}">${esc(st.text)}</span>` : '—'}</td>
+      <td>${wh ? `<span class="wh-text ${wh.cls}">${esc(wh.text)}</span>` : '—'}</td>
+      <td><span class="badge ${b.cls}">${b.text}</span>${r.message ? `<div class="rq-note">${esc(r.message)}</div>` : ''}</td>
+      <td class="col-num">${esc(formatTimeOnly(r.at.toISOString()))}</td>
+    </tr>`;
+}
+
 function renderSession() {
-  const wrap = document.getElementById('sessionWrap');
   const body = document.getElementById('sessionBody');
   const n = { success: 0, warning: 0, error: 0, rejected: 0, already: 0 };
   for (const r of sessionRows) if (n[r.result] !== undefined) n[r.result]++;
@@ -2106,19 +2148,39 @@ function renderSession() {
     `<div class="pill ${p.cls}"><span class="pill-val">${p.val}</span><span class="pill-lbl">${esc(p.lbl)}</span></div>`
   ).join('');
 
-  if (!sessionRows.length) { wrap.style.display = 'none'; body.innerHTML = ''; return; }
-  wrap.style.display = '';
-  body.innerHTML = sessionRows.map(r => {
-    const b = OUTCOME_LABEL[r.result] || { cls: 'badge-neutral', text: '—' };
-    return `<tr>
-      <td class="col-num">${esc(formatTimeOnly(r.at.toISOString()))}</td>
-      <td>${r.orderName ? orderLink(r.orderName, r.orderId) : `<span class="col-num">${esc(r.scanned)}</span>`}</td>
-      <td>${esc(machineText(r.machine))}</td>
-      <td><span class="badge ${b.cls}">${b.text}</span></td>
-      <td class="reject-reason">${esc(r.message || '—')}</td>
-    </tr>`;
-  }).join('');
+  body.innerHTML = sessionRows.map(rqDoneRowHTML).join('');
+  rqSyncTable();
 }
+
+// ─── شريط التقدّم + ظهور الشريطين — بيتنادى من `renderSession` و`rqRender` ───
+// «اتسجّل N من M» = أوردرات اتسجّلت (مش قطع سايبة) ÷ (اتسجّلت + اللي لسه في الطابور).
+function rqSyncTable() {
+  const hasDone = sessionRows.length > 0;
+  const hasPend = rqState.orders.length > 0;
+  const wrap  = document.getElementById('rqTableWrap');
+  const empty = document.getElementById('rqEmpty');
+  if (wrap) wrap.style.display = (hasDone || hasPend) ? '' : 'none';
+  // الرسالة الفاضية/التحميل بتفضل تحت الجدول لو مفيش طابور (حتى لو فيه صفوف اتسجّلت)
+  if (empty) empty.style.display = hasPend ? 'none' : '';
+  document.getElementById('doneBand').style.display = hasDone ? '' : 'none';
+  document.getElementById('pendBand').style.display = hasDone && hasPend ? '' : 'none';
+  document.getElementById('doneCnt').textContent = String(sessionRows.length);
+  document.getElementById('pendCnt').textContent = String(rqState.orders.length);
+  document.getElementById('sessionBody').style.display = hasDone && doneOpen ? '' : 'none';
+  document.getElementById('doneToggle').setAttribute('aria-expanded', String(doneOpen));
+  document.getElementById('doneChev').textContent = doneOpen ? '▾' : '▸';
+
+  const regd = sessionRows.filter(r => r.machine && (r.result === 'success' || r.result === 'warning')).length;
+  const total = regd + rqState.orders.length;
+  const prog = document.getElementById('sessProg');
+  const show = !!rqState.at && total > 0 && regd > 0;
+  prog.style.display = show ? '' : 'none';
+  if (show) {
+    document.getElementById('sessProgBar').style.width = Math.round(regd / total * 100) + '%';
+    document.getElementById('sessProgTxt').textContent = `اتسجّل ${regd} من ${total}`;
+  }
+}
+document.getElementById('doneToggle').addEventListener('click', () => { doneOpen = !doneOpen; rqSyncTable(); focusScan(); });
 
 // ─── §TOOL-JS::outcomeModal — المدخل الوحيد للنافذة ───
 // 🔴 نافذة واحدة بأربع نغمات — مش نافذة لكل حالة. أربع كتل منفصلة كانت
@@ -2869,10 +2931,6 @@ function rqSetFresh() {
   const btn   = document.getElementById('rqBtn');
   if (agoEl) { agoEl.className = 'eco-ago ' + info.cls; agoEl.textContent = info.text; }
   if (btn)   btn.classList.toggle('is-stale', info.stale);
-  const sAgo = document.getElementById('sessRemainAgo');
-  if (sAgo)  sAgo.textContent = info.text;
-  const sBtn = document.getElementById('sessRemainBtn');
-  if (sBtn)  sBtn.classList.toggle('is-stale', info.stale);
   const stamp = document.getElementById('rqStamp');
   if (stamp) {
     stamp.innerHTML = rqState.at
@@ -2887,7 +2945,6 @@ function rqSetFresh() {
 function rqRender() {
   const rows   = rqState.orders;
   const tbody  = document.getElementById('rqTableBody');
-  const wrap   = document.getElementById('rqTableWrap');
   const empty  = document.getElementById('rqEmpty');
   const cntEl  = document.getElementById('rqCount');
   const badge  = document.getElementById('rqBadge');
@@ -2896,12 +2953,9 @@ function rqRender() {
   const shown = rqState.at ? String(rows.length) : '—';
   if (cntEl) cntEl.textContent = shown;
   if (badge) badge.textContent = shown;
-  const sN = document.getElementById('sessRemainN');
-  if (sN) sN.textContent = shown;
 
   if (!rows.length) {
-    wrap.style.display  = 'none';
-    empty.style.display = '';
+    tbody.innerHTML = '';
     empty.innerHTML = rqState.at
       // 🔴 **الرسالة بتسمّي شرط القايمة — مش بتقول «مفيش شغل».** الطابور
       //    بيعرض اللي عهدته `Office` **بس**، و`Office` مابيكتبهاش غير «قسم
@@ -2914,11 +2968,10 @@ function rqRender() {
       : (rqState.failed
           ? '<div class="ico">⚠️</div><div>تعذّر تحميل الطابور — اضغط «تحديث»</div>'
           : ecoLoadingHTML());
+    rqSyncTable();
     return;
   }
 
-  empty.style.display = 'none';
-  wrap.style.display  = '';
   tbody.innerHTML = rows.map(o => {
     // 🔴 **v1.52.0 (قرار أحمد 22-10-2026):** عمودا «العميل» و«تاريخ الأوردر» اتشالوا
     //    (ومعاهم بادج العمر والنبضة بتاعته) واتضاف «العنوان» بعد رقم الأوردر.
@@ -2944,14 +2997,18 @@ function rqRender() {
     // ⚠️ «موقع الشحنة» — العهدة **قبل** السكانة: هي اللي بتقول للموظف
     //    الطرد جاي منين. الفاضية `—` مش `المخزن`: «مش معروف» ≠ «هنا».
     const wh = rqWhereaboutsText(o.whereabouts);
-    return `<tr>
+    // 🔴 §UNIFIED (v1.54.0): نفس الأعمدة السبعة بتاعة صف «اتسجّلت» — «النتيجة» هنا `⏳ مستنية` و«الوقت» `—`
+    return `<tr class="rq-row">
       <td>${orderLink(o.orderName, o.orderId)}</td>
-      <td class="col-addr">${esc(o.address || '—')}</td>
+      <td class="col-addr" title="${esc(o.address || '')}">${esc(o.address || '—')}</td>
       <td><span class="type-text ${typeClass}">${esc(typeLabel)}</span></td>
       <td><span class="badge ${st.cls}">${esc(st.text)}</span></td>
       <td><span class="wh-text ${wh.cls}">${esc(wh.text)}</span></td>
+      <td><span class="rq-pend-tag">⏳ مستنية</span></td>
+      <td>—</td>
     </tr>`;
   }).join('');
+  rqSyncTable();
 }
 
 // ─── الحالة اللي خلّت الأوردر مؤهل ───────────────────────────
@@ -3004,9 +3061,7 @@ async function rqLoad(silent) {
   if (rqState.loading) return;
   rqState.loading = true;
   const btn = document.getElementById('rqBtn');
-  const sBtn = document.getElementById('sessRemainBtn');
   if (btn) { btn.disabled = true; btn.classList.add('loading'); }
-  if (sBtn) { sBtn.disabled = true; sBtn.classList.add('loading'); }
 
   try {
     const data = await apiGet('get_ready_to_warehouse');
@@ -3045,7 +3100,6 @@ async function rqLoad(silent) {
   } finally {
     rqState.loading = false;
     if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
-    if (sBtn) { sBtn.disabled = false; sBtn.classList.remove('loading'); }
     rqRender();
     rqSetFresh();
     if (!silent) focusScan();   // الفوكس يرجع للسكانر
@@ -3199,7 +3253,7 @@ buildTabChipMenu();
 updateTabChip();
 measureSticky();                         // ← بعد رسم التابات والـ chip
 
-applySessionUI();   // §SESSION — الشاشة الأولى: زرار البدء + الطابور
+renderSession();   // §UNIFIED — الـ pills والشريطين من أول لحظة
 focusScan();
 rqLoad(true);                            // الطابور — قراءة بحتة
 riLoad(true).then(() => {               // دفتر القطع الراجعة — قراءة D1 بحتة (v1.51.0)

@@ -373,8 +373,7 @@ async function newPage({ withSession = true } = {}) {
 //    ٤٠٠ms للكتابة اليدوي). `press('Enter')` بيعدّي **بلا أي أثر**،
 //    والانتظار لازم يبقى **أطول من المهلة**.
 async function scan(page, code) {
-  // §SESSION (v1.53.1): السكانر مخفي لحد «ابدأ تسجيل المرتجعات»
-  if (!(await page.locator('#scanInput').isVisible())) await page.click('#startSessionBtn');
+  // §UNIFIED (v1.54.0): السكانر شغّال دايمًا — مفيش «ابدأ تسجيل المرتجعات»
   await page.fill('#scanInput', String(code));
   await page.waitForTimeout(900);
 }
@@ -409,15 +408,17 @@ console.log('① الجلسة والهيدر الموحّد');
   is(!(await page.locator('#aboutWorkers').textContent() || '').includes('قسم تسليمات المكتب'),
      '🔴 `PAGE_WORKERS` فيها Worker واحد — مش Worker أداة المكتب كمان');
 
-  // §SESSION (v1.53.1): الشاشة الأولى = زرار البدء الأخضر + الطابور، والسكانر مخفي
-  is(await page.locator('#startSessionBtn').isVisible() && !(await page.locator('#scanInput').isVisible()) && await page.locator('#rqBox').isVisible(),
-     '🔴 الشاشة الأولى: زرار «ابدأ تسجيل المرتجعات» + الطابور، والسكانر مخفي');
-  is((await page.evaluate(() => getComputedStyle(document.getElementById('startSessionBtn')).backgroundColor)) === 'rgb(22, 163, 74)',
-     'زرار البدء أخضر');
-  await page.click('#startSessionBtn');
-  is(await page.locator('#scanInput').isVisible() && !(await page.locator('#rqBox').isVisible()) && !(await page.locator('#startSessionBtn').isVisible()) && !(await page.locator('#sessionWrap').isVisible()),
-     '🔴 بعد البدء: السكانر ظاهر وجدول الجلسة فاضي والطابور مخفي');
-  is(await page.evaluate(() => document.activeElement?.id) === 'scanInput', 'الفوكس على مربع السكان بعد البدء');
+  // §UNIFIED (v1.54.0): شاشة واحدة — السكانر والطابور ظاهرين من أول لحظة، ومفيش جلسة بدء/إنهاء
+  is(await page.locator('#startSessionBtn').count() === 0 && await page.locator('#endSessionBtn').count() === 0 && await page.locator('#startCard').count() === 0,
+     '🔴 مفيش زرار «ابدأ تسجيل المرتجعات» ولا «إنهاء الجلسة»');
+  is(await page.locator('#scanInput').isVisible() && await page.locator('#rqBox').isVisible() && await page.locator('#rqTableWrap').isVisible(),
+     '🔴 السكانر والطابور ظاهرين مع بعض من أول لحظة');
+  is(await page.locator('#sessRemainBtn').count() === 0, 'زرار «المتبقي» اتشال — «تحديث» في رأس الطابور هو المصدر');
+  is(await page.evaluate(() => document.activeElement?.id) === 'scanInput', 'الفوكس على مربع السكان من أول لحظة');
+  is(await page.locator('#doneBand').isHidden() && await page.locator('#pendBand').isHidden(),
+     'الشريطين مخفيين طول ما مفيش صف اتسجّل');
+  is(await page.locator('#sessionWrap').count() === 0 && await page.locator('#rqTableWrap table').count() === 1,
+     '🔴 جدول واحد بس — مفيش جدول جلسة منفصل');
   // §PICKER (v1.53.2): اختيار أوردر من القايمة بدل السكان
   is(await page.locator('#pickOrderBtn').isVisible(), 'زرار «اختيار من القائمة» ظاهر جنب السكانر');
   await page.click('#pickOrderBtn');
@@ -434,17 +435,16 @@ console.log('① الجلسة والهيدر الموحّد');
      (await page.locator('#recvTableWrap thead th').allInnerTexts()).every(t => t.trim() !== 'المنتج'),
      '🔴 عمود «المنتج» اتشال من لوحة الاستلام');
   const cs = async id => page.evaluate(i => { const c = getComputedStyle(document.getElementById(i)); return [c.backgroundColor, c.color, c.borderTopColor]; }, id);
-  const [eb, ec, ebd] = await cs('endSessionBtn'), [cb, cc, cbd] = await cs('recvCancelBtn');
-  is(eb === 'rgb(255, 255, 255)' && ec === 'rgb(220, 38, 38)' && cb === 'rgb(255, 255, 255)' && cc === 'rgb(220, 38, 38)',
-     'زراري «إنهاء الجلسة»/«إلغاء الاستلام»: خلفية بيضا وإطار وخط أحمر', [eb, ec, cb, cc].join(' | '));
+  const [cb, cc, cbd] = await cs('recvCancelBtn');
+  is(cb === 'rgb(255, 255, 255)' && cc === 'rgb(220, 38, 38)',
+     'زرار «إلغاء الاستلام»: خلفية بيضا وإطار وخط أحمر', [cb, cc].join(' | '));
   is((await cs('recvFinishBtn'))[0] === 'rgb(22, 163, 74)' && (await page.locator('#recvFinishBtn').innerText()).includes('تسجيل الاستلام'),
      '«تسجيل الاستلام» أخضر');
   is((await page.locator('#recvBody').innerText()).includes('في انتظار التسجيل') && !(await page.locator('#recvBody').innerText()).includes('مستنية'),
      'الحالة «⏳ في انتظار التسجيل»');
   await page.click('#recvCancelBtn');
-  await page.click('#endSessionBtn');
-  is(await page.locator('#startSessionBtn').isVisible() && await page.locator('#rqBox').isVisible() && !(await page.locator('#scanInput').isVisible()),
-     '«إنهاء الجلسة» بترجّع الشاشة الأولى');
+  is(!(await page.locator('#recvBox').isVisible()) && await page.locator('#scanInput').isVisible() && await page.locator('#rqBox').isVisible(),
+     'إلغاء الاستلام بيقفل اللوحة والسكانر والطابور لسه ظاهرين');
   is(errors.length === 0, 'صفر أخطاء في الكونسول', errors.join(' | '));
   await ctx.close();
 }
@@ -576,6 +576,10 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
   is(!(await page.$('#rqTableBody .age-badge')), 'ولا بادج «عمر الأوردر» في الجدول');
   const cells = await page.$$eval('#rqTableBody tr:first-child td', td => td.length);
   is(cells === heads.length, 'خلايا الصف == أعمدة الهيدر', `${cells} ≠ ${heads.length}`);
+  // 🔴 §UNIFIED — نفس الأعمدة السبعة لكل الصفوف
+  is(heads.join('|') === 'رقم الأوردر|العنوان|نوع الأوردر|الحالة|موقع الشحنة|النتيجة|الوقت',
+     '🔴 الأعمدة السبعة بالترتيب المتفق عليه', heads.join(' | '));
+  is((await rowTxt('#54727')).includes('⏳ مستنية'), 'صف الطابور عمود «النتيجة» فيه «⏳ مستنية»');
   // ⛔ ولا أثر لـ`updatedAt` في الصفحة نفسها
   const pageSrc = await page.content();
   is(!/data-rq-upd|rqSinceUpdate/.test(pageSrc),
@@ -654,9 +658,9 @@ console.log('③ السكان — الاستلام قطعة قطعة (v1.51.0)')
   is(scanCalls.length === 0, '🔴 مفيش نداء `scan` (كتابة) من سكان الأوردر — الكتابة بعد القطع بس');
   is(receiveCalls.length === 0, 'ومفيش `receive_order` قبل سكان القطع');
   is(await panelOpen(), 'لوحة الاستلام اتفتحت');
-  is(await page.locator('#sessRemainBtn').isVisible() && (await txt('#sessRemainN')) === (await txt('#rqCount')) && (await txt('#sessRemainN')) !== '—',
-     'زرار «المتبقي» ظاهر في الجلسة ورقمه == عدّاد الطابور');
-  is((await txt('#sessRemainAgo')).length > 0 && (await txt('#sessRemainAgo')) !== 'لسه ما اتحدّثش', 'وبيقول «آخر تحديث» بعد الجلب');
+  is((await txt('#rqBadge')) === (await txt('#rqCount')) && (await txt('#rqCount')) !== '—',
+     'بادج «تحديث» في رأس الطابور == العدّاد');
+  is((await txt('#rqAgo')).length > 0 && (await txt('#rqAgo')) !== 'لسه ما اتحدّثش', 'ولوحة «آخر تحديث» اتملّت بعد الجلب');
   is(await page.locator('#doneCount').count() === 0, 'مربع «اتسجّل في الجلسة دي» المكرر اتشال');
   is(!(await page.locator('#recvCancelBtn').isDisabled()), '🔴 زرار الإلغاء مفتوح بعد فتح اللوحة (اترسمت بعد ما السكانة خلصت)');
   is(await page.$$eval('#recvBody tr', t => t.length) === 3, 'اللوحة فيها ٣ قطع (A×1 + B×2) — صف لكل قطعة');
@@ -682,7 +686,32 @@ console.log('③ السكان — الاستلام قطعة قطعة (v1.51.0)')
   is(await page.locator('#outcomeOverlay.open').count() === 0, 'النجاح الكامل توست مش نافذة');
   is(await page.$$eval('#rqTableBody tr', t => t.length) === before - 1,
      '🔴 الصف اتشال من الطابور بعد النجاح');
-  is((await txt('#sessionBody')).includes('#54727'), 'صف الجلسة اتضاف باسم الأوردر');
+  is((await txt('#sessionBody')).includes('#54727'), 'صف «اتسجّلت» اتضاف باسم الأوردر');
+  // 🔴 §UNIFIED — الصف المسجّل بيحتفظ بعنوانه ونوعه وحالته، وبنفس الأعمدة السبعة
+  const drow = page.locator('#sessionBody tr', { hasText: '#54727' });
+  const dcells = await drow.locator('td').allInnerTexts();
+  is(dcells.length === 7 && dcells[1].includes('شارع التحرير') && dcells[2].trim() === 'عادي' && dcells[3].includes('مرتجع') && dcells[4].includes('في المخزن') && dcells[5].includes('تم'),
+     '🔴 صف «اتسجّلت»: نفس الأعمدة السبعة · عنوان ونوع وحالة الأوردر محفوظين · «موقع الشحنة» بقى «في المخزن» · النتيجة «تم»', dcells.join(' | '));
+  is(await page.locator('#doneBand').isVisible() && await page.locator('#pendBand').isVisible() && (await txt('#doneCnt')) === '1',
+     '🔴 شريطا «اتسجّلت» و«مستنية» ظهروا وعدّاد «اتسجّلت» = ١');
+  is(await page.locator('#sessionBody').isHidden() && await page.locator('#doneToggle').getAttribute('aria-expanded') === 'false',
+     'شريط «اتسجّلت» مطوي افتراضيًا');
+  const prog = (await txt('#sessProgTxt'));
+  is(await page.locator('#sessProg').isVisible() && /اتسجّل 1 من \d+/.test(prog), 'شريط التقدّم «اتسجّل ١ من N»', prog);
+  await page.click('#doneToggle');
+  is(await page.locator('#sessionBody').isVisible() && await page.locator('#doneToggle').getAttribute('aria-expanded') === 'true',
+     'الضغط على شريط «اتسجّلت» بيفتحه');
+  is(await page.evaluate(() => document.activeElement?.id) === 'scanInput', 'والفوكس بيرجع للسكانر');
+  const firstBand = await page.$$eval('#rqTableWrap tbody', t => t.map(x => x.id || x.querySelector('tr')?.id));
+  is(firstBand.join(',') === 'doneBand,sessionBody,pendBand,rqTableBody', 'ترتيب الشرايح: اتسجّلت ثم مستنية', firstBand.join(','));
+  // 🔴 العرض الضيق (تحت ٧٦٠px): صف من سطرين بدل scroll أفقي، والهيدر مخفي
+  await page.setViewportSize({ width:520, height:900 });
+  await page.waitForTimeout(250);
+  is(await page.evaluate(() => { const w = document.getElementById('rqTableWrap'); return w.scrollWidth <= w.clientWidth + 1; }) &&
+     await page.locator('#rqTableWrap thead').isHidden(),
+     '🔴 على عرض ٥٢٠px: مفيش scroll أفقي في الجدول والهيدر مخفي (صف من سطرين)');
+  is(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'ومفيش scroll أفقي في الصفحة كلها');
+  await page.setViewportSize({ width:1280, height:720 });
 
   // ── ② قطعة غلط + أوردر تاني والأوردر مفتوح + ناقصة بإقرار (الملغي مؤهل) ──
   await scan(page, '7212244533571');
@@ -788,6 +817,13 @@ console.log('③ السكان — الاستلام قطعة قطعة (v1.51.0)')
   await scan(page, '9999999999999');
   is((await txt('#outcomeModal')).includes('مفيش أوردر'), 'الأوردر المش موجود بيتقال بالسبب');
   await closeModal();
+  // 🔴 §UNIFIED — الرفض و«خلاص متعمل» لسه بيتسجّلوا صف في الجلسة (بقوا جوّه شريط «اتسجّلت») بنفس رسايلهم
+  const doneRows = await page.$$eval('#sessionBody tr', trs => trs.map(t => [t.cells.length, t.textContent]));
+  is(doneRows.every(r => r[0] === 7), 'كل صفوف «اتسجّلت» (تم · مرفوض · خلاص متعمل) بسبعة أعمدة', doneRows.map(r => r[0]).join(','));
+  is(doneRows.some(r => r[1].includes('مرفوض')) && doneRows.some(r => r[1].includes('خلاص متعمل')),
+     '🔴 صف «مرفوض» وصف «خلاص متعمل» ظاهرين في شريط «اتسجّلت» زي ما كانوا في جدول الجلسة');
+  is(!(await page.locator('#sessionBody tr', { hasText: 'مرفوض' }).first().locator('td').nth(4).innerText()).includes('في المخزن'),
+     '🔴 صف المرفوض «موقع الشحنة» فيه مش «في المخزن» — ما اتكتبش حاجة');
   is(scanCalls.length === 0, '🔴 ولا نداء `scan` واحد طول الجلسة — المسار كله `order_items`/`receive_order`');
 
   is(errors.length === 0, 'صفر أخطاء في الكونسول', errors.join(' | '));
@@ -823,8 +859,7 @@ console.log('③-ب قطع مستنية الرجوع للمخزن');
   is(tabNames.length === 3 && tabNames[0].includes('الأوردرات') && tabNames[1].includes('منتجات التسليم الجزئي') && tabNames[2].includes('السجل'),
      '🔴 التابات: «الأوردرات» · «منتجات التسليم الجزئي» · «السجل»', tabNames.join(' | '));
   is(!tabNames.some(t => t.includes('السكانر')), 'اسم تاب «السكانر» القديم اتشال', tabNames.join(' | '));
-  if (await page.locator('#endSessionBtn').isVisible()) await page.click('#endSessionBtn');   // §SESSION — الجلسة اتفتحت من السكانات اللي فاتت
-  is(await page.locator('#rqBox').isVisible() && await page.locator('#startSessionBtn').isVisible() && !(await page.locator('#riBox').isVisible()),
+  is(await page.locator('#rqBox').isVisible() && await page.locator('#scanInput').isVisible() && !(await page.locator('#riBox').isVisible()),
      '🔴 تاب «الأوردرات» فيه السكانر وطابور الأوردرات **بس** — قايمة القطع مش فيه');
   await page.click('#tabPartial');
   await page.waitForTimeout(300);
@@ -845,7 +880,6 @@ console.log('③-ب قطع مستنية الرجوع للمخزن');
      '🔴 باركود أوردر في مربع القطع **مابيفتحش لوحة استلام** (التاب مايشوفهاش) — بيتوجّه لتاب «الأوردرات»');
   await page.click('#tabScanner');
   await page.waitForTimeout(200);
-  if (!(await page.locator('#scanInput').isVisible())) { await page.click('#startSessionBtn'); await page.waitForTimeout(100); }   // §SESSION
   is(await page.evaluate(() => document.activeElement?.id) === 'scanInput', 'الرجوع لتاب «الأوردرات» بيرجّع الفوكس للسكانر');
   await scan(page, '44444444');
   is((await txt('#outcomeModal')).includes('مفيش قطعة مستنية'), 'باركود مالوش سطر مستني بيتقال بالنص');
