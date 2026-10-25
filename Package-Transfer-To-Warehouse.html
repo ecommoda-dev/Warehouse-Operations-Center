@@ -152,8 +152,6 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .rq-unified tbody td.col-addr { min-width: 160px; max-width: none; white-space: normal; line-height: 1.6; }
 .rq-add-btn { white-space: nowrap; padding: 5px 12px; font-size: 12px; }
 /* §QUEUE-HEAD — عنوان الطابور فوق مربع الإدخال */
-.queue-head { margin: 0 2px 12px; }
-.queue-sub { margin-top: 3px; font-size: 12px; color: var(--text-secondary); }
 .rq-pend-tag { font-size: 11px; font-weight: 700; color: var(--text-muted); white-space: nowrap; }
 @media (max-width: 760px) {
   /* صف من سطرين بدل scroll أفقي: رقم الأوردر والنوع والنتيجة فوق، والعنوان والوقت تحت */
@@ -171,10 +169,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
   .rq-unified tbody tr.rq-row td:nth-child(6) .rq-add-btn { width: 100%; }
 }
 .rq-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
-.rq-title { font-size: 13.5px; font-weight: 700; color: var(--text-primary); }
-.rq-sub { font-size: 11px; color: var(--text-muted); }
 .rq-act { margin-inline-start: auto; display: flex; align-items: stretch; gap: 10px; }
-.rq-body { padding: 0; }
 .rq-empty { padding: 26px 16px; text-align: center; color: var(--text-muted); font-size: 13px; }
 .rq-empty .ico { font-size: 26px; margin-bottom: 6px; }
 .rq-fail { margin: 12px 16px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--red-light); border: 1px solid var(--red-border); color: var(--red-dark); font-size: 12.5px; }
@@ -751,7 +746,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
               <code>Returned</code> و<code>Cancelled</code> حالتان <b>نهائيتان
               بتتراكم</b> — كل مرتجع وكل ملغي في تاريخ المتجر بيطابق الفلتر، ومن غير
               النافذة الاستعلام بيرجّع آلاف الصفوف. التاريخ الفعلي بيجي من
-              <code>ordersSince</code> في رد الـ Worker وبيتعرض في السطر فوق السكانر.
+              <code>ordersSince</code> في رد الـ Worker (السطر التوضيحي اتشال من الشاشة بقرار — v1.62.0).
               ⚠️ <b>والنافذة عرض بس</b> — الأوردر الأقدم منها بيتسكن عادي والـ Worker
               بيكتب عليه. ⚠️ والثمن: طرد منسي أكتر من ٢٥٠ يوم مش ظاهر في القايمة
               (شبكة الأمان = تقرير دوري يدوي).</li>
@@ -838,13 +833,6 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
             الدائم في تاب «السجل»/D1 زي ما هو.
          ⛔ **عرض بحت:** الحارس الحقيقي لسه في الـ Worker، ومفيش تغيير في الكتابة ولا
             في نتايج `rejected`/`already` — نفس الصفوف بنفس الرسايل. -->
-    <!-- ══ §QUEUE-HEAD — عنوان الطابور فوق مربع الإدخال (v1.55.0 · طلب أحمد 25-10-2026) ══
-         العنوان والسطر التوضيحي (وفيه أرضية التاريخ من الـ Worker) في أول التاب خالص — فوق السكانر،
-         زي عنوان الأدوات التانية. `#rqSub` بيتحدّث من `ordersSince` في الرد — ⛔ ممنوع التاريخ يتكتب بالإيد. -->
-    <div class="queue-head" id="queueHead">
-      <div class="queue-sub" id="rqSub">مرتجع أو ملغي · مسجّل إنه في المكتب · قاهرة+جيزة وشو روم</div>
-    </div>
-
     <div class="card" id="scanCard" style="margin-bottom:16px;">
       <div class="card-body" style="display:flex; flex-direction:column; gap:12px; padding:0;">
         <div class="scan-row">
@@ -956,7 +944,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
   <div id="panelPartial" class="tab-panel">
 
     <div class="card" id="riScanCard" style="margin-bottom:16px;">
-      <div class="card-body">
+      <div class="card-body" style="display:flex; flex-direction:column; gap:12px; padding:0;">
         <div class="scan-row">
           <input id="scanInputRi" class="scan-input" type="text"
             autocomplete="off"
@@ -971,12 +959,9 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
          فوق) + قطع وصلت ناقصة مع أوردر كامل. سكان باركود القطعة (٨–٩ أرقام)
          في المربع فوق (أو في تاب «الأوردرات») بيقفل **أقدم** سطر مستني بنفس
          الباركود (قرار أحمد). -->
-    <div class="card" id="riBox" style="margin-bottom:16px;">
+    <!-- §UNIFIED-SECTION — نفس شكل جدول `#rqBox` بالحرف: لوحة العدّ + «آخر تحديث» ← صف «النتائج» ← الجدول (طلب أحمد 25-10-2026) -->
+    <div class="unified-section" id="riBox" style="margin-bottom:16px;">
       <div class="rq-head">
-        <div>
-          <div class="rq-title">📦 قطع مستنية الرجوع للمخزن</div>
-          <div class="rq-sub">قطع رجعت مع المندوب من تسليم جزئي · وقطع وصلت ناقصة مع أوردر مرتجع — اسكن باركود القطعة في المربع فوق</div>
-        </div>
         <div class="count-badge">
           <span class="count-num" id="riCount">—</span>
           <span class="count-lbl">قطعة</span>
@@ -986,25 +971,38 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
       </div>
       <div id="riFail" class="rq-fail" style="display:none;"></div>
       <div id="riTrunc" class="rq-warn" style="display:none;"></div>
-      <div class="rq-body">
-        <div id="riEmpty" class="rq-empty">
-          <div class="eco-loadbox" role="status" aria-live="polite"><span class="eco-load-spin" aria-hidden="true"></span><div class="eco-load-title">⏳ جاري تحميل القطع برجاء الانتظار ...</div></div>
+
+      <div class="tbl-bar" onclick="toggleRiTable()">
+        <div class="tbl-bar-right">
+          <span class="tbl-toggle open" id="riToggleIcon">▲</span>
+          <div class="results-wrap">
+            <span class="results-label">النتائج:</span>
+            <span class="results-count" id="riResults">—</span>
+          </div>
         </div>
-        <div class="table-wrap" id="riTableWrap" style="display:none;">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>رقم الأوردر</th>
-                <th>SKU</th>
-                <th>باركود المنتج</th>
-                <th>المصدر</th>
-                <th>الحالة</th>
-                <th>اتسجّلت</th>
-                <th>إجراء</th>
-              </tr>
-            </thead>
-            <tbody id="riTableBody"></tbody>
-          </table>
+      </div>
+
+      <div class="tbl-body-wrap" id="riBodyWrap">
+        <div class="tbl-scroll">
+          <div id="riEmpty" class="rq-empty">
+            <div class="eco-loadbox" role="status" aria-live="polite"><span class="eco-load-spin" aria-hidden="true"></span><div class="eco-load-title">⏳ جاري تحميل القطع برجاء الانتظار ...</div></div>
+          </div>
+          <div class="table-wrap" id="riTableWrap" style="display:none;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>رقم الأوردر</th>
+                  <th>SKU</th>
+                  <th>باركود المنتج</th>
+                  <th>المصدر</th>
+                  <th>الحالة</th>
+                  <th>اتسجّلت</th>
+                  <th>إجراء</th>
+                </tr>
+              </thead>
+              <tbody id="riTableBody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -1898,6 +1896,13 @@ function toggleRqTable() {
   document.getElementById('rqToggleIcon').classList.toggle('open', rqTblOpen);
 }
 
+let riTblOpen = true;
+function toggleRiTable() {
+  riTblOpen = !riTblOpen;
+  document.getElementById('riBodyWrap').classList.toggle('collapsed', !riTblOpen);
+  document.getElementById('riToggleIcon').classList.toggle('open', riTblOpen);
+}
+
 function toggleTable() {
   tblOpen = !tblOpen;
   document.getElementById('tblBodyWrap').classList.toggle('collapsed', !tblOpen);
@@ -2324,17 +2329,6 @@ async function rqLoad(silent, pre) {
     trunc.style.display = data.truncated ? '' : 'none';
     if (data.truncated) trunc.textContent =
       '⚠️ فيه أوردرات أكتر من الحد المعروض — فيه طرود مش ظاهرة في القايمة. اسكن عادي، والـ Worker هو اللي بيحكم.';
-
-    // ⚠️ **أرضية التاريخ بتتقال على الشاشة** — الطابور بيعرض من تاريخ معيّن
-    //    فأحدث، ولو الأرضية دي مكتوبة في الـ Worker لوحده الموظف بيقرا
-    //    القايمة كأنها **كل** المرتجعات. ⛔ ممنوع تتكتب هنا بالإيد: بتييجي
-    //    من الرد نفسه، وإلا تاريخ الواجهة وتاريخ الـ Worker يفترقوا في صمت
-    //    (درس R1). وفيه بند في فحص المتصفح بيقفل ده.
-    const sub = document.getElementById('rqSub');
-    const since = ecoYmdToDMY(data.ordersSince);
-    if (sub && since) {
-      sub.textContent = `مرتجع أو ملغي · مسجّل إنه في المكتب · قاهرة+جيزة وشو روم · أوردرات من ${since}`;
-    }
   } catch (err) {
     // 🔴 **الفشل بيتقال، والرقم القديم بيفضل معروض لو كان فيه واحد.**
     //    و«تعذّر» بتتعرض بس لو مافيش أي جلب ناجح قبل كده (قاعدة ٤).
@@ -2380,6 +2374,7 @@ function riRender() {
   const empty = document.getElementById('riEmpty');
   const shown = riState.at ? String(rows.length) : '—';
   document.getElementById('riCount').textContent = shown;
+  document.getElementById('riResults').textContent = shown;   // chip «النتائج» — نفس الرقم بالحرف
 
   if (!rows.length) {
     wrap.style.display  = 'none';

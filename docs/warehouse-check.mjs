@@ -433,12 +433,8 @@ console.log('① الجلسة والهيدر الموحّد');
   is((await page.locator('#rqTableWrap thead th').allInnerTexts()).map(t => t.trim()).includes('إجراء'),
      'عمود «إجراء» في رأس الجدول');
   // العنوان فوق مربع الإدخال خالص (v1.55.0)
-  is(await page.evaluate(() => {
-       const h = document.getElementById('queueHead'), c = document.getElementById('scanCard');
-       return !!h && !!(h.compareDocumentPosition(c) & Node.DOCUMENT_POSITION_FOLLOWING) && !h.textContent.includes('جاهز للرجوع للمخزن') && !h.querySelector('.queue-title');
-     }), '🔴 السطر التوضيحي فوق مربع الإدخال، وعنوان «🏭 جاهز للرجوع للمخزن» اتشال (v1.57.0)');
-  is(await page.evaluate(() => !document.getElementById('rqBox').textContent.includes('مرتجع أو ملغي ·')) && (await page.locator('#rqSub').textContent()).includes('مرتجع أو ملغي'),
-     'السطر التوضيحي (`#rqSub`) في العنوان مش جوّه كارت الجدول');
+  is(await page.evaluate(() => !document.getElementById('queueHead') && !document.getElementById('rqSub') && !document.body.textContent.includes('مرتجع أو ملغي · مسجّل إنه في المكتب')),
+     '🔴 السطر التوضيحي («مرتجع أو ملغي · مسجّل إنه في المكتب · … أوردرات من …») اتشال من الصفحة (v1.62.0)');
   // معيار الجداول: كارت موحّد + صف «النتائج» بنفس رقم العدّاد + بلا table-layout ثابت ولا ellipsis
   is(await page.locator('#rqBox.unified-section .tbl-bar #rqResults').count() === 1 &&
      (await page.locator('#rqResults').textContent()) === (await page.locator('#rqCount').textContent()),
@@ -606,22 +602,9 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
   is(!/data-rq-upd|rqSinceUpdate/.test(pageSrc),
      '🔴 صفر أثر لـ`rqSinceUpdate`/`data-rq-upd` في الصفحة');
 
-  // النافذة الزمنية بتتقال على الشاشة، وجاية من الرد مش مكتوبة بالإيد
-  // 🔴 **الأرضية مكتوبة على الشاشة وجاية من الرد** — لو الصفحة كتبتها
-  //    بالإيد، تغيير الأرضية في الـ Worker بيسيب الشاشة بتقول القديم
-  //    **في صمت** (درس R1).
-  // ⚠️ والمقارنة بنص `ecoYmdToDMY` **المحسوب في الصفحة** مش بنص مكتوب هنا.
-  const subTxt  = (await page.locator('#rqSub').textContent() || '');
-  const wantDay = await page.evaluate((d) => ecoYmdToDMY(d), ORDERS_SINCE);
-  is(subTxt.includes(wantDay),
-     '🔴 أرضية تاريخ الأوردر مكتوبة على الشاشة — والتاريخ جاي من رد الـ Worker',
-     `${subTxt} ⊅ ${wantDay}`);
-  is(subTxt.includes('في المكتب'),
-     '🔴 السطر تحت العنوان بيسمّي شرط القايمة — «مسجّل إنه في المكتب»', subTxt);
-  is(wantDay === '01/04/2026',
-     '🔴 الأرضية بتتعرض `01/04/2026` — مش بيوم ناقص من تحويل توقيت', String(wantDay));
-  is(!/يوم|آخر ٣٠|آخر 30/.test(subTxt),
-     '🔴 صفر أثر للنافذة المتحرّكة القديمة في السطر — الأرضية ثابتة مش «آخر N يوم»', subTxt);
+  // v1.62.0: السطر التوضيحي (وفيه أرضية التاريخ) اتشال بقرار أحمد — `ordersSince` لسه بيرجع في الرد بس مابيتعرضش.
+  is(await page.locator('#rqSub').count() === 0,
+     '🔴 مفيش سطر بيعرض أرضية التاريخ على الشاشة (اتشال بقرار)');
 
   is(await page.locator('#rqTableBody input[type=checkbox]').count() === 0,
      'مفيش مربعات اختيار — الطابور عرض بحت');
@@ -870,6 +853,11 @@ console.log('③-ب قطع مستنية الرجوع للمخزن');
   await page.waitForTimeout(300);
   is(await page.locator('#riBox').isVisible() && !(await page.locator('#rqBox').isVisible()) && !(await page.locator('#scanInput').isVisible()),
      '🔴 تاب «منتجات التسليم الجزئي» فيه قايمة القطع بس');
+  is(await page.locator('#riBox.unified-section .rq-head #riCount').count() === 1 &&
+     await page.locator('#riBox .tbl-bar #riResults').count() === 1 &&
+     (await page.locator('#riResults').textContent()) === (await page.locator('#riCount').textContent()) &&
+     await page.locator('#riBox .rq-title, #riBox .rq-sub').count() === 0,
+     '🔴 تاب «منتجات التسليم الجزئي» بنفس شكل كارت «مرتجعات + لواغي»: عدّاد + «آخر تحديث» + صف «النتائج»، وبلا عنوان ولا سطر توضيحي (v1.62.0)');
   is(await page.evaluate(() => document.activeElement?.id) === 'scanInputRi', 'الفوكس راح لمربع سكان القطع في التاب ده');
   // سكان قطعة من مربع التاب ده
   await page.fill('#scanInputRi', '55555555');
