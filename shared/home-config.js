@@ -200,7 +200,7 @@ const ECO_HOME = {
     //    ⚠️ بلا مربعات تقسيمة — «مرتجع» و«ملغي» بيتفرقوا في **الصفحة** (عمود الحالة).
     warehouse: {
       href: 'Package-Transfer-To-Warehouse.html', idCls: 'id-warehouse', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-6 9 6v9H3z"/><path d="M12 17v-5M9.5 14.5L12 12l2.5 2.5"/></svg>`,
-      name: 'جاهز للرجوع للمخزن', code: 'مرتجع أو ملغي ولسه ما اترجّعش',
+      name: 'مرتجعات + لواغي المكتب', code: 'مرتجع أو ملغي ولسه ما اترجّعش',
       err: 'تعذّر جلب طابور استلام المرتجعات',
       ...ecoRawQueue({
         cacheKey: ECO_CACHE_WAREHOUSE,

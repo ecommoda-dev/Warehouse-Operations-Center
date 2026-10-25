@@ -4,7 +4,7 @@
 <!-- skills: html-builder v6.6.0 · worker-builder v3.3.0 · constants v2.6.0 · order-lifecycle v1.8.0 — 19-09-2026 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>قسم استلام المرتجعات — مركز عمليات المخزن</title>
+  <title>مرتجعات + لواغي المكتب — مركز عمليات المخزن</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 
@@ -179,12 +179,11 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
   .rq-unified tbody tr.rq-row td:nth-child(1) { grid-column: 1; grid-row: 1; white-space: nowrap; }
   .rq-unified tbody tr.rq-row td:nth-child(3) .type-text { white-space: normal; }
   .rq-unified tbody tr.rq-row td:nth-child(3) { grid-column: 2; grid-row: 1; }
-  .rq-unified tbody tr.rq-row td:nth-child(5) { grid-column: 3; grid-row: 1; }
+  .rq-unified tbody tr.rq-row td:nth-child(4) { grid-column: 3; grid-row: 1; }
   .rq-unified tbody tr.rq-row td:nth-child(2) { grid-column: 1 / 3; grid-row: 2; }
-  .rq-unified tbody tr.rq-row td:nth-child(6) { grid-column: 3; grid-row: 2; }
-  .rq-unified tbody tr.rq-row td:nth-child(4) { display: none; }
-  .rq-unified tbody tr.rq-row td:nth-child(7) { grid-column: 1 / -1; grid-row: 3; }
-  .rq-unified tbody tr.rq-row td:nth-child(7) .rq-add-btn { width: 100%; }
+  .rq-unified tbody tr.rq-row td:nth-child(5) { grid-column: 3; grid-row: 2; }
+  .rq-unified tbody tr.rq-row td:nth-child(6) { grid-column: 1 / -1; grid-row: 3; }
+  .rq-unified tbody tr.rq-row td:nth-child(6) .rq-add-btn { width: 100%; }
 }
 .rq-box { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); overflow: hidden; }
 .rq-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
@@ -213,21 +212,6 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .type-text { font-weight: 800; white-space: nowrap; }
 .type-text.type-s1 { color: var(--accent-dark); }
 .type-text.type-s2 { color: var(--purple-dark); }
-
-/* ── «موقع الشحنة» — العهدة **قبل** السكانة ───────────────────
-   ⚠️ نص ملوّن مش بادج، زي `.type-text` بالظبط: العمود ده جنب عمود «الحالة»
-      اللي فيه بادج فعلاً، وبادجين متلاصقين في صف واحد بيتقروا حاجة واحدة.
-   ⚠️ و«مش مسجّل» **رمادي مش أخضر** — الفاضي معناه «مش معروف» مش «في
-      المخزن». اللون الأخضر هنا كان هيقول للموظف إن الطرد هنا وهو مش عارف. */
-.wh-text { font-weight: 800; white-space: nowrap; }
-.wh-text.wh-office   { color: var(--accent-dark); }
-.wh-text.wh-courier  { color: var(--purple-dark); }
-.wh-text.wh-unknown  { color: var(--text-muted); }
-/* ⚠️ `.wh-home` مالهوش صف هنا — البوابة بتستبعد `Warehouse` («في المخزن
-   خلاص»). متساب عشان الكتلة تفضل **مطابقة** لنسخة `Package-Transfer-To-Office.html`
-   بالحرف؛ كلاس ناقص في ناحية واحدة بيكسر التطابق اللي القاعدة مبنية عليه
-   (نفس منطق `.scan-hint` في `Order-SKU-Barcode-Printer.html`). */
-.wh-text.wh-home     { color: var(--green-dark); }
 
 /* ══ §RECV — الاستلام قطعة قطعة (v1.51.0 · طلب أحمد 22-10-2026) ══
    بيظهر بعد سكان باركود الأوردر: قايمة قطع الطرد، وكل قطعة بتتعلّم بسكان
@@ -533,7 +517,19 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
            واحد للنسخة (Standards #24). الرقم هنا **مش** مكتوب بإيد. -->
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.56.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.57.0</span>
+          <span class="cl-ver-date">25-10-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>الاسم بقى <b>«مرتجعات + لواغي المكتب»</b> في الشاشة الرئيسية وفي الأداة (كان «جاهز للرجوع للمخزن» و«قسم استلام المرتجعات»).</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>اتشال العنوان «🏭 جاهز للرجوع للمخزن» فوق مربع الإدخال (فضل السطر التوضيحي).</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>اتشال عمود <b>«موقع الشحنة»</b> من الجدول — الطابور أصلاً بيعرض «في المكتب» بس. واجهة بحتة.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.56.0</span>
           <span class="cl-ver-date">25-10-2026</span>
         </div>
         <ul class="cl-items">
@@ -693,7 +689,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 <div class="eco-overlay" id="aboutOverlay" onclick="if(event.target===this)closeAbout()">
   <div class="eco-modal">
     <div class="eco-modal-hdr">
-      <span>ℹ️ عن الأداة — قسم استلام المرتجعات (مركز عمليات المخزن)</span>
+      <span>ℹ️ عن الأداة — مرتجعات + لواغي المكتب (مركز عمليات المخزن)</span>
       <button class="modal-close-x" onclick="closeAbout()">✕</button>
     </div>
     <div class="eco-modal-body">
@@ -936,7 +932,6 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
          العنوان والسطر التوضيحي (وفيه أرضية التاريخ من الـ Worker) في أول التاب خالص — فوق السكانر،
          زي عنوان الأدوات التانية. `#rqSub` بيتحدّث من `ordersSince` في الرد — ⛔ ممنوع التاريخ يتكتب بالإيد. -->
     <div class="queue-head" id="queueHead">
-      <div class="queue-title">🏭 جاهز للرجوع للمخزن</div>
       <div class="queue-sub" id="rqSub">مرتجع أو ملغي · مسجّل إنه في المكتب · قاهرة+جيزة وشو روم</div>
     </div>
 
@@ -1037,7 +1032,6 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
                       <th>رقم الأوردر</th>
                       <th>العنوان</th>
                       <th>نوع الأوردر</th>
-                      <th>موقع الشحنة</th>
                       <th>النتيجة</th>
                       <th>الوقت</th>
                       <th>إجراء</th>
@@ -2893,14 +2887,12 @@ function rqRender() {
     //    واحدة كان بيشيل المعلومة الوحيدة اللي بتفرّق بينهم.
     // ⚠️ «موقع الشحنة» — العهدة **قبل** السكانة: هي اللي بتقول للموظف
     //    الطرد جاي منين. الفاضية `—` مش `المخزن`: «مش معروف» ≠ «هنا».
-    const wh = rqWhereaboutsText(o.whereabouts);
     // 🔴 §UNIFIED (v1.54.0): نفس الأعمدة السبعة بتاعة صف «اتسجّلت» — «النتيجة» هنا `⏳ في انتظار التسجيل` و«الوقت» `—`
     // ➕ v1.55.0: عمود ثامن «إجراء» = زرار «➕ إضافة» (بدل نافذة الاختيار اليدوي) — `data-add-id` + listener واحد على الـ tbody
     return `<tr class="rq-row">
       <td>${orderLink(o.orderName, o.orderId)}</td>
       <td class="col-addr" title="${esc(o.address || '')}">${esc(o.address || '—')}</td>
       <td><span class="type-text ${typeClass}">${esc(typeLabel)}</span></td>
-      <td><span class="wh-text ${wh.cls}">${esc(wh.text)}</span></td>
       <td><span class="rq-pend-tag">⏳ في انتظار التسجيل</span></td>
       <td>—</td>
       <td><button class="btn btn-primary btn-sm rq-add-btn" type="button" data-add-id="${esc(String(o.orderId))}">➕ إضافة</button></td>
@@ -2919,22 +2911,6 @@ function rqTypeLabel(o) {
   if (o.s2Cycle === 'exchange') return 'استبدال';
   if (o.s2Cycle === 'return')   return 'استرجاع';
   return 'استبدال/استرجاع';
-}
-
-// ─── عهدة الطرد قبل السكانة ──────────────────────────────────
-// ⚠️ **نفس الدالة بالحرف في `Package-Transfer-To-Office.html`** — أي تعديل في الاتنين
-//    في نفس التمريرة (درس R1). وفرع `Warehouse` هنا **حارس**: البوابة
-//    بتستبعده («في المخزن خلاص») فمفروض مايوصلش — ولو وصل يومًا، الخانة
-//    بتقول القيمة بدل ما تسكت.
-function rqWhereaboutsText(v) {
-  if (v === 'Warehouse') return { cls: 'wh-home',    text: '🏬 في المخزن' };
-  if (v === 'Office')    return { cls: 'wh-office',  text: '🏢 في المكتب' };
-  if (v === 'Courier')   return { cls: 'wh-courier', text: '🚚 مع المندوب' };
-  if (v) return { cls: 'wh-unknown', text: `⚠️ ${v}` };
-  // ⚠️ فاضية = **مش معروف**، مش «في المخزن». أداة التغليف لسه ما بتكتبش
-  //    `Warehouse` وقت التغليف، فالفاضي هو الحالة الغالبة — وتسميته «المخزن»
-  //    كانت هتقول للموظف إن الطرد هنا وهو مش عارف.
-  return { cls: 'wh-unknown', text: '— مش مسجّل' };
 }
 
 // 🔴 **نزع سلاح الصف** — الأوردر اللي اتسجّل بيتشال من الطابور فورًا.
@@ -3121,7 +3097,7 @@ setInterval(riSetFresh, RQ_TICK_MS);   // نبضة عرض بس — صفر شبك
 // §INIT — التحميل (الجلسة اتأكدت فوق)
 // ══════════════════════════════════════════════════════════════
 document.getElementById('headerMount').innerHTML = ecoHeader({
-  icon: '🏭', title: 'قسم استلام المرتجعات', subtitle: 'مركز عمليات المخزن',
+  icon: '🏭', title: 'مرتجعات + لواغي المكتب', subtitle: 'مركز عمليات المخزن',
   session,
   // ⚠️ Chip التاب الحالي — بيظهر **بس وقت الـ Sticky** (شريط التابات بيتقفل
   //    وقتها). كان جوّه الهيدر القديم، فبيتحط هنا في `extras` عشان الهيدر
