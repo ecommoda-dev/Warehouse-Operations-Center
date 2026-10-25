@@ -152,15 +152,6 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
       · `.eco-rbtn`) — اللوحة دي في **أربع** شاشات دلوقتي (الرئيسية ·
       التغليف · الطباعة · هنا)، ونسخة CSS خامسة معناها إن الشكل يفترق مع
       أول تعديل (درس R1). */
-/* §PICKER — اختيار أوردر من القايمة (فاتورة ضايعة/تالفة) */
-.pick-btn { white-space: nowrap; }
-.pick-list { display: flex; flex-direction: column; gap: 6px; max-height: 55vh; overflow-y: auto; margin: 10px 0; }
-.pick-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
-.pick-row:hover { background: var(--surface-2); }
-.pick-row .btn { white-space: nowrap; }
-.pick-row .pk-name { font-weight: 800; min-width: 70px; }
-.pick-row .pk-addr { flex: 1; font-size: 12px; color: var(--text-secondary); }
-.pick-empty { text-align: center; padding: 24px; color: var(--text-secondary); }
 /* ══ §UNIFIED — جدول واحد: «اتسجّلت» فوق و«مستنية» تحتها (v1.54.0 · طلب أحمد 25-10-2026) ══
    🔴 جدول واحد بنفس الأعمدة السبعة لكل الصفوف — الفرق بين الحالتين في **الشريط الفاصل**
       مش في معنى العمود. ⛔ ممنوع صف يحط ملاحظة في عمود «العنوان» أو «—» في «النوع» عشان
@@ -169,15 +160,17 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .sess-prog .bar { flex: 1 1 200px; height: 10px; border-radius: 99px; background: var(--surface-2); border: 1px solid var(--border); overflow: hidden; }
 .sess-prog .bar i { display: block; height: 100%; background: var(--green); }
 .sess-prog .txt { font-weight: 700; font-size: 13px; color: var(--text-primary); font-family: var(--font-mono); }
-.rq-unified { table-layout: fixed; }
+/* 🔴 جداول الصفحة على معيار الجداول: عرض الأعمدة بتتحكم فيه `core.js` §TABLE (قياس تلقائي + سحب لايف) —
+   ⛔ ممنوع `table-layout:fixed` بنسب ثابتة، وممنوع `ellipsis`/`nowrap` على خلية: العنوان بيلتف على سطرين
+   (الموظف لازم يشوف العنوان كامل). */
 .rq-unified thead th { padding: 7px 8px; }
 .rq-unified tbody td { padding: 6px 8px; font-size: 12.5px; overflow-wrap: anywhere; }
-.rq-unified tbody td.col-addr { min-width: 0; max-width: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.done-box { overflow: hidden; }
-.band-toggle { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 16px; border: 0; background: var(--green-light); color: var(--green-dark); font: inherit; font-weight: 800; font-size: 13px; cursor: pointer; text-align: start; }
-.band-toggle[aria-expanded="true"] { border-bottom: 1px solid var(--green-border); }
-.band-toggle:focus-visible { outline: 2px solid var(--green); outline-offset: -2px; }
-.band-cnt { min-width: 24px; padding: 0 8px; border-radius: 99px; text-align: center; font-size: 12px; font-family: var(--font-mono); background: var(--green); color: var(--on-accent); }
+.rq-unified tbody td.col-addr { min-width: 160px; max-width: none; white-space: normal; line-height: 1.6; }
+.rq-add-btn { white-space: nowrap; padding: 5px 12px; font-size: 12px; }
+/* §QUEUE-HEAD — عنوان الطابور فوق مربع الإدخال */
+.queue-head { margin: 0 2px 12px; }
+.queue-title { font-size: 17px; font-weight: 800; color: var(--text-primary); }
+.queue-sub { margin-top: 3px; font-size: 12px; color: var(--text-secondary); }
 .mini-pills { display: flex; gap: 6px; flex-wrap: wrap; }
 .mini-pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 99px; font-size: 12px; font-weight: 700; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-secondary); }
 .mini-pill b { font-family: var(--font-mono); color: var(--text-primary); }
@@ -196,10 +189,12 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
   .rq-unified tbody tr.rq-row td:nth-child(1) { grid-column: 1; grid-row: 1; white-space: nowrap; }
   .rq-unified tbody tr.rq-row td:nth-child(3) .type-text { white-space: normal; }
   .rq-unified tbody tr.rq-row td:nth-child(3) { grid-column: 2; grid-row: 1; }
-  .rq-unified tbody tr.rq-row td:nth-child(6) { grid-column: 3; grid-row: 1; }
+  .rq-unified tbody tr.rq-row td:nth-child(5) { grid-column: 3; grid-row: 1; }
   .rq-unified tbody tr.rq-row td:nth-child(2) { grid-column: 1 / 3; grid-row: 2; }
-  .rq-unified tbody tr.rq-row td:nth-child(7) { grid-column: 3; grid-row: 2; }
-  .rq-unified tbody tr.rq-row td:nth-child(4), .rq-unified tbody tr.rq-row td:nth-child(5) { display: none; }
+  .rq-unified tbody tr.rq-row td:nth-child(6) { grid-column: 3; grid-row: 2; }
+  .rq-unified tbody tr.rq-row td:nth-child(4) { display: none; }
+  .rq-unified tbody tr.rq-row td:nth-child(7) { grid-column: 1 / -1; grid-row: 3; }
+  .rq-unified tbody tr.rq-row td:nth-child(7) .rq-add-btn { width: 100%; }
 }
 .rq-box { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); overflow: hidden; }
 .rq-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
@@ -481,9 +476,13 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .act-btn.refresh:hover { border-color: var(--accent); color: var(--accent); }
 .act-btn.export { background: var(--green-light); border: 1px solid var(--green-border); color: var(--green); }
 .act-btn.export:hover { background: var(--green); color: var(--on-accent); }
-.tbl-body-wrap { max-height: 4000px; overflow: hidden; transition: max-height .3s ease;
-  border-radius: 0 0 var(--radius) var(--radius); }
-.tbl-body-wrap.collapsed { max-height: 0; }
+/* 🔴 Standards #46: مفيش سقف بكسل ثابت — الطي بـ`grid-template-rows` (الارتفاع `auto` فعليًا)،
+   فمفيش رقم يتخطّاه أي محتوى والصفوف الزيادة عمرها ما بتتقصّ بصمت. */
+.tbl-body-wrap { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 1fr;
+  transition: grid-template-rows .3s ease; border-radius: 0 0 var(--radius) var(--radius); }
+.tbl-body-wrap > * { min-height: 0; }
+.tbl-body-wrap.collapsed { grid-template-rows: 0fr; overflow: hidden; }
+.tbl-body-wrap.collapsed > * { overflow: hidden; }
 .tbl-scroll { overflow-x: auto; border-radius: 0 0 var(--radius) var(--radius); }
 
 .sortable-th { cursor: pointer; user-select: none; transition: background .12s, color .12s; }
@@ -532,23 +531,6 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
 </div><!-- /.sticky-header-wrap -->
 
-<!-- §PICKER — اختيار أوردر من القايمة -->
-<div class="eco-overlay" id="pickOverlay">
-  <div class="eco-modal">
-    <div class="eco-modal-hdr">
-      <span>📋 اختار الأوردر الراجع</span>
-      <button class="modal-close-x" type="button" onclick="closeOrderPicker()">✕</button>
-    </div>
-    <div class="eco-modal-body">
-      <input id="pickSearch" class="scan-input" type="text" placeholder="ابحث برقم الأوردر أو العنوان..." autocomplete="off" aria-label="بحث في الأوردرات" oninput="renderOrderPicker()" />
-      <div class="pick-list" id="pickList"></div>
-      <div style="display:flex; gap:10px; justify-content:flex-start;">
-        <button class="btn btn-outline" type="button" onclick="closeOrderPicker()">إلغاء</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- Changelog Modal -->
 <div class="eco-overlay" id="changelogOverlay" onclick="if(event.target===this)closeChangelog()">
   <div class="eco-modal">
@@ -562,7 +544,30 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
            واحد للنسخة (Standards #24). الرقم هنا **مش** مكتوب بإيد. -->
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.54.1</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.55.1</span>
+          <span class="cl-ver-date">25-10-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>جدول «اتسجّلت» بقى على معيار الجداول زي جدول الطابور (كارت موحّد + صف «النتائج» + فلاتر رأس العمود) وفضل مطوي افتراضيًا.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>اتشال عمود «الحالة» من جدولَي الطابور و«اتسجّلت».</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.55.0</span>
+          <span class="cl-ver-date">25-10-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>جدول «جاهز للرجوع للمخزن» بقى على <b>معيار الجداول</b> (كارت واحد: صف «النتائج» + الجدول) — فلاتر في رأس كل عمود، عناوين ثابتة، عرض الأعمدة بالسحب، والعنوان بيلتف على سطرين بدل ما يتقص.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>عنوان الطابور («🏭 جاهز للرجوع للمخزن» + السطر التوضيحي) بقى <b>فوق مربع الإدخال</b> خالص.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>زرار «📋 تسجيل أوردر يدوي» ونافذة الاختيار اتشالوا — بدالهم زرار <b>«➕ إضافة»</b> في آخر كل صف من الجدول (نفس مسار السكان).</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.54.1</span>
           <span class="cl-ver-date">25-10-2026</span>
         </div>
         <ul class="cl-items">
@@ -925,13 +930,20 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
             الدائم في تاب «السجل»/D1 زي ما هو.
          ⛔ **عرض بحت:** الحارس الحقيقي لسه في الـ Worker، ومفيش تغيير في الكتابة ولا
             في نتايج `rejected`/`already` — نفس الصفوف بنفس الرسايل. -->
+    <!-- ══ §QUEUE-HEAD — عنوان الطابور فوق مربع الإدخال (v1.55.0 · طلب أحمد 25-10-2026) ══
+         العنوان والسطر التوضيحي (وفيه أرضية التاريخ من الـ Worker) في أول التاب خالص — فوق السكانر،
+         زي عنوان الأدوات التانية. `#rqSub` بيتحدّث من `ordersSince` في الرد — ⛔ ممنوع التاريخ يتكتب بالإيد. -->
+    <div class="queue-head" id="queueHead">
+      <div class="queue-title">🏭 جاهز للرجوع للمخزن</div>
+      <div class="queue-sub" id="rqSub">مرتجع أو ملغي · مسجّل إنه في المكتب · قاهرة+جيزة وشو روم</div>
+    </div>
+
     <div class="card" id="scanCard" style="margin-bottom:16px;">
       <div class="card-body" style="display:flex; flex-direction:column; gap:12px; padding:0;">
         <div class="scan-row">
           <input id="scanInput" class="scan-input" type="text"
             placeholder="امسح باركود الأوردر الراجع هنا..." autocomplete="off" autofocus
             aria-label="باركود الأوردر" />
-          <button class="btn btn-primary pick-btn" id="pickOrderBtn" type="button" onclick="openOrderPicker()">📋 تسجيل أوردر يدوي</button>
         </div>
 
         <div class="sess-prog" id="sessProg" style="display:none;">
@@ -987,41 +999,46 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
                 الحارس الحقيقي في الـ Worker وقت السكان، وهو اللي بيقرا
                 الأوردر حيًّا. ⛔ والنافذة **مش شرط أهلية**: الأوردر الأقدم
                 منها مش في القايمة بس **بيتسكن عادي**. -->
-        <!-- ══ §DONE-BOX — جدول «اتسجّلت» (v1.54.1 · طلب أحمد 25-10-2026) ══
-             جدول كامل **منفصل** بنفس الأعمدة السبعة، مطوي افتراضيًا بعدّاد، وفوق جدول
-             «جاهز للرجوع للمخزن». بيظهر بس لما يكون فيه صف اتسجّل. -->
-        <div class="rq-box done-box" id="doneBox" style="display:none; margin-bottom:16px;">
-          <button class="band-toggle done-head" id="doneToggle" type="button" aria-expanded="false" aria-controls="doneTableWrap">
-            <span>✅ اتسجّلت في الصفحة دي</span><span class="band-cnt" id="doneCnt">0</span><span id="doneChev" aria-hidden="true">▸</span>
-          </button>
-          <div class="table-wrap" id="doneTableWrap" style="display:none;">
-            <table class="data-table rq-unified">
-              <colgroup>
-                <col style="width:9%"><col style="width:26%"><col style="width:10%"><col style="width:13%">
-                <col style="width:12%"><col style="width:20%"><col style="width:10%">
-              </colgroup>
-              <thead>
-                <tr>
-                  <th>رقم الأوردر</th>
-                  <th>العنوان</th>
-                  <th>نوع الأوردر</th>
-                  <th>الحالة</th>
-                  <th>موقع الشحنة</th>
-                  <th>النتيجة</th>
-                  <th>الوقت</th>
-                </tr>
-              </thead>
-              <tbody id="sessionBody"></tbody>
-            </table>
+        <!-- ══ §DONE-BOX — جدول «اتسجّلت» على معيار الجداول (v1.55.1 · طلب أحمد 25-10-2026) ══
+             نفس شكل جدول الطابور: كارت موحّد ← صف «النتائج» (سهم الطي + chip الرقم) ← الجدول. مطوي افتراضيًا،
+             وبيظهر بس لما يكون فيه صف اتسجّل. الفلاتر في رأس العمود وعرض الأعمدة بالسحب من `core.js` §TABLE. -->
+        <div class="unified-section" id="doneBox" style="display:none;">
+          <div class="tbl-bar" id="doneToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="doneBodyWrap">
+            <div class="tbl-bar-right">
+              <span class="tbl-toggle" id="doneChev" aria-hidden="true">▲</span>
+              <div class="results-wrap">
+                <span class="results-label">✅ اتسجّلت في الصفحة دي:</span>
+                <span class="results-count" id="doneCnt">0</span>
+              </div>
+            </div>
+          </div>
+          <div class="tbl-body-wrap collapsed" id="doneBodyWrap">
+            <div class="tbl-scroll">
+              <div class="table-wrap" id="doneTableWrap">
+                <table class="data-table rq-unified">
+                  <thead>
+                    <tr>
+                      <th>رقم الأوردر</th>
+                      <th>العنوان</th>
+                      <th>نوع الأوردر</th>
+                      <th>موقع الشحنة</th>
+                      <th>النتيجة</th>
+                      <th>الوقت</th>
+                    </tr>
+                  </thead>
+                  <tbody id="sessionBody"></tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="rq-box" id="rqBox">
+        <!-- ══ §UNIFIED-SECTION — جدول الطابور بمعيار الجداول (v1.55.0 · `data-table-standard.md`) ══
+             كارت واحد: لوحة العدّ + «آخر تحديث» ← صف «النتائج» (سهم الطي + chip الرقم) ← الجدول.
+             الفلاتر في رأس كل عمود (`ecoTablesAuto` من `core.js`)، وعناوين ثابتة وسحب عرض الأعمدة منه كمان.
+             ⛔ ممنوع `overflow:hidden` على `.unified-section` · وممنوع `table-layout:fixed` بنسب ثابتة. -->
+        <div class="unified-section" id="rqBox">
           <div class="rq-head">
-            <div>
-              <div class="rq-title">🏭 جاهز للرجوع للمخزن</div>
-              <div class="rq-sub" id="rqSub">مرتجع أو ملغي · مسجّل إنه في المكتب · قاهرة+جيزة وشو روم</div>
-            </div>
             <div class="count-badge">
               <span class="count-num" id="rqCount">—</span>
               <span class="count-lbl">أوردر</span>
@@ -1042,29 +1059,38 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           </div>
           <div id="rqFail" class="rq-fail" style="display:none;"></div>
           <div id="rqTrunc" class="rq-warn" style="display:none;"></div>
-          <div class="rq-body">
-            <div class="table-wrap" id="rqTableWrap" style="display:none;">
-              <table class="data-table rq-unified">
-                <colgroup>
-                  <col style="width:9%"><col style="width:26%"><col style="width:10%"><col style="width:13%">
-                  <col style="width:12%"><col style="width:20%"><col style="width:10%">
-                </colgroup>
-                <thead>
-                  <tr>
-                    <th>رقم الأوردر</th>
-                    <th>العنوان</th>
-                    <th>نوع الأوردر</th>
-                    <th>الحالة</th>
-                    <th>موقع الشحنة</th>
-                    <th>النتيجة</th>
-                    <th>الوقت</th>
-                  </tr>
-                </thead>
-                <tbody id="rqTableBody"></tbody>
-              </table>
+
+          <div class="tbl-bar" onclick="toggleRqTable()">
+            <div class="tbl-bar-right">
+              <span class="tbl-toggle open" id="rqToggleIcon">▲</span>
+              <div class="results-wrap">
+                <span class="results-label">النتائج:</span>
+                <span class="results-count" id="rqResults">—</span>
+              </div>
             </div>
-            <div id="rqEmpty" class="rq-empty">
-              <div class="eco-loadbox" role="status" aria-live="polite"><span class="eco-load-spin" aria-hidden="true"></span><div class="eco-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div></div>
+          </div>
+
+          <div class="tbl-body-wrap" id="rqBodyWrap">
+            <div class="tbl-scroll">
+              <div class="table-wrap" id="rqTableWrap" style="display:none;">
+                <table class="data-table rq-unified">
+                  <thead>
+                    <tr>
+                      <th>رقم الأوردر</th>
+                      <th>العنوان</th>
+                      <th>نوع الأوردر</th>
+                      <th>موقع الشحنة</th>
+                      <th>النتيجة</th>
+                      <th>الوقت</th>
+                      <th>إجراء</th>
+                    </tr>
+                  </thead>
+                  <tbody id="rqTableBody"></tbody>
+                </table>
+              </div>
+              <div id="rqEmpty" class="rq-empty">
+                <div class="eco-loadbox" role="status" aria-live="polite"><span class="eco-load-spin" aria-hidden="true"></span><div class="eco-load-title">⏳ جاري الاستعلام عن الأوردرات برجاء الانتظار ...</div></div>
+              </div>
             </div>
           </div>
         </div>
@@ -1680,43 +1706,18 @@ let scanBusy    = false;       // بيمنع سكانتين متوازيتين �
 // قطع اتعلّمت (v1.51.0) — الخروج كان هيمسح اللي اتسكن من غير ما يتسجّل.
 let recv = null;   // لوحة الاستلام المفتوحة (§RECV-JS) — { code, ack, order, machine, cycleKey, itemsUnknown, units }
 window.shellIsBusy = () => scanBusy || (!!recv && recv.units.some(u => u.state !== 'wait'));
-// ─── §PICKER — اختيار من القايمة بدل السكان (فاتورة ضايعة/تالفة) ───
-// نفس مسار السكان بالظبط (`openOrder`) — مفيش كتابة جديدة. القايمة هي `rqState.orders`
-// (نفس طابور «جاهز للرجوع للمخزن»). أوردر واحد في المرة: لوحة الاستلام بتفتح لأوردر واحد.
-function openOrderPicker() {
-  if (scanBusy || recv) { showToast('خلّص الأوردر المفتوح للاستلام الأول', 'warn'); return; }
-  document.getElementById('pickSearch').value = '';
-  renderOrderPicker();
-  document.getElementById('pickOverlay').classList.add('open');
-  document.getElementById('pickSearch').focus();
-}
-function closeOrderPicker() {
-  document.getElementById('pickOverlay').classList.remove('open');
-  focusScan();
-}
-function renderOrderPicker() {
-  const q = document.getElementById('pickSearch').value.trim().toLowerCase();
-  const rows = rqState.orders.filter(o => !q || `${o.orderName} ${o.address || ''}`.toLowerCase().includes(q));
-  const list = document.getElementById('pickList');
-  if (!rows.length) {
-    list.innerHTML = `<div class="pick-empty">${rqState.orders.length ? 'مفيش نتيجة للبحث' : 'مفيش أوردرات في الطابور — حدّث الطابور أو اسكن الباركود'}</div>`;
-    return;
-  }
-  // الإضافة بضغطة واحدة على زرار الصف نفسه — بـ`data-id` + listener واحد (مش `onclick` بنص)
-  list.innerHTML = rows.map(o => `<div class="pick-row">
-      <button class="btn btn-primary btn-sm" type="button" data-pick-id="${esc(String(o.orderId))}">➕ إضافة</button>
-      <span class="pk-name">${esc(o.orderName)}</span>
-      <span class="pk-addr">${esc(o.address || '—')}</span>
-      <span>${esc(rqTypeLabel(o))}</span>
-      <span>${esc(rqStatusOf(o).text || '')}</span>
-    </div>`).join('');
-}
-document.getElementById('pickList').addEventListener('click', e => {
-  const btn = e.target.closest('[data-pick-id]');
-  if (!btn) return;
-  const id = btn.dataset.pickId;
-  closeOrderPicker();
+// ─── §ADD-BTN — زرار «➕ إضافة» في كل صف من جدول الطابور (v1.55.0 · طلب أحمد 25-10-2026) ───
+// بيحل محل نافذة «اختيار من القايمة»: نفس مسار السكان بالظبط (`openOrder`) — مفيش كتابة جديدة.
+// أوردر واحد في المرة: لوحة الاستلام بتفتح لأوردر واحد. الزرار بـ`data-add-id` + listener واحد على الـ tbody
+// (مش `onclick` بنص) — الجدول بيتعاد رسمه كل جلب وكل تسجيل، فالـ listener لازم يفضل على الأب الثابت.
+function rqAddOrder(id) {
+  if (scanBusy || recv) { showToast('خلّص الأوردر المفتوح للاستلام الأول', 'warning'); return; }
   openOrder(id, false);
+}
+document.getElementById('rqTableBody').addEventListener('click', e => {
+  const btn = e.target.closest('[data-add-id]');
+  if (!btn) return;
+  rqAddOrder(btn.dataset.addId);
 });
 
 // ─── §UNIFIED — مفيش جلسة (v1.54.0) ───
@@ -2142,7 +2143,6 @@ function rqDoneRowHTML(r) {
   const ref = r.ref;
   const typeTxt = ref ? rqTypeLabel(ref) : (r.machine === 's2' ? 'استبدال/استرجاع' : r.machine === 's1' ? 'عادي' : '—');
   const typeCls = (ref ? ref.machine : r.machine) === 's2' ? 'type-s2' : 'type-s1';
-  const st = ref ? rqStatusOf(ref) : null;
   // «موقع الشحنة» بعد السكانة: اللي اتسجّل/خلاص متعمل = `Warehouse`، والباقي (رفض/فشل) هو اللي كان قبلها
   const wasWritten = r.machine && (r.result === 'success' || r.result === 'warning' || r.result === 'already');
   const wh = wasWritten ? rqWhereaboutsText('Warehouse') : (ref ? rqWhereaboutsText(ref.whereabouts) : null);
@@ -2151,7 +2151,6 @@ function rqDoneRowHTML(r) {
       <td>${r.orderName ? orderLink(r.orderName, r.orderId) : `<span class="col-num">${esc(r.scanned)}</span>`}</td>
       <td class="col-addr" title="${esc(ref?.address || '')}">${esc(ref?.address || '—')}</td>
       <td>${typeTxt === '—' ? '—' : `<span class="type-text ${typeCls}">${esc(typeTxt)}</span>`}</td>
-      <td>${st ? `<span class="badge ${st.cls}">${esc(st.text)}</span>` : '—'}</td>
       <td>${wh ? `<span class="wh-text ${wh.cls}">${esc(wh.text)}</span>` : '—'}</td>
       <td><span class="badge ${b.cls}">${b.text}</span>${r.message ? `<div class="rq-note">${esc(r.message)}</div>` : ''}</td>
       <td class="col-num">${esc(formatTimeOnly(r.at.toISOString()))}</td>
@@ -2193,9 +2192,9 @@ function rqSyncTable() {
   if (empty) empty.style.display = hasPend ? 'none' : '';
   document.getElementById('doneBox').style.display = hasDone ? '' : 'none';
   document.getElementById('doneCnt').textContent = String(sessionRows.length);
-  document.getElementById('doneTableWrap').style.display = hasDone && doneOpen ? '' : 'none';
+  document.getElementById('doneBodyWrap').classList.toggle('collapsed', !(hasDone && doneOpen));
   document.getElementById('doneToggle').setAttribute('aria-expanded', String(doneOpen));
-  document.getElementById('doneChev').textContent = doneOpen ? '▾' : '▸';
+  document.getElementById('doneChev').classList.toggle('open', doneOpen);
 
   const regd = sessionRows.filter(r => r.machine && (r.result === 'success' || r.result === 'warning')).length;
   const total = regd + rqState.orders.length;
@@ -2208,7 +2207,9 @@ function rqSyncTable() {
     document.getElementById('sessProgTxt').textContent = `اتسجّل ${regd} من ${total}`;
   }
 }
-document.getElementById('doneToggle').addEventListener('click', () => { doneOpen = !doneOpen; rqSyncTable(); focusScan(); });
+const doneToggleFire = () => { doneOpen = !doneOpen; rqSyncTable(); focusScan(); };
+document.getElementById('doneToggle').addEventListener('click', doneToggleFire);
+document.getElementById('doneToggle').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doneToggleFire(); } });
 
 // ─── §TOOL-JS::outcomeModal — المدخل الوحيد للنافذة ───
 // 🔴 نافذة واحدة بأربع نغمات — مش نافذة لكل حالة. أربع كتل منفصلة كانت
@@ -2326,6 +2327,14 @@ function toggleFilters() {
   document.getElementById('fltToggleIcon').classList.toggle('open', fltOpen);
 }
 let tblOpen = true;
+// طي/فتح جدول الطابور (v1.55.0) — نفس سلوك `toggleTable` بتاع السجل، بـ ids مستقلة
+let rqTblOpen = true;
+function toggleRqTable() {
+  rqTblOpen = !rqTblOpen;
+  document.getElementById('rqBodyWrap').classList.toggle('collapsed', !rqTblOpen);
+  document.getElementById('rqToggleIcon').classList.toggle('open', rqTblOpen);
+}
+
 function toggleTable() {
   tblOpen = !tblOpen;
   document.getElementById('tblBodyWrap').classList.toggle('collapsed', !tblOpen);
@@ -2981,6 +2990,8 @@ function rqRender() {
   const shown = rqState.at ? String(rows.length) : '—';
   if (cntEl) cntEl.textContent = shown;
   if (badge) badge.textContent = shown;
+  const resEl = document.getElementById('rqResults');   // chip «النتائج» في صف الجدول — نفس الرقم بالحرف
+  if (resEl) resEl.textContent = shown;
 
   if (!rows.length) {
     tbody.innerHTML = '';
@@ -3021,19 +3032,19 @@ function rqRender() {
     //    «مرتجع» و«ملغي» بيتصرّف عليهم الموظف بطريقتين مختلفتين (المرتجع
     //    بيتفتح ويتراجع · الملغي بيترجّع على الرف زي ما هو)، فجمعهم في كلمة
     //    واحدة كان بيشيل المعلومة الوحيدة اللي بتفرّق بينهم.
-    const st = rqStatusOf(o);
     // ⚠️ «موقع الشحنة» — العهدة **قبل** السكانة: هي اللي بتقول للموظف
     //    الطرد جاي منين. الفاضية `—` مش `المخزن`: «مش معروف» ≠ «هنا».
     const wh = rqWhereaboutsText(o.whereabouts);
     // 🔴 §UNIFIED (v1.54.0): نفس الأعمدة السبعة بتاعة صف «اتسجّلت» — «النتيجة» هنا `⏳ في انتظار التسجيل` و«الوقت» `—`
+    // ➕ v1.55.0: عمود ثامن «إجراء» = زرار «➕ إضافة» (بدل نافذة الاختيار اليدوي) — `data-add-id` + listener واحد على الـ tbody
     return `<tr class="rq-row">
       <td>${orderLink(o.orderName, o.orderId)}</td>
       <td class="col-addr" title="${esc(o.address || '')}">${esc(o.address || '—')}</td>
       <td><span class="type-text ${typeClass}">${esc(typeLabel)}</span></td>
-      <td><span class="badge ${st.cls}">${esc(st.text)}</span></td>
       <td><span class="wh-text ${wh.cls}">${esc(wh.text)}</span></td>
       <td><span class="rq-pend-tag">⏳ في انتظار التسجيل</span></td>
       <td>—</td>
+      <td><button class="btn btn-primary btn-sm rq-add-btn" type="button" data-add-id="${esc(String(o.orderId))}">➕ إضافة</button></td>
     </tr>`;
   }).join('');
   rqSyncTable();

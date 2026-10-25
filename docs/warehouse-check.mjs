@@ -422,18 +422,35 @@ console.log('① الجلسة والهيدر الموحّد');
      '🔴 مربع السكان لازق في أول البطاقة — مفيش مساحة فاضية فوقه', String(await page.evaluate(() => document.getElementById('scanInput').getBoundingClientRect().top - document.getElementById('scanCard').getBoundingClientRect().top)));
   is(await page.locator('#sessionWrap').count() === 0 && await page.locator('#rqTableWrap table').count() === 1,
      'جدول الطابور فيه جدول واحد، وجدول «اتسجّلت» منفصل عنه (#doneBox)');
-  // §PICKER (v1.53.2): اختيار أوردر من القايمة بدل السكان
-  is(await page.locator('#pickOrderBtn').isVisible(), 'زرار «اختيار من القائمة» ظاهر جنب السكانر');
-  await page.click('#pickOrderBtn');
-  const pickN = await page.locator('#pickList .pick-row').count();
-  is(await page.locator('#pickOverlay').evaluate(e => e.classList.contains('open')) && pickN === (await page.evaluate(() => rqState.orders.length)) && pickN > 0,
-     '🔴 النافذة فيها نفس أوردرات الطابور', String(pickN));
-  is(await page.locator('#pickAddBtn').count() === 0 && await page.locator('#pickList .pick-row button[data-pick-id]').count() === pickN,
-     '🔴 زرار «إضافة» جنب كل أوردر ومفيش زرار إضافة تحت');
-  await page.locator('#pickList .pick-row button[data-pick-id]').first().click();
+  // §ADD-BTN (v1.55.0): زرار «➕ إضافة» في كل صف بدل نافذة «اختيار من القائمة»
+  is(await page.locator('#pickOrderBtn').count() === 0 && await page.locator('#pickOverlay').count() === 0,
+     '🔴 زرار «تسجيل أوردر يدوي» ونافذة الاختيار اتشالوا');
+  const addN = await page.locator('#rqTableBody button[data-add-id]').count();
+  is(addN === (await page.evaluate(() => rqState.orders.length)) && addN > 0,
+     '🔴 زرار «➕ إضافة» في كل صف من الطابور', String(addN));
+  is((await page.locator('#rqTableWrap thead th').allInnerTexts()).map(t => t.trim()).includes('إجراء'),
+     'عمود «إجراء» في رأس الجدول');
+  // العنوان فوق مربع الإدخال خالص (v1.55.0)
+  is(await page.evaluate(() => {
+       const h = document.getElementById('queueHead'), c = document.getElementById('scanCard');
+       return !!h && !!(h.compareDocumentPosition(c) & Node.DOCUMENT_POSITION_FOLLOWING) && h.textContent.includes('جاهز للرجوع للمخزن');
+     }), '🔴 عنوان «🏭 جاهز للرجوع للمخزن» فوق مربع الإدخال');
+  is(await page.evaluate(() => !document.getElementById('rqBox').textContent.includes('مرتجع أو ملغي ·')) && (await page.locator('#rqSub').textContent()).includes('مرتجع أو ملغي'),
+     'السطر التوضيحي (`#rqSub`) في العنوان مش جوّه كارت الجدول');
+  // معيار الجداول: كارت موحّد + صف «النتائج» بنفس رقم العدّاد + بلا table-layout ثابت ولا ellipsis
+  is(await page.locator('#rqBox.unified-section .tbl-bar #rqResults').count() === 1 &&
+     (await page.locator('#rqResults').textContent()) === (await page.locator('#rqCount').textContent()),
+     '🔴 صف «النتائج» في كارت موحّد ورقمه = عدّاد الطابور');
+  is(await page.evaluate(() => {
+       const c = document.querySelector('#rqTableBody td.col-addr'); const cs = getComputedStyle(c);
+       return cs.textOverflow !== 'ellipsis' && cs.whiteSpace !== 'nowrap';
+     }), '🔴 العنوان بيلتف (مفيش ellipsis ولا nowrap)');
+  is(await page.locator('#rqTableWrap table.eco-tbl-on').count() === 1 && await page.locator('#rqTableWrap thead .eco-hf').count() >= 4,
+     'فلاتر رأس العمود شغّالة على جدول الطابور (قمع في الأعمدة القابلة للفلترة)');
+  await page.locator('#rqTableBody button[data-add-id]').first().click();
   await page.waitForTimeout(900);
-  is(await page.locator('#recvBox').isVisible() && !(await page.locator('#pickOverlay').evaluate(e => e.classList.contains('open'))),
-     '🔴 الإضافة من القايمة فتحت لوحة الاستلام (نفس مسار السكان)');
+  is(await page.locator('#recvBox').isVisible(),
+     '🔴 «➕ إضافة» فتحت لوحة الاستلام (نفس مسار السكان)');
   is(!((await page.locator('#recvTableWrap thead').innerText()).includes('المنتج') && !(await page.locator('#recvTableWrap thead').innerText()).includes('باركود')) &&
      (await page.locator('#recvTableWrap thead th').allInnerTexts()).every(t => t.trim() !== 'المنتج'),
      '🔴 عمود «المنتج» اتشال من لوحة الاستلام');
@@ -536,12 +553,10 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
      '🔴 `ecoOfficeQueue` بترجّع رقم مختلف على نفس البيانات — البوابتان مش نسخة واحدة',
      `office ${officeCount} · warehouse ${gateCount}`);
 
-  // عمود «الحالة» — السبب اللي الأوردر في القايمة عشانه
+  // (v1.55.1) عمود «الحالة» اتشال من الجدولين — اتأكد من غيابه تحت
   const rowTxt = (n) => page.$$eval('#rqTableBody tr', (trs, nm) =>
     (trs.map(t => t.textContent).find(t => t.includes(nm)) || ''), n);
   const rowsTxt = await page.$$eval('#rqTableBody tr', trs => trs.map(t => t.textContent));
-  is((await rowTxt('#54727')).includes('مرتجع'), 'صف المرتجع عليه بادج «مرتجع»');
-  is((await rowTxt('#54580')).includes('ملغي'),  'صف الملغي عليه بادج «ملغي» — مش نفس البادج');
   // 🔴 v1.53.0 — صف S2 بيتقسّم من `s2Cycle`: استبدال · استرجاع · غير معروف (مش تخمين)
   const typeCell = async (n) => page.$$eval('#rqTableBody tr', (trs, nm) => {
     const tr = trs.find(t => t.textContent.includes(nm)); return tr ? tr.cells[2].textContent.trim() : '';
@@ -551,8 +566,6 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
   is(tRet === 'استرجاع', '🔴 `s2Cycle = return` → «استرجاع»', tRet);
   is(tUnk === 'استبدال/استرجاع', '🔴 `s2Cycle` فاضي → «استبدال/استرجاع» مش تخمين', tUnk);
   is(tS1 === 'عادي', 'صف S1 لسه «عادي»', tS1);
-  is((await rowTxt('#54173')).includes('مرتجع (استرجاع)') && (await rowTxt('#54301')).includes('مرتجع (استبدال)'),
-     'عمود «الحالة» بيتبع نفس النص (مصدر واحد `rqTypeLabel`)');
 
   // عمود «موقع الشحنة» — العهدة قبل السكانة
   is((await rowTxt('#54727')).includes('في المكتب'), 'عمود العهدة بيقول «في المكتب» للراجع من المكتب');
@@ -580,8 +593,8 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
   const cells = await page.$$eval('#rqTableBody tr:first-child td', td => td.length);
   is(cells === heads.length, 'خلايا الصف == أعمدة الهيدر', `${cells} ≠ ${heads.length}`);
   // 🔴 §UNIFIED — نفس الأعمدة السبعة لكل الصفوف
-  is(heads.join('|') === 'رقم الأوردر|العنوان|نوع الأوردر|الحالة|موقع الشحنة|النتيجة|الوقت',
-     '🔴 الأعمدة السبعة بالترتيب المتفق عليه', heads.join(' | '));
+  is(heads.join('|') === 'رقم الأوردر|العنوان|نوع الأوردر|موقع الشحنة|النتيجة|الوقت|إجراء',
+     '🔴 الأعمدة بالترتيب المتفق عليه (بلا «الحالة») + عمود «إجراء» (➕ إضافة) في الآخر', heads.join(' | '));
   is((await rowTxt('#54727')).includes('⏳ في انتظار التسجيل') && !(await rowTxt('#54727')).includes('مستنية'), 'صف الطابور عمود «النتيجة» فيه «⏳ في انتظار التسجيل»');
   // ⛔ ولا أثر لـ`updatedAt` في الصفحة نفسها
   const pageSrc = await page.content();
@@ -693,20 +706,22 @@ console.log('③ السكان — الاستلام قطعة قطعة (v1.51.0)')
   // 🔴 §UNIFIED — الصف المسجّل بيحتفظ بعنوانه ونوعه وحالته، وبنفس الأعمدة السبعة
   const drow = page.locator('#sessionBody tr', { hasText: '#54727' });
   const dcells = await drow.locator('td').allInnerTexts();
-  is(dcells.length === 7 && dcells[1].includes('شارع التحرير') && dcells[2].trim() === 'عادي' && dcells[3].includes('مرتجع') && dcells[4].includes('في المخزن') && dcells[5].includes('تم'),
-     '🔴 صف «اتسجّلت»: نفس الأعمدة السبعة · عنوان ونوع وحالة الأوردر محفوظين · «موقع الشحنة» بقى «في المخزن» · النتيجة «تم»', dcells.join(' | '));
+  is(dcells.length === 6 && dcells[1].includes('شارع التحرير') && dcells[2].trim() === 'عادي' && dcells[3].includes('في المخزن') && dcells[4].includes('تم'),
+     '🔴 صف «اتسجّلت»: ستة أعمدة (بلا «الحالة») · عنوان ونوع الأوردر محفوظين · «موقع الشحنة» بقى «في المخزن» · النتيجة «تم»', dcells.join(' | '));
   is(await page.locator('#doneBox').isVisible() && (await txt('#doneCnt')) === '1',
      '🔴 جدول «اتسجّلت» ظهر وعدّاده = ١');
-  is(await page.locator('#doneTableWrap').isHidden() && await page.locator('#doneToggle').getAttribute('aria-expanded') === 'false',
+  is(await page.locator('#doneBodyWrap').evaluate(e => e.classList.contains('collapsed')) && await page.locator('#doneToggle').getAttribute('aria-expanded') === 'false',
      '🔴 جدول «اتسجّلت» مطوي افتراضيًا');
   const prog = (await txt('#sessProgTxt'));
   is(await page.locator('#sessProg').isVisible() && /اتسجّل 1 من \d+/.test(prog), 'شريط التقدّم «اتسجّل ١ من N»', prog);
   await page.click('#doneToggle');
-  is(await page.locator('#doneTableWrap').isVisible() && await page.locator('#doneToggle').getAttribute('aria-expanded') === 'true',
+  is(await page.locator('#doneTableWrap').isVisible() && !(await page.locator('#doneBodyWrap').evaluate(e => e.classList.contains('collapsed'))) && await page.locator('#doneToggle').getAttribute('aria-expanded') === 'true',
      'الضغط على عنوان «اتسجّلت» بيفتح الجدول');
   const dHeads = await page.$$eval('#doneTableWrap thead th', t => t.map(x => x.textContent.trim()));
   const pHeads = await page.$$eval('#rqTableWrap thead th', t => t.map(x => x.textContent.trim()));
-  is(dHeads.length === 7 && dHeads.join('|') === pHeads.join('|'), '🔴 جدول «اتسجّلت» كامل بنفس الأعمدة السبعة بتاعة جدول الطابور', dHeads.join(' | '));
+  is(dHeads.length === 6 && dHeads.join('|') === pHeads.slice(0, 6).join('|') && !dHeads.includes('الحالة') && !pHeads.includes('الحالة'), '🔴 جدول «اتسجّلت» بنفس أعمدة الطابور (بلا «الحالة» في الاتنين)', dHeads.join(' | '));
+  is(await page.locator('#doneBox.unified-section .tbl-bar #doneCnt').count() === 1 && await page.locator('#doneTableWrap table.eco-tbl-on').count() === 1,
+     '🔴 جدول «اتسجّلت» على المعيار: كارت موحّد + صف «النتائج» + فلاتر رأس العمود');
   is(await page.evaluate(() => document.activeElement?.id) === 'scanInput', 'والفوكس بيرجع للسكانر');
   const order = await page.evaluate(() => document.getElementById('doneBox').compareDocumentPosition(document.getElementById('rqBox')) & Node.DOCUMENT_POSITION_FOLLOWING);
   is(!!order, 'جدول «اتسجّلت» فوق جدول الطابور');
@@ -822,10 +837,10 @@ console.log('③ السكان — الاستلام قطعة قطعة (v1.51.0)')
   await closeModal();
   // 🔴 §UNIFIED — الرفض و«خلاص متعمل» لسه بيتسجّلوا صف في الجلسة (بقوا جوّه شريط «اتسجّلت») بنفس رسايلهم
   const doneRows = await page.$$eval('#sessionBody tr', trs => trs.map(t => [t.cells.length, t.textContent]));
-  is(doneRows.every(r => r[0] === 7), 'كل صفوف «اتسجّلت» (تم · مرفوض · خلاص متعمل) بسبعة أعمدة', doneRows.map(r => r[0]).join(','));
+  is(doneRows.every(r => r[0] === 6), 'كل صفوف «اتسجّلت» (تم · مرفوض · خلاص متعمل) بستة أعمدة', doneRows.map(r => r[0]).join(','));
   is(doneRows.some(r => r[1].includes('مرفوض')) && doneRows.some(r => r[1].includes('خلاص متعمل')),
      '🔴 صف «مرفوض» وصف «خلاص متعمل» ظاهرين في شريط «اتسجّلت» زي ما كانوا في جدول الجلسة');
-  is(!(await page.locator('#sessionBody tr', { hasText: 'مرفوض' }).first().locator('td').nth(4).innerText()).includes('في المخزن'),
+  is(!(await page.locator('#sessionBody tr', { hasText: 'مرفوض' }).first().locator('td').nth(3).innerText()).includes('في المخزن'),
      '🔴 صف المرفوض «موقع الشحنة» فيه مش «في المخزن» — ما اتكتبش حاجة');
   is(scanCalls.length === 0, '🔴 ولا نداء `scan` واحد طول الجلسة — المسار كله `order_items`/`receive_order`');
 
