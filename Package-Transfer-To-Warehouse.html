@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<!-- skills: html-builder v6.6.0 · worker-builder v3.3.0 · constants v2.6.0 · order-lifecycle v1.8.0 — 19-09-2026 -->
+<!-- skills: html-builder v8.5.0 · worker-builder v3.3.0 · constants v2.6.0 · order-lifecycle v1.8.0 — 25-10-2026 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>مرتجعات + لواغي المكتب — مركز عمليات المخزن</title>
@@ -77,8 +77,6 @@
    §TOOL — Scanner tab content
    ══════════════════════════════════════════════════════════════ */
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
-.card-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.card-header h2 { font-size: 14px; font-weight: 600; color: var(--text-primary); }
 .card-body { padding: 20px; }
 
 .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: background .15s, opacity .15s; white-space: nowrap; font-family: var(--font-body); }
@@ -106,26 +104,18 @@
 .order-link:hover { text-decoration: underline; }
 .order-num  { font-family: var(--font-mono); font-weight: 600; font-size: 14px; color: var(--text-primary); }
 
-.pills-row { display: flex; gap: 10px; flex-wrap: wrap; }
-.pill { display: flex; flex-direction: column; align-items: center; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 18px; min-width: 80px; }
-.pill-val { font-size: 22px; font-weight: 800; color: var(--text-primary); font-family: var(--font-mono); }
-.pill-lbl { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
-.pill.green .pill-val { color: var(--green); }
-.pill.red   .pill-val { color: var(--red);   }
-.pill.amber .pill-val { color: var(--amber); }
-
 /* Data Tables — canonical rules: natural width, centered cells, vertical gridlines */
 .table-wrap { overflow-x: auto; }
 .data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 .data-table thead th {
   padding: 10px 12px; background: var(--surface-2); border-bottom: 1px solid var(--border);
-  font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .4px;
+  font-size: var(--th-size); font-weight: var(--th-weight); color: var(--th-color);
   white-space: nowrap; text-align: center;
 }
 .data-table tbody tr { border-bottom: 1px solid var(--border); }
 .data-table tbody tr:last-child { border-bottom: none; }
 .data-table tbody tr:hover { background: var(--surface-2); }
-.data-table tbody td { padding: 10px 12px; font-size: 13px; color: var(--text-primary); text-align: center; }
+.data-table tbody td { padding: 10px 12px; font-size: var(--td-size); font-weight: var(--td-weight); color: var(--text-primary); text-align: center; }
 .data-table thead th, .data-table tbody td { border-inline-start: 1px solid var(--border); }
 .data-table thead th:first-child, .data-table tbody td:first-child { border-inline-start: none; }
 .col-mono { font-family: var(--font-mono); direction: ltr; white-space: nowrap; }
@@ -140,18 +130,15 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .scan-row { display: flex; gap: 10px; align-items: stretch; }
 .scan-input { flex: 1; padding: 10px 14px; border: 2px solid var(--border-strong); border-radius: var(--radius-sm); font-size: 15px; color: var(--text-primary); background: var(--surface); transition: border-color .15s; font-family: var(--font-mono); direction: ltr; text-align: left; }
 .scan-input:focus { outline: none; border-color: var(--accent); }
-.scan-input::placeholder { color: var(--text-muted); font-family: var(--font-body); font-size: 13px; }
 
 .count-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--accent-light); border: 1.5px solid var(--accent-border); border-radius: var(--radius-sm); padding: 5px 14px; }
 .count-num { font-size: 22px; font-weight: 800; color: var(--accent); font-family: var(--font-mono); line-height: 1; }
 .count-lbl { font-size: 11px; color: var(--text-secondary); font-weight: 500; }
 
-/* ══ §READY-QUEUE — طابور «جاهز للتسليم لبوسطة» (v1.23.0) ══
+/* ══ §WAREHOUSE-QUEUE — طابور «جاهز للرجوع للمخزن» ══
    🔴 كلاسات الصفحة، مش الـ shell (قاعدة الأسبقية). اللي جاي من الـ shell
-      هو لوحة «آخر تحديث» بس (`.eco-fresh` · `.eco-ago` · `.eco-stamp-chip`
-      · `.eco-rbtn`) — اللوحة دي في **أربع** شاشات دلوقتي (الرئيسية ·
-      التغليف · الطباعة · هنا)، ونسخة CSS خامسة معناها إن الشكل يفترق مع
-      أول تعديل (درس R1). */
+      هو وحدة «آخر تحديث» + «تحديث» (`ecoFreshUnitHTML` · §FRESH-UNIT) —
+      نسخة CSS تانية معناها إن الشكل يفترق مع أول تعديل (درس R1). */
 /* ══ §UNIFIED — جدول واحد: «اتسجّلت» فوق و«مستنية» تحتها (v1.54.0 · طلب أحمد 25-10-2026) ══
    🔴 جدول واحد بنفس الأعمدة السبعة لكل الصفوف — الفرق بين الحالتين في **الشريط الفاصل**
       مش في معنى العمود. ⛔ ممنوع صف يحط ملاحظة في عمود «العنوان» أو «—» في «النوع» عشان
@@ -165,10 +152,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .rq-add-btn { white-space: nowrap; padding: 5px 12px; font-size: 12px; }
 /* §QUEUE-HEAD — عنوان الطابور فوق مربع الإدخال */
 .queue-head { margin: 0 2px 12px; }
-.queue-title { font-size: 17px; font-weight: 800; color: var(--text-primary); }
 .queue-sub { margin-top: 3px; font-size: 12px; color: var(--text-secondary); }
-.rq-done-row.is-ok { background: var(--green-light); }
-.rq-note { margin-top: 2px; font-size: 11px; color: var(--text-secondary); white-space: normal; }
 .rq-pend-tag { font-size: 11px; font-weight: 700; color: var(--text-muted); white-space: nowrap; }
 @media (max-width: 760px) {
   /* صف من سطرين بدل scroll أفقي: رقم الأوردر والنوع والنتيجة فوق، والعنوان والوقت تحت */
@@ -185,7 +169,6 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
   .rq-unified tbody tr.rq-row td:nth-child(6) { grid-column: 1 / -1; grid-row: 3; }
   .rq-unified tbody tr.rq-row td:nth-child(6) .rq-add-btn { width: 100%; }
 }
-.rq-box { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); overflow: hidden; }
 .rq-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
 .rq-title { font-size: 13.5px; font-weight: 700; color: var(--text-primary); }
 .rq-sub { font-size: 11px; color: var(--text-muted); }
@@ -195,17 +178,6 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .rq-empty .ico { font-size: 26px; margin-bottom: 6px; }
 .rq-fail { margin: 12px 16px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--red-light); border: 1px solid var(--red-border); color: var(--red-dark); font-size: 12.5px; }
 .rq-warn { margin: 12px 16px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--amber-light); border: 1px solid var(--amber-border); color: var(--amber-dark); font-size: 12.5px; }
-/* بادج عمر الأوردر — **نسخة طبق الأصل من `Orders-Packing-Checker.html`** بالحرف. الدرجة
-   نفسها بتيجي من `ecoDayLevel` في الـ shell فمستحيل تفترق؛ اللون هو
-   اللي مكرّر. ⚠️ أي تعديل يتعمل في الصفحتين في نفس التمريرة. */
-.time-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; white-space: nowrap; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-secondary); }
-.time-badge.tb-d0 { background: var(--green-light);  color: var(--green-dark);  border-color: var(--green-border); }
-.time-badge.tb-d1 { background: var(--amber-light);  color: var(--amber-dark);  border-color: var(--amber-border); }
-.time-badge.tb-d2 { background: var(--orange-light); color: var(--orange-dark); border-color: var(--orange-border); }
-.time-badge.tb-d3 { background: var(--red-light);    color: var(--red-dark);    border-color: var(--red-border); }
-.time-badge.tb-d7 { background: var(--crit);         color: var(--on-accent);   border-color: var(--crit); }
-.time-badge.tb-none { background: var(--surface-2);  color: var(--text-muted); }
-
 /* «نوع الأوردر» — نسخة طبق الأصل من `Orders-Packing-Checker.html` بالحرف: نص عادي بلون
    بدل بادج (عادي = أزرق التفاعل · استبدال = بنفسجي). نفس القاعدة —
    تعديل عليها يتعمل في الصفحتين في نفس التمريرة (درس R1). */
@@ -217,7 +189,6 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
    بيظهر بعد سكان باركود الأوردر: قايمة قطع الطرد، وكل قطعة بتتعلّم بسكان
    باركودها. ⚠️ الحالات التلاتة لكل قطعة: ⏳ مستنية · ✅ اتسكنت · ❌ ناقصة. */
 .recv-box { border: 2px solid var(--accent-border); border-radius: var(--radius-sm); background: var(--surface); overflow: hidden; }
-.recv-prog { margin-inline-start: auto; font-family: var(--font-mono); font-size: 20px; font-weight: 800; color: var(--accent-dark); direction: ltr; }
 .log-items { text-align: start; }
 .log-item { white-space: nowrap; }
 .recv-note { padding: 10px 16px; font-size: 12.5px; color: var(--amber-dark); background: var(--amber-light); border-bottom: 1px solid var(--amber-border); }
@@ -231,7 +202,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .u-state.s-miss { color: var(--red-dark); }
 .u-acts { display: inline-flex; gap: 6px; }
 .recv-img { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); cursor: zoom-in; display: block; }
-.img-full-ov { position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,.88); display: flex; align-items: center; justify-content: center; cursor: zoom-out; }
+.img-full-ov { position: fixed; inset: 0; z-index: 650; background: rgba(0,0,0,.88); display: flex; align-items: center; justify-content: center; cursor: zoom-out; }
 .img-full-ov img { max-width: 100vw; max-height: 100vh; object-fit: contain; }
 
 /* ══ §RI — «قطع مستنية الرجوع للمخزن» (دفتر D1 · v1.51.0) ══
@@ -241,7 +212,6 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .ri-src.src-order   { color: var(--amber-dark); }
 
 .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: var(--on-accent); border-radius: 50%; animation: spin .6s linear infinite; flex-shrink: 0; }
-.spinner-dark { border-color: rgba(0,0,0,.15); border-top-color: var(--accent); }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ══════════════════════════════════════════════════════════════
@@ -385,7 +355,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .ms-chip { display: flex; align-items: center; gap: 5px; background: var(--accent-light);
   color: var(--accent-dark); border: 1px solid var(--accent-border); border-radius: 20px;
   padding: 3px 6px 3px 10px; font-size: 11.5px; font-weight: 600; }
-.ms-chip button { border: none; background: rgba(37,99,235,.15); color: var(--accent-dark);
+.ms-chip button { border: none; background: var(--accent-border); color: var(--accent-dark);
   width: 16px; height: 16px; border-radius: 50%; font-size: 11px; cursor: pointer; line-height: 1; }
 .ms-chip button:hover { background: var(--accent); color: var(--on-accent); }
 
@@ -517,7 +487,44 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
            واحد للنسخة (Standards #24). الرقم هنا **مش** مكتوب بإيد. -->
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.57.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.60.0</span>
+          <span class="cl-ver-date">25-10-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔍 <b>مراجعة شاملة للواجهة على معيار الواجهات (html-builder v8.5.0)</b> — التابات التلاتة (مرتجعات + لواغي · منتجات التسليم الجزئي · سجل العمليات) والنوافذ. واجهة بحتة: صفر تغيير في الـ Worker أو الحارس أو الكتابة.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>⚠️ <b>إلغاء الاستلام</b> و<b>الاستلام اليدوي لقطعة</b> بقوا بيطلعوا <b>نافذة في الصفحة بتسمّي الأثر بالأرقام</b> بدل <code>confirm</code> المتصفح. وفي «إلغاء الاستلام» الزرار الرئيسي هو «رجوع للاستلام» — الضغطة العرضية على <code>Enter</code> ما تمسحش علامات الموظف.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🛡️ <b>حارس السكانر:</b> رقم أطول من ١٥ خانة (غالبًا باركودين اتسكنوا ورا بعض) بيطلّع تحذير وصوت <b>من غير ما يتبعت للـ Worker</b> — كان بيرجع «الأوردر مش موجود» وهي رسالة كاذبة.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>اتشالت نصوص الـ <code>placeholder</code> الرمادية من مربعَي السكان وحقل السنة (بتتقري كأنها قيمة مكتوبة على شاشة المحطة).</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>خط الجداول من التوكنز: العناوين ١٢px/٧٠٠ والخلايا ١٢.٥px/٦٠٠ (كانت عناوين ١١px بحروف كبيرة وخلايا ١٣px/٤٠٠).</span></li>
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>اسم موظف فيه <code>'</code> أو <code>&lt;</code> كان بيكسر قايمة فلتر الموظف وchips الفلاتر في تاب «سجل العمليات» — الأسماء بقت بتتهرّب.</span></li>
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>كل توستات التحذير بقت <code>warning</code> (الاسم الرسمي) بدل <code>warn</code>، وصورة المنتج المكبّرة بقت تحت التوست مش فوقه.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>مؤقّت السكانر بقى لكل مربع لوحده، وتاريخ فلتر «الفترة السريعة» ونطاقه من <code>core.js</code> (نسخة واحدة)، وتنضيف CSS ميّت، وتحديث «عن الأداة» (٢٥٠ يوم · عهدة «في المكتب» بس · مفيش تحديث تلقائي).</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.59.0</span>
+          <span class="cl-ver-date">25-10-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>⏱️ الطابور ودفتر القطع بيتفتحوا <b>من الكاش بصفر نداء</b> لو أحدث من ١٠ دقايق. التسجيل الناجح بيمسح الكاش، وزرار «تحديث» بيجيب طازة دايمًا. ⛔ الكاش للعرض بس — الحارس لسه الـ Worker وقت السكان.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.58.0</span>
+          <span class="cl-ver-date">25-10-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔄 «آخر تحديث منذ:» وزرار «تحديث» بقوا وحدة موحّدة بنفس شكل وسلوك صف الرئيسية (بلون عمر الرقم وبلا بادج رقم)، واتشال زرار «↺ تحديث» المكرر من صف النتائج.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.57.0</span>
           <span class="cl-ver-date">25-10-2026</span>
         </div>
         <ul class="cl-items">
@@ -709,12 +716,19 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <p><strong>المستخدمون المستهدفون:</strong> فريق المخزن — لحظة استلام
             الطرود الراجعة وترجيعها على الرف.</p>
 
+          <h4>التابات</h4>
+          <ul>
+            <li><b>📷 مرتجعات + لواغي</b> — مربع السكان (أوردر أو قطعة) + لوحة الاستلام قطعة قطعة + طابور «جاهز للرجوع للمخزن».</li>
+            <li><b>📦 منتجات التسليم الجزئي</b> — مربع سكان <b>قطع بس</b> + دفتر «قطع مستنية الرجوع للمخزن» (تسليم جزئي · ناقصة).</li>
+            <li><b>📋 سجل العمليات</b> — فلاتر server-side + صفحات + ترتيب + تصدير XLSX.</li>
+          </ul>
+
           <h4>🔴 دي معكوس «قسم تسليمات المكتب» على نفس الحقل</h4>
           <table>
             <tr><th></th><th>تسليمات المكتب</th><th>استلام المرتجعات (دي)</th></tr>
             <tr><td>الحالة المؤهلة</td><td><code>Ready</code></td><td><b><code>Returned</code> · <code>Cancelled</code></b></td></tr>
             <tr><td><b>الإلغاء</b></td><td>🔴 سبب رفض</td><td>🔴 <b>شرط أهلية</b></td></tr>
-            <tr><td>العهدة المقبولة قبل</td><td><code>Warehouse</code> أو فاضية</td><td><b><code>Office</code> · <code>Courier</code> · فاضية</b></td></tr>
+            <tr><td>العهدة المقبولة في الطابور</td><td><code>Warehouse</code> أو فاضية</td><td><b><code>Office</code> بس</b> (فلتر عرض — السكان بيقبل أي عهدة غير <code>Warehouse</code>)</td></tr>
             <tr><td>«خلاص متعمل»</td><td>العهدة <code>Office</code></td><td>العهدة <b><code>Warehouse</code></b></td></tr>
             <tr><td>القيمة المكتوبة</td><td><code>Office</code></td><td><b><code>Warehouse</code></b></td></tr>
           </table>
@@ -736,16 +750,20 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
               مفيش طرد S2 اتغلّف أصلاً (v1.52.0). ⚠️ أوردر اتلغى قبل ما يتغلّف
               <b>مفيهوش طرد أصلاً</b> — مفيش حاجة ترجع على الرف.</li>
             <li><b>عهدة الطرد مش <code>Warehouse</code></b> — <code>Warehouse</code>
-              بترجّع «خلاص متعمل» (محايدة)، و<code>Office</code>/<code>Courier</code>
-              <b>مقبولتين</b>: دول بالظبط الطريقان اللي الطرد بيرجع منهم.</li>
+              بترجّع «خلاص متعمل» (محايدة)، وباقي العهد (<code>Office</code> ·
+              <code>Courier</code> · فاضية) <b>مقبولة في السكان</b>: دول الطرق اللي
+              الطرد بيرجع منها. 🔴 <b>الطابور</b> أضيق (من v1.30.0): بيعرض عهدة
+              <code>Office</code> بس — فلتر عرض مش شرط أهلية.</li>
           </ol>
 
           <h4>كيف تعمل — Workflow</h4>
           <ol>
             <li>الدخول بيحصل <b>مرة واحدة</b> في الشاشة الرئيسية للهب — الصفحة دي
               مالهاش شاشة دخول.</li>
-            <li>الطابور بيتحمّل تلقائيًا ويقول إيه المرتجع/الملغي اللي المفروض
-              يرجع على الرف — <b>آخر ٢٥٠ يوم</b>.</li>
+            <li>الطابور بيتفتح من الكاش لو أحدث من ١٠ دقايق (وإلا بيتجاب من الـ
+              Worker)، ويقول إيه المرتجع/الملغي المسجّل «في المكتب» اللي المفروض
+              يرجع على الرف — <b>آخر ٢٥٠ يوم</b> (نافذة متحرّكة). مفيش تحديث
+              تلقائي: زرار «تحديث» بس.</li>
             <li>الموظف بيسكن باركود الأوردر — بتفتح <b>لوحة بقطع الطرد</b>، وبيسكن
               باركود كل قطعة (أو «ناقصة» / «استلام يدوي»). آخر قطعة = التسجيل
               بيحصل لوحده (v1.51.0). مفيش دفعة.</li>
@@ -761,7 +779,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <h4>الـ Endpoints الرئيسية</h4>
           <table>
             <tr><th>action</th><th>الوصف</th></tr>
-            <tr><td><code>get_ready_to_warehouse</code></td><td>المرتجع/الملغي في آخر ٣٠ يوم (تلات استعلامات) بحقوله الخام — <b>قراءة بحتة</b></td></tr>
+            <tr><td><code>get_ready_to_warehouse</code></td><td>المرتجع/الملغي في آخر ٢٥٠ يوم (تلات استعلامات على تمريرتين) بحقوله الخام — <b>قراءة بحتة</b></td></tr>
             <tr><td><code>order_items</code></td><td>(v1.51.0) قراءة الأوردر حيًّا + نفس الحكم + <b>قطع الطرد</b> — <b>قراءة بحتة</b>، والرفض/«خلاص متعمل» بيتسجّلوا صف زي ما كانوا</td></tr>
             <tr><td><code>receive_order</code></td><td>(v1.51.0) إعادة قراءة طازة + تحقق إن كل قطعة اتسكنت أو اتعلّمت ناقصة بإقرار → <code>metafieldsSet</code> (<code>Warehouse</code>) + سطور الدفتر (<code>received</code>/<code>missing</code>) + صف D1</td></tr>
             <tr><td><code>get_return_items</code></td><td>(v1.51.0) دفتر <code>warehouse_return_items</code> — القطع <code>pending</code> + <code>missing</code> (قراءة D1 بحتة)</td></tr>
@@ -773,7 +791,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
             <tr><td><code>get_config</code></td><td>بيرجّع <code>WORKER_VERSION</code> — الواجهة بتقارنه بـ <code>min</code></td></tr>
           </table>
 
-          <h4>⚙️ نتيجة كل سكانة — أربع حالات</h4>
+          <h4>⚙️ نتيجة كل سكانة</h4>
           <table>
             <tr><th>الحالة</th><th>معناها</th></tr>
             <tr><td><span class="badge badge-green">✓ تم</span></td><td>العهدة اتكتبت <b>واتأكدت من رد شوبيفاي</b> (<code>Warehouse</code>)</td></tr>
@@ -792,14 +810,16 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <ul>
             <li><code>shared/core.js</code> — الهوية والهيدر والإعدادات والتوست وحارس النسخة (نسخة واحدة مضمّنة للهب كله)</li>
             <li><code>shared/gates.js §WAREHOUSE-GATE</code> — 🔴 <b>مصدر الأهلية الوحيد في الواجهة</b> (<code>ecoWarehouseGate</code> · <code>ecoWarehouseQueue</code>). الصفحة دي <b>والشاشة الرئيسية</b> بينادوا نفس الدالة على نفس الرد. ⛔ <b>وممنوع ينسخ حارس الإلغاء من §OFFICE-GATE</b> — هناك رفض وهنا أهلية</li>
-            <li><code>§SCAN</code> — سكانر بمهلة (١٥٠ms للسكانة · ٤٠٠ms للكتابة)، نفس قيم <code>Orders-Packing-Checker.html</code> بالحرف</li>
+            <li><code>§SCAN</code> — سكانر بمهلة (١٥٠ms للسكانة · ٤٠٠ms للكتابة) ومؤقّت لكل مربع، نفس قيم <code>Orders-Packing-Checker.html</code> بالحرف</li>
+            <li><code>§SCAN::plausibility</code> — <code>scanImplausible</code>: أكتر من ١٥ رقم = باركودين ملزوقين، تحذير بلا نداء للـ Worker</li>
             <li><code>§TOOL-JS::routeScan</code> — باركود ٨–٩ أرقام = قطعة، غير كده = أوردر (v1.51.0)</li>
             <li><code>§TOOL-JS::openOrder</code> — نداء <code>order_items</code> (قراءة) ومعالجة النتايج</li>
             <li><code>§RECV-JS</code> — لوحة الاستلام قطعة قطعة + <code>receive_order</code>. مفتاح القطعة <code>lineItemId#unitIndex</code> = نفس صيغة الـ Worker بالحرف</li>
             <li><code>§RI-JS</code> + <code>receiveLooseItem</code> — «قطع مستنية الرجوع للمخزن» و<code>receive_item</code>. الرقم بنفس <code>derive</code> صف الرئيسية (<code>home-config.js</code> · <code>ECO_CACHE_RETURN_ITEMS</code>)</li>
             <li><code>§TOOL-JS::outcomeModal</code> — نافذة واحدة بأربع نغمات (مرفوض · خلاص متعمل · إقرار · فشل)، ومدخل واحد <code>showOutcome</code></li>
-            <li><code>§TOOL-JS::session</code> + <code>§UNIFIED</code> — شريط «اتسجّلت» جوّه جدول الطابور الموحّد + العدّادات وشريط التقدّم (مفيش جلسة بدء/إنهاء)</li>
-            <li><code>§WAREHOUSE-QUEUE-JS</code> — الطابور بالتحديث التلقائي وحراسه التلاتة</li>
+            <li><code>§UNIFIED</code> — شاشة واحدة: السكانر شغّال دايمًا (مفيش بدء/إنهاء جلسة) وجدول الطابور على معيار الجداول (<code>rqSyncTable</code>). الأثر الدائم للتسجيل في تاب «سجل العمليات» مش في الصفحة</li>
+            <li><code>§WAREHOUSE-QUEUE-JS</code> — الطابور: <code>rqLoad</code> + <code>§CACHE-TTL</code> (كاش أحدث من ١٠ دقايق = صفر نداء) و<code>§FRESH-UNIT</code> (وحدة «آخر تحديث» + «تحديث»). <b>مفيش تحديث تلقائي</b></li>
+            <li><code>§TOOL-JS::confirm</code> — إلغاء الاستلام والاستلام اليدوي بنافذة <code>showOutcome</code> بتسمّي الأثر (مفيش <code>confirm</code> المتصفح)</li>
             <li><code>§LOG-JS</code> — القسم الموحّد: فلاتر multi-select + فترة سريعة + جدول + صفحات + تصدير</li>
             <li><code>§LOG-JS::logParams</code> — المصدر الوحيد لفلاتر التلات نداءات</li>
             <li><code>§SHELL-JS::freezeOnScroll</code> — قفل الهيدر وشريط التابات بعتبة <b>مقيسة</b> مش رقم ثابت</li>
@@ -819,7 +839,9 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
             <li>🔴 أي استعلام خط أساس على السجل ده <b>لازم يفلتر على <code>extra.sourceTool</code></b> — من غيره بيعدّ صفوف <b>أربع</b> أدوات مع بعض (سكانرا بوسطة · تسليمات المكتب · دي)</li>
             <li><code>extra.result</code> — <code>success</code>/<code>warning</code>/<code>error</code>/<code>rejected</code>/<code>already</code></li>
             <li><code>extra.machine</code> — <code>S1</code> أو <code>S2</code>: <b>أنهي طرد</b> اتسجّل، مش حالة الأوردر</li>
-            <li><code>doneThisSession</code> — الأوردر اللي اتسجّل في الجلسة دي بيتشال من الطابور فورًا؛ الشاشة <b>لازم تتغيّر</b> بعد النجاح</li>
+            <li><code>rqState</code> / <code>riState</code> — الطابور ودفتر القطع. <code>rqRemove</code>/<code>riRemove</code> بتشيل الصف فورًا بعد النجاح وبتمسح الكاش؛ الشاشة <b>لازم تتغيّر</b> بعد النجاح</li>
+            <li><code>ECO_CACHE_WAREHOUSE</code> · <code>ECO_CACHE_RETURN_ITEMS</code> · <code>ECO_CACHE_TTL_MS</code> (shell) — كاش العرض (١٠ دقايق). ⛔ للعرض بس، مش حارس</li>
+            <li><code>recv</code> — لوحة الاستلام المفتوحة (<code>shellIsBusy</code> بيقراها عشان الخروج التلقائي مايمسحش قطع اتعلّمت)</li>
           </ul>
 
           <h4>الـ Workers اللي الصفحة دي بتناديهم</h4>
@@ -839,12 +861,14 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
               بيجيب المرتجع/الملغي بس، والأهلية بتتحسب في
               <code>§WAREHOUSE-GATE</code> بتاع الـ shell — <b>مصدر واحد</b>
               للصفحة وللشاشة الرئيسية.</li>
-            <li>🔴 <b>نافذة الطابور ٣٠ يوم.</b> <code>Returned</code> و
-              <code>Cancelled</code> حالتان <b>نهائيتان بتتراكم</b> — كل مرتجع وكل
-              ملغي في تاريخ المتجر بيطابق الفلتر، ومن غير النافذة الاستعلام بيرجّع
-              آلاف الصفوف والطابور يقول رقم مالوش علاقة بالطرود اللي في إيد
-              الموظف. ⚠️ <b>والنافذة عرض بس</b> — الأوردر الأقدم منها بيتسكن عادي
-              والـ Worker بيكتب عليه.</li>
+            <li>🔴 <b>نافذة الطابور ٢٥٠ يوم متحرّكة</b> (قرار أحمد 19-09-2026 §٩).
+              <code>Returned</code> و<code>Cancelled</code> حالتان <b>نهائيتان
+              بتتراكم</b> — كل مرتجع وكل ملغي في تاريخ المتجر بيطابق الفلتر، ومن غير
+              النافذة الاستعلام بيرجّع آلاف الصفوف. التاريخ الفعلي بيجي من
+              <code>ordersSince</code> في رد الـ Worker وبيتعرض في السطر فوق السكانر.
+              ⚠️ <b>والنافذة عرض بس</b> — الأوردر الأقدم منها بيتسكن عادي والـ Worker
+              بيكتب عليه. ⚠️ والثمن: طرد منسي أكتر من ٢٥٠ يوم مش ظاهر في القايمة
+              (شبكة الأمان = تقرير دوري يدوي).</li>
             <li>⚠️ <b>الملغي على شوبيفاي نفسها مش في الطابور</b> — الأوردر اللي
               عليه <code>cancelledAt</code> من غير <code>manual_status =
               Cancelled</code> مش بيطابق أي من التلات استعلامات (فلتر
@@ -939,7 +963,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
       <div class="card-body" style="display:flex; flex-direction:column; gap:12px; padding:0;">
         <div class="scan-row">
           <input id="scanInput" class="scan-input" type="text"
-            placeholder="امسح باركود الأوردر الراجع هنا..." autocomplete="off" autofocus
+            autocomplete="off" autofocus
             aria-label="باركود الأوردر" />
         </div>
 
@@ -981,7 +1005,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
                 `shared/gates.js` §WAREHOUSE-GATE — **نفس** الدالة اللي
                 الشاشة الرئيسية بتعدّ بيها، على **نفس** رد الـ endpoint.
                 ⛔ ممنوع أي قاعدة أهلية مكتوبة في الصفحة دي (درس R1).
-             ⚠️ والطابور **لقطة** عمرها لحد ١٥ دقيقة **وبنافذة ٣٠ يوم** —
+             ⚠️ والطابور **لقطة** (كاش أقصاه ١٠ دقايق) **وبنافذة ٢٥٠ يوم** —
                 الحارس الحقيقي في الـ Worker وقت السكان، وهو اللي بيقرا
                 الأوردر حيًّا. ⛔ والنافذة **مش شرط أهلية**: الأوردر الأقدم
                 منها مش في القايمة بس **بيتسكن عادي**. -->
@@ -1049,7 +1073,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
       <div class="card-body">
         <div class="scan-row">
           <input id="scanInputRi" class="scan-input" type="text"
-            placeholder="امسح باركود القطعة الراجعة هنا..." autocomplete="off"
+            autocomplete="off"
             aria-label="باركود القطعة" />
         </div>
       </div>
@@ -1195,7 +1219,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <div class="flt-g" style="min-width:240px;">
             <span class="flt-label">بحث برقم أوردر أو ملاحظة</span>
             <div class="search-wrap">
-              <input type="text" class="search-input" id="logSearch" oninput="onLogSearchInput(this)" />
+              <input type="text" class="search-input" id="logSearch" aria-label="بحث برقم أوردر أو ملاحظة" oninput="onLogSearchInput(this)" />
               <span class="search-icon">🔍</span>
             </div>
           </div>
@@ -1234,8 +1258,8 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
                       <select class="month-select" id="monthSelectYear" onchange="onYearSelectChange()"></select>
                     </div>
                     <input type="number" class="month-select" id="monthSelectYearManual" style="display:none;margin-top:8px;"
-                      placeholder="مثال: 2019" oninput="onMonthYearManualInput()">
-                    <div class="month-select-hint">اختَر الشهر والسنة — يتطبّق الفلتر تلقائيًا بمجرد اختيار الاتنين. لسنة أقدم اختَر "سنة تانية..." واكتبها يدويًا.</div>
+                      aria-label="السنة (4 أرقام)" oninput="onMonthYearManualInput()">
+                    <div class="month-select-hint">اختَر الشهر والسنة — يتطبّق الفلتر تلقائيًا بمجرد اختيار الاتنين. لسنة أقدم اختَر "سنة تانية..." واكتبها (4 أرقام، مثال 2019).</div>
                   </div>
                 </div>
                 <div class="range-preset-item" data-preset="thisMonth"   onclick="applyRangePreset('thisMonth')"><span>الشهر الحالي</span><span class="pr-check">✓</span></div>
@@ -1251,13 +1275,13 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           <div class="flt-g">
             <span class="flt-label">من تاريخ</span>
             <div class="range-date-wrap">
-              <input type="date" id="rangeDateFrom" onclick="this.showPicker&&this.showPicker();" onchange="onRangeDateChange()">
+              <input type="date" id="rangeDateFrom" aria-label="من تاريخ" onclick="this.showPicker&&this.showPicker();" onchange="onRangeDateChange()">
             </div>
           </div>
           <div class="flt-g">
             <span class="flt-label">إلى تاريخ</span>
             <div class="range-date-wrap">
-              <input type="date" id="rangeDateTo" onclick="this.showPicker&&this.showPicker();" onchange="onRangeDateChange()">
+              <input type="date" id="rangeDateTo" aria-label="إلى تاريخ" onclick="this.showPicker&&this.showPicker();" onchange="onRangeDateChange()">
             </div>
           </div>
 
@@ -1405,27 +1429,6 @@ function toggleSearchActiveState(el) {
   el.classList.toggle('has-value', el.value.trim().length > 0);
 }
 
-// ── Order status badge color (per ecommoda-order-lifecycle suggested palette) ──
-function statusBadgeClass(value) {
-  const map = {
-    'New Order':             'badge-neutral',
-    'Confirmed':              'badge-accent',
-    'WhatsApp-Confirmed':     'badge-amber',
-    'WhatsApp-CANCELLED':     'badge-amber',
-    'Pending Edit':           'badge-amber',
-    'Confirmed + Edit':       'badge-amber',
-    'Ready':                  'badge-accent',
-    'Shipped':                 'badge-purple',
-    'In-Return':                'badge-amber',
-    'Delivered':                 'badge-green',
-    'Returned':                   'badge-red',
-    'Cancelled':                   'badge-red',
-    'Confirmed + RETURN':          'badge-accent',
-    'Confirmed + EXCHANGE':        'badge-accent',
-  };
-  return map[value] || 'badge-neutral';
-}
-
 // ══════════════════════════════════════════════════════════════
 // Main Tabs
 // ══════════════════════════════════════════════════════════════
@@ -1557,7 +1560,6 @@ document.addEventListener('click', e => {
 // ⚠️ والمسح والقراءة **جوّه `handleScan`** مش جوّه الـ listener — المسح في
 //    الـ listener بيقطع دفعة السكانر في نصّها.
 
-let scanTimer;
 const scanInputEl   = document.getElementById('scanInput');
 const scanInputRiEl = document.getElementById('scanInputRi');   // v1.52.0 — تاب «منتجات التسليم الجزئي»
 
@@ -1572,17 +1574,35 @@ function activeScanInput() {
 }
 function focusScan() { activeScanInput()?.focus(); }
 
+// ─── §SCAN::plausibility — حارس إلزامي على أي قيمة مسحوبة (SKILL.md Step 5) ───
+// باركودين اتلزقوا في قيمة واحدة بيعدّوا أي تنضيف ويوصلوا للـ Worker كـ«رقم صالح»،
+// فيرجع «الأوردر مش موجود» وهي رسالة كاذبة. أطول Order ID مقاس ١٣–١٤ رقم، فأي رقم
+// فوق ١٥ خانة = باركودين ورا بعض. ⚠️ الحد الأدنى مش محروس عن قصد: اسم الأوردر ٥ أرقام
+// وباركود القطعة ٨–٩ والـ ID ١٣+ — مفيش فجوة مقاسة نقدر نرفض فيها بأمان.
+const SCAN_MAX_DIGITS = 15;
+function scanImplausible(code) {
+  const c = String(code).trim();
+  if (/^\d+$/.test(c) && c.length > SCAN_MAX_DIGITS) {
+    return `الرقم ${c} طوله ${c.length} رقم — غالبًا اتسكن باركودين ورا بعض. اسكنهم تاني واحد واحد.`;
+  }
+  return null;
+}
+
 function bindScanInput(el, onScan) {
+  let timer;   // مؤقّت لكل مربع — مؤقّت مشترك كان ممكن يلغي سكانة المربع التاني
   el.addEventListener('input', () => {
-    clearTimeout(scanTimer);
+    clearTimeout(timer);
     // دفعة السكانر بتيجي أسرع من ٨٠ms بين الحروف: بعد ٣ حروف نعتبرها سكانر
     // ونستنى ١٥٠ms بس بعد آخر حرف. الكتابة اليدوية بتاخد المهلة الكاملة.
     const isBurst = el.value.length > 3;
-    scanTimer = setTimeout(() => {
+    timer = setTimeout(() => {
       const val = el.value.trim();
       el.value = '';
       el.focus();
-      if (val) onScan(val);
+      if (!val) return;
+      const bad = scanImplausible(val);
+      if (bad) { playBeep('warn'); showToast(bad, 'warning', 6000); return; }
+      onScan(val);
     }, isBurst ? 150 : 400);
   });
 }
@@ -1592,12 +1612,12 @@ bindScanInput(scanInputRiEl, val => routeScanRi(val));
 function routeScanRi(code) {
   if (recv) {
     playBeep('warn');
-    showToast(`فيه أوردر مفتوح للاستلام (${recv.order?.orderName || ''}) في تاب «الأوردرات» — خلّصه أو ألغيه الأول`, 'warn');
+    showToast(`فيه أوردر مفتوح للاستلام (${recv.order?.orderName || ''}) في تاب «الأوردرات» — خلّصه أو ألغيه الأول`, 'warning');
     return;
   }
   if (isItemBarcode(code)) { receiveLooseItem(code); return; }
   playBeep('warn');
-  showToast('المربع ده للقطع بس (٨–٩ أرقام) — سكان الأوردرات من تاب «الأوردرات»', 'warn');
+  showToast('المربع ده للقطع بس (٨–٩ أرقام) — سكان الأوردرات من تاب «الأوردرات»', 'warning');
 }
 
 // ─── §TOOL-JS::routeScan — مين السكانة دي؟ (v1.51.0) ───
@@ -1612,7 +1632,7 @@ function routeScan(code) {
   if (recv) {
     if (isItemBarcode(code)) { recvScanUnit(code); return; }
     playBeep('warn');
-    showToast(`فيه أوردر مفتوح للاستلام (${recv.order?.orderName || ''}) — خلّصه أو ألغيه الأول`, 'warn');
+    showToast(`فيه أوردر مفتوح للاستلام (${recv.order?.orderName || ''}) — خلّصه أو ألغيه الأول`, 'warning');
     return;
   }
   if (isItemBarcode(code)) { receiveLooseItem(code); return; }
@@ -1665,7 +1685,7 @@ function machineText(m) {
 //    (عهدة `Warehouse` + الدفتر) في `recvSubmit` بعد سكان القطع. الرفض و«خلاص
 //    متعمل» لسه بيتسجّلوا صف في السجل زي ما كانوا.
 async function openOrder(code, ack) {
-  if (scanBusy) { showToast('استنى لحد ما السكانة اللي قبلها تخلص', 'warn'); return; }
+  if (scanBusy) { showToast('استنى لحد ما السكانة اللي قبلها تخلص', 'warning'); return; }
   if (isOutcomeOpen() && !ack) return;          // نافذة مفتوحة = الموظف لسه بيقرا
 
   scanBusy = true;
@@ -1851,7 +1871,7 @@ function recvScanUnit(code) {
     playBeep(known ? 'warn' : 'error');
     showToast(known
       ? 'القطعة دي اتعلّمت خلاص — كل قطعها في الأوردر ده اتسكنت'
-      : `الباركود ${code} مش من قطع الأوردر ده — الطرد فيه قطعة غلط؟ راجعها قبل الإنهاء`, known ? 'warn' : 'error', 6000);
+      : `الباركود ${code} مش من قطع الأوردر ده — الطرد فيه قطعة غلط؟ راجعها قبل الإنهاء`, known ? 'warning' : 'error', 6000);
     return;
   }
   u.state = 'done'; u.mode = 'scan';
@@ -1875,13 +1895,25 @@ function openImageFull(url) {
   document.body.appendChild(ov);
 }
 
+// 🔴 تأكيد في الصفحة (نافذة `showOutcome`) مش `confirm()` الأصلية — Step 3C: التأكيد بيسمّي الأثر
+//    بالأرقام. ⚠️ الزرار الرئيسي (اللي عليه الفوكس و`Enter`) هو «رجوع للاستلام» عن قصد: الإلغاء
+//    بيمسح علامات الموظف، فالضغطة العرضية لازم تكون على الاختيار الآمن.
 function recvCancel() {
   if (!recv || scanBusy) return;
   const n = recvCounts();
-  if (n.done + n.miss > 0 && !confirm('فيه قطع اتسكنت — إلغاء الاستلام بيمسح اللي اتعلّم ومش هيتسجّل حاجة. متأكد؟')) return;
-  recv = null;
-  recvRender();
-  focusScan();
+  const doCancel = () => { recv = null; recvRender(); focusScan(); };
+  if (n.done + n.miss === 0) { doCancel(); return; }
+  playBeep('warn');
+  showOutcome({
+    tone: 'warn', title: '⚠️ إلغاء الاستلام؟',
+    order: recv.order, machine: recv.machine,
+    lines: [`${n.done} قطعة اتسكنت${n.miss ? ` و${n.miss} علّمتها ناقصة` : ''} — الإلغاء بيمسح العلامات دي ومش هيتسجّل أي حاجة.`],
+    note: 'تقدر تسكن الأوردر من الأول بعدها.',
+    buttons: [
+      { label: '↩ رجوع للاستلام', cls: 'btn-primary', primary: true, onClick: closeOutcome },
+      { label: '✕ إلغاء الاستلام', cls: 'btn-red', onClick: () => { closeOutcome(); doCancel(); } },
+    ],
+  });
 }
 
 // ─── الخطوة ②: إنهاء الاستلام ───
@@ -1890,7 +1922,7 @@ function recvCancel() {
 function recvFinish() {
   if (!recv || scanBusy) return;
   const n = recvCounts();
-  if (!recv.itemsUnknown && n.wait > 0) { showToast(`فاضل ${n.wait} قطعة — اسكنها أو علّمها ناقصة`, 'warn'); return; }
+  if (!recv.itemsUnknown && n.wait > 0) { showToast(`فاضل ${n.wait} قطعة — اسكنها أو علّمها ناقصة`, 'warning'); return; }
 
   if (recv.itemsUnknown) {
     playBeep('warn');
@@ -1946,7 +1978,7 @@ async function recvSubmit(extra) {
       rqRemove(res.order?.orderId);
       recv = null;
       if (res.logged === false) {
-        showToast(`تم استلام ${res.order?.orderName || ''} — ⚠️ بس ما اتكتبش في السجل: ${res.logError || ''}`, 'warn', 8000);
+        showToast(`تم استلام ${res.order?.orderName || ''} — ⚠️ بس ما اتكتبش في السجل: ${res.logError || ''}`, 'warning', 8000);
       } else if (res.result === 'warning') {
         showOutcome({
           tone: 'warn', title: '⚠️ الطرد اتسجّل «في المخزن» — مع ملاحظات',
@@ -1993,7 +2025,7 @@ async function recvSubmit(extra) {
 // 🔴 الـ Worker بيقفل **أقدم** سطر مستني بنفس الباركود (قرار أحمد 22-10-2026)،
 //    والنتيجة بتقول الأوردر اللي القطعة اتحسبت عليه بالاسم.
 async function receiveLooseItem(code, id) {
-  if (scanBusy) { showToast('استنى لحد ما السكانة اللي قبلها تخلص', 'warn'); return; }
+  if (scanBusy) { showToast('استنى لحد ما السكانة اللي قبلها تخلص', 'warning'); return; }
   scanBusy = true;
   setScanBusyUI(true);
   try {
@@ -2202,9 +2234,11 @@ function msRenderList(key) {
     ? '<div class="ms-empty">لا توجد نتائج مطابقة للبحث</div>'
     : visible.map(it => {
         const checked = st.selected.has(it.value);
-        return `<div class="ms-item ${checked ? 'checked' : ''}" onclick="msToggleItem('${key}','${it.value}')">
-          <input type="checkbox" ${checked ? 'checked' : ''} onclick="event.stopPropagation(); msToggleItem('${key}','${it.value}')">
-          <span class="ms-item-label">${it.label}</span>
+        // ⚠️ القيمة والاسم بييجوا من الـ Worker (أسماء الموظفين) — بتتهرّب وبتتمرّر `data-*`
+        //    مش جوّه نص `onclick` (اسم فيه `'` كان بيكسر الفلتر في صمت).
+        return `<div class="ms-item ${checked ? 'checked' : ''}" data-k="${esc(key)}" data-v="${esc(it.value)}" onclick="msToggleItem(this.dataset.k, this.dataset.v)">
+          <input type="checkbox" ${checked ? 'checked' : ''} onclick="event.stopPropagation(); const r = this.closest('.ms-item'); msToggleItem(r.dataset.k, r.dataset.v)">
+          <span class="ms-item-label">${esc(it.label)}</span>
         </div>`;
       }).join('');
 
@@ -2290,9 +2324,9 @@ function renderChips() {
     const chips = [...msState[key].selected].map(val => {
       const item = msState[key].items.find(it => it.value === val);
       const v = item ? item.label : val;
-      return `<span class="ms-chip">${v}<button onclick="msToggleItem('${key}','${val.replace(/'/g, "\\'")}')">✕</button></span>`;
+      return `<span class="ms-chip">${esc(v)}<button type="button" aria-label="شيل ${esc(v)}" data-k="${esc(key)}" data-v="${esc(val)}" onclick="msToggleItem(this.dataset.k, this.dataset.v)">✕</button></span>`;
     }).join('');
-    row.innerHTML = chips ? `<span class="chips-label">${label}:</span>${chips}` : '';
+    row.innerHTML = chips ? `<span class="chips-label">${esc(label)}:</span>${chips}` : '';
   });
 }
 
@@ -2306,10 +2340,11 @@ const RANGE_MONTH_NAMES = ['','يناير','فبراير','مارس','أبريل
 let activePreset = '';
 let rangeDebounce = null;
 
+// ⚠️ `ecoAddDays` و`cairoDayStr` من `core.js` (نسخة واحدة — درس R1). `cairoNow()` بترجّع Date
+//    مُزاحة لتوقيت القاهرة (تتقرا بـ `getUTC*` بس)، و`ymdUTC` بتكتب تاريخ Date من النوع ده.
 function cairoNow()          { return toCairo(new Date().toISOString()); }
-function cairoDateStr(d)     { const p = n => String(n).padStart(2,'0');
+function ymdUTC(d)           { const p = n => String(n).padStart(2,'0');
                                return `${d.getUTCFullYear()}-${p(d.getUTCMonth()+1)}-${p(d.getUTCDate())}`; }
-function addDays(ymd, n)     { const d = new Date(`${ymd}T00:00:00Z`); d.setUTCDate(d.getUTCDate()+n); return cairoDateStr(d); }
 
 function toggleRangePresetMenu(e) {
   e.stopPropagation();
@@ -2326,24 +2361,24 @@ document.addEventListener('click', () => {
 
 function computePresetRange(preset) {
   const now = cairoNow();
-  const today = cairoDateStr(now);
+  const today = cairoDayStr(new Date());
   switch (preset) {
     case 'today':     return { from: today, to: today };
-    case 'yesterday': { const y = addDays(today, -1); return { from: y, to: y }; }
-    case 'last3':     return { from: addDays(today, -2),  to: today };
-    case 'last7':     return { from: addDays(today, -6),  to: today };
-    case 'last30':    return { from: addDays(today, -29), to: today };
-    case 'last90':    return { from: addDays(today, -89), to: today };
+    case 'yesterday': { const y = ecoAddDays(today, -1); return { from: y, to: y }; }
+    case 'last3':     return { from: ecoAddDays(today, -2),  to: today };
+    case 'last7':     return { from: ecoAddDays(today, -6),  to: today };
+    case 'last30':    return { from: ecoAddDays(today, -29), to: today };
+    case 'last90':    return { from: ecoAddDays(today, -89), to: today };
     case 'thisMonth': return { from: `${now.getUTCFullYear()}-${String(now.getUTCMonth()+1).padStart(2,'0')}-01`, to: today };
     case 'lastMonth': {
       const firstThis = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
       const lastPrev  = new Date(firstThis); lastPrev.setUTCDate(0);
       const firstPrev = new Date(Date.UTC(lastPrev.getUTCFullYear(), lastPrev.getUTCMonth(), 1));
-      return { from: cairoDateStr(firstPrev), to: cairoDateStr(lastPrev) };
+      return { from: ymdUTC(firstPrev), to: ymdUTC(lastPrev) };
     }
     case 'thisQuarter': {
       const q = Math.floor(now.getUTCMonth() / 3);
-      return { from: cairoDateStr(new Date(Date.UTC(now.getUTCFullYear(), q*3, 1))), to: today };
+      return { from: ymdUTC(new Date(Date.UTC(now.getUTCFullYear(), q*3, 1))), to: today };
     }
     case 'thisYear':  return { from: `${now.getUTCFullYear()}-01-01`, to: today };
     case 'lastYear':  { const y = now.getUTCFullYear() - 1; return { from: `${y}-01-01`, to: `${y}-12-31` }; }
@@ -2746,7 +2781,7 @@ async function exportLogXLSX() {
     a.href     = URL.createObjectURL(blob);
     // ⚠️ بتوقيت القاهرة زي باقي الأداة — `toISOString()` بيدّي UTC، فتصدير
     //    الساعة ١ صباحًا كان بيتسمّى بتاريخ إمبارح.
-    a.download = `warehouse-return-log-${cairoDateStr(cairoNow())}.xlsx`;
+    a.download = `warehouse-return-log-${cairoDayStr(new Date())}.xlsx`;
     a.click();
     URL.revokeObjectURL(a.href);
 
@@ -3004,8 +3039,18 @@ document.getElementById('riTableBody').addEventListener('click', e => {
   const id = Number(b.dataset.riId);
   const r  = riState.items.find(x => x.id === id);
   if (!r) return;
-  if (!confirm(`تأكيد استلام القطعة ${r.sku || r.title || ''} (${r.orderName || ''}) يدويًا من غير سكان؟`)) return;
-  receiveLooseItem(null, id);
+  if (isOutcomeOpen()) return;   // نافذة مفتوحة = الموظف لسه بيقرا
+  playBeep('warn');
+  showOutcome({
+    tone: 'warn', title: '⚠️ استلام يدوي من غير سكان',
+    order: { orderName: r.orderName, orderId: r.orderId },
+    lines: [`القطعة ${r.sku || r.title || '—'} هتتسجّل «رجعت المخزن» من غير سكان الباركود.`],
+    note: 'بيتسجّل في الدفتر إن الاستلام كان يدوي.',
+    buttons: [
+      { label: '✅ أيوه، سجّلها', cls: 'btn-primary', primary: true, onClick: () => { closeOutcome(); receiveLooseItem(null, id); } },
+      { label: '✕ رجوع', cls: 'btn-red', onClick: closeOutcome },
+    ],
+  });
 });
 
 function riRemove(id) {

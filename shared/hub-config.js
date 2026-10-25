@@ -202,7 +202,7 @@ const ECO_WORKERS = {
   bostaUpload: { url: 'https://bosta-orders-upload-worker.ecommoda-dev.workers.dev', min: '2.23.0', label: 'رفع بوسطة' },
 };
 
-const TOOL_VERSION = 'v1.59.0';                     // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.60.0';                     // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const SHOP_HANDLE  = '6c7e1a-53';
 

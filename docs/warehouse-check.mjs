@@ -298,7 +298,7 @@ function makeStub() {
     if (action === 'get_config')      body = { ok:true, version:DIAG.version };
     else if (action === 'diag')       body = DIAG;
     else if (action === 'get_employees')
-      body = { ok:true, employees:[{ username:'tester', display_name:'الموظف التجريبي' }] };
+      body = { ok:true, employees:[{ username:'tester', display_name:'الموظف التجريبي' }, { username:"o'neil", display_name:"O'Neil <i>x</i>" }] };
     // 🔴 **خام** — نفس عقد الـ Worker الحقيقي: مرتجع/ملغي بلا أي فلترة أهلية.
     else if (action === 'get_ready_to_warehouse')
       body = { ok:true, orders:RAW, truncated:false, ordersSince:ORDERS_SINCE,
@@ -793,6 +793,20 @@ console.log('③ السكان — الاستلام قطعة قطعة (v1.51.0)')
   const nR2 = receiveCalls.length;
   await page.locator('#recvCancelBtn').click();
   await page.waitForTimeout(200);
+  // 🔴 v1.60.0: التأكيد نافذة في الصفحة بتسمّي الأثر بالأرقام — مش `confirm()` الأصلية، والزرار الرئيسي هو الآمن
+  const cancelTxt = await txt('#outcomeModal');
+  is(await page.locator('#outcomeOverlay.open').count() === 1 && cancelTxt.includes('اتسكنت') && /\d/.test(cancelTxt),
+     '🔴 «إلغاء الاستلام» بيفتح نافذة بتسمّي الأثر بالأرقام (مش confirm المتصفح)', cancelTxt.slice(0, 90));
+  is(await panelOpen(), 'اللوحة لسه مفتوحة قبل التأكيد');
+  is((await page.evaluate(() => document.activeElement?.textContent || '')).includes('رجوع للاستلام'),
+     '🔴 الفوكس (و`Enter`) على «رجوع للاستلام» — الضغطة العرضية مابتمسحش علامات الموظف');
+  await page.locator('#outcomeFtr button:has-text("رجوع للاستلام")').click();
+  await page.waitForTimeout(200);
+  is(await panelOpen(), '«رجوع للاستلام» بيسيب اللوحة والعلامات زي ما هي');
+  await page.locator('#recvCancelBtn').click();
+  await page.waitForTimeout(200);
+  await page.locator('#outcomeFtr button:has-text("إلغاء الاستلام")').click();
+  await page.waitForTimeout(200);
   is(!(await panelOpen()) && receiveCalls.length === nR2, 'الإلغاء (بتأكيد) بيقفل اللوحة بصفر كتابة');
   is(await page.evaluate(() => window.shellIsBusy()) === false, 'والخروج التلقائي رجع شغّال');
 
@@ -874,7 +888,12 @@ console.log('③-ب قطع مستنية الرجوع للمخزن');
   await closeModal();
   await page.click('#tabPartial');   // الاستلام اليدوي من زرار في قايمة التاب ده
   await page.waitForTimeout(200);
+  const nRi = riCalls.length;
   await page.locator('#riTableBody button[data-ri-id="14"]').click();
+  await page.waitForTimeout(300);
+  is(await page.locator('#outcomeOverlay.open').count() === 1 && riCalls.length === nRi && (await txt('#outcomeModal')).includes('من غير سكان'),
+     '🔴 الاستلام اليدوي بيفتح نافذة تأكيد في الصفحة وصفر نداء قبل التأكيد');
+  await page.locator('#outcomeFtr button:has-text("أيوه، سجّلها")').click();
   await page.waitForTimeout(700);
   is(riCalls.at(-1)?.id === 14, 'الاستلام اليدوي (بتأكيد) بيبعت `id`');
   is(await txt('#riCount') === '0' && (await txt('#riEmpty')).includes('مفيش قطع'), 'القايمة فضيت بالنص');
@@ -974,6 +993,78 @@ console.log('⑤ السجل والفحص الذاتي');
   await ctx.close();
 }
 
+
+// ══════════════════════════════════════════════════════════════
+// ⑥ مراجعة html-builder v8.5.0 (v1.60.0)
+// ══════════════════════════════════════════════════════════════
+console.log('⑥ مراجعة المعيار — v1.60.0');
+{
+  itemsCalls.length = 0;
+  const { page, ctx, errors } = await newPage();
+  await page.goto(`${BASE}/Package-Transfer-To-Warehouse.html`);
+  await page.waitForTimeout(1000);
+
+  // Step 2 بند ٧: صفر placeholder (لا في مربعَي السكان ولا في حقل السنة)
+  is(await page.evaluate(() => document.querySelectorAll('[placeholder]').length) === 0,
+     '🔴 صفر `placeholder` في الصفحة (aria-label هو الوصف)');
+  is(await page.evaluate(() => ['scanInput', 'scanInputRi', 'logSearch', 'rangeDateFrom', 'rangeDateTo', 'monthSelectYearManual']
+       .every(id => document.getElementById(id)?.getAttribute('aria-label'))),
+     'كل حقول الإدخال ليها `aria-label`');
+
+  // Step 5 §SCAN::plausibility: باركودين ملزوقين = تحذير بلا نداء للـ Worker
+  await page.fill('#scanInput', '7212244533570' + '7212244533571');
+  await page.waitForTimeout(900);
+  is(itemsCalls.length === 0, '🔴 رقم أطول من ١٥ خانة (باركودين ملزوقين) ما بيتبعتش للـ Worker', String(itemsCalls.length));
+  const warnToast = await page.locator('#toastContainer .toast-warning').allTextContents();
+  is(warnToast.some(t => t.includes('باركودين')), 'والتحذير بيقول السبب والمطلوب (توست `warning` الرسمي)', warnToast.join(' | '));
+  await page.fill('#scanInput', '7212244533570');
+  await page.waitForTimeout(900);
+  is(itemsCalls.length === 1, 'باركود الأوردر الطبيعي (١٣ رقم) لسه بيتبعت', String(itemsCalls.length));
+  await page.evaluate(() => closeOutcome());
+
+  // Standards #49: خط الجدول من التوكنز
+  const fonts = await page.evaluate(() => {
+    const th = document.querySelector('#rqTableWrap thead th') || document.querySelector('.data-table thead th');
+    const td = document.querySelector('.data-table tbody td') || document.querySelector('#recvBody td');
+    const a = getComputedStyle(th), b = td ? getComputedStyle(td) : null;
+    return [a.fontSize, a.fontWeight, a.textTransform, b && b.fontSize, b && b.fontWeight];
+  });
+  is(fonts[0] === '12px' && fonts[1] === '700' && fonts[2] === 'none', '`th` الجدول 12px/700 بلا uppercase', fonts.join(' '));
+  is(fonts[3] === '12.5px' && fonts[4] === '600', '`td` الجدول 12.5px/600', fonts.join(' '));
+
+  // ترتيب z-index: عارض الصورة تحت التوست (٦٥٠ < ٩٩٩٩)
+  is(await page.evaluate(() => {
+    const d = document.createElement('div'); d.className = 'img-full-ov'; document.body.appendChild(d);
+    const z = +getComputedStyle(d).zIndex; d.remove(); return z < 9999 && z > 600;
+  }), 'عارض صورة المنتج على السلّم (فوق المودالات وتحت التوست)');
+
+  // اسم موظف فيه ' و < : الفلتر بيشتغل ومفيش HTML بيتحقن
+  await page.click('#tabLog');
+  await page.waitForTimeout(700);
+  logCalls.length = 0;
+  await page.click('#msBtn-emp');
+  const empHtml = await page.locator('#msList-emp').innerHTML();
+  is(!empHtml.includes('<i>') && empHtml.includes('&lt;i&gt;'), '🔴 اسم الموظف بيتهرّب قبل `innerHTML`');
+  await page.click('#msList-emp .ms-item:has-text("O\'Neil")');
+  await page.waitForTimeout(800);
+  const empSent = logCalls.map(u => new URL(u).searchParams.get('employees')).filter(Boolean);
+  is(empSent.length > 0 && empSent.every(v => v === "o'neil"), '🔴 موظف باسم فيه `\'` بيتبعت للـ Worker سليم', JSON.stringify(empSent));
+  is(await page.locator('#chipsRow-emp .ms-chip').count() === 1 && !(await page.locator('#chipsRow-emp').innerHTML()).includes('<i>'),
+     'chip الموظف اتعرض متهرّب');
+  await page.click('#chipsRow-emp .ms-chip button');
+  await page.waitForTimeout(600);
+  is(await page.locator('#chipsRow-emp .ms-chip').count() === 0, '✕ على الـ chip بيشيل الفلتر برضه');
+
+  // فترة سريعة: «آخر 7 أيام» = ٧ أيام شاملة اليوم (بعد ما الحساب اتحوّل لـ `ecoAddDays`)
+  logCalls.length = 0;
+  await page.click('#rangePresetBtn');
+  await page.click('.range-preset-item[data-preset="last7"]');
+  await page.waitForTimeout(800);
+  const [df, dt] = await page.evaluate(() => [document.getElementById('rangeDateFrom').value, document.getElementById('rangeDateTo').value]);
+  is(!!df && !!dt && Math.round((Date.parse(dt) - Date.parse(df)) / 86400000) === 6, 'فترة «آخر 7 أيام» = ٦ أيام فرق (٧ شاملة اليوم)', `${df} → ${dt}`);
+  is(errors.length === 0, 'صفر أخطاء في الكونسول', errors.join(' | '));
+  await ctx.close();
+}
 
 // ══ §CACHE-TTL (v1.59.0) — الفتح من الكاش لو أحدث من ١٠ دقايق ══
 console.log('§CACHE-TTL — كاش الطابور عند الفتح');
