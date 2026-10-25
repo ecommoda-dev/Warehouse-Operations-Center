@@ -156,10 +156,6 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
    🔴 جدول واحد بنفس الأعمدة السبعة لكل الصفوف — الفرق بين الحالتين في **الشريط الفاصل**
       مش في معنى العمود. ⛔ ممنوع صف يحط ملاحظة في عمود «العنوان» أو «—» في «النوع» عشان
       الشكل يتظبط: العمود اللي مالوش قيمة بيقول `—` بصراحة. */
-.sess-prog { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.sess-prog .bar { flex: 1 1 200px; height: 10px; border-radius: 99px; background: var(--surface-2); border: 1px solid var(--border); overflow: hidden; }
-.sess-prog .bar i { display: block; height: 100%; background: var(--green); }
-.sess-prog .txt { font-weight: 700; font-size: 13px; color: var(--text-primary); font-family: var(--font-mono); }
 /* 🔴 جداول الصفحة على معيار الجداول: عرض الأعمدة بتتحكم فيه `core.js` §TABLE (قياس تلقائي + سحب لايف) —
    ⛔ ممنوع `table-layout:fixed` بنسب ثابتة، وممنوع `ellipsis`/`nowrap` على خلية: العنوان بيلتف على سطرين
    (الموظف لازم يشوف العنوان كامل). */
@@ -171,12 +167,6 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .queue-head { margin: 0 2px 12px; }
 .queue-title { font-size: 17px; font-weight: 800; color: var(--text-primary); }
 .queue-sub { margin-top: 3px; font-size: 12px; color: var(--text-secondary); }
-.mini-pills { display: flex; gap: 6px; flex-wrap: wrap; }
-.mini-pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 99px; font-size: 12px; font-weight: 700; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-secondary); }
-.mini-pill b { font-family: var(--font-mono); color: var(--text-primary); }
-.mini-pill.red { background: var(--red-light); border-color: var(--red-border); color: var(--red-dark); }
-.mini-pill.red b { color: var(--red); }
-.mini-pill.green b { color: var(--green); }
 .rq-done-row.is-ok { background: var(--green-light); }
 .rq-note { margin-top: 2px; font-size: 11px; color: var(--text-secondary); white-space: normal; }
 .rq-pend-tag { font-size: 11px; font-weight: 700; color: var(--text-muted); white-space: nowrap; }
@@ -243,10 +233,9 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
    بيظهر بعد سكان باركود الأوردر: قايمة قطع الطرد، وكل قطعة بتتعلّم بسكان
    باركودها. ⚠️ الحالات التلاتة لكل قطعة: ⏳ مستنية · ✅ اتسكنت · ❌ ناقصة. */
 .recv-box { border: 2px solid var(--accent-border); border-radius: var(--radius-sm); background: var(--surface); overflow: hidden; }
-.recv-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px; background: var(--accent-light); border-bottom: 1px solid var(--accent-border); }
-.recv-title { font-size: 14px; font-weight: 800; color: var(--text-primary); }
-.recv-sub { font-size: 12px; color: var(--text-secondary); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .recv-prog { margin-inline-start: auto; font-family: var(--font-mono); font-size: 20px; font-weight: 800; color: var(--accent-dark); direction: ltr; }
+.log-items { text-align: start; }
+.log-item { white-space: nowrap; }
 .recv-note { padding: 10px 16px; font-size: 12.5px; color: var(--amber-dark); background: var(--amber-light); border-bottom: 1px solid var(--amber-border); }
 .recv-foot { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--surface-2); }
 .recv-row.u-done  { background: var(--green-light); }
@@ -524,9 +513,9 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
   <div id="headerMount"></div>
 
   <div class="main-tabs-bar" id="mainTabsBar">
-    <button class="main-tab-btn active" id="tabScanner" onclick="switchMainTab('scanner')">📷 الأوردرات</button>
+    <button class="main-tab-btn active" id="tabScanner" onclick="switchMainTab('scanner')">📷 مرتجعات + لواغي</button>
     <button class="main-tab-btn"        id="tabPartial" onclick="switchMainTab('partial')">📦 منتجات التسليم الجزئي</button>
-    <button class="main-tab-btn"        id="tabLog"     onclick="switchMainTab('log')">📋 السجل</button>
+    <button class="main-tab-btn"        id="tabLog"     onclick="switchMainTab('log')">📋 سجل العمليات</button>
   </div>
 
 </div><!-- /.sticky-header-wrap -->
@@ -544,7 +533,20 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
            واحد للنسخة (Standards #24). الرقم هنا **مش** مكتوب بإيد. -->
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.55.1</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.56.0</span>
+          <span class="cl-ver-date">25-10-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>لوحة استلام المنتجات: اتشال العنوان والسطر التحتاني وفضل الجدول بس، واتضاف عمود «رقم الأوردر».</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>اتشال جدول «اتسجّلت في الصفحة دي» وشريط التقدّم تحت مربع الإدخال.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>تاب السجل: عمود «من → إلى» اتشال ومكانه «المنتجات (SKU × العدد)» (يحتاج Worker 1.9.0 — الصفوف الأقدم بتقول —).</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>اسم تاب «الأوردرات» بقى «مرتجعات + لواغي» وتاب «السجل» بقى «سجل العمليات».</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.55.1</span>
           <span class="cl-ver-date">25-10-2026</span>
         </div>
         <ul class="cl-items">
@@ -610,7 +612,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
         <ul class="cl-items">
           <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>🔴 <b>أوردرات «الاسترجاع» الخالص كانت بتترفض بـ«مفيش طرد يرجع» ومش بتظهر في الطابور.</b> الطرد الراجع هو <b>الشحنة الأصلية (S1)</b> اللي اتغلّفت، ومفيش طرد S2 بيتغلّف في الاسترجاع — فشرط التغليف بقى على <code>s1_packing_date_time</code> للماكينتين (في الـ Worker والطابور مع بعض). 🔴 <b>محتاج Promote:</b> Worker v1.6.0 — قبله الاسترجاع لسه بيترفض.</span></li>
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span>جدول «جاهز للرجوع للمخزن»: اتشال عمودا «العميل» و«تاريخ الأوردر» واتضاف <b>«العنوان»</b> بعد رقم الأوردر.</span></li>
-          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>التابات بقت: <b>📷 الأوردرات</b> (السكانر + طابور الأوردرات بس) · <b>📦 منتجات التسليم الجزئي</b> (قطع مستنية الرجوع للمخزن + مربع سكان قطع خاص بيها) · <b>📋 السجل</b>.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>التابات بقت: <b>📷 مرتجعات + لواغي</b> (السكانر + طابور الأوردرات بس) · <b>📦 منتجات التسليم الجزئي</b> (قطع مستنية الرجوع للمخزن + مربع سكان قطع خاص بيها) · <b>📋 سجل العمليات</b>.</span></li>
         </ul>
       </div>
 
@@ -946,29 +948,18 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
             aria-label="باركود الأوردر" />
         </div>
 
-        <div class="sess-prog" id="sessProg" style="display:none;">
-          <div class="bar" id="sessProgBarWrap" role="progressbar" aria-label="تقدّم تسجيل المرتجعات"><i id="sessProgBar" style="width:0%"></i></div>
-          <span class="txt" id="sessProgTxt"></span>
-          <div class="mini-pills" id="sessionPills"></div>
-        </div>
-
         <!-- ══ §RECV — الاستلام قطعة قطعة (v1.51.0 · طلب أحمد 22-10-2026) ══════
              بيظهر بعد سكان باركود الأوردر. كل قطعة بتتعلّم بسكان **باركود
              المنتج** (٨–٩ أرقام)، و`Warehouse` مابتتكتبش غير لما **كل** قطعة
              تبقى «اتسكنت» أو «ناقصة» (بإقرار صريح). الكتابة نفسها في الـ Worker
              (`receive_order`) على قراءة **طازجة** — مش على القايمة دي. -->
         <div class="recv-box" id="recvBox" style="display:none;">
-          <div class="recv-head">
-            <div>
-              <div class="recv-title" id="recvTitle">📦 استلام منتجات الشحنة</div>
-              <div class="recv-sub" id="recvSub"></div>
-            </div>
-          </div>
           <div class="recv-note" id="recvNote" style="display:none;"></div>
           <div class="table-wrap" id="recvTableWrap">
             <table class="data-table">
               <thead>
                 <tr>
+                  <th>رقم الأوردر</th>
                   <th>الصورة</th>
                   <th>SKU</th>
                   <th>عدد القطع</th>
@@ -999,39 +990,6 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
                 الحارس الحقيقي في الـ Worker وقت السكان، وهو اللي بيقرا
                 الأوردر حيًّا. ⛔ والنافذة **مش شرط أهلية**: الأوردر الأقدم
                 منها مش في القايمة بس **بيتسكن عادي**. -->
-        <!-- ══ §DONE-BOX — جدول «اتسجّلت» على معيار الجداول (v1.55.1 · طلب أحمد 25-10-2026) ══
-             نفس شكل جدول الطابور: كارت موحّد ← صف «النتائج» (سهم الطي + chip الرقم) ← الجدول. مطوي افتراضيًا،
-             وبيظهر بس لما يكون فيه صف اتسجّل. الفلاتر في رأس العمود وعرض الأعمدة بالسحب من `core.js` §TABLE. -->
-        <div class="unified-section" id="doneBox" style="display:none;">
-          <div class="tbl-bar" id="doneToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="doneBodyWrap">
-            <div class="tbl-bar-right">
-              <span class="tbl-toggle" id="doneChev" aria-hidden="true">▲</span>
-              <div class="results-wrap">
-                <span class="results-label">✅ اتسجّلت في الصفحة دي:</span>
-                <span class="results-count" id="doneCnt">0</span>
-              </div>
-            </div>
-          </div>
-          <div class="tbl-body-wrap collapsed" id="doneBodyWrap">
-            <div class="tbl-scroll">
-              <div class="table-wrap" id="doneTableWrap">
-                <table class="data-table rq-unified">
-                  <thead>
-                    <tr>
-                      <th>رقم الأوردر</th>
-                      <th>العنوان</th>
-                      <th>نوع الأوردر</th>
-                      <th>موقع الشحنة</th>
-                      <th>النتيجة</th>
-                      <th>الوقت</th>
-                    </tr>
-                  </thead>
-                  <tbody id="sessionBody"></tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
 
         <!-- ══ §UNIFIED-SECTION — جدول الطابور بمعيار الجداول (v1.55.0 · `data-table-standard.md`) ══
              كارت واحد: لوحة العدّ + «آخر تحديث» ← صف «النتائج» (سهم الطي + chip الرقم) ← الجدول.
@@ -1389,7 +1347,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
               <th class="sortable-th" data-sort-key="employee"  onclick="toggleSort('employee')">الموظف<span class="sort-icon" data-sort-key="employee"></span></th>
               <th class="sortable-th" data-sort-key="orderName" onclick="toggleSort('orderName')">رقم الأوردر<span class="sort-icon" data-sort-key="orderName"></span></th>
               <th class="sortable-th" data-sort-key="machine"   onclick="toggleSort('machine')">الطرد<span class="sort-icon" data-sort-key="machine"></span></th>
-              <th>من → إلى</th>
+              <th>المنتجات (SKU × العدد)</th>
               <th class="sortable-th" data-sort-key="result"    onclick="toggleSort('result')">النتيجة<span class="sort-icon" data-sort-key="result"></span></th>
               <th>السبب / ملاحظة</th>
             </tr></thead>
@@ -1700,7 +1658,6 @@ function routeScan(code) {
 //    ٦١** في سكانر المرتجعات: الشاشة بعد النجاح كان شكلها زي قبل الضغط
 //    بالظبط، فالموظف بيضغط تاني.
 
-let sessionRows = [];          // سكانات الجلسة — عرض بحت، مش مصدر للسجل
 let scanBusy    = false;       // بيمنع سكانتين متوازيتين على نفس النداء
 // §IDLE — الخروج التلقائي (٦٠ د) موقوف طول ما سكانة بتتسجّل **أو** لوحة استلام مفتوحة فيها
 // قطع اتعلّمت (v1.51.0) — الخروج كان هيمسح اللي اتسكن من غير ما يتسجّل.
@@ -1723,17 +1680,8 @@ document.getElementById('rqTableBody').addEventListener('click', e => {
 // ─── §UNIFIED — مفيش جلسة (v1.54.0) ───
 // السكانر شغّال دايمًا. `sessionRows` = اللي اتسجّل في الصفحة دي (ريفريش بيمسحه)، وبيتعرض
 // في شريط «اتسجّلت» جوّه جدول الطابور نفسه (`renderSession` + `rqRender`).
-let doneOpen = false;      // جدول «اتسجّلت» مطوي افتراضيًا — الرقم على الشريط والـ pills بيقولوا اللي حصل
 
 let pendingAck  = null;        // الأوردر المستني إقرار (نافذة التحذير مفتوحة)
-
-const OUTCOME_LABEL = {
-  success:  { cls: 'badge-green',   text: '✓ تم' },
-  warning:  { cls: 'badge-amber',   text: '⚠ تم بتحذير' },
-  error:    { cls: 'badge-red',     text: '✗ فشل' },
-  rejected: { cls: 'badge-purple',  text: '⛔ مرفوض' },
-  already:  { cls: 'badge-neutral', text: '⏭ خلاص متعمل' },
-};
 
 function machineText(m) {
   return m === 's2' ? 'استبدال/استرجاع (S2)' : m === 's1' ? 'الشحنة الأصلية (S1)' : '—';
@@ -1870,12 +1818,6 @@ function recvRender() {
   if (!recv) { box.style.display = 'none'; document.getElementById('recvBody').innerHTML = ''; return; }
   box.style.display = '';
   const o = recv.order || {};
-  // الحالة بتشيل نوع الدورة بالفعل («مرتجع (استبدال/استرجاع)») فمابنكرّرش اسم الماكينة — بس رمزها (S1/S2).
-  document.getElementById('recvTitle').innerHTML =
-    `📦 استلام منتجات الشحنة للأوردر رقم ${orderLink(o.orderName, o.orderId)}`;
-  document.getElementById('recvSub').innerHTML =
-    `<span>${esc(rqStatusOf({ ...o, machine: recv.machine }).text)}</span>`
-    + `<span>·</span><span>${recv.machine === 's2' ? 'S2' : 'S1'}</span>`;
   const n = recvCounts();
 
   const note = document.getElementById('recvNote');
@@ -1899,6 +1841,7 @@ function recvRender() {
       : `<button class="btn btn-outline btn-sm" type="button" data-act="undo" data-key="${esc(u.key)}">↩ تراجع</button>`;
     const cls = u.state === 'done' ? 'u-done' : u.state === 'miss' ? 'u-miss' : '';
     return `<tr class="recv-row ${cls}${recv.flash === u.key ? ' u-flash' : ''}" data-key="${esc(u.key)}">
+      <td>${orderLink(o.orderName, o.orderId)}</td>
       <td>${u.imageUrl ? `<img class="recv-img" src="${esc(u.imageUrl)}" alt="" loading="lazy" data-full="${esc(u.imageUrl)}">` : '—'}</td>
       <td class="col-mono">${esc(u.sku || '—')}</td>
       <td class="col-num">${u.qty > 1 ? `${u.unitIndex} من ${u.qty}` : '1'}</td>
@@ -2119,97 +2062,18 @@ function setScanBusyUI(busy) {
 }
 
 // ─── §TOOL-JS::session — جدول سكانات الجلسة + العدّادات ───
-function pushSession(res, code) {
-  // ⚠️ `ref` = صف الطابور بتاع الأوردر (لو كان فيه) — عشان صف «اتسجّلت» يحتفظ بعنوانه ونوعه
-  //    وحالته زي ما كان قبل التسجيل. أوردر مش في الطابور (أو قطعة سايبة) = `—` بصراحة.
-  const oid = res.order?.orderId, onm = res.order?.orderName;
-  const ref = rqState.orders.find(o => (oid && String(o.orderId) === String(oid)) || (onm && o.orderName === onm)) || null;
-  sessionRows.unshift({
-    at:        new Date(),
-    orderName: onm || null,
-    orderId:   oid || null,
-    scanned:   code,
-    machine:   res.machine || null,
-    result:    res.result,
-    message:   res.message || '',
-    ref,
-  });
-  renderSession();
-}
+function pushSession() { renderSession(); }   // الجدول اتشال — النتيجة في التوست/النافذة والأثر في «سجل العمليات»
 
-// ─── صف «اتسجّلت» — نفس الأعمدة السبعة بتاعة صف الطابور بالظبط ───
-function rqDoneRowHTML(r) {
-  const b   = OUTCOME_LABEL[r.result] || { cls: 'badge-neutral', text: '—' };
-  const ref = r.ref;
-  const typeTxt = ref ? rqTypeLabel(ref) : (r.machine === 's2' ? 'استبدال/استرجاع' : r.machine === 's1' ? 'عادي' : '—');
-  const typeCls = (ref ? ref.machine : r.machine) === 's2' ? 'type-s2' : 'type-s1';
-  // «موقع الشحنة» بعد السكانة: اللي اتسجّل/خلاص متعمل = `Warehouse`، والباقي (رفض/فشل) هو اللي كان قبلها
-  const wasWritten = r.machine && (r.result === 'success' || r.result === 'warning' || r.result === 'already');
-  const wh = wasWritten ? rqWhereaboutsText('Warehouse') : (ref ? rqWhereaboutsText(ref.whereabouts) : null);
-  const ok = r.result === 'success' || r.result === 'warning';
-  return `<tr class="rq-row rq-done-row ${ok ? 'is-ok' : ''}">
-      <td>${r.orderName ? orderLink(r.orderName, r.orderId) : `<span class="col-num">${esc(r.scanned)}</span>`}</td>
-      <td class="col-addr" title="${esc(ref?.address || '')}">${esc(ref?.address || '—')}</td>
-      <td>${typeTxt === '—' ? '—' : `<span class="type-text ${typeCls}">${esc(typeTxt)}</span>`}</td>
-      <td>${wh ? `<span class="wh-text ${wh.cls}">${esc(wh.text)}</span>` : '—'}</td>
-      <td><span class="badge ${b.cls}">${b.text}</span>${r.message ? `<div class="rq-note">${esc(r.message)}</div>` : ''}</td>
-      <td class="col-num">${esc(formatTimeOnly(r.at.toISOString()))}</td>
-    </tr>`;
-}
+// ─── جدول «اتسجّلت» اتشال (v1.56.0) — الأثر الدائم في تاب «سجل العمليات»؛ النتيجة قدام الموظف في التوست/النافذة ───
+function renderSession() { rqSyncTable(); }
 
-function renderSession() {
-  const body = document.getElementById('sessionBody');
-  const n = { success: 0, warning: 0, error: 0, rejected: 0, already: 0 };
-  for (const r of sessionRows) if (n[r.result] !== undefined) n[r.result]++;
-
-  // ⚠️ الشارات بتظهر **بس لما يكون فيها فعلاً** — شارة بصفر بيتعوّد عليها الموظف فبيبطّل يشوفها
-  //    (نفس مبدأ مربعات «بلا قناة» في `Order-Printer.html`). «اتسجّل» نفسها في شريط التقدّم
-  //    (`rqSyncTable`) — بتظهر هنا بس لو الشريط مش ظاهر (مثلًا قطعة سايبة).
-  const regd = sessionRows.filter(r => r.machine && (r.result === 'success' || r.result === 'warning')).length;
-  const showProg = !!rqState.at && regd > 0 && (regd + rqState.orders.length) > 0;
-  const pills = [];
-  if (n.success + n.warning && !showProg) pills.push({ cls: 'green', val: n.success + n.warning, lbl: 'اتسجّل' });
-  if (n.already)             pills.push({ cls: '',      val: n.already,  lbl: 'خلاص متعمل' });
-  if (n.rejected)            pills.push({ cls: 'red',   val: n.rejected, lbl: 'مرفوض' });
-  if (n.error)               pills.push({ cls: 'red',   val: n.error,    lbl: 'فشل' });
-  document.getElementById('sessionPills').innerHTML = pills.map(p =>
-    `<span class="mini-pill ${p.cls}"><b>${p.val}</b>${esc(p.lbl)}</span>`
-  ).join('');
-
-  body.innerHTML = sessionRows.map(rqDoneRowHTML).join('');
-  rqSyncTable();
-}
-
-// ─── شريط التقدّم + ظهور جدول «اتسجّلت» — بيتنادى من `renderSession` و`rqRender` ───
-// «اتسجّل N من M» = أوردرات اتسجّلت (مش قطع سايبة) ÷ (اتسجّلت + اللي لسه في الطابور).
 function rqSyncTable() {
-  const hasDone = sessionRows.length > 0;
   const hasPend = rqState.orders.length > 0;
   const wrap  = document.getElementById('rqTableWrap');
   const empty = document.getElementById('rqEmpty');
   if (wrap)  wrap.style.display  = hasPend ? '' : 'none';
-  // الرسالة الفاضية/التحميل بتفضل لو مفيش طابور (حتى لو فيه صفوف اتسجّلت)
   if (empty) empty.style.display = hasPend ? 'none' : '';
-  document.getElementById('doneBox').style.display = hasDone ? '' : 'none';
-  document.getElementById('doneCnt').textContent = String(sessionRows.length);
-  document.getElementById('doneBodyWrap').classList.toggle('collapsed', !(hasDone && doneOpen));
-  document.getElementById('doneToggle').setAttribute('aria-expanded', String(doneOpen));
-  document.getElementById('doneChev').classList.toggle('open', doneOpen);
-
-  const regd = sessionRows.filter(r => r.machine && (r.result === 'success' || r.result === 'warning')).length;
-  const total = regd + rqState.orders.length;
-  const showProg = !!rqState.at && total > 0 && regd > 0;
-  document.getElementById('sessProg').style.display = (showProg || document.getElementById('sessionPills').children.length) ? '' : 'none';
-  document.getElementById('sessProgBarWrap').style.display = showProg ? '' : 'none';
-  document.getElementById('sessProgTxt').style.display = showProg ? '' : 'none';
-  if (showProg) {
-    document.getElementById('sessProgBar').style.width = Math.round(regd / total * 100) + '%';
-    document.getElementById('sessProgTxt').textContent = `اتسجّل ${regd} من ${total}`;
-  }
 }
-const doneToggleFire = () => { doneOpen = !doneOpen; rqSyncTable(); focusScan(); };
-document.getElementById('doneToggle').addEventListener('click', doneToggleFire);
-document.getElementById('doneToggle').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doneToggleFire(); } });
 
 // ─── §TOOL-JS::outcomeModal — المدخل الوحيد للنافذة ───
 // 🔴 نافذة واحدة بأربع نغمات — مش نافذة لكل حالة. أربع كتل منفصلة كانت
@@ -2838,14 +2702,11 @@ function renderLogTable(rows) {
       : r.machine === 'S2' ? `<span class="badge badge-purple col-num">S2</span>`
       : `<span class="badge badge-neutral">${esc(r.machine || '—')}</span>`;
 
-    // ⚠️ LTR صريح: "Office → Warehouse" جوّه خلية RTL بيتقلب ترتيبها بالـ bidi
-    //    فيبان وكأن الاتجاه معكوس. الاتجاه هنا **جزء من المعنى** مش تنسيق.
-    // ⚠️ وصف الرفض مالوش «إلى» — العمود بيقول العهدة اللي وقف عندها صراحةً.
-    //    لو اتعرض `Office → —` كان هيتقرا «اتكتب فاضي».
-    const transition = r.isRejected
-      ? `<span class="col-num">${esc(r.raw.value_before || '—')}</span>`
-        + `<span style="color:var(--text-secondary);font-weight:700;"> · ما اتكتبش</span>`
-      : `<span class="col-num">${esc(r.raw.value_before || '—')} → ${esc(r.raw.value_after || '—')}</span>`;
+    // المنتجات: extra.items من Worker 1.9.0 ([{sku, qty, missing?}]) — الصفوف الأقدم بلا تفاصيل = —
+    const items = Array.isArray(r.extra.items) ? r.extra.items : [];
+    const itemsHtml = items.length
+      ? items.map(it => `<div class="log-item"><span class="col-mono">${esc(it.sku || '—')}</span> × <b class="col-num">${esc(it.qty)}</b>${it.missing ? ` <span class="badge badge-red">${esc(it.missing)} ناقصة</span>` : ''}</div>`).join('')
+      : '—';
 
     return `<tr>
       <td class="col-num">${r.date ? formatDate(r.raw.timestamp) : '—'}</td>
@@ -2853,7 +2714,7 @@ function renderLogTable(rows) {
       <td>${esc(r.employee || '—')}</td>
       <td>${r.orderName ? orderLink(r.orderName, r.orderId) : '—'}</td>
       <td>${machineBadge}</td>
-      <td style="font-size:12px;">${transition}</td>
+      <td class="log-items">${itemsHtml}</td>
       <td>${resultBadge(r.result)}</td>
       <td class="reject-reason">${esc(r.reason || '—')}</td>
     </tr>`;
@@ -2881,8 +2742,7 @@ async function exportLogXLSX() {
       { header: 'الموظف',      key: 'employee',  width: 16 },
       { header: 'رقم الأوردر', key: 'orderName', width: 14 },
       { header: 'الطرد',       key: 'machine',   width: 12 },
-      { header: 'من',          key: 'before',    width: 16 },
-      { header: 'إلى',         key: 'after',     width: 16 },
+      { header: 'المنتجات',    key: 'items',     width: 40 },
       { header: 'النتيجة',     key: 'result',    width: 14 },
       { header: 'الزون',       key: 'zone',      width: 14 },
       // ⚠️ عمود السبب مش زينة: صف الرفض كل قيمته فيه — من غيره التصدير
@@ -2901,8 +2761,7 @@ async function exportLogXLSX() {
         employee:  r.employee  || '—',
         orderName: r.orderName || '—',
         machine:   r.machine   || '—',
-        before:    r.raw.value_before || '—',
-        after:     r.isRejected ? '—' : (r.raw.value_after || '—'),
+        items:     Array.isArray(r.extra.items) && r.extra.items.length ? r.extra.items.map(it => `${it.sku} × ${it.qty}${it.missing ? ` (${it.missing} ناقصة)` : ''}`).join(' | ') : '—',
         result:    RESULT_LABELS[r.result] || '—',
         zone:      r.extra.zone || '—',
         reason:    r.reason || '—',
@@ -3060,12 +2919,6 @@ function rqTypeLabel(o) {
   if (o.s2Cycle === 'exchange') return 'استبدال';
   if (o.s2Cycle === 'return')   return 'استرجاع';
   return 'استبدال/استرجاع';
-}
-function rqStatusOf(o) {
-  if (o.machine === 's2') return { cls: 'badge-amber', text: `مرتجع (${rqTypeLabel(o)})` };
-  if (o.s1 === 'Returned') return { cls: 'badge-amber', text: 'مرتجع' };
-  if (o.s1 === 'Cancelled' || o.cancelledAt) return { cls: 'badge-red', text: 'ملغي' };
-  return { cls: 'badge-neutral', text: '—' };
 }
 
 // ─── عهدة الطرد قبل السكانة ──────────────────────────────────
@@ -3274,7 +3127,7 @@ document.getElementById('headerMount').innerHTML = ecoHeader({
   //    وقتها). كان جوّه الهيدر القديم، فبيتحط هنا في `extras` عشان الهيدر
   //    بقى موحّد في الـ shell. نفس نمط `Order-Printer.html` و`Bosta-Orders-Shipped-Scanner.html`.
   extras: '<div class="active-tab-chip" id="activeTabChip" onclick="toggleTabChipMenu(event)">'
-        +   '<span id="activeTabChipLabel">📷 الأوردرات</span><span class="chip-arrow">▾</span>'
+        +   '<span id="activeTabChipLabel">📷 مرتجعات + لواغي</span><span class="chip-arrow">▾</span>'
         +   '<div class="tab-chip-menu" id="tabChipMenu"></div>'
         + '</div>',
 });
