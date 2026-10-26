@@ -2,13 +2,13 @@
 
 # مركز عمليات المخزن — Warehouse Operations Center (`Warehouse-Operations-Center`)
 
-![version](https://img.shields.io/badge/version-v1.62.0-blue)
+![version](https://img.shields.io/badge/version-v1.63.0-blue)
 
 **بتعمل إيه:** هب واحد لمحطة المخزن. الموظف بيدخل **مرة واحدة**، وبعدين
 بيتنقّل بين الطباعة والتغليف وحذف المنتج وتسليمات بوسطة وسكانر المرتجعات
 ورحلة الأوردر من غير ما يدخل تاني ومن غير ما يفتح تبويبات متفرقة.
 **مين بيستخدمها:** المخزن
-**الإصدار:** `v1.62.0` — **واحد للهب كله** (`TOOL_VERSION` في `shared/hub-config.js`)
+**الإصدار:** `v1.63.0` — **واحد للهب كله** (`TOOL_VERSION` في `shared/hub-config.js`)
 
 > 🔴 **الهب واجهة + Worker دخول بس — من v1.32.0.** الريبو ده بقى فيه
 > `index.js` و`wrangler.toml`، **بس نطاقهم محصور في الدخول والخروج بس**
@@ -80,7 +80,7 @@
 
 `core.js` · `core.css` · `home.js` **نسختين متطابقتين بالبايت** مع `Delivery-COD-Operations-Center` (`bash docs/core-twin-check.sh`)، والشرح الكامل (جدول الملفات · ترتيب التحميل · المولّدات · الفحوصات) في قسم **«النواة المشتركة بين الهبّين»** في `CLAUDE.md` بتاعه — ما بيتكررش هنا. اللي خاص بالمخزن: `shared/hub-config.js` · `hub.css` · `home-config.js` · **`gates.js`** (بوابات القنوات والمكتب والمرتجعات §BOSTA-GATE · §OFFICE-GATE · §WAREHOUSE-GATE؛ و§COURIER-GROUP بقى في `core.js`). ⛔ هب المخزن مالوش مولّدات (صفحاته مكتوبة بإيد).
 
-## 📦 تمريرة v1.62.0 — طابور «راجع من بوسطة» في `Bosta-Orders-Returned-Scanner.html` (طلب أحمد 25-10-2026)
+## 📦 تمريرة v1.63.0 — طابور «راجع من بوسطة» في `Bosta-Orders-Returned-Scanner.html` (طلب أحمد 25-10-2026)
 
 > 🔴 **مش واجهة بحتة:** الـ endpoint الجديد `?action=get_ready_to_return` اتكتب في **`Bosta-Orders-Returned-Scanner/index.js` (Worker v3.6.0)** — **Promote مطلوب من هناك**، وبعده `returned.min` بقى `3.6.0`.
 
@@ -92,6 +92,27 @@
 - ⚠️ **مفاتيح مخمّنة لازم تتأكد:** `custom.bosta_webhook_last_update_s1/s2` (عمود «آخر تحديث من بوسطة» — لو الاسم غلط العمود بيقول `—` بس) · و`custom.courier` مكتوب بقيمة `Bosta`. فلتر الاستعلام على `status_2_r_e:'In-Return'` لو مش filterable بيرجّع كل المتجر والـ Worker بيفلتر في الكود لحد `READY_RETURN_MAX_PAGES` (١٢ × ٥٠) ويرجّع `truncated`.
 - ✅ `docs/scanners-check.mjs`: **100 بند** (+١٧ في §RETURN-QUEUE). صفر `min` غير `returned`.
 - 🟡 **مفتوح:** ما اتجرّبش على شوبيفاي حقيقي (الفحص على Worker وهمي بس). مفيش صف في الرئيسية للطابور ده (قرار منفصل). وتاب السجل في `Bosta-Orders-Returned-Scanner.html` اتنقل لفلاتر رأس العمود `ecoSrvFilters` (26-10-2026) مع sticky headers وتوكنز `--th-*`/`--td-*`؛ والنسخة المستقلة اتنقلت لنفس المكوّن (نسخة inline من `srv-filters.js` — أي إصلاح فيه يتعمل في الاتنين). و#51 اتضاف هناك كـ §COL-RESIZE (نسخة مبسّطة من §TABLE).
+
+## ✏️🚚 تمريرة v1.62.0 — تابا «أوردرات معدّلة» و«تحويل بوسطة» (طلب أحمد 25-10-2026)
+
+> الـ Worker اتعدّل (`package-transfer-to-warehouse-worker` **1.10.0**) → `ECO_WORKERS.warehouse.min = 1.10.0`. **Promote حاجز.**
+
+الفكرة: أوردر اتطبع واتغلّف وراح المكتب وبعدين اتعدّل (`Confirmed` · `Confirmed + Edit` · S2 `Confirmed + EXCHANGE`) — فالطرد اللي في المكتب بمحتوى قديم. السكان بيكتب `Warehouse` (نفس `scan` بـ`mode`) عشان يرجع يتغلّف.
+
+| | «أوردرات معدّلة» (`mode=edited`) | «تحويل بوسطة» (`mode=edited_bosta`) |
+|---|---|---|
+| المندوب / الزون | مش Bosta · قاهرة+جيزة/شو روم | **Bosta** · **`Other_Regions`** |
+| التغليف | `s1_…` لـS1 · 🔴 **`s2_…` لـS2** | نفسه |
+| الملغي/المرتجع | 🔴 مستبعَد (شغل تاب المرتجعات) | مستبعَد |
+| العهدة | `Office` بس | `Office` بس |
+
+- 🔴 **استعلام واحد مشترك للتابين:** `get_ready_edited` (كاش واحد `ECO_CACHE_EDITED`، حالة واحدة `edState`)، والتقسيم بالمندوب/الزون في **`ecoEditedGate(o, mode)` / `ecoEditedQueue`** (`shared/gates.js` §EDITED-GATE). ⛔ منفصل عن `get_ready_to_warehouse` بقرار: حالاته نهائية وبتتراكم، وده عشرات — دمجهم بيربط فشلهم وبيخلط `truncated`.
+- ⛔ **§EDITED-GATE مش نسخة من §WAREHOUSE-GATE:** الحالة `Confirmed…`، والملغي **مستبعَد** مش شرط أهلية، والتغليف **بميتافيلد الماكينة** (الطرد خارج) مش `packedAtS1` على الماكينتين. نفس القاعدة في `evaluateEdited` بالـ Worker — في نفس التمريرة (درس R1).
+- ⚠️ **السكان بيكتب على طول** (`scan` + `edScan`) من غير سكان قطع ولا دفتر: قطع الطرد المعدّل مالهاش مصدر في شوبيفاي. `order_items`/`receive_order` تاب المرتجعات بس.
+- ⚠️ **الجلب كسول** (أول فتح لأي تاب منهم · كاش ١٠ د) — مفيش حمل زيادة على الـ Workers عند فتح الصفحة.
+- ⚠️ **أوردر مندوبه `Bosta` وزونه لسه قاهرة+جيزة مش في أي تاب منهم** (بقاعدة أحمد) — والسكان بيحكم عليه الـ Worker.
+- 🟡 **مفتوح:** صفوف الرئيسية للتابين (مؤجّلة) · فلتر `query` على `Confirmed` محتاج قياس حي (القيمة بتتفلتر حرفيًا في الكود).
+- ✅ `docs/warehouse-check.mjs`: **245 بند** (+٢٨: قسم ⑧ — البوابة · S2 بـ`s2_…` · الملغي مستبعَد · استعلام واحد للتابين · `mode` في `scan` · الرفض بسبب · نزع سلاح الصف · الكاش). ⚠️ ما اتجرّبش على شوبيفاي الحقيقي.
 
 ## 🔎 تمريرة v1.61.0 — مكوّن فلاتر رأس العمود الـ server-side (طلب أحمد 25-10-2026)
 
@@ -4091,7 +4112,7 @@ v3.5.0 وv3.6.0)** ·
 
 ---
 
-آخر تحديث: 25-10-2026 — v1.62.0 (طابور «راجع من بوسطة» · `returned.min` → `3.6.0` · قفل الدفعة · `.tbl-body-wrap` grid). 🔴 **Promote لـ `bosta-orders-returned-scanner` v3.6.0 حاجز للطابور.**
+آخر تحديث: 25-10-2026 — v1.63.0 (طابور «راجع من بوسطة» · `returned.min` → `3.6.0` · قفل الدفعة · `.tbl-body-wrap` grid). 🔴 **Promote لـ `bosta-orders-returned-scanner` v3.6.0 حاجز للطابور.**
 
 آخر تحديث: 22-10-2026 — v1.52.0 (الاسترجاع الخالص: شرط التغليف في §WAREHOUSE-GATE على `packedAtS1` · عمود «العنوان» · تابات «الأوردرات»/«منتجات التسليم الجزئي»/السجل · `warehouse.min` → `1.6.0`).
 

@@ -180,7 +180,9 @@ const ECO_WORKERS = {
   // 🔴 `min: '1.6.0'` (v1.52.0) — الطابور بقى بعمود «العنوان» (`address` في رد `get_ready_to_warehouse`) بدل «العميل»
   //    و«تاريخ الأوردر»، وحارس التغليف بقى على `s1_packing_date_time` للماكينتين (الاسترجاع الخالص كان بيترفض).
   //    على Worker `1.5.x` عمود العنوان بيقول `—` على **كل** صف، والاسترجاع الخالص لسه بيترفض — **بلا أي خطأ** — فالحارس بيسمّي النسخة.
-  warehouse:{ url: 'https://package-transfer-to-warehouse-worker.ecommoda-dev.workers.dev', min: '1.6.0', label: 'مرتجعات + لواغي المكتب' },
+  // 🔴 `min: '1.10.0'` (v1.62.0) — تابا «أوردرات معدّلة» و«تحويل بوسطة» بينادوا `get_ready_edited` ويبعتوا `mode` في `scan`.
+  //    على Worker أقدم: الطابور `Unknown action` (404) والسكان بيتعامل كأنه تاب المرتجعات (mode بيتتجاهل) — يرفض أوردر معدّل بكود `status`.
+  warehouse:{ url: 'https://package-transfer-to-warehouse-worker.ecommoda-dev.workers.dev', min: '1.10.0', label: 'مرتجعات + لواغي المكتب' },
   // 🔴 جرد المخزون — انضم للهب في v1.39.0 (الأداة المستقلة `Inventory-Audit-Updater`).
   // `6.2.1` = نفس `MIN_WORKER_VERSION` اللي كانت في الأداة المستقلة بالحرف — الصفحة
   // **معتمدة عليه فعلاً** (Standards #29): تاب الجرد الجماعي بيقرا `bulk_compare`
@@ -202,7 +204,7 @@ const ECO_WORKERS = {
   bostaUpload: { url: 'https://bosta-orders-upload-worker.ecommoda-dev.workers.dev', min: '2.23.0', label: 'رفع بوسطة' },
 };
 
-const TOOL_VERSION = 'v1.62.0';                     // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.63.0';                     // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const SHOP_HANDLE  = '6c7e1a-53';
 
@@ -226,6 +228,7 @@ const ECO_CACHE_PACK   = 'woc_queue_pack';    // كاش طابور التغلي�
 const ECO_CACHE_BOSTA     = 'woc_queue_bosta';      // كاش طابور تسليمات بوسطة — رد `get_ready_to_ship` خام (v1.43.0)
 const ECO_CACHE_OFFICE    = 'woc_queue_office';     // كاش طابور تسليمات المكتب — رد `get_ready_to_office` خام
 const ECO_CACHE_WAREHOUSE = 'woc_queue_warehouse';  // كاش طابور استلام المرتجعات — رد `get_ready_to_warehouse` خام
+const ECO_CACHE_EDITED = 'woc_queue_edited';  // كاش طابور «أوردرات معدّلة» + «تحويل بوسطة» — رد `get_ready_edited` خام (كاش واحد للتابين · v1.62.0)
 const ECO_CACHE_RETURN_ITEMS = 'woc_queue_return_items';  // كاش دفتر القطع الراجعة — رد `get_return_items` خام (v1.51.0)
 const ECO_CACHE_BOSTA_UPLOAD = 'woc_queue_bosta_upload';  // عدّادات «رفع بوسطة» التلاتة (شحن · استرجاع · استبدال) — ⛔ مش `ECO_CACHE_BOSTA` (ده كاش طابور تسليمات بوسطة)
 const ECO_CACHE_RETURN_QUEUE = 'woc_queue_return_scanner';  // كاش طابور «راجع من بوسطة» — رد `get_ready_to_return` خام (v1.62.0)
@@ -243,7 +246,7 @@ const ECO_HUB = {
   icon: '📦',                       // الأيقونة الافتراضية للهيدر
   // مفاتيح sessionStorage اللي بتتمسح مع الخروج (الجلسة وآخر نشاط بيتمسحوا في الـ core)
   clearKeys: [
-    ECO_CACHE_PRINT, ECO_CACHE_PACK, ECO_CACHE_BOSTA, ECO_CACHE_OFFICE, ECO_CACHE_WAREHOUSE, ECO_CACHE_RETURN_ITEMS, ECO_CACHE_BOSTA_UPLOAD, ECO_CACHE_RETURN_QUEUE,
+    ECO_CACHE_PRINT, ECO_CACHE_PACK, ECO_CACHE_BOSTA, ECO_CACHE_OFFICE, ECO_CACHE_WAREHOUSE, ECO_CACHE_EDITED, ECO_CACHE_RETURN_ITEMS, ECO_CACHE_BOSTA_UPLOAD, ECO_CACHE_RETURN_QUEUE,
     ...Object.values(ECO_CACHE_UPLOAD_ROWS), ECO_CACHE_PRINT_LOGS,
     ...['print', 'pack', 'bosta'].map(k => ECO_CACHE_DONE + k),
   ],
