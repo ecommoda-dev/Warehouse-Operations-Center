@@ -91,7 +91,7 @@
 - **`.tbl-body-wrap` على `grid-template-rows`** بدل `max-height:20000px` (Standards #46) وصندوق السكان من غير `placeholder`.
 - ⚠️ **مفاتيح مخمّنة لازم تتأكد:** `custom.bosta_webhook_last_update_s1/s2` (عمود «آخر تحديث من بوسطة» — لو الاسم غلط العمود بيقول `—` بس) · و`custom.courier` مكتوب بقيمة `Bosta`. فلتر الاستعلام على `status_2_r_e:'In-Return'` لو مش filterable بيرجّع كل المتجر والـ Worker بيفلتر في الكود لحد `READY_RETURN_MAX_PAGES` (١٢ × ٥٠) ويرجّع `truncated`.
 - ✅ `docs/scanners-check.mjs`: **100 بند** (+١٧ في §RETURN-QUEUE). صفر `min` غير `returned`.
-- 🟡 **مفتوح:** ما اتجرّبش على شوبيفاي حقيقي (الفحص على Worker وهمي بس). مفيش صف في الرئيسية للطابور ده (قرار منفصل). وتاب السجل في `Bosta-Orders-Returned-Scanner.html` اتنقل لفلاتر رأس العمود `ecoSrvFilters` (26-10-2026) مع sticky headers وتوكنز `--th-*`/`--td-*`؛ والنسخة المستقلة لسه بقسم الفلاتر القديم (#47/#49/#51 مفتوحة هناك — تفترق عن الهب في الـ chrome بس).
+- 🟡 **مفتوح:** ما اتجرّبش على شوبيفاي حقيقي (الفحص على Worker وهمي بس). مفيش صف في الرئيسية للطابور ده (قرار منفصل). وتاب السجل في `Bosta-Orders-Returned-Scanner.html` اتنقل لفلاتر رأس العمود `ecoSrvFilters` (26-10-2026) مع sticky headers وتوكنز `--th-*`/`--td-*`؛ والنسخة المستقلة اتنقلت لنفس المكوّن (نسخة inline من `srv-filters.js` — أي إصلاح فيه يتعمل في الاتنين). المفتوح هناك: #51 (عرض الأعمدة اللايف) بس.
 
 ## 🔎 تمريرة v1.61.0 — مكوّن فلاتر رأس العمود الـ server-side (طلب أحمد 25-10-2026)
 
