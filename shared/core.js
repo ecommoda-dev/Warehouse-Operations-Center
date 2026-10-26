@@ -651,6 +651,22 @@ function playBeep(type) {
       gain.gain.setValueAtTime(0.18, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
       osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.08);
+    } else if (type === 'fail') {
+      // فشل ثقيل — نغمة منشارية نازلة وأطول من `error`: كود مرفوض أو أوردر فشل (unified-entry-box).
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(240, ctx.currentTime);
+      osc.frequency.setValueAtTime(150, ctx.currentTime + 0.2);
+      gain.gain.setValueAtTime(0.35, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.5);
+    } else if (type === 'dup') {
+      // تكرار — دقّتين قصيرتين متوسطتين، محايدتين (مش إنذار): التكرار حالة عادية في السكان.
+      osc.frequency.setValueAtTime(700, ctx.currentTime);
+      gain.gain.setValueAtTime(0.22, ctx.currentTime);
+      gain.gain.setValueAtTime(0.001, ctx.currentTime + 0.07);
+      gain.gain.setValueAtTime(0.22, ctx.currentTime + 0.12);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.2);
     } else {
       // `error` وأي قيمة تانية — نغمة نازلة.
       osc.frequency.setValueAtTime(300, ctx.currentTime);
