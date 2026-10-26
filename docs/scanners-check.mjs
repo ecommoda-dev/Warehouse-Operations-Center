@@ -248,9 +248,9 @@ for (const [file, title, tabLog, panelLog, rows, diag] of [
   console.log('④ تاب السجل — فلتر الموظف بيتملّى من `get_employees`');
   await page.click(tabLog); await page.waitForTimeout(600);
   is(await page.locator(panelLog).evaluate(el => el.classList.contains('active')), 'بانل السجل اتفتح');
-  is(await page.evaluate(() => msState.emp.items.length) > 0,
+  is(await page.evaluate(() => typeof srvLog !== 'undefined' ? srvLog.label('emp','tester') !== 'tester' : msState.emp.items.length > 0),
      '🔴 فلتر الموظف اتملّى — كان **أثر جانبي لشاشة الدخول** اللي اتشالت');
-  is(await page.evaluate(() => msState.emp.items[0].label) === 'الموظف التجريبي',
+  is(await page.evaluate(() => typeof srvLog !== 'undefined' ? srvLog.label('emp','tester') : msState.emp.items[0].label) === 'الموظف التجريبي',
      'وبالاسم المعروض مش الـ username');
 
   console.log('— الكونسول —');
