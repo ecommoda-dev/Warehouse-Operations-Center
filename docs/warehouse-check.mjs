@@ -641,7 +641,7 @@ console.log('② الطابور — الفلترة من الـ shell مش من �
   const cells = await page.$$eval('#rqTableBody tr:first-child td', td => td.length);
   is(cells === heads.length, 'خلايا الصف == أعمدة الهيدر', `${cells} ≠ ${heads.length}`);
   // 🔴 §UNIFIED — نفس الأعمدة لكل الصفوف
-  is(heads.join('|') === 'رقم الأوردر|العنوان|نوع الأوردر|النتيجة|الوقت|إجراء',
+  is(heads.join('|') === 'رقم الأوردر|العنوان|نوع الأوردر|النتيجة|إجراء',
      '🔴 الأعمدة بالترتيب المتفق عليه (بلا «الحالة») + عمود «إجراء» (➕ إضافة) في الآخر', heads.join(' | '));
   is((await rowTxt('#54727')).includes('⏳ في انتظار التسجيل') && !(await rowTxt('#54727')).includes('مستنية'), 'صف الطابور عمود «النتيجة» فيه «⏳ في انتظار التسجيل»');
   // ⛔ ولا أثر لـ`updatedAt` في الصفحة نفسها
@@ -756,8 +756,12 @@ console.log('③ السكان — الاستلام قطعة قطعة (v1.51.0)')
   is((await page.evaluate(() => window.__beeps.slice())).includes(300), 'وبنغمة الفشل (300)');
   is(await page.locator('#recvBody .recv-row.u-done').count() === 0, 'ومفيش قطعة اتسجلت');
   const ic = itemsCalls.length;
+  const unitsBefore = await page.locator('#recvBody .recv-row').count();
   await scan(page, '7212244533576');
-  is(itemsCalls.length === ic, 'سكان أوردر تاني والأوردر مفتوح مابيفتحش أوردر تاني');
+  // 🔴 §RECV-MULTI: أوردر تاني بيتسكن والأوردر الأول مفتوح — بيتفتح (النداء بيحصل) ومابيمسحش الأول من اللوحة
+  is(itemsCalls.length === ic + 1, '🔴 سكان أوردر تاني والأوردر مفتوح بيعدّي على `order_items` (اللوحة بقت لأكتر من أوردر)');
+  { const nn = await page.locator('#recvBody .recv-row').count(); is(nn === unitsBefore && nn > 0, 'والأوردر الأول لسه في اللوحة بقطعه', `${nn} / ${unitsBefore}`); }
+  await page.locator('#outcomeFtr button').first().click();   // نافذة «خلاص متعمل» بتاعة الأوردر التاني
   // 🔴 v1.54.1 — زرار «ناقصة» اتشال من لوحة الاستلام (قرار أحمد 25-10-2026)
   is(await page.locator('#recvBody button[data-act="miss"]').count() === 0 && !(await txt('#recvBody')).includes('ناقصة'),
      '🔴 مفيش زرار «ناقصة» في لوحة الاستلام');
@@ -1293,6 +1297,87 @@ console.log('⑧ أوردرات معدّلة + تحويل بوسطة');
   is(errors.length === 0, 'صفر أخطاء في الكونسول', errors.join(' | '));
   await ctx.close();
 }
+
+// ══════════════════════════════════════════════════════════════
+// ⑨ §RECV-MULTI — لوحة استلام لأكتر من أوردر في نفس الوقت (v1.65.0 · طلب أحمد 26-10-2026)
+// ══════════════════════════════════════════════════════════════
+console.log('⑨ لوحة الاستلام المتعددة');
+{
+  // باركود مشترك بين أوردرين — ده التعارض اللي نافذة الاختيار اتعملت عشانه
+  const saved571 = ORDER_ITEMS['7212244533571'];
+  ORDER_ITEMS['7212244533571'] = [{ lineItemId:'gid://shopify/LineItem/3', sku:'A / 44', title:'Shoe A - 44', variantId:'v1', barcode:'11111111', qty:1 }];
+  const { page, ctx, errors } = await newPage();
+  await page.goto(`${BASE}/Package-Transfer-To-Warehouse.html`);
+  await page.waitForTimeout(1200);
+  const oidRows = oid => page.locator(`#recvBody tr.recv-row[data-oid="${oid}"]`);
+
+  // ── «إضافة الكل»
+  const i0 = itemsCalls.length;
+  is(!(await page.locator('#rqAddAllBtn').isDisabled()) && (await page.locator('#rqAddAllBtn').innerText()).includes('إضافة الكل'),
+     '🔴 زرار «➕ إضافة الكل» موجود ومفتوح والطابور فيه أوردرات');
+  await page.click('#rqAddAllBtn');
+  await page.waitForTimeout(2000);
+  is(itemsCalls.length - i0 === 6, '«إضافة الكل» نادى `order_items` لكل أوردر في الطابور (٦)', String(itemsCalls.length - i0));
+  is(await oidRows('7212244533570').count() === 3 && await oidRows('7212244533571').count() === 1,
+     '🔴 أوردرين اتفتحوا في اللوحة **مع بعض** (#54727 بـ٣ قطع و #54580 بقطعة)');
+  // الطابور فيه ٦ — اتفتح ٤ (الاتنين دول + #54301 بقطعة بلا باركود + #54296 قطعه ما اتحددتش) والاتنين الباقيين اترفضوا
+  is(await oidRows('7212244533572').count() === 0 && await page.locator('#recvBody tr.recv-empty-row').count() === 1,
+     '🔴 أوردر قطعه ما اتحددتش بيفضل ظاهر في اللوحة بصف خاص (مش بيختفي)');
+  is(await page.locator('#recvBody tr.recv-first').count() === 4, 'أول قطعة من كل أوردر بتبدأ مجموعة (خط فاصل)');
+  is(await page.locator('#recvBody .recv-prog').count() === 3, 'عدّاد «اتسكن/الكل» جنب كل أوردر لما يبقى أكتر من واحد');
+  is(await isOutcomeOpenFn(page) && (await page.locator('#outcomeHdr').innerText()).includes('اتفتح 4 من 6'),
+     '🔴 اللي ما اتفتحش اتجمّع في نافذة ملخّص **واحدة** (مفيش نافذة وسط الدفعة)', await page.locator('#outcomeHdr').innerText());
+  await page.locator('#outcomeFtr button').first().click();
+  const openedBtns = await page.locator('#rqTableBody button:disabled').count();
+  is(openedBtns === 4, 'الصفوف اللي اتفتحوا زرارهم «✔ مفتوح في اللوحة» ومقفول', String(openedBtns));
+  is((await page.locator('#recvCancelBtn').innerText()).includes('إلغاء الكل (4)'), 'زرار الإلغاء بقى «إلغاء الكل (٤)»');
+  is(await page.locator('#recvBody button[data-act="cancelord"]').count() === 4, 'زرار «إلغاء الأوردر» لكل أوردر');
+
+  // ── تعارض الباركود: نافذة اختيار + Esc بيلغي من غير ما يعلّم قطعة
+  await scan(page, '11111111');
+  is(await isOutcomeOpenFn(page) && (await page.locator('#outcomeHdr').innerText()).includes('أكتر من أوردر'),
+     '🔴 باركود في أوردرين = نافذة اختيار (مفيش تخمين بالأقدم)');
+  const labels = await page.locator('#outcomeFtr button').allInnerTexts();
+  is(labels.length === 3 && labels[0].includes('#54727') && labels[1].includes('#54580'),
+     'الأزرار: رقم كل أوردر + إلغاء', labels.join(' | '));
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  is(!(await isOutcomeOpenFn(page)) && await page.locator('#recvBody .recv-row.u-done').count() === 0,
+     'Esc بيلغي السكانة — مفيش قطعة اتعلّمت');
+
+  // ── الاختيار: الأوردر التاني — وقطعته الوحيدة بتكمّل الأوردر فيتسجّل ويتشال لوحده
+  const r0 = receiveCalls.length;
+  await scan(page, '11111111');
+  await page.locator('#outcomeFtr button').nth(1).click();
+  await page.waitForTimeout(900);
+  is(receiveCalls.length === r0 + 1 && String(receiveCalls[r0].code) === '7212244533571',
+     '🔴 اختيار #54580 → اكتمل فاتسجّل لوحده (`receive_order` للأوردر ده بس)', JSON.stringify(receiveCalls[r0]?.code));
+  is(await oidRows('7212244533571').count() === 0 && await oidRows('7212244533570').count() === 3,
+     '🔴 اللي اتسجّل اتشال من اللوحة، واللي لسه ناقص فضل بقطعه');
+  is(await page.locator('#recvBox').isVisible() && !(await page.locator('#recvBody').innerText()).includes('#54580'),
+     'اللوحة لسه مفتوحة وفيها الباقي بس');
+
+  // ── قطعة في أوردر واحد بس → من غير نافذة
+  await scan(page, '11111111');
+  is(!(await isOutcomeOpenFn(page)) && await oidRows('7212244533570').locator('.u-state.s-done').count() === 1,
+     'قطعة مستنية في أوردر واحد بس = بتتعلّم على طول من غير أسئلة');
+  is((await page.locator('#recvCancelBtn').innerText()).includes('إلغاء الكل (3)'),
+     'اللي اتسجّل اتشال من عدّاد الإلغاء (٤ → ٣)');
+
+  // ── إلغاء الكل بيسأل (فيه قطعة معلّمة) ومابيكتبش حاجة
+  const r1 = receiveCalls.length;
+  await page.click('#recvCancelBtn');
+  is(await isOutcomeOpenFn(page) && (await page.locator('#outcomeHdr').innerText()).includes('إلغاء'), 'إلغاء الاستلام بيسأل (قطعة معلّمة)');
+  await page.locator('#outcomeFtr button').nth(1).click();
+  await page.waitForTimeout(300);
+  is(!(await page.locator('#recvBox').isVisible()) && receiveCalls.length === r1, 'الإلغاء قفل اللوحة بصفر كتابة');
+  is((await page.locator('#rqTableBody button[data-add-id]').count()) >= 1, 'الأوردر اللي اتلغى استلامه رجع زرار «➕ إضافة» بتاعه');
+
+  is(errors.length === 0, 'صفر أخطاء في الكونسول', errors.join(' | '));
+  ORDER_ITEMS['7212244533571'] = saved571;
+  await ctx.close();
+}
+async function isOutcomeOpenFn(page) { return page.evaluate(() => document.getElementById('outcomeOverlay')?.classList.contains('open')); }
 
 // ══ §CACHE-TTL (v1.59.0) — الفتح من الكاش لو أحدث من ١٠ دقايق ══
 console.log('§CACHE-TTL — كاش الطابور عند الفتح');
