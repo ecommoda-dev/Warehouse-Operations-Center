@@ -163,10 +163,9 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
   .rq-unified tbody tr.rq-row td:nth-child(3) .type-text { white-space: normal; }
   .rq-unified tbody tr.rq-row td:nth-child(3) { grid-column: 2; grid-row: 1; }
   .rq-unified tbody tr.rq-row td:nth-child(4) { grid-column: 3; grid-row: 1; }
-  .rq-unified tbody tr.rq-row td:nth-child(2) { grid-column: 1 / 3; grid-row: 2; }
-  .rq-unified tbody tr.rq-row td:nth-child(5) { grid-column: 3; grid-row: 2; }
-  .rq-unified tbody tr.rq-row td:nth-child(6) { grid-column: 1 / -1; grid-row: 3; }
-  .rq-unified tbody tr.rq-row td:nth-child(6) .rq-add-btn { width: 100%; }
+  .rq-unified tbody tr.rq-row td:nth-child(2) { grid-column: 1 / -1; grid-row: 2; }
+  .rq-unified tbody tr.rq-row td:nth-child(5) { grid-column: 1 / -1; grid-row: 3; }
+  .rq-unified tbody tr.rq-row td:nth-child(5) .rq-add-btn { width: 100%; }
 }
 .rq-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
 .rq-act { margin-inline-start: auto; display: flex; align-items: stretch; gap: 10px; }
@@ -192,6 +191,9 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 .recv-row.u-done  { background: var(--green-light); }
 .recv-row.u-miss  { background: var(--red-light); }
 .recv-row.u-flash { outline: 2px solid var(--green); outline-offset: -2px; }
+/* §RECV-MULTI — أول قطعة من كل أوردر بتبدأ مجموعة جديدة (خط فاصل) + عدّاد «اتسكن من الكل» جنب رقم الأوردر */
+.recv-row.recv-first td { border-top: 3px solid var(--accent-border); }
+.recv-prog { margin-inline-start: 6px; font-size: 11px; font-weight: 800; color: var(--text-muted); white-space: nowrap; }
 .u-state { font-weight: 800; white-space: nowrap; }
 .u-state.s-wait { color: var(--text-muted); }
 .u-state.s-done { color: var(--green-dark); }
@@ -735,7 +737,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
             <li><code>extra.machine</code> — <code>S1</code> أو <code>S2</code>: <b>أنهي طرد</b> اتسجّل، مش حالة الأوردر</li>
             <li><code>rqState</code> / <code>riState</code> — الطابور ودفتر القطع. <code>rqRemove</code>/<code>riRemove</code> بتشيل الصف فورًا بعد النجاح وبتمسح الكاش؛ الشاشة <b>لازم تتغيّر</b> بعد النجاح</li>
             <li><code>ECO_CACHE_WAREHOUSE</code> · <code>ECO_CACHE_RETURN_ITEMS</code> · <code>ECO_CACHE_TTL_MS</code> (shell) — كاش العرض (١٠ دقايق). ⛔ للعرض بس، مش حارس</li>
-            <li><code>recv</code> — لوحة الاستلام المفتوحة (<code>shellIsBusy</code> بيقراها عشان الخروج التلقائي مايمسحش قطع اتعلّمت)</li>
+            <li><code>recvs</code> — أوردرات لوحة الاستلام المفتوحة مع بعض (<code>shellIsBusy</code> بيقراها عشان الخروج التلقائي مايمسحش قطع اتعلّمت)</li>
           </ul>
 
           <h4>الـ Workers اللي الصفحة دي بتناديهم</h4>
@@ -878,7 +880,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           </div>
           <div class="recv-foot">
             <button class="btn btn-danger-outline" id="recvCancelBtn" type="button" onclick="recvCancel()">✕ إلغاء الاستلام</button>
-            <button class="btn btn-success" id="recvFinishBtn" type="button" onclick="recvFinish()" disabled>✅ تسجيل الاستلام</button>
+            <button class="btn btn-success" id="recvFinishBtn" type="button" onclick="recvFinishReady()" disabled>✅ تسجيل الاستلام</button>
           </div>
         </div>
 
@@ -908,6 +910,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
               <span class="count-lbl">أوردر</span>
             </div>
             <!-- 🔴 §FRESH-UNIT (طلب أحمد 25-10-2026): نفس وحدة صف الرئيسية بالحرف — `ecoFreshUnitHTML` في `shared/core.js`، بلا بادج رقم -->
+<button class="btn btn-primary btn-sm" id="rqAddAllBtn" type="button" onclick="rqAddAll()" disabled>➕ إضافة الكل</button>
 <div class="rq-act" id="rqFreshMount"></div>
           </div>
           <div id="rqFail" class="rq-fail" style="display:none;"></div>
@@ -933,7 +936,6 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
                       <th>العنوان</th>
                       <th>نوع الأوردر</th>
                       <th>النتيجة</th>
-                      <th>الوقت</th>
                       <th>إجراء</th>
                     </tr>
                   </thead>
@@ -1460,9 +1462,9 @@ bindScanInput(edScanInputEl, val => edScan('edited', val));
 bindScanInput(ebScanInputEl, val => edScan('edited_bosta', val));
 
 function routeScanRi(code) {
-  if (recv) {
+  if (recvs.length) {
     playBeep('warn');
-    showToast(`فيه أوردر مفتوح للاستلام (${recv.order?.orderName || ''}) في تاب «الأوردرات» — خلّصه أو ألغيه الأول`, 'warning');
+    showToast(`فيه ${recvs.length} أوردر مفتوح للاستلام في تاب «الأوردرات» — خلّصهم أو ألغيهم الأول`, 'warning');
     return;
   }
   if (isItemBarcode(code)) { receiveLooseItem(code); return; }
@@ -1478,14 +1480,13 @@ function routeScanRi(code) {
 //    بس** — مش مع دفتر التسليم الجزئي. قطعة مش منه = رفض بلا أي كتابة.
 function isItemBarcode(code) { return /^\d{8,9}$/.test(String(code).trim()); }
 
+// 🔴 §RECV-MULTI: سكان أوردر جديد بيتضاف للوحة (مش بيتمنع). وطول ما فيه أوردر مفتوح، باركود القطعة
+//    بيتطابق مع قطع **كل** الأوردرات المفتوحة (`recvScanUnit`) — مش مع دفتر التسليم الجزئي.
 function routeScan(code) {
-  if (recv) {
-    if (isItemBarcode(code)) { recvScanUnit(code); return; }
-    playBeep('warn');
-    showToast(`فيه أوردر مفتوح للاستلام (${recv.order?.orderName || ''}) — خلّصه أو ألغيه الأول`, 'warning');
-    return;
+  if (isItemBarcode(code)) {
+    if (recvs.length) { recvScanUnit(code); return; }
+    receiveLooseItem(code); return;
   }
-  if (isItemBarcode(code)) { receiveLooseItem(code); return; }
   openOrder(code, false);
 }
 
@@ -1503,15 +1504,88 @@ function routeScan(code) {
 let scanBusy    = false;       // بيمنع سكانتين متوازيتين على نفس النداء
 // §IDLE — الخروج التلقائي (٦٠ د) موقوف طول ما سكانة بتتسجّل **أو** لوحة استلام مفتوحة فيها
 // قطع اتعلّمت (v1.51.0) — الخروج كان هيمسح اللي اتسكن من غير ما يتسجّل.
-let recv = null;   // لوحة الاستلام المفتوحة (§RECV-JS) — { code, ack, order, machine, cycleKey, itemsUnknown, units }
-window.shellIsBusy = () => scanBusy || (!!recv && recv.units.some(u => u.state !== 'wait'));
+// 🔴 §RECV-MULTI (طلب أحمد 26-10-2026): لوحة الاستلام بقت **لأكتر من أوردر في نفس الوقت** — `recvs` مصفوفة
+//    أوردرات مفتوحة، كل واحد { code, ack, order, machine, cycleKey, itemsUnknown, warnings, units, submitting }.
+//    الأوردر اللي قطعه تكمل بيتسجّل (`receive_order`) ويتشال من اللوحة؛ اللي بيفضل هو اللي لسه ناقص.
+const recvs = [];
+let recvFlash = null;                          // «orderId|key» — القطعة اللي لسه اتسكنت (لمعان)
+let recvLastPick = null;                       // آخر أوردر اتختار من نافذة التعارض (بيطلع أول زرار)
+const recvBatch = { running: false, done: 0, total: 0 };   // «إضافة الكل»
+const recvOpenIds = () => new Set(recvs.map(r => String(r.order?.orderId)));
+window.shellIsBusy = () => scanBusy || recvBatch.running || recvs.some(r => r.submitting || r.units.some(u => u.state !== 'wait'));
 // ─── §ADD-BTN — زرار «➕ إضافة» في كل صف من جدول الطابور (v1.55.0 · طلب أحمد 25-10-2026) ───
 // بيحل محل نافذة «اختيار من القايمة»: نفس مسار السكان بالظبط (`openOrder`) — مفيش كتابة جديدة.
 // أوردر واحد في المرة: لوحة الاستلام بتفتح لأوردر واحد. الزرار بـ`data-add-id` + listener واحد على الـ tbody
 // (مش `onclick` بنص) — الجدول بيتعاد رسمه كل جلب وكل تسجيل، فالـ listener لازم يفضل على الأب الثابت.
 function rqAddOrder(id) {
-  if (scanBusy || recv) { showToast('خلّص الأوردر المفتوح للاستلام الأول', 'warning'); return; }
+  if (scanBusy || recvBatch.running) { showToast('استنى لحد ما العملية اللي قبلها تخلص', 'warning'); return; }
+  if (recvOpenIds().has(String(id))) { showToast('الأوردر ده مفتوح في اللوحة خلاص', 'warning'); return; }
   openOrder(id, false);
+}
+
+// ─── §RECV-MULTI::addAll — «➕ إضافة الكل» (طلب أحمد 26-10-2026) ───
+// بتفتح كل أوردرات الطابور في اللوحة (قراءة بس — `order_items`). بتزامن ٣ نداءات مش `Promise.all`
+// (نفس درس R15: الـ Custom App مشترك والـ THROTTLED حصل قبل كده). الأوردر اللي محتاج إقرار أو
+// اترفض أو فشل **ما بيفتحش نافذة** وسط الدفعة — بيتجمّع في نافذة ملخّص واحدة في الآخر.
+const RECV_ADD_CONCURRENCY = 3;
+function rqAddAllUI() {
+  const b = document.getElementById('rqAddAllBtn');
+  if (!b) return;
+  const left = rqState.orders.filter(o => !recvOpenIds().has(String(o.orderId))).length;
+  b.disabled = scanBusy || recvBatch.running || left === 0;
+  b.textContent = recvBatch.running ? `⏳ جاري الفتح ${recvBatch.done} من ${recvBatch.total}` : `➕ إضافة الكل${left ? ` (${left})` : ''}`;
+}
+async function rqAddAll() {
+  if (scanBusy || recvBatch.running) return;
+  if (isOutcomeOpen()) return;
+  const open = recvOpenIds();
+  const todo = rqState.orders.filter(o => !open.has(String(o.orderId)));
+  if (!todo.length) { showToast('كل أوردرات الطابور مفتوحة في اللوحة خلاص', 'warning'); return; }
+  recvBatch.running = true; recvBatch.done = 0; recvBatch.total = todo.length;
+  rqAddAllUI();
+  const issues = [];
+  let opened = 0, next = 0;
+  const worker = async () => {
+    while (next < todo.length) {
+      const o = todo[next++];
+      try { if (await openOrderBatch(o, issues)) opened++; }
+      finally { recvBatch.done++; rqAddAllUI(); }
+    }
+  };
+  try {
+    await Promise.all(Array.from({ length: Math.min(RECV_ADD_CONCURRENCY, todo.length) }, worker));
+  } finally {
+    recvBatch.running = false;
+    // الترتيب في اللوحة = ترتيب الطابور (الفتح المتوازي بيرجّعهم بترتيب الوصول)
+    const pos = new Map(rqState.orders.map((o, i) => [String(o.orderId), i]));
+    recvs.sort((a, b) => (pos.get(String(a.order?.orderId)) ?? 1e9) - (pos.get(String(b.order?.orderId)) ?? 1e9));
+    recvRender(); rqRender(); rqAddAllUI(); focusScan();
+  }
+  if (issues.length) {
+    playBeep('warn');
+    showOutcome({
+      tone: 'warn', title: `⚠️ اتفتح ${opened} من ${todo.length} — ${issues.length} محتاج مراجعة`,
+      lines: issues.map(i => `${i.name}: ${i.msg}`),
+      note: 'الأوردرات دي ما اتفتحتش في اللوحة — اضغط «إضافة» جنب كل واحد لوحده (عشان تشوف التفاصيل وتقرّ لو لزم).',
+    });
+  } else if (opened) {
+    playBeep('success');
+    showToast(`✅ اتفتح ${opened} أوردر في اللوحة`, 'success');
+  }
+}
+
+// نسخة «بلا نوافذ» من `openOrder` للدفعة — بترجّع true لو الأوردر اتفتح، وبتضيف السبب في `issues` لو لأ.
+async function openOrderBatch(o, issues) {
+  const name = `#${String(o.orderName || o.orderId).replace(/^#/, '')}`;
+  try {
+    const res = await apiPost('order_items', { code: String(o.orderId), ack: false, employee: currentEmployee.username });
+    if (res.result === 'items') return recvAddFromResult(res, String(o.orderId), false, true);
+    if (res.result === 'already') { pushSession(res, String(o.orderId)); rqRemove(res.order?.orderId); return false; }
+    issues.push({ name, msg: res.message || (res.result === 'needs_ack' ? 'محتاج مراجعة قبل الاستلام' : 'مرفوض') });
+  } catch (err) {
+    issues.push({ name, msg: err.message || 'النداء فشل' });
+  }
+  return false;
 }
 document.getElementById('rqTableBody').addEventListener('click', e => {
   const btn = e.target.closest('[data-add-id]');
@@ -1570,8 +1644,7 @@ async function openOrder(code, ack) {
     // ② الطرد مؤهل — لوحة الاستلام قطعة قطعة
     if (res.result === 'items') {
       pendingAck = null;
-      playBeep('scan');
-      recvOpen(res, code, ack === true);
+      recvAddFromResult(res, code, ack === true, false);
       return;
     }
 
@@ -1620,7 +1693,8 @@ async function openOrder(code, ack) {
     setScanBusyUI(false);
     // 🔴 اللوحة اترسمت وإحنا لسه `scanBusy` (زرارا الإنهاء والإلغاء مقفولين) —
     //    من غير إعادة الرسم دي، أوردر قطعه ما اتحددتش مالوش أي طريق للإنهاء.
-    if (recv) recvRender();
+    if (recvs.length) recvRender();
+    rqAddAllUI();
   }
 }
 
@@ -1634,6 +1708,18 @@ async function openOrder(code, ack) {
 //    (`unitKey`). أي اختلاف = كل استلام بيرجع «القطع اتغيّرت» (409).
 // ⚠️ `recv` متعرّف فوق جنب `scanBusy` (§TOOL-JS) — `shellIsBusy` بيقراه.
 
+// ─── §RECV-MULTI::add — أوردر اتفتح (من `openOrder` أو من «إضافة الكل») ───
+// بيرجّع true لو اتضاف. الأوردر المفتوح خلاص ما بيتكررش (نفس الأوردر في لوحتين = قطعة بتتسكن مرتين).
+function recvAddFromResult(res, code, ack, quiet) {
+  if (recvOpenIds().has(String(res.order?.orderId))) {
+    if (!quiet) { playBeep('warn'); showToast(`الأوردر ${res.order?.orderName || ''} مفتوح في اللوحة خلاص`, 'warning'); }
+    return false;
+  }
+  if (!quiet) playBeep('scan');
+  recvOpen(res, code, ack);
+  return true;
+}
+
 function recvOpen(res, code, ack) {
   const units = [];
   for (const it of (res.items || [])) {
@@ -1642,94 +1728,179 @@ function recvOpen(res, code, ack) {
         sku: it.sku, title: it.title, barcode: it.barcode, imageUrl: it.imageUrl || null, state: 'wait', mode: null });
     }
   }
-  recv = { code, ack, order: res.order, machine: res.machine, cycleKey: res.cycleKey,
-           itemsUnknown: !!res.itemsUnknown || !units.length, warnings: res.warnings || [], units, flash: null };
+  recvs.push({ code, ack, order: res.order, machine: res.machine, cycleKey: res.cycleKey,
+           itemsUnknown: !!res.itemsUnknown || !units.length, warnings: res.warnings || [], units, submitting: false });
   recvRender();
-  document.getElementById('recvBox').scrollIntoView({ block: 'nearest' });
+  rqRender();    // الصف اللي اتفتح بيتقفل زرار «إضافة» بتاعه
+  if (!recvBatch.running) document.getElementById('recvBox').scrollIntoView({ block: 'nearest' });
 }
 
-function recvCounts() {
+function recvCountsOf(r) {
   const n = { total: 0, done: 0, miss: 0, wait: 0 };
-  if (!recv) return n;
-  for (const u of recv.units) { n.total++; n[u.state]++; }
+  for (const u of r.units) { n.total++; n[u.state]++; }
   return n;
+}
+// أوردر جاهز يتسجّل بضغطة «تسجيل الاستلام»: قطعه ما بقاش فيها مستنية — أو قطعه ما اتحددتش (تأكيد يدوي)
+function recvFinishable(r) { return !r.submitting && (r.itemsUnknown || recvCountsOf(r).wait === 0); }
+function recvDrop(r) {
+  const i = recvs.indexOf(r);
+  if (i >= 0) recvs.splice(i, 1);
+  rqRender();
 }
 
 function recvRender() {
   const box = document.getElementById('recvBox');
-  if (!recv) { box.style.display = 'none'; document.getElementById('recvBody').innerHTML = ''; return; }
+  if (!recvs.length) { box.style.display = 'none'; document.getElementById('recvBody').innerHTML = ''; return; }
   box.style.display = '';
-  const o = recv.order || {};
-  const n = recvCounts();
+  const multi = recvs.length > 1;
 
   const note = document.getElementById('recvNote');
   const notes = [];
-  if (recv.itemsUnknown) notes.push('⚠️ ما قدرناش نحدد قطع الطرد ده من شوبيفاي — راجع الطرد بعينك، وبعدها «تسجيل الاستلام» هيطلب تأكيد يدوي.');
-  for (const w of recv.warnings) notes.push(`⚠️ ${w}`);
+  for (const r of recvs) {
+    const pre = multi ? `${r.order?.orderName || ''}: ` : '';
+    if (r.itemsUnknown) notes.push(`⚠️ ${pre}ما قدرناش نحدد قطع الطرد ده من شوبيفاي — راجع الطرد بعينك، وبعدها «تسجيل الاستلام» هيطلب تأكيد يدوي.`);
+    for (const w of r.warnings) notes.push(`⚠️ ${pre}${w}`);
+  }
   note.style.display = notes.length ? '' : 'none';
   note.innerHTML = notes.map(esc).join('<br>');
 
   const body = document.getElementById('recvBody');
-  document.getElementById('recvTableWrap').style.display = recv.units.length ? '' : 'none';
-  body.innerHTML = recv.units.map(u => {
-    const st = u.state === 'done'
-      ? `<span class="u-state s-done">✅ اتسجلت${u.mode === 'manual' ? ' (يدوي)' : ''}</span>`
-      : u.state === 'miss' ? '<span class="u-state s-miss">❌ ناقصة</span>'
-      : '<span class="u-state s-wait">⏳ في انتظار التسجيل</span>';
-    // ⚠️ الأزرار بـ`data-*` + listener واحد على الـ tbody — مش `onclick` بنص، عشان
-    //    مفيش قيمة (SKU · اسم منتج) تتسرّب جوّه HTML.
-    const acts = u.state === 'wait'
-      ? `<button class="btn btn-outline btn-sm" type="button" data-act="manual" data-key="${esc(u.key)}">✋ استلام يدوي</button>`
-      : `<button class="btn btn-outline btn-sm" type="button" data-act="undo" data-key="${esc(u.key)}">↩ تراجع</button>`;
-    const cls = u.state === 'done' ? 'u-done' : u.state === 'miss' ? 'u-miss' : '';
-    return `<tr class="recv-row ${cls}${recv.flash === u.key ? ' u-flash' : ''}" data-key="${esc(u.key)}">
-      <td>${orderLink(o.orderName, o.orderId)}</td>
+  let html = '';
+  let anyRows = false;
+  for (const r of recvs) {
+    const o = r.order || {};
+    const n = recvCountsOf(r);
+    const oid = esc(String(o.orderId));
+    if (!r.units.length) {
+      // أوردر قطعه ما اتحددتش — لازم يفضل ظاهر في اللوحة (من غيره ملوش أي طريق للإنهاء ولا للإلغاء)
+      anyRows = true;
+      html += `<tr class="recv-empty-row recv-first"><td>${orderLink(o.orderName, o.orderId)}</td>
+        <td colspan="4">قطع الطرد ده ما اتحددتش — راجع الطرد بعينك واضغط «تسجيل الاستلام»</td>
+        <td>${multi ? `<button class="btn btn-outline btn-sm" type="button" data-act="cancelord" data-oid="${oid}">✕ إلغاء الأوردر</button>` : ''}</td></tr>`;
+      continue;
+    }
+    html += r.units.map((u, idx) => {
+      anyRows = true;
+      const st = u.state === 'done'
+        ? `<span class="u-state s-done">✅ اتسجلت${u.mode === 'manual' ? ' (يدوي)' : ''}</span>`
+        : u.state === 'miss' ? '<span class="u-state s-miss">❌ ناقصة</span>'
+        : '<span class="u-state s-wait">⏳ في انتظار التسجيل</span>';
+      // ⚠️ الأزرار بـ`data-*` + listener واحد على الـ tbody — مش `onclick` بنص، عشان
+      //    مفيش قيمة (SKU · اسم منتج) تتسرّب جوّه HTML.
+      let acts = u.state === 'wait'
+        ? `<button class="btn btn-outline btn-sm" type="button" data-act="manual" data-oid="${oid}" data-key="${esc(u.key)}">✋ استلام يدوي</button>`
+        : `<button class="btn btn-outline btn-sm" type="button" data-act="undo" data-oid="${oid}" data-key="${esc(u.key)}">↩ تراجع</button>`;
+      if (multi && idx === 0) acts += `<button class="btn btn-outline btn-sm" type="button" data-act="cancelord" data-oid="${oid}">✕ إلغاء الأوردر</button>`;
+      const cls = u.state === 'done' ? 'u-done' : u.state === 'miss' ? 'u-miss' : '';
+      const flash = recvFlash === `${o.orderId}|${u.key}` ? ' u-flash' : '';
+      return `<tr class="recv-row ${cls}${flash}${idx === 0 ? ' recv-first' : ''}" data-oid="${oid}" data-key="${esc(u.key)}">
+      <td>${orderLink(o.orderName, o.orderId)}${multi && idx === 0 ? `<span class="recv-prog">${n.done + n.miss}/${n.total}</span>` : ''}</td>
       <td>${u.imageUrl ? `<img class="recv-img" src="${esc(u.imageUrl)}" alt="" loading="lazy" data-full="${esc(u.imageUrl)}">` : '—'}</td>
       <td class="col-mono">${esc(u.sku || '—')}</td>
       <td class="col-num">${u.qty > 1 ? `${u.unitIndex} من ${u.qty}` : '1'}</td>
       <td>${st}</td>
       <td><span class="u-acts">${acts}</span></td>
     </tr>`;
-  }).join('');
+    }).join('');
+  }
+  body.innerHTML = html;
+  document.getElementById('recvTableWrap').style.display = anyRows ? '' : 'none';
 
-  const fin = document.getElementById('recvFinishBtn');
-  fin.disabled = scanBusy || (!recv.itemsUnknown && n.wait > 0);
-  document.getElementById('recvCancelBtn').disabled = scanBusy;
+  const anySubmitting = recvs.some(r => r.submitting);
+  document.getElementById('recvFinishBtn').disabled = scanBusy || !recvs.some(recvFinishable);
+  const cancelBtn = document.getElementById('recvCancelBtn');
+  cancelBtn.disabled = scanBusy || anySubmitting;
+  cancelBtn.textContent = multi ? `✕ إلغاء الكل (${recvs.length})` : '✕ إلغاء الاستلام';
 }
 
 document.getElementById('recvBody').addEventListener('click', e => {
   const img = e.target.closest('img.recv-img');
   if (img) { openImageFull(img.dataset.full); return; }
   const b = e.target.closest('button[data-act]');
-  if (!b || !recv || scanBusy) return;
-  const u = recv.units.find(x => x.key === b.dataset.key);
+  if (!b || scanBusy) return;
+  const r = recvs.find(x => String(x.order?.orderId) === b.dataset.oid);
+  if (!r || r.submitting) return;
+  if (b.dataset.act === 'cancelord') { recvCancel(r); return; }
+  const u = r.units.find(x => x.key === b.dataset.key);
   if (!u) return;
   if (b.dataset.act === 'manual') { u.state = 'done'; u.mode = 'manual'; }
   else if (b.dataset.act === 'undo') { u.state = 'wait'; u.mode = null; }
-  recv.flash = null;
+  recvFlash = null;
   recvRender();
   focusScan();
 });
 
-// ─── سكان قطعة جوّه الأوردر المفتوح ───
-// أول قطعة **مستنية** بنفس الباركود بتتعلّم. ولو كل قطع الأوردر اتسكنت (مفيش
-// ناقص) الاستلام بيتنهي لوحده — من غير ضغطة زيادة.
+// ─── سكان قطعة جوّه الأوردرات المفتوحة ───
+// 🔴 §RECV-MULTI — الباركود هو باركود **المتغيّر** مش القطعة: أوردرين فيهم نفس الصنف والمقاس
+//    بيطابقوا نفس السكانة. القاعدة (قرار أحمد 26-10-2026):
+//      قطعة مستنية في أوردر واحد بس → تتعلّم على طول · في أكتر من أوردر → نافذة اختيار بأرقام
+//      الأوردرات (الموظف هو اللي يقرر، مفيش تخمين بالأقدم) · ولا واحد → رفض/تنبيه.
+//    وأول قطعة تكمّل أوردر (من غير ناقص) بتسجّله لوحده من غير ضغطة زيادة.
 function recvScanUnit(code) {
-  const u = recv.units.find(x => x.state === 'wait' && x.barcode === code);
-  if (!u) {
-    const known = recv.units.some(x => x.barcode === code);
+  if (isOutcomeOpen()) { playBeep('warn'); showToast('اقفل النافذة المفتوحة الأول وبعدين اسكن', 'warning'); return; }
+  const cands = [];
+  for (const r of recvs) {
+    if (r.submitting) continue;
+    const u = r.units.find(x => x.state === 'wait' && x.barcode === code);
+    if (u) cands.push({ r, u });
+  }
+  if (!cands.length) {
+    const known = recvs.some(r => r.units.some(x => x.barcode === code));
     playBeep(known ? 'warn' : 'error');
     showToast(known
-      ? 'القطعة دي اتعلّمت خلاص — كل قطعها في الأوردر ده اتسكنت'
-      : `الباركود ${code} مش من قطع الأوردر ده — الطرد فيه قطعة غلط؟ راجعها قبل الإنهاء`, known ? 'warning' : 'error', 6000);
+      ? 'القطعة دي اتعلّمت خلاص — كل قطعها في الأوردرات المفتوحة اتسكنت'
+      : `الباركود ${code} مش من قطع الأوردرات المفتوحة — الطرد فيه قطعة غلط؟ راجعها قبل الإنهاء`, known ? 'warning' : 'error', 6000);
     return;
   }
+  if (cands.length === 1) { recvMarkUnit(cands[0].r, cands[0].u); return; }
+  recvPick(cands);
+}
+
+function recvMarkUnit(r, u) {
   u.state = 'done'; u.mode = 'scan';
-  recv.flash = u.key;
+  recvFlash = `${r.order?.orderId}|${u.key}`;
   playBeep('scan');
   recvRender();
-  const n = recvCounts();
-  if (n.wait === 0 && n.miss === 0) recvFinish();
+  const n = recvCountsOf(r);
+  if (n.wait === 0 && n.miss === 0 && !r.itemsUnknown) recvFinish(r);
+}
+
+// نافذة اختيار الأوردر عند التعارض. الأوردر اللي اتختار آخر مرة بيطلع **أول زرار** وعليه الفوكس
+// (`Enter` بيعيد نفس الاختيار) — اللي بيفرد طرد واحد بيخلّص بضغطة لكل قطعة. أرقام 1-9 بتختار، و Esc بيلغي.
+// ⚠️ الأرقام بتتنفّذ بعد ٢٠٠ms من غير ضغطة تانية — باركود بيتسكن والنافذة مفتوحة (دفعة أرقام أسرع من
+//    ٨٠ms بين الحروف) كان هيضغط أزرار عشوائية، فأي ضغطة ورا التانية = سكانة مش اختيار وبتتلغي.
+function recvPick(cands) {
+  playBeep('warn');
+  cands.sort((a, b) => (String(b.r.order?.orderId) === recvLastPick) - (String(a.r.order?.orderId) === recvLastPick));
+  const u0 = cands[0].u;
+  let digitTimer = null, lastKeyAt = 0;
+  const cleanup = () => { document.removeEventListener('keydown', onKey, true); clearTimeout(digitTimer); };
+  const choose = c => { cleanup(); closeOutcome(); recvLastPick = String(c.r.order?.orderId); if (recvs.includes(c.r) && c.u.state === 'wait') recvMarkUnit(c.r, c.u); };
+  const cancel = () => { cleanup(); closeOutcome(); };
+  const buttons = cands.map((c, i) => {
+    const n = recvCountsOf(c.r);
+    return { label: `${i + 1} · ${c.r.order?.orderName || ''} (${n.done + n.miss}/${n.total})`, cls: 'btn-primary', primary: i === 0, onClick: () => choose(c) };
+  });
+  buttons.push({ label: '✕ إلغاء (Esc)', cls: 'btn-red', onClick: cancel });
+  const onKey = ev => {
+    const now = Date.now(), burst = now - lastKeyAt < 80;
+    lastKeyAt = now;
+    clearTimeout(digitTimer);
+    if (burst) return;                                   // باركود بيتسكن — مش اختيار
+    if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); cancel(); return; }
+    if (/^[1-9]$/.test(ev.key) && cands[Number(ev.key) - 1]) {
+      const c = cands[Number(ev.key) - 1];
+      digitTimer = setTimeout(() => choose(c), 200);
+    }
+  };
+  document.addEventListener('keydown', onKey, true);
+  showOutcome({
+    tone: 'warn', title: '🔀 القطعة دي موجودة في أكتر من أوردر',
+    lines: [`${u0.sku || u0.title || '—'}${cands.length ? ` — في ${cands.length} أوردرات مستنية` : ''}`,
+            'اختار الأوردر اللي القطعة اللي في إيدك بتاعته (اضغط الرقم أو الزرار).'],
+    note: 'الاختيار بيتعلّم القطعة على الأوردر ده بس — ولو غلطت، «تراجع» جنب القطعة.',
+    buttons,
+  });
 }
 
 // صورة المنتج بحجم الشاشة — ضغطة في أي حتة أو Esc بتقفلها
@@ -1748,16 +1919,21 @@ function openImageFull(url) {
 // 🔴 تأكيد في الصفحة (نافذة `showOutcome`) مش `confirm()` الأصلية — Step 3C: التأكيد بيسمّي الأثر
 //    بالأرقام. ⚠️ الزرار الرئيسي (اللي عليه الفوكس و`Enter`) هو «رجوع للاستلام» عن قصد: الإلغاء
 //    بيمسح علامات الموظف، فالضغطة العرضية لازم تكون على الاختيار الآمن.
-function recvCancel() {
-  if (!recv || scanBusy) return;
-  const n = recvCounts();
-  const doCancel = () => { recv = null; recvRender(); focusScan(); };
+// `target` = أوردر واحد · من غيره = إلغاء كل الأوردرات المفتوحة.
+function recvCancel(target) {
+  if (scanBusy || isOutcomeOpen()) return;
+  const list = target ? [target] : recvs.slice();
+  if (!list.length || list.some(r => r.submitting)) return;
+  const n = { done: 0, miss: 0 };
+  for (const r of list) { const c = recvCountsOf(r); n.done += c.done; n.miss += c.miss; }
+  const doCancel = () => { for (const r of list) { const i = recvs.indexOf(r); if (i >= 0) recvs.splice(i, 1); } recvFlash = null; recvRender(); rqRender(); focusScan(); };
   if (n.done + n.miss === 0) { doCancel(); return; }
   playBeep('warn');
+  const what = target ? `الأوردر ${target.order?.orderName || ''}` : (list.length > 1 ? `${list.length} أوردرات` : 'الأوردر');
   showOutcome({
     tone: 'warn', title: '⚠️ إلغاء الاستلام؟',
-    order: recv.order, machine: recv.machine,
-    lines: [`${n.done} قطعة اتسكنت${n.miss ? ` و${n.miss} علّمتها ناقصة` : ''} — الإلغاء بيمسح العلامات دي ومش هيتسجّل أي حاجة.`],
+    order: target ? target.order : (list.length === 1 ? list[0].order : null), machine: target ? target.machine : (list.length === 1 ? list[0].machine : null),
+    lines: [`${what}: ${n.done} قطعة اتسكنت${n.miss ? ` و${n.miss} علّمتها ناقصة` : ''} — الإلغاء بيمسح العلامات دي ومش هيتسجّل أي حاجة.`],
     note: 'تقدر تسكن الأوردر من الأول بعدها.',
     buttons: [
       { label: '↩ رجوع للاستلام', cls: 'btn-primary', primary: true, onClick: closeOutcome },
@@ -1767,22 +1943,38 @@ function recvCancel() {
 }
 
 // ─── الخطوة ②: إنهاء الاستلام ───
+// زرار «تسجيل الاستلام» (الفوتر): بيسجّل **كل** الأوردرات الجاهزة. اللي مش محتاج إقرار بيتسجّل على طول
+// واحد ورا التاني (وبيقف لو نافذة نتيجة اتفتحت عشان ما تتدهسش)، واللي محتاج إقرار (ناقص · قطع ما اتحددتش)
+// بيفتح نافذته — أوردر واحد في المرة، والزرار بيفضل مفتوح للباقي.
+async function recvFinishReady() {
+  if (scanBusy || isOutcomeOpen()) return;
+  const ready = recvs.filter(recvFinishable);
+  if (!ready.length) { showToast('مفيش أوردر جاهز — فيه قطع لسه مستنية', 'warning'); return; }
+  const needsAck = r => r.itemsUnknown || recvCountsOf(r).miss > 0;
+  for (const r of ready.filter(r => !needsAck(r))) {
+    await recvSubmit(r, {});
+    if (isOutcomeOpen()) return;
+  }
+  const first = ready.find(needsAck);
+  if (first) recvFinish(first);
+}
+
 // القطع الناقصة والقطع اللي ما اتحددتش بيطلبوا **إقرار صريح** في نافذة قبل
 // النداء — والـ Worker بيرفض من غير الإقرار حتى لو الواجهة اتخطّت النافذة.
-function recvFinish() {
-  if (!recv || scanBusy) return;
-  const n = recvCounts();
-  if (!recv.itemsUnknown && n.wait > 0) { showToast(`فاضل ${n.wait} قطعة — اسكنها أو علّمها ناقصة`, 'warning'); return; }
+function recvFinish(r) {
+  if (!r || !recvs.includes(r) || r.submitting || scanBusy) return;
+  const n = recvCountsOf(r);
+  if (!r.itemsUnknown && n.wait > 0) { showToast(`فاضل ${n.wait} قطعة — اسكنها أو علّمها ناقصة`, 'warning'); return; }
 
-  if (recv.itemsUnknown) {
+  if (r.itemsUnknown) {
     playBeep('warn');
     showOutcome({
       tone: 'warn', title: '⚠️ تأكيد استلام من غير سكان القطع',
-      order: recv.order, machine: recv.machine,
+      order: r.order, machine: r.machine,
       lines: ['قطع الطرد ده ما اتحددتش من شوبيفاي — الاستلام هيتسجّل على الأوردر بس، من غير سطور قطع في الدفتر.'],
       note: 'متأكد إن الطرد وصل المخزن وراجعته بعينك؟',
       buttons: [
-        { label: '✅ أيوه، سجّل الاستلام', cls: 'btn-primary', primary: true, onClick: () => { closeOutcome(); recvSubmit({ itemsUnknownAck: true }); } },
+        { label: '✅ أيوه، سجّل الاستلام', cls: 'btn-primary', primary: true, onClick: () => { closeOutcome(); recvSubmit(r, { itemsUnknownAck: true }); } },
         { label: '✕ رجوع', cls: 'btn-red', onClick: closeOutcome },
       ],
     });
@@ -1790,43 +1982,45 @@ function recvFinish() {
   }
   if (n.miss > 0) {
     playBeep('warn');
-    const missing = recv.units.filter(u => u.state === 'miss');
+    const missing = r.units.filter(u => u.state === 'miss');
     showOutcome({
       tone: 'warn', title: `⚠️ ${n.miss} قطعة ناقصة من الطرد`,
-      order: recv.order, machine: recv.machine,
+      order: r.order, machine: r.machine,
       lines: missing.map(u => `❌ ${u.sku || u.title || '—'}${u.qty > 1 ? ` (قطعة ${u.unitIndex} من ${u.qty})` : ''}`),
       note: 'الطرد هيتسجّل «في المخزن»، والقطع دي هتتسجّل «ناقصة» وتظهر في «قطع مستنية الرجوع للمخزن» لحد ما توصل.',
       buttons: [
-        { label: '✅ أيوه، القطع دي ناقصة فعلاً', cls: 'btn-primary', primary: true, onClick: () => { closeOutcome(); recvSubmit({ missingAck: true }); } },
+        { label: '✅ أيوه، القطع دي ناقصة فعلاً', cls: 'btn-primary', primary: true, onClick: () => { closeOutcome(); recvSubmit(r, { missingAck: true }); } },
         { label: '✕ رجوع للسكان', cls: 'btn-red', onClick: closeOutcome },
       ],
     });
     return;
   }
-  recvSubmit({});
+  recvSubmit(r, {});
 }
 
-async function recvSubmit(extra) {
-  if (!recv || scanBusy) return;
-  const cur = recv;
-  scanBusy = true;
-  setScanBusyUI(true);
+// بيرجّع 'ok' | 'fail'. ⚠️ **مابيقفلش `scanBusy`** — أوردر بيتسجّل في الخلفية والسكانر يكمّل على الباقي
+// (القفل كان لأوردر واحد). الحارس من الازدواج `r.submitting` لكل أوردر.
+async function recvSubmit(r, extra) {
+  if (!recvs.includes(r) || r.submitting) return 'fail';
+  r.submitting = true;
   recvRender();
+  let outcome = 'fail';
   try {
     const res = await apiPost('receive_order', {
-      code: String(cur.order?.orderId || cur.code),
-      ack: cur.ack === true,
+      code: String(r.order?.orderId || r.code),
+      ack: r.ack === true,
       employee: currentEmployee.username,
-      scanned: cur.units.filter(u => u.state === 'done').map(u => ({ key: u.key, mode: u.mode })),
-      missing: cur.units.filter(u => u.state === 'miss').map(u => u.key),
+      scanned: r.units.filter(u => u.state === 'done').map(u => ({ key: u.key, mode: u.mode })),
+      missing: r.units.filter(u => u.state === 'miss').map(u => u.key),
       ...extra,
     });
 
     if (res.result === 'success' || res.result === 'warning') {
+      outcome = 'ok';
       playBeep(res.result === 'warning' ? 'warn' : 'success');
-      pushSession(res, cur.code);
+      pushSession(res, r.code);
       rqRemove(res.order?.orderId);
-      recv = null;
+      recvDrop(r);
       if (res.logged === false) {
         showToast(`تم استلام ${res.order?.orderName || ''} — ⚠️ بس ما اتكتبش في السجل: ${res.logError || ''}`, 'warning', 8000);
       } else if (res.result === 'warning') {
@@ -1838,11 +2032,11 @@ async function recvSubmit(extra) {
         showToast(`✅ ${res.order?.orderName || ''} → رجع المخزن (${res.units} قطعة)`, 'success');
       }
       if (res.missing) riLoad(true);
-      return;
+      return outcome;
     }
-    // `error` — النداء وصل لشوبيفاي والكتابة اترفضت: اللوحة بتفضل مفتوحة عشان يعيد
+    // `error` — النداء وصل لشوبيفاي والكتابة اترفضت: الأوردر بيفضل في اللوحة عشان يعيد
     playBeep('error');
-    pushSession(res, cur.code);
+    pushSession(res, r.code);
     showOutcome({ tone: 'fail', title: '❌ الاستلام ما اتسجّلش', order: res.order, machine: res.machine,
       lines: [res.message || 'فشل غير معروف'], note: 'القطع اللي اتعلّمت لسه زي ما هي — جرّب «تسجيل الاستلام» تاني.' });
   } catch (err) {
@@ -1850,7 +2044,7 @@ async function recvSubmit(extra) {
     const p = err.payload || {};
     // 409 = مفيش أي كتابة حصلت (الـ Worker رفض قبل الكتابة)
     if (err.status === 409 && (p.code === 'items_changed' || p.result === 'already' || p.result === 'rejected')) {
-      recv = null;
+      recvDrop(r);
       if (p.result === 'already') rqRemove(p.order?.orderId);
       showOutcome({ tone: p.result === 'already' ? 'neutral' : 'fail',
         title: p.result === 'already' ? '⏭ الطرد ده اتسجّل في المخزن خلاص' : '⛔ الأوردر اتغيّر من وقت السكان',
@@ -1865,10 +2059,12 @@ async function recvSubmit(extra) {
         note: 'راجع تاب السجل قبل ما تعيد — ممكن يكون الطرد اتسجّل فعلاً. لو اتسجّل، سكان الأوردر تاني هيقول «خلاص متعمل».' });
     }
   } finally {
-    scanBusy = false;
-    setScanBusyUI(false);
+    r.submitting = false;
     recvRender();
+    rqAddAllUI();
+    if (!isOutcomeOpen()) focusScan();
   }
+  return outcome;
 }
 
 // ─── §TOOL-JS::receiveLooseItem — سكان قطعة سايبة (تسليم جزئي / ناقصة) ───
@@ -2392,9 +2588,11 @@ function rqRender() {
           ? '<div class="ico">⚠️</div><div>تعذّر تحميل الطابور — اضغط «تحديث»</div>'
           : ecoLoadingHTML());
     rqSyncTable();
+    rqAddAllUI();
     return;
   }
 
+  const opened = recvOpenIds();
   tbody.innerHTML = rows.map(o => {
     // 🔴 **v1.52.0 (قرار أحمد 22-10-2026):** عمودا «العميل» و«تاريخ الأوردر» اتشالوا
     //    (ومعاهم بادج العمر والنبضة بتاعته) واتضاف «العنوان» بعد رقم الأوردر.
@@ -2425,11 +2623,13 @@ function rqRender() {
       <td class="col-addr" title="${esc(o.address || '')}">${esc(o.address || '—')}</td>
       <td><span class="type-text ${typeClass}">${esc(typeLabel)}</span></td>
       <td><span class="rq-pend-tag">⏳ في انتظار التسجيل</span></td>
-      <td>—</td>
-      <td><button class="btn btn-primary btn-sm rq-add-btn" type="button" data-add-id="${esc(String(o.orderId))}">➕ إضافة</button></td>
+      <td>${opened.has(String(o.orderId))
+        ? '<button class="btn btn-outline btn-sm rq-add-btn" type="button" disabled>✔ مفتوح في اللوحة</button>'
+        : `<button class="btn btn-primary btn-sm rq-add-btn" type="button" data-add-id="${esc(String(o.orderId))}">➕ إضافة</button>`}</td>
     </tr>`;
   }).join('');
   rqSyncTable();
+  rqAddAllUI();
 }
 
 // ─── الحالة اللي خلّت الأوردر مؤهل ───────────────────────────
@@ -2577,7 +2777,7 @@ for (const [mode, v] of Object.entries(ED_VIEWS)) {
   document.getElementById(v.p + 'TableBody').addEventListener('click', e => {
     const btn = e.target.closest('[data-ed-add]');
     if (!btn) return;
-    if (scanBusy || recv) { showToast('خلّص الأوردر المفتوح الأول', 'warning'); return; }
+    if (scanBusy || recvs.length) { showToast('خلّص أوردرات لوحة الاستلام الأول', 'warning'); return; }
     edScan(mode, btn.dataset.edAdd);
   });
 }
