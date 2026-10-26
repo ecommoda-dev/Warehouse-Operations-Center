@@ -96,6 +96,11 @@ const calls = [];
 //    بند §AWB-MACHINE بيتفحص بيه — والقياس الوحيد الممكن، لأن الفشل في
 //    الحقيقة **صامت**: الرد بيقول `ok` والبوليصة بتطلع، بس بتاعة الشحنة الغلط.
 let MOCK_NO_MACHINE = false;
+// §WHEREABOUTS-GUARD (v1.65.0) — `POST /precheck-whereabouts` الوهمي.
+//   WH_BLOCK : خريطة `"<id>|<machine>"` → قيمة الميتافيلد (غيابه = فاضي)
+//   WH_OTHER : خريطة `"<id>|<machine>"` → قيمة الميتافيلد التاني (للعرض)
+//   WH_MODE  : 'ok' · 'down' (502 برسالة) · 'old404' (Worker قديم) · 'missing' (أوردر ما رجعش)
+const WH_BLOCK = new Map(); const WH_OTHER = new Map(); let WH_MODE = 'ok';
 // ⚠️ `PW_CHROMIUM` بيسمح بتمرير مسار كروميوم مثبّت مسبقًا لو Playwright
 //    ما نزّلش نسخته — نفس اللي في `docs/sku-barcode-check.mjs` بالظبط.
 //    مسار مزروع في الكود بيخلّي الاختبار يقع على أي جهاز تاني.
@@ -160,6 +165,21 @@ await page.route('**order-printer-worker.ecommoda-dev.workers.dev/**', async (ro
       total:1000, totalOriginal:1000, itemsQty:2, tags:['Printed(S1)'], isPrinted:true, printedAny:true } }));
   if (url.pathname === '/logs') LOGS_CALLS++;
   if (url.pathname === '/logs') return route.fulfill(J({ok:true, entries:LOGS, count:LOGS.length, total:LOGS.length, cap:5000, truncated:false}));
+  if (url.pathname === '/precheck-whereabouts') {
+    if (WH_MODE === 'old404') return route.fulfill({ status:404, contentType:'application/json', body: JSON.stringify({ error:'Not found' }) });
+    if (WH_MODE === 'down')   return route.fulfill({ status:502, contentType:'application/json', body: JSON.stringify({ ok:false, error:'تعذّر قراءة عهدة الطرد من شوبيفاي — اختبار' }) });
+    const results = (body.orders||[]).map(b => {
+      const k = `${b.id}|${b.type}`, key = 'custom.package_whereabouts_' + b.type.toLowerCase();
+      const o = ORDERS.find(x => x.id === b.id);
+      if (WH_MODE === 'missing' && o && o.name === '#53404')
+        return { id:b.id, machine:b.type, key, verified:false, blocked:true, value:null, name:null, reason:'unverified' };
+      const v = WH_BLOCK.get(k);
+      return { id:b.id, name:o?.name || null, machine:b.type, key, verified:true, blocked: v != null, value: v ?? null,
+               reason: v != null ? 'has_value' : null,
+               other:{ key:'custom.package_whereabouts_' + (b.type === 'S2' ? 's1' : 's2'), value: WH_OTHER.get(k) ?? null } };
+    });
+    return route.fulfill(J({ ok:true, results, blockedCount: results.filter(r=>r.blocked).length, checkedAt:new Date().toISOString() }));
+  }
   if (action === 'bosta_lookup') {
     // 🔴 الـ Worker الوهمي بيصنّف **بالماكينة** زي Worker v2.8.0 بالظبط:
     //    صف S1 بياخد شحنة `Send` وصف S2 بياخد شحنة `Exchange` — **معرّفان
@@ -760,6 +780,111 @@ await page.click('#msBtn-lChan'); await page.waitForTimeout(150);
   await page.reload(); await page.waitForTimeout(1800);
   check('كاش السجل أقدم من ١٠ دقايق = جلب جديد', LOGS_CALLS === L0 + 1, `${L0} → ${LOGS_CALLS}`);
 }
+
+// ⑩ §WHEREABOUTS-GUARD (v1.65.0 · قرار أحمد 26-10-2026) — عهدة الطرد لازم تكون فاضية
+console.log('\n── ⑩ حارس عهدة الطرد ─────────────────────────');
+const resetToQueue = async () => {
+  await page.reload(); await page.waitForSelector('#printDashboard', { state:'visible', timeout:15000 });
+  await page.waitForTimeout(600);
+};
+const closeResult = async () => { await page.evaluate(() => closeTrackResult()); await page.waitForTimeout(150); };
+const clickGatePrintIfAny = async () => {
+  await page.waitForTimeout(500);
+  if (await page.isVisible('#gateOverlay.open')) {
+    for (const b of await page.$$('#pgBody [data-gate-need]')) await b.check();
+    await page.click('#pgPrintAllBtn');
+  }
+};
+
+// ①-أ: أوردر واحد موقوف (S1 · Office) والباقي بيكمّل — مسار الفاتورة
+await resetToQueue();
+WH_BLOCK.clear(); WH_OTHER.clear(); WH_MODE = 'ok';
+WH_BLOCK.set('gid://shopify/Order/5|S1', 'Office');
+WH_OTHER.set('gid://shopify/Order/5|S1', null);
+await page.click('#chanBtn-invoice'); await page.waitForTimeout(200);
+const before = calls.length;
+await page.click('#printAllBtn');
+await clickGatePrintIfAny();
+await page.waitForSelector('#trackResultOverlay.open', { timeout:15000 });
+await page.waitForTimeout(400);
+const whCalls = calls.slice(before);
+const pre = whCalls.filter(c => c.path === '/precheck-whereabouts');
+check('الفحص اتنادى مرة واحدة للدفعة', pre.length === 1, String(pre.length));
+check('🔴 الماكينة اتبعتت مع كل أوردر (type)', (pre[0]?.body?.orders||[]).every(o => o.type === 'S1' || o.type === 'S2') && (pre[0]?.body?.orders||[]).length >= 1,
+      JSON.stringify(pre[0]?.body));
+const invIds = whCalls.filter(c => c.path === '/invoice').map(c => c.body.orderId);
+check('🔴 الأوردر الموقوف ما اتجابش له /invoice', !invIds.includes('gid://shopify/Order/5'), JSON.stringify(invIds));
+check('🔴 الدفعة كلها موقوفة (أوردر واحد) = صفر /invoice', invIds.length === 0, JSON.stringify(invIds));
+check('🔴 مفيش /track للموقوف', !whCalls.filter(c => c.path === '/track').some(c => c.body.orderId === 'gid://shopify/Order/5'));
+const modalTxt = await page.innerText('#trackResultBody');
+check('النافذة بتقول إنه اتوقف قبل الطباعة', modalTxt.includes('اتوقف قبل الطباعة') && modalTxt.includes('#53404'), modalTxt.slice(0,300));
+check('🔴 النافذة فيها اسم الميتافيلد (ماكينة S1)', modalTxt.includes('custom.package_whereabouts_s1'));
+check('🔴 النافذة فيها القيمة Office', modalTxt.includes('Office'));
+check('النافذة بتبيّن الميتافيلد التاني «للعلم» وإنه فاضي', modalTxt.includes('custom.package_whereabouts_s2') && modalTxt.includes('(فاضي)'));
+check('النافذة فيها الحالة الحالية للأوردر', modalTxt.includes('الحالة الحالية'));
+await closeResult();
+
+// ①-ب: S2 — `_s2` فيه قيمة → موقوف، ومابيروحش bosta_lookup (مفيش `not_found` كدب)
+await resetToQueue();
+WH_BLOCK.clear(); WH_BLOCK.set('gid://shopify/Order/11|S2', 'Warehouse');
+await page.click('#chanBtn-awb'); await page.waitForTimeout(200);
+{
+  const b0 = calls.length;
+  await page.click('#printAllBtn'); await clickGatePrintIfAny();
+  await page.waitForSelector('#trackResultOverlay.open', { timeout:15000 }); await page.waitForTimeout(400);
+  const seg = calls.slice(b0);
+  const look3 = seg.filter(c => c.action === 'bosta_lookup').pop();
+  check('🔴 الأوردر الموقوف (S2) مش في bosta_lookup',
+        !(look3?.body?.orders||[]).some(o => o.name === '#53409'), JSON.stringify((look3?.body?.orders||[]).map(o=>o.name)));
+  check('🔴 ولا /track اتبعت للموقوف', !seg.filter(c => c.path === '/track').some(c => c.body.orderNumber === '#53409'));
+  check('🔴 والباقي كمّل — /track اتبعت لأوردرات تانية في نفس الدفعة',
+        seg.filter(c => c.path === '/track').length >= 1, JSON.stringify(seg.map(c=>c.path||c.action)));
+  check('🔴 صف `not_found` ما اتكتبش للموقوف (مش في bosta_lookup أصلاً)', !(look3?.body?.orders||[]).some(o => o.name === '#53409'));
+  const t = await page.innerText('#trackResultBody');
+  check('🔴 النافذة فيها `_s2` والقيمة Warehouse ووصفها', t.includes('custom.package_whereabouts_s2') && t.includes('Warehouse') && t.includes('المخزن'), t.slice(0,300));
+  await closeResult();
+}
+
+// ①-ج: S2 — الحقل `_s1` فيه قيمة بس مش بيتفحص (الماكينة S2) → مش موقوف (الأوردر لسه في الطابور لأنه اتوقف قبل كده)
+await resetToQueue();
+WH_BLOCK.clear(); WH_MODE = 'ok';
+WH_BLOCK.set('gid://shopify/Order/11|S1', 'Courier');      // مش ماكينة الصف → مالوش أثر
+await page.click('#chanBtn-awb'); await page.waitForTimeout(200);
+{
+  const b0 = calls.length;
+  await page.click('#printAllBtn'); await clickGatePrintIfAny();
+  await page.waitForSelector('#trackResultOverlay.open', { timeout:15000 }); await page.waitForTimeout(400);
+  const look2 = calls.slice(b0).filter(c => c.action === 'bosta_lookup').pop();
+  check('🔴 S2 مع `_s1` عليه قيمة مش موقوف (بيتفحص `_s2` بس)',
+        (look2?.body?.orders||[]).some(o => o.machine === 'S2'), JSON.stringify((look2?.body?.orders||[]).map(o=>[o.name,o.machine])));
+  await closeResult();
+}
+
+// ①-د: الفحص نفسه فشل → كله موقوف (مش متأكدين) والسبب مكتوب، وصفر كتابة
+for (const [mode, expect] of [['down', 'اختبار'], ['old404', 'v2.10.0']]) {
+  await resetToQueue(); WH_MODE = mode; WH_BLOCK.clear();
+  await page.click('#chanBtn-invoice'); await page.waitForTimeout(200);
+  const b0 = calls.length;
+  await page.click('#printAllBtn');
+  await page.waitForSelector('#trackResultOverlay.open', { timeout:15000 }); await page.waitForTimeout(400);
+  const seg = calls.slice(b0);
+  const t = await page.innerText('#trackResultBody');
+  check(`🔴 فشل الفحص (${mode}) = صفر /invoice وصفر /track`, !seg.some(c => c.path === '/invoice' || c.path === '/track'));
+  check(`🔴 فشل الفحص (${mode}) = السبب مكتوب والأوردرات موقوفة`, t.includes('اتوقف قبل الطباعة') && t.includes('مش متأكدين') && t.includes(expect), t.slice(0,300));
+  await closeResult();
+}
+
+// ①-هـ: الأوردر ما رجعش من شوبيفاي → موقوف «مش متأكد»
+await resetToQueue(); WH_MODE = 'missing'; WH_BLOCK.clear();
+await page.click('#chanBtn-invoice'); await page.waitForTimeout(200);
+await page.click('#printAllBtn'); await clickGatePrintIfAny();
+await page.waitForSelector('#trackResultOverlay.open', { timeout:15000 }); await page.waitForTimeout(400);
+{
+  const t = await page.innerText('#trackResultBody');
+  check('🔴 أوردر ما رجعش من شوبيفاي = موقوف «مش متأكد»', t.includes('#53404') && t.includes('ما رجعش من شوبيفاي') && t.includes('مش متأكد'), t.slice(0,300));
+  await closeResult();
+}
+WH_MODE = 'ok'; WH_BLOCK.clear();
 
 check('صفر أخطاء في الكونسول وصفر أخطاء صفحة', errs.length === 0, errs.join(' | '));
 
