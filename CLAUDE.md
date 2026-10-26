@@ -2,13 +2,13 @@
 
 # مركز عمليات المخزن — Warehouse Operations Center (`Warehouse-Operations-Center`)
 
-![version](https://img.shields.io/badge/version-v1.62.0-blue)
+![version](https://img.shields.io/badge/version-v1.63.0-blue)
 
 **بتعمل إيه:** هب واحد لمحطة المخزن. الموظف بيدخل **مرة واحدة**، وبعدين
 بيتنقّل بين الطباعة والتغليف وحذف المنتج وتسليمات بوسطة وسكانر المرتجعات
 ورحلة الأوردر من غير ما يدخل تاني ومن غير ما يفتح تبويبات متفرقة.
 **مين بيستخدمها:** المخزن
-**الإصدار:** `v1.62.0` — **واحد للهب كله** (`TOOL_VERSION` في `shared/hub-config.js`)
+**الإصدار:** `v1.63.0` — **واحد للهب كله** (`TOOL_VERSION` في `shared/hub-config.js`)
 
 > 🔴 **الهب واجهة + Worker دخول بس — من v1.32.0.** الريبو ده بقى فيه
 > `index.js` و`wrangler.toml`، **بس نطاقهم محصور في الدخول والخروج بس**
@@ -79,6 +79,19 @@
 ## 🧩 النواة المشتركة — المرجع في هب الشحن
 
 `core.js` · `core.css` · `home.js` **نسختين متطابقتين بالبايت** مع `Delivery-COD-Operations-Center` (`bash docs/core-twin-check.sh`)، والشرح الكامل (جدول الملفات · ترتيب التحميل · المولّدات · الفحوصات) في قسم **«النواة المشتركة بين الهبّين»** في `CLAUDE.md` بتاعه — ما بيتكررش هنا. اللي خاص بالمخزن: `shared/hub-config.js` · `hub.css` · `home-config.js` · **`gates.js`** (بوابات القنوات والمكتب والمرتجعات §BOSTA-GATE · §OFFICE-GATE · §WAREHOUSE-GATE؛ و§COURIER-GROUP بقى في `core.js`). ⛔ هب المخزن مالوش مولّدات (صفحاته مكتوبة بإيد).
+
+## 📦 تمريرة v1.63.0 — طابور «راجع من بوسطة» في `Bosta-Orders-Returned-Scanner.html` (طلب أحمد 25-10-2026)
+
+> 🔴 **مش واجهة بحتة:** الـ endpoint الجديد `?action=get_ready_to_return` اتكتب في **`Bosta-Orders-Returned-Scanner/index.js` (Worker v3.6.0)** — **Promote مطلوب من هناك**، وبعده `returned.min` بقى `3.6.0`.
+
+- **الطابور:** كارت `#rqBox` تحت مربع السكان بيعرض الأوردرات اللي بوسطة بتردّها فعلاً: **`custom.courier = Bosta`** + **`In-Return`** (S1 = `manual_status` · S2 = `status_2_r_e`) + ميتافيلد الـ webhook بتاع نفس الماكينة (`bosta_webhook_status_update_s1/s2`) كوده **41** (`41 · Out For Return`). أوردر مستوفي الماكينتين بيطلع صفّين. الأعمدة: رقم الأوردر · العميل · رقم التتبع · نوع الراجع (S1 RTO / [S-2] بعد التسليم) · حالة بوسطة · آخر تحديث من بوسطة · تاريخ الأوردر (بعمر) · «➕ إضافة للمسح».
+- 🔴 **الحكم كله في الـ Worker** (فلترة الميتافيلد بتتأكد في الكود مش بالاستعلام بس — فلتر ميتافيلد مش filterable بيتجاهله شوبيفاي ويرجّع المتجر كله). الصفحة بتعرض اللي راجع بالحرف ومابتفلترش ولا صف (درس R1). ⛔ **عرض بحت مش حارس:** أوردر مش في الطابور لسه بيتسكن والـ Worker هو اللي بيحكم (`validateTransition`).
+- **كاش:** `ECO_CACHE_RETURN_QUEUE` (`woc_queue_return_scanner`) بنفس قاعدة §CACHE-TTL (أحدث من ١٠ د = صفر نداء)، وبيتمسح مع الخروج (`clearKeys`). فشل الطابور = بانر أحمر والعدّاد `—` والسكان شغّال.
+- **قفل الدفعة (#43):** `isUpdating` في الصفحة بيمنع إضافة/حذف رقم أثناء `startUpdate`، و`window.shellIsBusy = () => isUpdating` بيوقّف الخروج التلقائي. ⚠️ **نفس الإصلاح اتعمل في `index.html` بتاع الريبو المستقل** (الملفين متطابقين في §TOOL-JS).
+- **`.tbl-body-wrap` على `grid-template-rows`** بدل `max-height:20000px` (Standards #46) وصندوق السكان من غير `placeholder`.
+- ⚠️ **مفاتيح مخمّنة لازم تتأكد:** `custom.bosta_webhook_last_update_s1/s2` (عمود «آخر تحديث من بوسطة» — لو الاسم غلط العمود بيقول `—` بس) · و`custom.courier` مكتوب بقيمة `Bosta`. فلتر الاستعلام على `status_2_r_e:'In-Return'` لو مش filterable بيرجّع كل المتجر والـ Worker بيفلتر في الكود لحد `READY_RETURN_MAX_PAGES` (١٢ × ٥٠) ويرجّع `truncated`.
+- ✅ `docs/scanners-check.mjs`: **100 بند** (+١٧ في §RETURN-QUEUE). صفر `min` غير `returned`.
+- 🟡 **مفتوح:** ما اتجرّبش على شوبيفاي حقيقي (الفحص على Worker وهمي بس). مفيش صف في الرئيسية للطابور ده (قرار منفصل). وتاب السجل في `Bosta-Orders-Returned-Scanner.html` اتنقل لفلاتر رأس العمود `ecoSrvFilters` (26-10-2026) مع sticky headers وتوكنز `--th-*`/`--td-*`؛ والنسخة المستقلة اتنقلت لنفس المكوّن (نسخة inline من `srv-filters.js` — أي إصلاح فيه يتعمل في الاتنين). و#51 اتضاف هناك كـ §COL-RESIZE (نسخة مبسّطة من §TABLE).
 
 ## ✏️🚚 تمريرة v1.62.0 — تابا «أوردرات معدّلة» و«تحويل بوسطة» (طلب أحمد 25-10-2026)
 
@@ -384,7 +397,7 @@ tool في D1 : warehouse_ops_center      ← login · logout بس
 | `stats.html` | إحصائيات المخزن | التلاتة (قراءة سجل) | — | L (1400) |
 | `Order-SKU-Barcode-Printer.html` | باركود SKU — **دفعة أوردرات + سجل** | `order-sku-barcode-printer-worker` + التغليف (تراكينج · موظفين) | **`1.3.0`** · pack `2.5.0` | M (1200) |
 | `Bosta-Orders-Shipped-Scanner.html` | **قسم تسليمات بوسطة** — طابور «جاهز للتسليم» + سكانر | `bosta-orders-shipped-scanner` | **`3.5.0`** | M (1200) |
-| `Bosta-Orders-Returned-Scanner.html` | **قسم مرتجعات بوسطة** — استلام راجع | `bosta-orders-returned-scanner` | **`3.4.0`** | M (1200) |
+| `Bosta-Orders-Returned-Scanner.html` | **قسم مرتجعات بوسطة** — استلام راجع + طابور «راجع من بوسطة» (v1.62.0) | `bosta-orders-returned-scanner` | **`3.6.0`** | M (1200) |
 | `Package-Transfer-To-Office.html` | **قسم تسليمات المكتب** — نقل الطرد من المخزن للمكتب | `package-transfer-to-office-worker` | **`1.1.0`** | M (1200) |
 | `Package-Transfer-To-Warehouse.html` | **مرتجعات + لواغي المكتب** (كان «قسم استلام المرتجعات») — رجوع الطرد الراجع للمخزن **قطعة قطعة** + تاب «منتجات التسليم الجزئي» (v1.52.0) | `package-transfer-to-warehouse-worker` | **`1.6.0`** | M (1200) |
 | `Inventory-Audit-Updater.html` | **جرد المخزون** — جرد فردي · أولويات الجرد · جرد جماعي بالسكانر · سجل | `inventory-audit-updater-worker` | **`6.2.1`** | L (1400) |
@@ -4098,6 +4111,8 @@ v3.5.0 وv3.6.0)** ·
 مراجعة `print`/`pack`/`remove`/`stats` على html-builder v6.6.0
 
 ---
+
+آخر تحديث: 25-10-2026 — v1.63.0 (طابور «راجع من بوسطة» · `returned.min` → `3.6.0` · قفل الدفعة · `.tbl-body-wrap` grid). 🔴 **Promote لـ `bosta-orders-returned-scanner` v3.6.0 حاجز للطابور.**
 
 آخر تحديث: 22-10-2026 — v1.52.0 (الاسترجاع الخالص: شرط التغليف في §WAREHOUSE-GATE على `packedAtS1` · عمود «العنوان» · تابات «الأوردرات»/«منتجات التسليم الجزئي»/السجل · `warehouse.min` → `1.6.0`).
 

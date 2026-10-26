@@ -148,7 +148,7 @@ const ECO_WORKERS = {
   //    **بيسمّي السبب** بدل ما الموظف يدوّر.
   //    ⚠️ والسكان **ما اتأثرش** — `lookup`/`update` زي ما هم بالحرف.
   shipped:  { url: 'https://bosta-orders-shipped-scanner.ecommoda-dev.workers.dev',  min: '3.5.0', label: 'قسم تسليمات بوسطة' },
-  returned: { url: 'https://bosta-orders-returned-scanner.ecommoda-dev.workers.dev', min: '3.4.0', label: 'قسم مرتجعات بوسطة' },
+  returned: { url: 'https://bosta-orders-returned-scanner.ecommoda-dev.workers.dev', min: '3.6.0', label: 'قسم مرتجعات بوسطة' },
   // 🔴 قسم تسليمات المكتب — Worker جديد بالكامل (هب v1.26.0).
   // `1.0.0` = أول نسخة، ومفيش أي نسخة أقدم منشورة — فالحارس هنا **مش** بيمنع
   // rollback، هو بيمسك الحالة الوحيدة الممكنة: الـ Worker ما اتنشرش أصلاً أو
@@ -204,7 +204,7 @@ const ECO_WORKERS = {
   bostaUpload: { url: 'https://bosta-orders-upload-worker.ecommoda-dev.workers.dev', min: '2.23.0', label: 'رفع بوسطة' },
 };
 
-const TOOL_VERSION = 'v1.62.0';                     // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.63.0';                     // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const SHOP_HANDLE  = '6c7e1a-53';
 
@@ -231,6 +231,7 @@ const ECO_CACHE_WAREHOUSE = 'woc_queue_warehouse';  // كاش طابور است�
 const ECO_CACHE_EDITED = 'woc_queue_edited';  // كاش طابور «أوردرات معدّلة» + «تحويل بوسطة» — رد `get_ready_edited` خام (كاش واحد للتابين · v1.62.0)
 const ECO_CACHE_RETURN_ITEMS = 'woc_queue_return_items';  // كاش دفتر القطع الراجعة — رد `get_return_items` خام (v1.51.0)
 const ECO_CACHE_BOSTA_UPLOAD = 'woc_queue_bosta_upload';  // عدّادات «رفع بوسطة» التلاتة (شحن · استرجاع · استبدال) — ⛔ مش `ECO_CACHE_BOSTA` (ده كاش طابور تسليمات بوسطة)
+const ECO_CACHE_RETURN_QUEUE = 'woc_queue_return_scanner';  // كاش طابور «راجع من بوسطة» — رد `get_ready_to_return` خام (v1.62.0)
 const ECO_CACHE_DONE      = 'woc_done_';            // + مفتاح الطابور: عدّاد «خلص النهارده / أمس» (نفس عمر كاش الطابور)
 const ECO_IDLE_KEY     = 'woc_last_activity';  // §IDLE — آخر نشاط (sessionStorage، لكل تاب لوحده)
 const ECO_FOLD_KEY     = 'woc_home_fold';      // §FOLD — الأقسام المطوية في الرئيسية `{ secId: true }` (sessionStorage · طلب أحمد 25-10-2026)
@@ -245,7 +246,7 @@ const ECO_HUB = {
   icon: '📦',                       // الأيقونة الافتراضية للهيدر
   // مفاتيح sessionStorage اللي بتتمسح مع الخروج (الجلسة وآخر نشاط بيتمسحوا في الـ core)
   clearKeys: [
-    ECO_CACHE_PRINT, ECO_CACHE_PACK, ECO_CACHE_BOSTA, ECO_CACHE_OFFICE, ECO_CACHE_WAREHOUSE, ECO_CACHE_EDITED, ECO_CACHE_RETURN_ITEMS, ECO_CACHE_BOSTA_UPLOAD,
+    ECO_CACHE_PRINT, ECO_CACHE_PACK, ECO_CACHE_BOSTA, ECO_CACHE_OFFICE, ECO_CACHE_WAREHOUSE, ECO_CACHE_EDITED, ECO_CACHE_RETURN_ITEMS, ECO_CACHE_BOSTA_UPLOAD, ECO_CACHE_RETURN_QUEUE,
     ...Object.values(ECO_CACHE_UPLOAD_ROWS), ECO_CACHE_PRINT_LOGS,
     ...['print', 'pack', 'bosta'].map(k => ECO_CACHE_DONE + k),
   ],
