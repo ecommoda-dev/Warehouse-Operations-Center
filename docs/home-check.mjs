@@ -137,6 +137,9 @@ function makeStub(mode = {}) {
     if (action === 'get_ready_to_ship')      return json({ ok: true, orders: [], counts: { total: 0 } });
     if (action === 'get_ready_to_office')    return json({ ok: true, orders: [] });
     if (action === 'get_ready_to_warehouse') return json({ ok: true, orders: [] });
+    // v1.64.0 — صف «مرتجعات بوسطة»: ٣ صفوف (S1 · S1 · S2) — أوردر واحد مستوفي الماكينتين بيطلع صفّين
+    if (action === 'get_ready_to_return') { calls.ret = (calls.ret || 0) + 1; if (mode.returnFail) return json({ ok: false, error: 'boom' }, 500);
+      return json({ ok: true, scanned: 9, truncated: !!mode.returnTrunc, orders: [{ machine: 'S1' }, { machine: 'S1' }, { machine: 'S2' }] }); }
     if (action === 'get_return_items') return json({ ok: true, items: [], counts: { pending: 0, missing: 0 }, truncated: false });   // v1.51.0 — صف «قطع مستنية الرجوع»
 
     if (action === 'get_done_counts') {
@@ -360,7 +363,7 @@ console.log('⑥ بلا تحديث تلقائي + الرئيسية من الكا
 
 console.log('⑦ التصميم الموحّد — الأقسام الخمسة والهوية والإطار (قرار أحمد 22-10-2026)');
 {
-  const { page, ctx, errors } = await openHome({});
+  const { page, ctx, calls, errors } = await openHome({});
   const secs = await page.evaluate(() => [...document.querySelectorAll('.eco-home-sec')].map(s => ({
     id: s.id, title: s.querySelector('.eco-home-sec-title').textContent.trim(),
     rows: [...s.querySelectorAll('.eco-qrow')].map(r => r.id), tools: [...s.querySelectorAll('.eco-tool')].map(a => a.getAttribute('href')),
@@ -381,12 +384,18 @@ console.log('⑦ التصميم الموحّد — الأقسام الخمسة �
   }));
   is(pos.every(x => Math.abs(x - pos[0]) <= 2), '🎨 المطوي: أيقونة/عنوان كل الأقسام على اليمين بنفس البُعد (الأدوات مش في النص)', pos.join(','));
   for (const id of ['secPrep', 'secHelper', 'secOther']) await page.locator(`#${id} [data-sec-toggle] .eco-sec-chev`).click();
-  // مرتجعات بوسطة = صف بلا طابور
-  const link = await page.evaluate(() => { const r = document.getElementById('rowBostaReturns');
+  // 🔴 مرتجعات بوسطة = صف طابور حقيقي (v1.64.0): الرقم = عدد صفوف `get_ready_to_return` بالحرف
+  const rb = await page.evaluate(() => { const r = document.getElementById('rowBostaReturns');
     return { tag: r.tagName, href: r.getAttribute('href'), link: r.classList.contains('is-link'), num: r.querySelector('.eco-count').textContent.trim(),
-             btn: !!r.querySelector('.eco-qref'), open: r.querySelector('.eco-open').textContent.trim(), inQ: 'bostaReturns' in homeQ, ageBox: !!r.querySelector('.eco-agebox') }; });
-  is(link.tag === 'A' && link.href === 'Bosta-Orders-Returned-Scanner.html' && link.link && link.num === '—' && !link.btn && !link.ageBox && link.open.includes('فتح الأداة') && !link.inQ,
-     '🔴 «مرتجعات بوسطة» **صف** (مش كارت) بلا عدّاد: `—` + «فتح الأداة ←» وبلا تحديث ولا جلب', JSON.stringify(link));
+             btn: !!r.querySelector('.eco-qref'), inQ: 'bostaReturns' in homeQ, ageBox: !!r.querySelector('.eco-agebox'),
+             chips: [...r.querySelectorAll('.eco-chip')].map(c => c.textContent.replace(/\s+/g, ' ').trim()) }; });
+  is(rb.tag === 'A' && rb.href === 'Bosta-Orders-Returned-Scanner.html' && !rb.link && rb.num === '3' && rb.btn && rb.inQ && rb.ageBox,
+     '🔴 «مرتجعات بوسطة» صف طابور: الرقم 3 == صفوف الرد، وفيه تحديث وعمر وجلب', JSON.stringify(rb));
+  is(rb.chips.join('|').includes('2') && rb.chips.join('|').includes('1') && rb.chips.some(c => c.includes('راجع قبل التسليم')) && rb.chips.some(c => c.includes('بعد التسليم')),
+     'تقسيمة الصف: راجع قبل التسليم (S1) = 2 · بعد التسليم (S2) = 1', rb.chips.join(' | '));
+  const rbCache = await page.evaluate(() => { const c = JSON.parse(sessionStorage.getItem('woc_queue_return_scanner') || 'null'); return c && c.data && c.data.orders && c.data.orders.length; });
+  is(rbCache === 3, 'الكاش الخام اتكتب بنفس مفتاح الصفحة (`woc_queue_return_scanner`) — الصفحة هتفتح بصفر نداء', String(rbCache));
+  is(calls.ret === 1, 'نداء واحد لـ`get_ready_to_return` عند فتح الرئيسية', String(calls.ret));
   // مفيش حافة · الخلفية بتتلوّن بالعمر
   const edge = await page.evaluate(() => { homeQ.print.at = new Date(Date.now() - 35 * 60000); renderFreshness();
     const r = document.getElementById('rowPrint'); return { e: getComputedStyle(r, '::before').content, cls: [...r.classList].find(c => c.startsWith('age-')) }; });
@@ -445,6 +454,16 @@ console.log('⑧ «رفع بوسطة» — أول صف في «تجهيز الأ�
   const t = await txt(page, '#rowBostaUpload');
   is(t.includes('استبدال') && t.includes('تعذّر') && await txt(page, '#cntPrint') === '4', '🔴 فشل وضع الاستبدال: الصف بيقول «تعذّر» ويسمّي الوضع، وصف الطباعة سليم', t.slice(0, 140));
   await ctx.close();
+}
+
+{ // v1.64.0 — «مرتجعات بوسطة»: فشل الطابور = «تعذّر» مش صفر، والباقي سليم · والقص بيتقال
+  const f = await openHome({ returnFail: true });
+  const t = await txt(f.page, '#rowBostaReturns');
+  is(t.includes('تعذّر') && !/\b0\b/.test(await txt(f.page, '#cntBostaReturns')) && await txt(f.page, '#cntPrint') === '4', '🔴 فشل «راجع من بوسطة»: «تعذّر» مش صفر، وصف الطباعة سليم', t.slice(0, 140));
+  await f.ctx.close();
+  const tr = await openHome({ returnTrunc: true });
+  is((await txt(tr.page, '#moneyBostaReturns')).includes('مقطوعة'), '⚠️ `truncated` من الـ Worker بيظهر «القايمة مقطوعة» على الصف');
+  await tr.ctx.close();
 }
 
 

@@ -40,3 +40,6 @@
 /* chips صف «قطع مستنية الرجوع للمخزن» (v1.51.0) — المستنية بلون الصف، والناقصة أحمر (محتاجة مراجعة) */
 .eco-chip.qc-ri-pending{background:var(--id-retitems-light);color:var(--id-retitems);border-color:var(--id-retitems-border)}
 .eco-chip.qc-ri-missing{background:var(--red-light);color:var(--red-dark);border-color:var(--red-border)}
+/* chips صف «مرتجعات بوسطة» (v1.64.0) — نفس ألوان بادجات الصفحة: S1 (RTO) أزرق · [S-2] بعد التسليم محايد */
+.eco-chip.qc-rb-s1{background:var(--blue-light);color:var(--blue);border-color:var(--blue-border)}
+.eco-chip.qc-rb-s2{background:var(--surface-2);color:var(--text-secondary);border-color:var(--border-strong)}

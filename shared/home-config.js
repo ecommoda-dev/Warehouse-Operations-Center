@@ -228,12 +228,28 @@ const ECO_HOME = {
         },
       }),
     },
-    // 🔴 «مرتجعات بوسطة» — صف **بلا طابور** (`link: true`): مفيش عدّاد ولا تحديث. الأداة **هدّامة**
-    //    (`orderCancel` بلا رجعة) — تأكيدها جوّه الصفحة نفسها.
+    // 🔴 «مرتجعات بوسطة» — صف طابور «راجع من بوسطة» (v1.64.0 · طلب أحمد 26-10-2026) من `get_ready_to_return`
+    //    (Worker ≥ v3.6.0). الأداة **هدّامة** (`orderCancel` بلا رجعة) — تأكيدها جوّه الصفحة نفسها.
+    //    🔴 **الحكم كله في الـ Worker** (مندوب بوسطة · `In-Return` · كود الـ webhook 41) — الرقم هنا = `orders.length`
+    //    بالحرف زي عدّاد الصفحة (`rqCount`)، ومفيش أي فلترة محلية (درس R1). صفّ لكل ماكينة: أوردر مستوفي S1 وS2
+    //    بيتعدّ مرتين. 🔴 الكاش نفس مفتاح الصفحة (`ECO_CACHE_RETURN_QUEUE`) والاتنين بيكتبوا الرد الخام.
+    //    ⚠️ `truncated` (حارس ١٢×٥٠) = شارة «⚠️ القايمة مقطوعة» (من `home.js`)، ومعاها بانر في الصفحة. ⛔ عرض بحت مش حارس.
     bostaReturns: {
       href: 'Bosta-Orders-Returned-Scanner.html', idCls: 'id-bostaret', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>`,
-      name: 'مرتجعات بوسطة', code: 'سكانر استلام الراجع',
-      link: true,
+      name: 'مرتجعات بوسطة', code: 'راجع من بوسطة ولسه ما اتسكنش',
+      err: 'تعذّر جلب طابور «راجع من بوسطة»',
+      ...ecoRawQueue({
+        cacheKey: ECO_CACHE_RETURN_QUEUE,
+        fetchRaw: () => ecoApi(ECO_WORKERS.returned).apiGet('get_ready_to_return'),
+        derive: data => {
+          const orders = data.orders || [];
+          const s1 = orders.filter(o => o.machine === 'S1').length;
+          return { total: orders.length, truncated: !!data.truncated, chips: [
+            { grp: true, cls: 'qc-rb-s1', label: 'راجع قبل التسليم', n: s1 },
+            { grp: true, cls: 'qc-rb-s2', label: 'بعد التسليم',      n: orders.length - s1 },
+          ] };
+        },
+      }),
     },
   },
 };
