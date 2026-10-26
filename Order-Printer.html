@@ -1527,8 +1527,18 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
       <div class="cl-entry">
         <div class="cl-head">
-          <span class="cl-ver">v1.65.0</span>
+          <span class="cl-ver">v1.66.0</span>
           <span class="cl-badge" id="clLatestBadge">آخر نسخة</span>
+          <span class="cl-date">26-10-2026</span>
+        </div>
+        <div class="cl-list">
+          <div class="cl-item"><span class="cl-tag change">تغيير</span><span>🚫 <b>حارس عهدة الطرد بقى بيسمح بـ <code>Warehouse</code></b> — الطباعة مسموحة لو ميتافيلد ماكينة الأوردر فاضي أو قيمته <code>Warehouse</code>، وأي قيمة تانية (مكتب · مندوب · غريبة) بتوقف الأوردر ده بس. محتاج Promote لـ <code>order-printer-worker</code> v2.11.0.</span></div>
+        </div>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-head">
+          <span class="cl-ver">v1.65.0</span>
           <span class="cl-date">26-10-2026</span>
         </div>
         <div class="cl-list">
@@ -3382,10 +3392,10 @@ async function printInvoiceFlow(selected) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// 🔴 §WHEREABOUTS-GUARD — عهدة الطرد لازم تكون فاضية قبل الطباعة (v1.65.0)
+// 🔴 §WHEREABOUTS-GUARD — عهدة الطرد لازم تكون فاضية أو Warehouse قبل الطباعة (v1.65.0 · v1.66.0)
 // ══════════════════════════════════════════════════════════════
 // قرار أحمد 26-10-2026: الأوردر اللي ميتافيلد عهدة الطرد **بتاع ماكينته**
-// (`custom.package_whereabouts_s1` لـ S1 · `_s2` لـ S2) فيه قيمة بيتوقف
+// (`custom.package_whereabouts_s1` لـ S1 · `_s2` لـ S2) فيه قيمة غير `Warehouse` (v1.66.0: المسموح فاضي أو `Warehouse`) بيتوقف
 // **هو بس**، والباقي بيكمّل، وبيظهر في نافذة النتايج بالسبب والقيمة.
 // - 🔴 القراءة **لحظة الطباعة** من الـ Worker (`POST /precheck-whereabouts`،
 //   v2.10.0) مش من لقطة الطابور — لقطة عمرها ١٥ دقيقة ممكن تقول «فاضي».
@@ -3403,11 +3413,11 @@ function whBlockedRow(o, kind, info) {
   let msg;
   if (kind === "has_value") {
     msg = `اتوقف قبل الطباعة — الأوردر عليه عهدة طرد مسجّلة على ماكينة ${machine}. ` +
-          `الطباعة بتتطلب إن ميتافيلد ${key} يكون فاضي، وقيمته دلوقتي «${info.value}».`;
+          `الطباعة بتتطلب إن ميتافيلد ${key} يكون فاضي أو Warehouse، وقيمته دلوقتي «${info.value}».`;
   } else if (kind === "unverified") {
-    msg = `اتوقف قبل الطباعة — الأوردر ما رجعش من شوبيفاي في فحص عهدة الطرد، فمش متأكدين إن ${key} فاضي.`;
+    msg = `اتوقف قبل الطباعة — الأوردر ما رجعش من شوبيفاي في فحص عهدة الطرد، فمش متأكدين إن ${key} فاضي أو Warehouse.`;
   } else {
-    msg = `اتوقف قبل الطباعة — تعذّر فحص عهدة الطرد فمش متأكدين إن ${key} فاضي` +
+    msg = `اتوقف قبل الطباعة — تعذّر فحص عهدة الطرد فمش متأكدين إن ${key} فاضي أو Warehouse` +
           (info.error ? ` (${info.error})` : "") + `. حاول تاني.`;
   }
   return {
@@ -3435,7 +3445,7 @@ async function whereaboutsGuard(selected) {
       // الشريحة كلها فشلت → كلها موقوفة (مش متأكدين) بسبب الفشل نفسه.
       if (err) {
         const msg = /404|Not found/i.test(err.message || "")
-          ? "الـ Worker نسخة قديمة — محتاج Promote لـ order-printer-worker v2.10.0"
+          ? "الـ Worker نسخة قديمة — محتاج Promote لـ order-printer-worker v2.11.0"
           : (err.message || String(err));
         chunk.forEach(o => blockedRows.push(whBlockedRow(o, "check_failed", { error: msg })));
         continue;

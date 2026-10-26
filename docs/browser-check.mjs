@@ -174,8 +174,8 @@ await page.route('**order-printer-worker.ecommoda-dev.workers.dev/**', async (ro
       if (WH_MODE === 'missing' && o && o.name === '#53404')
         return { id:b.id, machine:b.type, key, verified:false, blocked:true, value:null, name:null, reason:'unverified' };
       const v = WH_BLOCK.get(k);
-      return { id:b.id, name:o?.name || null, machine:b.type, key, verified:true, blocked: v != null, value: v ?? null,
-               reason: v != null ? 'has_value' : null,
+      return { id:b.id, name:o?.name || null, machine:b.type, key, verified:true, blocked: v != null && String(v).trim().toLowerCase() !== 'warehouse', value: v ?? null,
+               reason: (v != null && String(v).trim().toLowerCase() !== 'warehouse') ? 'has_value' : null,
                other:{ key:'custom.package_whereabouts_' + (b.type === 'S2' ? 's1' : 's2'), value: WH_OTHER.get(k) ?? null } };
     });
     return route.fulfill(J({ ok:true, results, blockedCount: results.filter(r=>r.blocked).length, checkedAt:new Date().toISOString() }));
@@ -826,7 +826,7 @@ await closeResult();
 
 // ①-ب: S2 — `_s2` فيه قيمة → موقوف، ومابيروحش bosta_lookup (مفيش `not_found` كدب)
 await resetToQueue();
-WH_BLOCK.clear(); WH_BLOCK.set('gid://shopify/Order/11|S2', 'Warehouse');
+WH_BLOCK.clear(); WH_BLOCK.set('gid://shopify/Order/11|S2', 'Office');
 await page.click('#chanBtn-awb'); await page.waitForTimeout(200);
 {
   const b0 = calls.length;
@@ -841,7 +841,7 @@ await page.click('#chanBtn-awb'); await page.waitForTimeout(200);
         seg.filter(c => c.path === '/track').length >= 1, JSON.stringify(seg.map(c=>c.path||c.action)));
   check('🔴 صف `not_found` ما اتكتبش للموقوف (مش في bosta_lookup أصلاً)', !(look3?.body?.orders||[]).some(o => o.name === '#53409'));
   const t = await page.innerText('#trackResultBody');
-  check('🔴 النافذة فيها `_s2` والقيمة Warehouse ووصفها', t.includes('custom.package_whereabouts_s2') && t.includes('Warehouse') && t.includes('المخزن'), t.slice(0,300));
+  check('🔴 النافذة فيها `_s2` والقيمة Office ووصفها', t.includes('custom.package_whereabouts_s2') && t.includes('Office') && t.includes('المكتب'), t.slice(0,300));
   await closeResult();
 }
 
@@ -849,19 +849,20 @@ await page.click('#chanBtn-awb'); await page.waitForTimeout(200);
 await resetToQueue();
 WH_BLOCK.clear(); WH_MODE = 'ok';
 WH_BLOCK.set('gid://shopify/Order/11|S1', 'Courier');      // مش ماكينة الصف → مالوش أثر
+WH_BLOCK.set('gid://shopify/Order/11|S2', ' Warehouse ');  // ماكينة الصف بس Warehouse → مسموح (v1.66.0)
 await page.click('#chanBtn-awb'); await page.waitForTimeout(200);
 {
   const b0 = calls.length;
   await page.click('#printAllBtn'); await clickGatePrintIfAny();
   await page.waitForSelector('#trackResultOverlay.open', { timeout:15000 }); await page.waitForTimeout(400);
   const look2 = calls.slice(b0).filter(c => c.action === 'bosta_lookup').pop();
-  check('🔴 S2 مع `_s1` عليه قيمة مش موقوف (بيتفحص `_s2` بس)',
+  check('🔴 S2 مع `_s1` عليه قيمة و`_s2` = Warehouse → مش موقوف (Warehouse مسموحة)',
         (look2?.body?.orders||[]).some(o => o.machine === 'S2'), JSON.stringify((look2?.body?.orders||[]).map(o=>[o.name,o.machine])));
   await closeResult();
 }
 
 // ①-د: الفحص نفسه فشل → كله موقوف (مش متأكدين) والسبب مكتوب، وصفر كتابة
-for (const [mode, expect] of [['down', 'اختبار'], ['old404', 'v2.10.0']]) {
+for (const [mode, expect] of [['down', 'اختبار'], ['old404', 'v2.11.0']]) {
   await resetToQueue(); WH_MODE = mode; WH_BLOCK.clear();
   await page.click('#chanBtn-invoice'); await page.waitForTimeout(200);
   const b0 = calls.length;
