@@ -579,6 +579,12 @@
 .result-actions { color: var(--text-secondary); font-size: 12px; font-weight: 600; }
 .result-detail  { color: var(--red-dark);   font-size: 12px; font-weight: 700; }
 .result-warn    { color: var(--amber-dark); font-size: 12px; font-weight: 700; }
+.wh-box { width: 100%; border-collapse: collapse; margin: 6px 0 4px; font-size: 12px; background: var(--surface); border: 1px solid var(--red-border); }
+.wh-box th, .wh-box td { padding: 4px 8px; text-align: center; border: 1px solid var(--red-border); }
+.wh-box th { background: var(--red-light); font-weight: 800; }
+.wh-box .wh-hit td { font-weight: 800; }
+.wh-hint  { color: var(--text-secondary); font-weight: 600; }
+.wh-empty { color: var(--text-muted); font-weight: 600; }
 .export-warn {
   margin: 0 0 12px; padding: 10px 14px; border-radius: 9px;
   background: var(--amber-light); border: 1px solid var(--amber);
@@ -1521,8 +1527,18 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
       <div class="cl-entry">
         <div class="cl-head">
-          <span class="cl-ver">v1.25.1</span>
+          <span class="cl-ver">v1.65.0</span>
           <span class="cl-badge" id="clLatestBadge">آخر نسخة</span>
+          <span class="cl-date">26-10-2026</span>
+        </div>
+        <div class="cl-list">
+          <div class="cl-item"><span class="cl-tag new">جديد</span><span>🚫 <b>حارس عهدة الطرد قبل الطباعة</b> — الأوردر اللي <code>custom.package_whereabouts_s1</code> (ماكينة S1) أو <code>_s2</code> (ماكينة S2) عليه قيمة بيتوقف <b>هو بس</b> والباقي بيكمّل، وبيظهر في نافذة النتايج بالسبب والميتافيلد وقيمته. «مش متأكد» (فشل الفحص أو الأوردر ما رجعش) = متوقف. محتاج Worker v2.10.0.</span></div>
+        </div>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-head">
+          <span class="cl-ver">v1.25.1</span>
           <span class="cl-date">14-09-2026</span>
         </div>
         <div class="cl-list">
@@ -2093,10 +2109,8 @@ async function startReprint() {
     // 🔴 **نفس البوابة** — أوردر إعادة الطباعة بيتصنّف فيها 🟡 «سبق طباعته»
     //    على الأقل (شرط `o.reprint` في `runPreprintGate`)، و🔴 لو حالته
     //    فعلاً من `VOID_INVOICE_STATUSES`.
-    const gate = await runPreprintGate([row]);
-    if (!gate)                { showToast('اتلغت الطباعة', 'info'); return; }
-    if (!gate.orders.length)  { showToast('مفيش أوردرات باقية للطباعة', 'warn'); return; }
-    await executePrint(gate.orders, gate.guards);
+    //    🔴 وحارس عهدة الطرد (§WHEREABOUTS-GUARD) جوّا نفس المسار.
+    await printInvoiceFlow([row]);
     // الكارت بيتبني من جديد عشان «آخر طباعة» و«اتطبع كام مرة» يبقوا صح لو
     // الموظف احتاج نسخة تانية — رقم قديم في كارت مفتوح أسوأ من مفيش رقم.
     await openReprintFor(String(row.name).replace('#', ''), row.orderId);
@@ -3347,10 +3361,98 @@ async function startPrint() {
   // فالدفعة **مستحيل** تبقى مختلطة.
   if (activeChannel === "awb") return startPrintAWB(selected);
 
-  const gate = await runPreprintGate(selected);
-  if (!gate) { showToast("اتلغت الطباعة", "info"); return; }
-  if (!gate.orders.length) { showToast("مفيش أوردرات باقية للطباعة", "warn"); return; }
-  await executePrint(gate.orders, gate.guards);
+  await printInvoiceFlow(selected);
+}
+
+// 🔴 مسار الفاتورة الواحد: حارس عهدة الطرد ← بوابة المراجعة ← الطباعة.
+//    الطابور وكارت إعادة الطباعة الاتنين بيعدّوا منه (مسار طباعة تاني = درس R1).
+async function printInvoiceFlow(selected) {
+  const wh = await whereaboutsGuard(selected);
+  if (!wh.allowed.length) {
+    hidePrintLoading();
+    renderTrackResults(wh.blockedRows);
+    showToast("كل الأوردرات اتوقفت قبل الطباعة — مفيش أي طباعة ومفيش أي تسجيل", "error", 8000);
+    return;
+  }
+  const gate = await runPreprintGate(wh.allowed);
+  // الموظف لغى أو مفيش باقي: الأوردرات الموقوفة لازم تفضل باينة بتفاصيلها.
+  if (!gate) { showToast("اتلغت الطباعة", "info"); if (wh.blockedRows.length) renderTrackResults(wh.blockedRows); return; }
+  if (!gate.orders.length) { showToast("مفيش أوردرات باقية للطباعة", "warn"); if (wh.blockedRows.length) renderTrackResults(wh.blockedRows); return; }
+  await executePrint(gate.orders, gate.guards, wh.blockedRows);
+}
+
+// ══════════════════════════════════════════════════════════════
+// 🔴 §WHEREABOUTS-GUARD — عهدة الطرد لازم تكون فاضية قبل الطباعة (v1.65.0)
+// ══════════════════════════════════════════════════════════════
+// قرار أحمد 26-10-2026: الأوردر اللي ميتافيلد عهدة الطرد **بتاع ماكينته**
+// (`custom.package_whereabouts_s1` لـ S1 · `_s2` لـ S2) فيه قيمة بيتوقف
+// **هو بس**، والباقي بيكمّل، وبيظهر في نافذة النتايج بالسبب والقيمة.
+// - 🔴 القراءة **لحظة الطباعة** من الـ Worker (`POST /precheck-whereabouts`،
+//   v2.10.0) مش من لقطة الطابور — لقطة عمرها ١٥ دقيقة ممكن تقول «فاضي».
+// - 🔴 **«مش متأكد» = متوقف** (قرار أحمد): الفحص فشل أو الأوردر ما رجعش =
+//   الأوردر بيتوقف برسالة بتقول السبب. ده عكس مبدأ بوابة المراجعة عن قصد.
+// - 🔴 بيتنادى **قبل** `bosta_lookup`/`/invoice`/`/track` — الموقوف ما
+//   يكتبش `not_found` كدب ولا يطلّع ورق.
+// - ⛔ صفر تسجيل في D1 (قرار أحمد) — نافذة النتايج هي الأثر الوحيد.
+const WH_CHUNK = 250;                       // = WHEREABOUTS_MAX_ORDERS في الـ Worker
+const WH_VALUE_HINT = { Office: "المكتب", Warehouse: "المخزن", Courier: "المندوب" };
+
+function whBlockedRow(o, kind, info) {
+  const machine = o.type;
+  const key = `custom.package_whereabouts_${machine === "S2" ? "s2" : "s1"}`;
+  let msg;
+  if (kind === "has_value") {
+    msg = `اتوقف قبل الطباعة — الأوردر عليه عهدة طرد مسجّلة على ماكينة ${machine}. ` +
+          `الطباعة بتتطلب إن ميتافيلد ${key} يكون فاضي، وقيمته دلوقتي «${info.value}».`;
+  } else if (kind === "unverified") {
+    msg = `اتوقف قبل الطباعة — الأوردر ما رجعش من شوبيفاي في فحص عهدة الطرد، فمش متأكدين إن ${key} فاضي.`;
+  } else {
+    msg = `اتوقف قبل الطباعة — تعذّر فحص عهدة الطرد فمش متأكدين إن ${key} فاضي` +
+          (info.error ? ` (${info.error})` : "") + `. حاول تاني.`;
+  }
+  return {
+    status: "error", blockedBy: "whereabouts", orderNumber: o.name, orderId: o.orderId, type: o.type,
+    actions: [], warnings: [], errors: [msg],
+    whDetail: { kind, machine, key, value: info.value ?? null,
+                otherKey: info.otherKey || null, otherValue: info.otherValue ?? null,
+                status: o.status || "", checkedAt: info.checkedAt || null },
+  };
+}
+
+// بترجّع { allowed, blockedRows } — ومابترميش أبدًا.
+async function whereaboutsGuard(selected) {
+  showPrintLoading("جاري فحص عهدة الطرد قبل الطباعة...");
+  const allowed = [], blockedRows = [];
+  try {
+    for (let i = 0; i < selected.length; i += WH_CHUNK) {
+      const chunk = selected.slice(i, i + WH_CHUNK);
+      let res = null, err = null;
+      try {
+        res = await apiPath("/precheck-whereabouts", { orders: chunk.map(o => ({ id: o.id, type: o.type })) });
+        if (!res || !Array.isArray(res.results)) throw new Error("رد الفحص مش مفهوم");
+      } catch (e) { err = e; }
+
+      // الشريحة كلها فشلت → كلها موقوفة (مش متأكدين) بسبب الفشل نفسه.
+      if (err) {
+        const msg = /404|Not found/i.test(err.message || "")
+          ? "الـ Worker نسخة قديمة — محتاج Promote لـ order-printer-worker v2.10.0"
+          : (err.message || String(err));
+        chunk.forEach(o => blockedRows.push(whBlockedRow(o, "check_failed", { error: msg })));
+        continue;
+      }
+      const byKey = new Map(res.results.map(r => [`${r.id}|${r.machine}`, r]));
+      for (const o of chunk) {
+        const r = byKey.get(`${o.id}|${o.type}`) || byKey.get(`${String(o.id).split("/").pop()}|${o.type}`);
+        if (!r)                    blockedRows.push(whBlockedRow(o, "unverified", {}));
+        else if (!r.verified)      blockedRows.push(whBlockedRow(o, "unverified", {}));
+        else if (r.blocked)        blockedRows.push(whBlockedRow(o, "has_value", {
+                                     value: r.value, otherKey: r.other?.key, otherValue: r.other?.value,
+                                     checkedAt: res.checkedAt }));
+        else                       allowed.push(o);
+      }
+    }
+  } finally { hidePrintLoading(); }
+  return { allowed, blockedRows };
 }
 
 // حد التزامن لنداءات الطباعة (`/invoice` و `/track`).
@@ -3609,7 +3711,7 @@ function buildGateGuards(need) {
 
 // `guards` — إقرارات قطع الفواتير اللاغية، مفتاحها `order.id`. بتتبعت مع
 // `/track` وبتتسجّل في `extra.guard` بتاع صف الطباعة (Worker v2.3.0).
-async function executePrint(selectedOrders, guards = {}) {
+async function executePrint(selectedOrders, guards = {}, preBlocked = []) {
   if (!currentEmployee) { showToast("سجّل الدخول أولاً", "error"); return; }
   const total = selectedOrders.length;
   showPrintLoading(`جاري تحضير ${total.toLocaleString("en-US")} فاتورة...`);
@@ -3663,7 +3765,7 @@ async function executePrint(selectedOrders, guards = {}) {
 
     if (!invoices.length) {
       hidePrintLoading();
-      renderTrackResults(failedRows);
+      renderTrackResults([...preBlocked, ...failedRows]);
       showToast(`فشل تحضير كل الفواتير (${total.toLocaleString("en-US")}) — مفيش أي طباعة ومفيش أي تسجيل`, "error", 8000);
       return;
     }
@@ -3703,7 +3805,7 @@ async function executePrint(selectedOrders, guards = {}) {
     clearSelection();
     hidePrintLoading();
     // الفشل في تحضير الفاتورة والفشل في التسجيل الاتنين بيظهروا في نفس النافذة
-    renderTrackResults([...failedRows, ...tracked]);
+    renderTrackResults([...preBlocked, ...failedRows, ...tracked]);
     markPrintedAway(tracked);          // §JUST-PRINTED — **قبل** التحديث
     await loadOrders(true);
     if (logsLoaded) loadLogs();
@@ -3775,7 +3877,17 @@ async function startPrintAWB(selected) {
   finally { closeAwbWin(); }
 }
 
-async function runPrintAWB(selected) {
+async function runPrintAWB(selectedAll) {
+  // 🔴 §WHEREABOUTS-GUARD — **قبل** `bosta_lookup`: الموقوف ما يكتبش صف
+  //    `not_found` كدب ولا يتجاب له بوليصة. التاب المحجوز في `startPrintAWB`
+  //    بيتقفل في `finally` لو كله اتوقف.
+  const wh = await whereaboutsGuard(selectedAll);
+  if (!wh.allowed.length) {
+    renderTrackResults(wh.blockedRows);
+    showToast("كل الأوردرات اتوقفت قبل الطباعة — مفيش أي طباعة ومفيش أي تسجيل", "error", 8000);
+    return;
+  }
+  const selected = wh.allowed;
   showPrintLoading(`جاري مراجعة ${selected.length.toLocaleString("en-US")} شحنة على بوسطة...`);
 
   let look;
@@ -3819,11 +3931,11 @@ async function runPrintAWB(selected) {
   const staleMachine = (o) => o.type === "S2" && byId[o.id]?.machine !== "S2";
 
   const ready   = selected.filter(o =>  byId[o.id]?.ok && !staleMachine(o));
-  const blocked = selected
+  const blocked = [...wh.blockedRows, ...selected
     .filter(o => !byId[o.id]?.ok || staleMachine(o))
     .map(o => staleMachine(o) && byId[o.id]?.ok
       ? awbBlockedRow(o, { reason: "no_machine_echo" })
-      : awbBlockedRow(o, byId[o.id]));
+      : awbBlockedRow(o, byId[o.id]))];
 
   if (!ready.length) {
     renderTrackResults(blocked);
@@ -3837,7 +3949,7 @@ async function runPrintAWB(selected) {
     onOpen:    closeAwbWin,
     onConfirm: preopenAwbTab,
   });
-  if (!gate) { showToast("اتلغت الطباعة", "info"); return; }
+  if (!gate) { showToast("اتلغت الطباعة", "info"); if (wh.blockedRows.length) renderTrackResults(wh.blockedRows); return; }
   if (!gate.orders.length) {
     if (blocked.length) renderTrackResults(blocked);
     showToast("مفيش أوردرات باقية للطباعة", "warn");
@@ -4227,7 +4339,8 @@ function renderTrackResults(rows) {
     return;
   }
 
-  const badge = st => st === "success" ? '<span class="result-badge badge-success">✓ تم</span>'
+  const whRank = r => r.blockedBy === "whereabouts";
+  const badge = (st, r) => r && whRank(r) ? '<span class="result-badge badge-danger">🚫 اتوقف قبل الطباعة</span>' : st === "success" ? '<span class="result-badge badge-success">✓ تم</span>'
                     : st === "warning" ? '<span class="result-badge badge-warn">⚠ تم جزئيًا</span>'
                                        : '<span class="result-badge badge-danger">✗ فشل</span>';
 
@@ -4241,7 +4354,7 @@ function renderTrackResults(rows) {
     sorted.map(r => {
       const st = r.status || "error";
       const parts = [
-        `<div>${badge(st)} ${prtOrderLink(r.orderNumber || "", r.orderId)} <span style="color:var(--text-secondary)">[${escHtml(typeLabel(r.type))}]</span>` +
+        `<div>${badge(st, r)} ${prtOrderLink(r.orderNumber || "", r.orderId)} <span style="color:var(--text-secondary)">[${escHtml(typeLabel(r.type))}]</span>` +
            // المستند اللي اتطبع — النافذة الواحدة ممكن تجمع صفوف بوليصة
            // وصفوف اتوقفت قبل الطباعة، فالتمييز لازم يبان.
            `${r.doc === "AWB" ? ' <span class="chan-cell ch-awb">🚚 بوليصة</span>' : ""}</div>`,
@@ -4250,11 +4363,35 @@ function renderTrackResults(rows) {
       (r.warnings || []).forEach(w => parts.push(`<div class="result-warn">⚠ ${escHtml(w)}</div>`));
       (r.errors   || []).forEach(e => parts.push(`<div class="result-detail">✗ ${escHtml(e)}</div>`));
       if (r.logged === false) parts.push('<div class="result-warn">⚠ العملية تمت لكن ما اتسجلتش في السجل</div>');
+      if (r.whDetail) parts.push(whDetailHTML(r.whDetail));
       return `<div class="result-row ${st}">${parts.join("")}</div>`;
     }).join("") +
     '</div>';
 
   openTrackResult();
+}
+
+function whCheckedTime(iso) {
+  if (!iso) return "";
+  const d = toCairo(iso);                       // بتوقيت القاهرة (UTC getters)
+  if (isNaN(d.getTime())) return "";
+  const p = n => String(n).padStart(2, "0");
+  return `${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())}`;
+}
+
+// تفاصيل إيقاف حارس عهدة الطرد — الميتافيلد وقيمته والحالة (§WHEREABOUTS-GUARD).
+function whDetailHTML(d) {
+  const val = v => v == null || v === ""
+    ? '<span class="wh-empty">(فاضي)</span>'
+    : `<code>${escHtml(v)}</code>${WH_VALUE_HINT[v] ? ` <span class="wh-hint">— ${escHtml(WH_VALUE_HINT[v])}</span>` : ""}`;
+  const rows = [
+    `<tr class="wh-hit"><td><code>${escHtml(d.key)}</code> <span class="wh-hint">(ماكينة ${escHtml(d.machine)} — اللي اتفحص)</span></td>` +
+      `<td>${d.kind === "has_value" ? val(d.value) : '<span class="wh-empty">⚠ مش متأكد</span>'}</td></tr>`,
+  ];
+  if (d.otherKey) rows.push(`<tr><td><code>${escHtml(d.otherKey)}</code> <span class="wh-hint">(للعلم — مش مفحوص)</span></td><td>${val(d.otherValue)}</td></tr>`);
+  return '<table class="wh-box"><thead><tr><th>الميتافيلد</th><th>القيمة</th></tr></thead><tbody>' + rows.join("") + '</tbody></table>' +
+    `<div class="result-actions">الحالة الحالية: ${escHtml(d.status || "—")}` +
+    (whCheckedTime(d.checkedAt) ? ` · وقت الفحص: ${whCheckedTime(d.checkedAt)}` : "") + '</div>';
 }
 
 function openTrackResult()  { document.getElementById("trackResultOverlay").classList.add("open"); }
