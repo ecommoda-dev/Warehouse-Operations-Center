@@ -604,7 +604,7 @@ input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-colo
 
           <h4>كيف تعمل — Workflow</h4>
           <ol>
-            <li>الموظف يمسح أرقام تتبع بوسطة (سكانر أو يدوي)</li>
+            <li>الموظف يمسح أرقام تتبع بوسطة (سكانر أو يدوي) — أو يضغط «➕ إضافة للمسح» من طابور «راجع من بوسطة» (عرض بحت، مش حارس)</li>
             <li>الأداة تستعلم بوسطة، وتجيب S1/S2/returnStatus من شوبيفاي لكل أوردر</li>
             <li>تتحقق من جدول القرار (تحت) وتعرض النتيجة — متوافق أو مرفوض مع السبب</li>
             <li>الموظف يراجع ويحدد الأوردرات المتوافقة، ثم يضغط "تحديث شوبيفاي"</li>
@@ -674,7 +674,7 @@ input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-colo
             <li><code>PAGE_DIAG_LABELS</code> — أسماء عربية لفحوصات <code>?action=diag</code> (الـ Worker ده بيرجّع <code>checks</code> ككائن بمفاتيح إنجليزية)</li>
             <li><code>§SCAN</code> — سكانر جن + إضافة يدوية لأرقام التتبع</li>
             <li><code>§TOOL-JS</code> — <code>lookup</code> · جدول النتائج · <code>startUpdate</code> (٣ حالات) · تصدير النتائج</li>
-            <li><code>§LOG-JS</code> — تاب السجل: القسم الموحّد (فلاتر multi-select + مدى تاريخ + ترتيب ٣ حالات + صف النتائج) و pagination وتصدير XLSX ببانر التقصّ</li>
+            <li><code>§LOG-JS</code> — تاب السجل: القسم الموحّد (فلاتر في رأس العمود <code>srvLog</code> من <code>shared/srv-filters.js</code> + ترتيب ٣ حالات + صف النتائج) و pagination وتصدير XLSX ببانر التقصّ</li>
           </ul>
 
           <h4>KEY VARIABLES</h4>
