@@ -298,6 +298,8 @@ input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-colo
 #rqTableBody tr.rq-hl { background: var(--amber-light); outline: 2px solid var(--amber); outline-offset: -2px; }
 /* ٧ أعمدة: حشو أضيق وبادج العمر تحت التاريخ — عشان عمود «إجراء» مايتقصّش برّه الشاشة (سكرول أفقي من غير إشارة) */
 #rqTableWrap thead th, #rqTableWrap tbody td { padding-inline: 8px; }
+/* جدول «راجع من بوسطة» RTL: رقم الأوردر أقصى اليمين وإجراء أقصى اليسار (باقي الجداول لسه ltr) */
+#rqTableWrap, #rqTableWrap table { direction: rtl; }
 #rqTableBody .rq-time { display: block; margin: 3px 0 0; font-size: 11.5px; font-weight: 600; color: var(--text-secondary); }
 #rqTableBody .rq-trk { font-weight: 800; color: var(--text-primary); }
 .rq-fail ul { margin: 6px 0 0; padding-inline-start: 20px; }
