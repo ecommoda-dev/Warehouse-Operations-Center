@@ -73,7 +73,6 @@ function homeQueueRowHTML(key, sid) {
           <span class="eco-card-ico">${d.svg}</span>
           <div>
             <div class="eco-card-name">${esc(d.name)}</div>
-            <div class="eco-card-code"${d.ltr ? ' dir="ltr"' : ''}>${esc(d.code)}</div>
           </div>
         </div>`;
   // 🔴 صف بلا طابور (أداة مالهاش عدّاد): الرقم `—` رمادي مش `0`، وزرار «فتح الأداة ←» مكان التحديث —
@@ -132,6 +131,13 @@ function homeToolTilesHTML(tools, sid) {
   }).join('');
 }
 
+// 🎨 أيقونات شريط «افتح الكل / اقفل الكل / ترتيب» (v1.60.0)
+const HOME_FOLD_ICO = {
+  open: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 5-5 5 5M7 17l5 5 5-5"/></svg>',
+  close: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 3 5 5 5-5M7 21l5-5 5 5"/></svg>',
+  order: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M3 8l4-4 4 4M17 20V4M13 16l4 4 4-4"/></svg>',
+  save: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>'
+};
 const HOME_GRIP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="6" r="1.3"/><circle cx="15" cy="6" r="1.3"/><circle cx="9" cy="12" r="1.3"/><circle cx="15" cy="12" r="1.3"/><circle cx="9" cy="18" r="1.3"/><circle cx="15" cy="18" r="1.3"/></svg>';
 function homeSectionHTML(s) {
   const body = s.queues
@@ -146,7 +152,6 @@ function homeSectionHTML(s) {
         <span class="eco-home-sec-ico">${s.svg}</span>
         <div class="eco-sec-tx">
           <div class="eco-home-sec-title">${esc(s.title)}</div>
-          <div class="eco-home-sec-sub">${esc(s.sub)}</div>
         </div>
         <div class="eco-sum" id="sum${s.id}">${s.tools ? homeToolTilesHTML(s.tools, s.id) : ''}</div>
       </div>
@@ -176,10 +181,9 @@ function ecoHomeMount(root = document.getElementById('homeRoot')) {
   }
   root.innerHTML = `
   <div class="eco-fold-bar">
-    <button type="button" class="eco-fold-btn" data-fold-all="open">افتح الكل</button>
-    <button type="button" class="eco-fold-btn" data-fold-all="close">اقفل الكل</button>
-    <button type="button" class="eco-fold-btn" data-edit-toggle aria-pressed="false">✎ ترتيب</button>
-    <span class="eco-edit-hint" hidden>اسحب المقبض لنقل قسم، واسحب أي صف أو كارت أو chip لنقله. الأدوات بتتنقل بين أقسام الأدوات، والأسهم (⇄ ينقل الأداة للقسم التاني) بديل للسحب على الموبايل.</span>
+    <button type="button" class="eco-fold-btn" data-fold-all="open">${HOME_FOLD_ICO.open}<span>افتح الكل</span></button>
+    <button type="button" class="eco-fold-btn" data-fold-all="close">${HOME_FOLD_ICO.close}<span>اقفل الكل</span></button>
+    <button type="button" class="eco-fold-btn" data-edit-toggle aria-pressed="false">${HOME_FOLD_ICO.order}<span>ترتيب</span></button>
   </div>` + ECO_HOME.sections.map(homeSectionHTML).join('');
   homeSyncEdit();
 }
@@ -621,8 +625,7 @@ function homeSetEditing(on) {
   root.querySelectorAll('[data-ditem]').forEach(el => on ? el.setAttribute('draggable', 'true') : el.removeAttribute('draggable'));
   const b = root.querySelector('[data-edit-toggle]');
   b.setAttribute('aria-pressed', String(on));
-  b.textContent = on ? '✓ خلّصت الترتيب' : '✎ ترتيب';
-  root.querySelector('.eco-edit-hint').hidden = !on;
+  b.innerHTML = on ? HOME_FOLD_ICO.save + '<span>حفظ الترتيب</span>' : HOME_FOLD_ICO.order + '<span>ترتيب</span>';
   homeSyncEdit();
 }
 

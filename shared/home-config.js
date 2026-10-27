@@ -89,7 +89,7 @@ const ECO_HOME = {
   staggerMs: 200,     // 🔴 الخمس Workers بتشارك نفس الـ Custom App — فاصل بين إطلاق كل طابور (قرار أحمد 19-09-2026)
   sections: [
     { id: 'Prep', cls: 'sec-prep', summary: true, svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>`,
-      title: 'قسم تجهيز الأوردر', sub: 'رفع وطباعة وتغليف', queues: ['bostaUpload', 'print', 'pack'] },
+      title: 'قسم التجهيزات', sub: 'رفع وطباعة وتغليف', queues: ['bostaUpload', 'print', 'pack'] },
     { id: 'Deliver', cls: 'sec-deliver', summary: true, svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h12M12 6l6 6-6 6"/></svg>`,
       title: 'قسم التسليمات', sub: 'بوسطة والمكتب', queues: ['bosta', 'office'] },
     { id: 'Returns', cls: 'sec-returns', summary: true, svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>`,
@@ -99,7 +99,7 @@ const ECO_HOME = {
       tools: [
         // 🔴 ثيم أحمر (`tool-danger`) — الأداة دي **هدّامة**: بتحذف بند من أوردر حي، وبند متحذف **مالوش رجعة**.
         //    الاسم بيقول الحالة اللي بتودّي ليها («عطلان؟») عشان الموظف اللي جاي من الجدول يلاقي نفس الكلمة.
-        { href: 'Order-Item-Remover.html', theme: 'tool-danger', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 3h4M6 7l1 14h10l1-14M10 11v6M14 11v6"/></svg>`, name: 'عطلان؟ احذف المنتج من الأوردر' },
+        { href: 'Order-Item-Remover.html', theme: 'tool-danger', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 3h4M6 7l1 14h10l1-14M10 11v6M14 11v6"/></svg>`, name: 'أوردر عطلان؟' },
         { href: 'Order-SKU-Barcode-Printer.html', ico: 'ico-blue', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5v14M7 5v14M11 5v14M14 5v14M18 5v14M20 5v14"/></svg>`, name: 'باركود SKU' },
       ] },
     { id: 'Other', cls: 'sec-tools', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18" cy="12" r="1.6"/></svg>`,
@@ -149,7 +149,7 @@ const ECO_HOME = {
     },
     print: {
       href: 'Order-Printer.html', idCls: 'id-print', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V3h10v6"/><rect x="4" y="9" width="16" height="8" rx="2"/><path d="M7 14h10v7H7z"/></svg>`,
-      name: 'جاهز للطباعة', code: 'فواتير مستنية الطباعة',
+      name: 'الطباعة', code: 'فواتير مستنية الطباعة',
       err: 'تعذّر جلب طابور الطباعة',
       done: { verb: 'اتطبع', worker: 'printer', pick: donePickPrint },
       ...ecoRawQueue({
@@ -160,7 +160,7 @@ const ECO_HOME = {
     },
     pack: {
       href: 'Orders-Packing-Checker.html', idCls: 'id-pack', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg>`,
-      name: 'جاهز للتغليف', code: 'اتطبع ولسه ما اتغلّفش',
+      name: 'التغليف', code: 'اتطبع ولسه ما اتغلّفش',
       err: 'تعذّر جلب طابور التغليف',
       done: { verb: 'اتغلّف', worker: 'pack', pick: e => e.type === 'packed' },
       ...ecoRawQueue({
@@ -174,7 +174,7 @@ const ECO_HOME = {
     //    ⚠️ بلا مربعات بقرار أحمد — الرقم المتغلّف بس، من غير أي ذكر للمستبعَد.
     bosta: {
       href: 'Bosta-Orders-Shipped-Scanner.html', idCls: 'id-deliver', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h11v10H3z"/><path d="M14 9h4l3 3v4h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>`,
-      name: 'جاهز لتسليم بوسطة', code: 'اتطبع واتغلّف ومستني بوسطة',
+      name: 'تسليم بوسطة', code: 'اتطبع واتغلّف ومستني بوسطة',
       err: 'تعذّر جلب طابور تسليمات بوسطة',
       // `types`/`results` فلاتر server-side بتقلّل الصفحات بس — الحكم النهائي في `pick`.
       done: { verb: 'اتسلّم لبوسطة', worker: 'shipped', params: { types: 'update', results: 'success,warning' }, pick: donePickShip },
@@ -188,7 +188,7 @@ const ECO_HOME = {
     //    بتنادي **نفس الدالة** على **نفس الرد**. (`package_whereabouts_s1` مش قابل للفلترة في بحث شوبيفاي.)
     office: {
       href: 'Package-Transfer-To-Office.html', idCls: 'id-office', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4h14v17"/><path d="M9 21v-4h6v4M9 8h2M13 8h2M9 12h2M13 12h2"/></svg>`,
-      name: 'جاهز للتسليم للمكتب', code: 'اتغلّف ولسه في المخزن',
+      name: 'تسليم المكتب', code: 'اتغلّف ولسه في المخزن',
       err: 'تعذّر جلب طابور تسليمات المكتب',
       ...ecoRawQueue({
         cacheKey: ECO_CACHE_OFFICE,
@@ -237,7 +237,7 @@ const ECO_HOME = {
     //    اتسلّمت ناقصة. ⚠️ الوحدة **قطعة** مش أوردر. وصفر شوبيفاي في الجلب ده (D1 بس).
     returnItems: {
       href: 'Package-Transfer-To-Warehouse.html#riBox', idCls: 'id-retitems', unit: 'قطعة', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>`,
-      name: 'قطع مستنية الرجوع للمخزن', code: 'تسليم جزئي · قطع ناقصة',
+      name: 'منتجات تسليم جزئي', code: 'تسليم جزئي · قطع ناقصة',
       err: 'تعذّر جلب دفتر القطع الراجعة',
       ...ecoRawQueue({
         cacheKey: ECO_CACHE_RETURN_ITEMS,

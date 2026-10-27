@@ -377,7 +377,7 @@ console.log('⑦ التصميم الموحّد — الأقسام الخمسة �
     id: s.id, title: s.querySelector('.eco-home-sec-title').textContent.trim(),
     rows: [...s.querySelectorAll('.eco-qrow')].map(r => r.id), tools: [...s.querySelectorAll('.eco-tool')].map(a => a.getAttribute('href')),
     open: !s.classList.contains('is-collapsed'), sum: !!s.querySelector('.eco-sum') })));
-  is(secs.map(s => s.title).join('|') === 'قسم تجهيز الأوردر|قسم التسليمات|قسم المرتجعات|أدوات مساعدة|أدوات أخرى', '🔴 خمس أقسام بالأسماء والترتيب المتفق عليه', secs.map(s => s.title).join('|'));
+  is(secs.map(s => s.title).join('|') === 'قسم التجهيزات|قسم التسليمات|قسم المرتجعات|أدوات مساعدة|أدوات أخرى', '🔴 خمس أقسام بالأسماء والترتيب المتفق عليه', secs.map(s => s.title).join('|'));
   is(secs[0].rows.join() === 'rowBostaUpload,rowPrint,rowPack' && secs[1].rows.join() === 'rowBosta,rowOffice' && secs[2].rows.join() === 'rowWarehouse,rowEdited,rowReturnItems,rowBostaReturns',
      'الصفوف في أقسامها: (رفع بوسطة · طباعة · تغليف) · (بوسطة · مكتب) · (رجوع للمخزن · تعديل أوردرات · قطع مستنية الرجوع · مرتجعات بوسطة)', JSON.stringify(secs.map(s => s.rows)));
   is(secs[3].tools.join() === 'Order-Item-Remover.html,Order-SKU-Barcode-Printer.html' && secs[4].tools.join() === 'Inventory-Audit-Updater.html,stats.html',
@@ -434,7 +434,7 @@ console.log('⑦ التصميم الموحّد — الأقسام الخمسة �
      '🎨 الهيدر تدرّج بلا إطار ومن غير الخطين اللي كانوا على الجانبين');
   await page.click('#secDeliver .eco-sec-chev'); await page.waitForTimeout(450);
   const fr = await page.evaluate(() => { const hd = document.querySelector('#secDeliver .eco-home-sec-hd'); return { img: getComputedStyle(hd).backgroundImage, bw: getComputedStyle(hd).borderTopWidth, pills: [...document.querySelectorAll('#secDeliver .eco-sm')].map(w => w.querySelector('.eco-sm-n').textContent.trim()) }; });
-  is(fr.img.includes('linear-gradient') && parseFloat(fr.bw) === 0 && fr.pills.join('|') === 'جاهز لتسليم بوسطة|جاهز للتسليم للمكتب', '🎨 المطوي: نفس الهيدر (تدرّج أعمق) بلا إطار + chips بأسماء الصفوف', JSON.stringify(fr));
+  is(fr.img.includes('linear-gradient') && parseFloat(fr.bw) === 0 && fr.pills.join('|') === 'تسليم بوسطة|تسليم المكتب', '🎨 المطوي: نفس الهيدر (تدرّج أعمق) بلا إطار + chips بأسماء الصفوف', JSON.stringify(fr));
   // عطلان = الثيم الأحمر الوحيد
   const dng = await page.evaluate(() => [...document.querySelectorAll('.eco-tool.tool-danger')].map(a => a.getAttribute('href')));
   is(dng.join() === 'Order-Item-Remover.html', '🔴 الثيم الأحمر لـ«عطلان؟» وحده (الأداة الهدّامة)', dng.join());
@@ -493,7 +493,7 @@ console.log('⑩ §FOLD — حفظ حالة الطي (sessionStorage) + «افت
   const stored = () => page.evaluate(() => sessionStorage.getItem('woc_home_fold'));
   const reload = async () => { await page.reload(); await page.waitForTimeout(1300); };
   is((await st()).every(x => !x.c && x.e === 'true') && (await st()).length === 5, 'أول فتح (بلا حالة محفوظة): الخمس أقسام مفتوحة');
-  is(await page.$$eval('.eco-fold-bar .eco-fold-btn', b => b.map(x => x.textContent.trim()).join('|')) === 'افتح الكل|اقفل الكل|✎ ترتيب', 'زرار «افتح الكل» و«اقفل الكل» و«✎ ترتيب» فوق الأقسام (ومفيش «رجّع الترتيب الأصلي»)');
+  is(await page.$$eval('.eco-fold-bar .eco-fold-btn', b => b.map(x => x.textContent.trim()).join('|')) === 'افتح الكل|اقفل الكل|ترتيب', 'زرار «افتح الكل» و«اقفل الكل» و«✎ ترتيب» فوق الأقسام (ومفيش «رجّع الترتيب الأصلي»)');
   await page.locator('#secPrep [data-sec-toggle] .eco-sec-chev').click(); await page.waitForTimeout(300);
   is(JSON.parse(await stored()).Prep === true, 'طي قسم = بيتحفظ في `sessionStorage` (المطوي بس)', await stored());
   await reload();
@@ -530,7 +530,7 @@ console.log('⑪ §ORDER — ترتيب الأقسام والأدوات (طلب 
   await page.click('[data-edit-toggle]');
   is(await page.evaluate(() => document.getElementById('homeRoot').classList.contains('is-editing') && getComputedStyle(document.querySelector('.eco-eh')).display === 'grid'), '✎ وضع الترتيب بيظهر المقبض والأسهم');
   await page.click('#secPrep [data-mv="s|Prep||1"]');
-  is(await secIds() === 'Deliver,Prep,Returns,Helper,Other', 'سهم ▼ بينقل «قسم تجهيز الأوردر» تحت اللي بعده', await secIds());
+  is(await secIds() === 'Deliver,Prep,Returns,Helper,Other', 'سهم ▼ بينقل «قسم التجهيزات» تحت اللي بعده', await secIds());
   await page.dragAndDrop('#secOther .eco-eh', '#secDeliver .eco-home-sec-hd', { targetPosition: { x: 300, y: 3 } });
   is(await secIds() === 'Other,Deliver,Prep,Returns,Helper', 'السحب بينقل قسم', await secIds());
   const before = await list('Prep');
