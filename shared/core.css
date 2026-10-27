@@ -181,6 +181,7 @@
      لو اتشاركوا نفس اللون الموظف مايعرفش اللون بيقول إيه. */
   /* قيم افتراضية محايدة — كل صف/حاوية بيبدّلها (`.id-*` · `.sec-*`) زي `--age` فوق */
   --idc: var(--accent); --idc-light: var(--accent-light); --idc-border: var(--accent-border);
+  --eco-fold-ms: 750ms; --eco-sgap: 32px; --eco-opengap: 10px; --gapnow: var(--eco-sgap);
   --sec-bg: transparent; --sec-border: var(--border); --sec-fg: var(--text-primary); --sec-solid: var(--text-mid);
   --sec-tools-bg:#f8fafc; --sec-tools-border:#e2e8f0; --sec-tools-fg:#334155; --sec-tools-solid:#475569;
   --font-body:      'Noto Sans Arabic', -apple-system, sans-serif;
@@ -364,70 +365,88 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
       عند كل دخول، وماياخدهوش إلا اللي عنده طابور
       حقيقي وجلبه رخيص.
    ══════════════════════════════════════════════════════════════ */
-/* 🎨 الأقسام (v1.47.0 · قرار أحمد 21-10-2026) — **بلا إطار**: العنوان في النص بخطين على الجانبين
-   (`.eco-sec-ln`)، وكل قسم قابل للطي. كان حاوية بخلفية وإطار (v1.43.0) واتشال: لون العمر
-   (كهرماني/أحمر) فوق خلفية بنفسجي أو تركواز كان بيتخلط، فاللون دلوقتي هو الأعلى صوتًا.
-   ⚠️ الصفوف **جوّه** ما اتغيّرتش في المنطق: سلّم العمر (٥ · ١٥ · ٦٠) وألوان الهوية والحافة والخلفية
-      التدريجية زي v1.38.0/v1.43.0 — اللي اتغيّر **الحجم** (أضغط) وشكل صندوق «آخر تحديث» وزرار التحديث.
-   ⚠️ مطوي = شريط ملوّن (`--sec-bg`) فيه الأيقونة والعنوان وتحته ملخّص الصفوف (`.eco-sum`)، والخطين
-      بيختفوا. الحالة **مابتتخزّنش** — كله مفتوح عند الفتح (قرار أحمد). */
-.eco-home-sec{margin-bottom:6px}
+/* 🎨 الأقسام (v1.59.0 · قرار أحمد 27-10-2026 من «معمل الأقسام»): هيدر **تدرّج** بلا إطار — نفس الشكل مفتوح ومطوي،
+   اللي بيتغيّر عمق التدرّج بس. القسم المفتوح **بطاقة واحدة** بتغلّف الهيدر والصفوف (`.eco-home-sec` نفسها)،
+   والمطوي بلا بطاقة. مسافة واسعة بين الأقسام (`--eco-sgap`) + زيادة بعد المفتوح (`--eco-opengap`) + خط رفيع
+   بين كل قسم والتاني. الطي بحركة `--eco-fold-ms`.
+   ⛔ اتشالت: الخطين على الجانبين (`.eco-sec-ln` · `.eco-sec-sp`) والشريط الملوّن المحدد بإطار 2px والبلاطات
+      الموصولة في كبسولة (`.eco-sumg`) — الملخّص المطوي بقى chips منفصلة.
+   ⚠️ الملخّص جوّه الهيدر (جنب العنوان) وهو مطوي، والـ chips لينكات لصفحاتها — الضغطة عليها مابتطويش القسم. */
+.eco-home-sec{--gapnow:var(--eco-sgap);position:relative;margin-bottom:var(--gapnow);padding:6px;border:1px solid transparent;border-radius:16px;transition:margin-bottom var(--eco-fold-ms) ease,background-color var(--eco-fold-ms) ease,border-color var(--eco-fold-ms) ease}
+.eco-home-sec:not(.is-collapsed){--gapnow:calc(var(--eco-sgap) + var(--eco-opengap));background:var(--surface);border-color:var(--sec-border)}
 .eco-home-sec:last-child{margin-bottom:0}
+.eco-home-sec:not(:last-child)::after{content:"";position:absolute;inset-inline:0;bottom:calc(var(--gapnow) / -2);border-top:1px solid var(--border-strong);pointer-events:none}
 .eco-home-sec.sec-tools{--sec-bg:var(--sec-tools-bg);--sec-border:var(--sec-tools-border);--sec-fg:var(--sec-tools-fg);--sec-solid:var(--sec-tools-solid)}
-.eco-home-sec-hd{display:flex;align-items:center;gap:10px;padding:2px;border-radius:12px;border:1px solid transparent;cursor:pointer;transition:background-color .2s,border-color .2s}
-.eco-home-sec-hd:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.eco-sec-ln{flex:1 1 0;min-width:10px;height:2px;border-radius:2px;background:var(--sec-fg)}
-.eco-sec-sp{flex:none;width:30px}
-.eco-sec-mid{display:flex;align-items:center;gap:10px;min-width:0}
+.eco-home-sec-hd{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:12px;cursor:pointer;background:linear-gradient(to left,var(--sec-bg),transparent)}
+.eco-home-sec.is-collapsed .eco-home-sec-hd{background:linear-gradient(to left,var(--sec-border),var(--sec-bg))}
+.eco-home-sec-hd:focus{outline:none}
+.eco-home-sec-hd:focus-visible{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 35%,transparent)}   /* كيبورد بس — الضغطة بالماوس ما بتطلّعش حلقة */
+.eco-sec-mid{display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto}
+.eco-home-sec.is-collapsed .eco-sec-mid{flex-wrap:wrap}
 .eco-sec-tx{min-width:0}
 .eco-home-sec-ico{position:relative;width:32px;height:32px;flex-shrink:0;border-radius:9px;display:flex;align-items:center;justify-content:center;background:var(--sec-solid);color:var(--on-accent)}
 .eco-home-sec-ico svg{width:17px;height:17px}
 .eco-home-sec-title{font-size:17px;font-weight:900;line-height:1.3;color:var(--sec-fg)}
 .eco-home-sec-sub{font-size:12px;font-weight:700;color:var(--text-secondary)}
-/* زرار الطي — سهم بدائرة */
+/* زرار الطي — سهم بدائرة (لفوق وهو مفتوح · بيلفّ ١٨٠° وهو مطوي) */
 .eco-sec-chev{width:30px;height:30px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1.5px solid var(--sec-border);background:var(--surface);color:var(--text-primary);transition:border-color .2s}
-.eco-sec-chev svg{width:16px;height:16px;transition:transform .25s}
+.eco-sec-chev svg{width:16px;height:16px;transition:transform var(--eco-fold-ms) ease}
 .eco-home-sec-hd:hover .eco-sec-chev{border-color:var(--sec-solid)}
 .eco-home-sec.is-collapsed .eco-sec-chev svg{transform:rotate(180deg)}
 /* الجسم — حركة طي بـ`grid-template-rows` (من غير ارتفاع مكتوب). ⚠️ `visibility:hidden` بعد الحركة
    عشان الصفوف المطوية ماتاخدش تاب ولا قارئ شاشة. */
-.eco-sec-body{display:grid;grid-template-rows:1fr;transition:grid-template-rows .25s ease}
+.eco-sec-body{display:grid;grid-template-rows:1fr;transition:grid-template-rows var(--eco-fold-ms) ease}
 .eco-sec-in{overflow:hidden;min-height:0;padding-inline:6px;margin-inline:-6px;transition:visibility 0s}
 .eco-rows{padding-block:12px 14px}
 .eco-sec-in>.eco-tools-grid{margin-block:12px 14px}
 .eco-home-sec.is-collapsed .eco-sec-body{grid-template-rows:0fr}
-.eco-home-sec.is-collapsed .eco-sec-in{visibility:hidden;transition:visibility 0s .25s}
-/* مطوي = شريط ملوّن بدل الخطين */
-.eco-home-sec.is-collapsed .eco-home-sec-hd{background:var(--sec-bg);border:2px solid var(--sec-fg);padding:7px 11px}
-.eco-home-sec.is-collapsed .eco-sec-ln{display:none}
-.eco-home-sec.is-collapsed .eco-sec-mid{flex:1 1 auto;margin-inline:0}   /* العنوان على اليمين في كل الأقسام المطوية (v1.51/v1.48 · طلب أحمد) — كان في النص للأدوات */
-.eco-home-sec.is-collapsed.has-sum .eco-home-sec-sub{display:none}
-/* مطوي بملخّص: الأيقونة ثم العنوان على اليمين، والكبسولات بعدهم في نفس الصف (v1.46.0 · طلب أحمد) */
-.eco-home-sec.is-collapsed.has-sum .eco-sec-mid{flex:1 1 auto;margin-inline:0;gap:12px;flex-wrap:wrap}
-.eco-home-sec.is-collapsed.has-sum .eco-sec-tx{display:contents}
-.eco-home-sec.is-collapsed.has-sum .eco-home-sec-title{white-space:nowrap}
-.eco-home-sec.is-collapsed.has-sum .eco-sum{margin-top:0;flex:1 1 auto;align-items:center}
-/* 🎨 §HOME-TILES — الملخّص وهو مطوي: بلاطات موصولة في كبسولة واحدة (قرار أحمد 22-10-2026 من مختبر الأقسام
-   المطوية). بلاطة الطابور = الرقم فوق · الاسم · شارة العمر بلون عمرها. بلاطة الأداة = أيقونة + اسم. كل بلاطة
-   لينك (`<a>`) لصفحتها. الصفر باهت (`.z0`). ⚠️ الألوان من نفس `id-*`/`tc-*` — مفيش لون مكتوب هنا. */
-.eco-sum{display:none;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:4px}
+.eco-home-sec.is-collapsed .eco-sec-in{visibility:hidden;transition:visibility 0s var(--eco-fold-ms)}
+/* 🎨 §HOME-CHIPS — الملخّص وهو مطوي: chips منفصلة جوّه الهيدر. الطابور = [الرقم] الاسم + ساعة المدة بلون
+   عمرها (نص صغير بلا خلفية). الأداة = أيقونة + اسم. كل chip لينك (`<a>`) لصفحتها. الصفر باهت (`.z0`).
+   ⚠️ الألوان من نفس `id-*`/`tc-*` — مفيش لون مكتوب هنا. */
+.eco-sum{display:none;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;flex:1 1 auto}
 .eco-home-sec.is-collapsed .eco-sum{display:flex}
-.eco-sumg{display:inline-flex;flex-wrap:wrap;max-width:100%;border:1px solid var(--border-strong);border-radius:14px;overflow:hidden;background:var(--surface)}
-.eco-sm{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:92px;max-width:150px;padding:4px 12px;background:var(--idc-light);color:var(--idc);text-align:center;text-decoration:none;cursor:pointer;transition:filter .15s}
-.eco-sm+.eco-sm{border-inline-start:1px solid var(--idc-border)}
+.eco-sm{display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:3px 10px;border:1.5px solid var(--idc-border);border-radius:99px;background:var(--idc-light);color:var(--idc);font-size:11.5px;font-weight:800;line-height:1.5;text-decoration:none;white-space:nowrap;cursor:pointer;transition:filter .15s}
+.eco-sm:has(.eco-sm-nn){padding-inline-start:4px}
 .eco-sm:hover{filter:brightness(.96)}
-.eco-sm:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
-.eco-sm-nn{font-family:var(--font-mono);font-size:19px;font-weight:900;line-height:1.15;font-variant-numeric:tabular-nums;direction:ltr}
-.eco-sm-n{font-size:11.5px;font-weight:800;line-height:1.35}
+.eco-sm:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.eco-sm-nn{min-width:24px;padding:0 7px;border-radius:99px;background:var(--surface);text-align:center;font-family:var(--font-mono);font-size:11.5px;font-weight:900;font-variant-numeric:tabular-nums;direction:ltr}
 .eco-sm-ic{display:grid;place-items:center}
-.eco-sm-ic svg{width:20px;height:20px}
+.eco-sm-ic svg{width:14px;height:14px}
 .eco-sm.z0 .eco-sm-nn,.eco-sm.z0 .eco-sm-n{opacity:.45}
-.eco-smcap{font-style:normal;font-size:10.5px;font-weight:800;line-height:1.5;padding:0 8px;border-radius:999px;border:1px solid var(--age-border);background:var(--age-light);color:var(--age-dark);white-space:nowrap}
+.eco-smcap{display:inline-flex;align-items:center;gap:3px;font-style:normal;font-size:10.5px;font-weight:900;line-height:1.5;color:var(--age-dark);white-space:nowrap}
+.eco-smcap svg{width:11px;height:11px}
 .eco-sm.tc-blue{--idc:var(--accent);--idc-light:var(--accent-light);--idc-border:var(--accent-border)}
 .eco-sm.tc-green{--idc:var(--green-dark);--idc-light:var(--green-light);--idc-border:var(--green-border)}
 .eco-sm.tc-amber{--idc:var(--amber-dark);--idc-light:var(--amber-light);--idc-border:var(--amber-border)}
 .eco-sm.tc-purple{--idc:var(--purple);--idc-light:var(--purple-light);--idc-border:var(--purple-border)}
 .eco-sm.tc-red{--idc:var(--red-dark);--idc-light:var(--red-light);--idc-border:var(--red-border)}
+/* ✎ §HOME-ORDER — ترتيب الأقسام والأدوات (v1.59.0): المقبض والأسهم مخفيين إلا في وضع الترتيب (`.is-editing` على الجذر) */
+.eco-eh{display:none;width:28px;height:28px;flex:none;place-items:center;border-radius:8px;border:1.5px dashed var(--sec-fg);color:var(--sec-fg);background:var(--surface);cursor:grab}
+.eco-eh svg{width:16px;height:16px}
+.eco-eh:active{cursor:grabbing}
+.eco-ea{display:none;gap:4px;align-items:center}
+.eco-ea button{width:24px;height:24px;border-radius:7px;border:1.5px solid var(--border-strong);background:var(--surface);color:var(--text-primary);cursor:pointer;display:grid;place-items:center;padding:0;font-size:11px;line-height:1}
+.eco-ea button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.eco-ea button:disabled{opacity:.3;cursor:not-allowed}
+.eco-ea button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.is-editing .eco-eh{display:grid}
+.is-editing .eco-ea{display:inline-flex}
+.is-editing [data-ditem]{cursor:grab;outline:1.5px dashed var(--border-strong);outline-offset:2px}
+.is-editing .eco-tool{position:relative}
+.is-editing .eco-tool>.eco-ea{position:absolute;top:6px;inset-inline-end:6px}
+.is-editing .eco-row>.eco-ea{flex-direction:column}
+.eco-dragging{opacity:.35}
+.eco-home-sec.drop-b{box-shadow:0 -5px 0 -1px var(--accent)}
+.eco-home-sec.drop-a{box-shadow:0 5px 0 -1px var(--accent)}
+.eco-home-sec.drop-in{outline:2px dashed var(--accent);outline-offset:3px}
+[data-axis="y"].drop-b{box-shadow:0 -4px 0 0 var(--accent)}
+[data-axis="y"].drop-a{box-shadow:0 4px 0 0 var(--accent)}
+[data-axis="x"].drop-b{box-shadow:4px 0 0 0 var(--accent)}
+[data-axis="x"].drop-a{box-shadow:-4px 0 0 0 var(--accent)}
+.eco-edit-hint{flex:1 1 220px;font-size:11.5px;font-weight:700;color:var(--text-secondary);align-self:center;line-height:1.6}
+.eco-fold-btn[aria-pressed="true"]{border-color:var(--accent);color:var(--accent-dark);background:var(--accent-light)}
+@media (max-width:520px){.eco-home-sec{--eco-sgap:20px}}
 /* ══ الطوابير = صفوف بعرض الشاشة (اتجاه B — قرار أحمد 06-09-2026) ══
    القراءة من فوق لتحت مش جنب بعض. السبب العملي: الصف بيوسّع الرقم
    والتقسيمة والختم والزرار **على سطر واحد**، وبيسع رسالة فشل كاملة
@@ -647,7 +666,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary)
 .eco-fold-btn{padding:5px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--text-secondary);font-family:var(--font-body);font-size:11.5px;font-weight:800;cursor:pointer;transition:border-color .15s,color .15s}
 .eco-fold-btn:hover{border-color:var(--accent);color:var(--accent-dark)}
 .eco-fold-btn:focus-visible{outline:none;box-shadow:0 0 0 3px var(--focus-ring)}
-@media (prefers-reduced-motion: reduce){.eco-fresh-unit *,.eco-qrow,.eco-qrow *,.eco-sec-body,.eco-sec-in,.eco-sec-chev svg,.eco-home-sec-hd{transition:none!important;animation:none!important}}
+@media (prefers-reduced-motion: reduce){.eco-fresh-unit *,.eco-qrow,.eco-qrow *,.eco-home-sec,.eco-sec-body,.eco-sec-in,.eco-sec-chev svg,.eco-home-sec-hd{transition:none!important;animation:none!important}}
 @media (max-width:720px){
   .eco-row-id,.eco-row-mid{min-width:0}
   .eco-row-act{margin-inline-start:0;width:100%}

@@ -212,7 +212,7 @@ const ECO_WORKERS = {
   bostaUpload: { url: 'https://bosta-orders-upload-worker.ecommoda-dev.workers.dev', min: '2.23.0', label: 'رفع بوسطة' },
 };
 
-const TOOL_VERSION = 'v1.66.0';                     // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.67.0';                     // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const SHOP_HANDLE  = '6c7e1a-53';
 
@@ -243,6 +243,7 @@ const ECO_CACHE_RETURN_QUEUE = 'woc_queue_return_scanner';  // كاش طابور
 const ECO_CACHE_DONE      = 'woc_done_';            // + مفتاح الطابور: عدّاد «خلص النهارده / أمس» (نفس عمر كاش الطابور)
 const ECO_IDLE_KEY     = 'woc_last_activity';  // §IDLE — آخر نشاط (sessionStorage، لكل تاب لوحده)
 const ECO_FOLD_KEY     = 'woc_home_fold';      // §FOLD — الأقسام المطوية في الرئيسية `{ secId: true }` (sessionStorage · طلب أحمد 25-10-2026)
+const ECO_ORDER_KEY    = 'woc_home_order';     // §ORDER — ترتيب أقسام الرئيسية وأدواتها `{ secs, items }` (localStorage · تفضيل شاشة · طلب أحمد 27-10-2026 — مابيتمسحش مع الخروج ومفيش «رجّع الترتيب الأصلي»)
 // 🔴 كاش **صفوف/سجل** الصفحات (مش عدّادات الرئيسية) — الصفحة بترسم منه لو أحدث من ١٠ دقايق بدل جلب جديد عند كل فتح.
 //    فيه أسماء وتليفونات عملاء → بيتمسح مع الخروج (`clearKeys`).
 const ECO_CACHE_UPLOAD_ROWS = { s1: 'woc_upload_rows_s1', return: 'woc_upload_rows_return', exchange: 'woc_upload_rows_exchange' };  // رد `get_orders`/`fetch_candidates` خام لكل وضع في «رفع بوسطة»
