@@ -140,6 +140,15 @@ function makeStub(mode = {}) {
     // v1.64.0 — صف «مرتجعات بوسطة»: ٣ صفوف (S1 · S1 · S2) — أوردر واحد مستوفي الماكينتين بيطلع صفّين
     if (action === 'get_ready_to_return') { calls.ret = (calls.ret || 0) + 1; if (mode.returnFail) return json({ ok: false, error: 'boom' }, 500);
       return json({ ok: true, scanned: 9, truncated: !!mode.returnTrunc, orders: [{ machine: 'S1' }, { machine: 'S1' }, { machine: 'S2' }] }); }
+    // «تعديل أوردرات» — استعلام واحد للتابين: ٢ معدّلة (مندوب · شو روم) + ١ تحويل بوسطة + ١ ملغي (مستبعَد) + ١ بلا عهدة Office (مستبعَد)
+    if (action === 'get_ready_edited') { calls.edited = (calls.edited || 0) + 1;
+      const base = { s1: 'Confirmed + Edit', packedAtS1: '2026-10-20T10:00:00Z', whereaboutsS1: 'Office' };
+      return json({ ok: true, orders: [
+        { ...base, courier: 'Saif', zone: 'Cairo+Giza' }, { ...base, courier: 'Saif', zone: 'Show_Room' },
+        { ...base, courier: 'Bosta', zone: 'Other_Regions' },
+        { ...base, courier: 'Saif', zone: 'Cairo+Giza', cancelledAt: '2026-10-21T10:00:00Z' },
+        { ...base, courier: 'Saif', zone: 'Cairo+Giza', whereaboutsS1: 'Warehouse' },
+      ] }); }
     if (action === 'get_return_items') return json({ ok: true, items: [], counts: { pending: 0, missing: 0 }, truncated: false });   // v1.51.0 — صف «قطع مستنية الرجوع»
 
     if (action === 'get_done_counts') {
@@ -369,8 +378,8 @@ console.log('⑦ التصميم الموحّد — الأقسام الخمسة �
     rows: [...s.querySelectorAll('.eco-qrow')].map(r => r.id), tools: [...s.querySelectorAll('.eco-tool')].map(a => a.getAttribute('href')),
     open: !s.classList.contains('is-collapsed'), sum: !!s.querySelector('.eco-sum') })));
   is(secs.map(s => s.title).join('|') === 'قسم تجهيز الأوردر|قسم التسليمات|قسم المرتجعات|أدوات مساعدة|أدوات أخرى', '🔴 خمس أقسام بالأسماء والترتيب المتفق عليه', secs.map(s => s.title).join('|'));
-  is(secs[0].rows.join() === 'rowBostaUpload,rowPrint,rowPack' && secs[1].rows.join() === 'rowBosta,rowOffice' && secs[2].rows.join() === 'rowWarehouse,rowReturnItems,rowBostaReturns',
-     'الصفوف في أقسامها: (رفع بوسطة · طباعة · تغليف) · (بوسطة · مكتب) · (رجوع للمخزن · قطع مستنية الرجوع · مرتجعات بوسطة)', JSON.stringify(secs.map(s => s.rows)));
+  is(secs[0].rows.join() === 'rowBostaUpload,rowPrint,rowPack' && secs[1].rows.join() === 'rowBosta,rowOffice' && secs[2].rows.join() === 'rowWarehouse,rowEdited,rowReturnItems,rowBostaReturns',
+     'الصفوف في أقسامها: (رفع بوسطة · طباعة · تغليف) · (بوسطة · مكتب) · (رجوع للمخزن · تعديل أوردرات · قطع مستنية الرجوع · مرتجعات بوسطة)', JSON.stringify(secs.map(s => s.rows)));
   is(secs[3].tools.join() === 'Order-Item-Remover.html,Order-SKU-Barcode-Printer.html' && secs[4].tools.join() === 'Inventory-Audit-Updater.html,stats.html',
      'الأدوات: مساعدة (عطلان · باركود) · أخرى (الجرد · الإحصائيات) — **كروت** مش pills', JSON.stringify([secs[3].tools, secs[4].tools]));
   is(secs.every(s => s.open && s.sum), 'كلها مفتوحة عند الفتح، وكلها ليها ملخّص مطوي (بلاطات — الأدوات كمان)');
@@ -396,6 +405,17 @@ console.log('⑦ التصميم الموحّد — الأقسام الخمسة �
   const rbCache = await page.evaluate(() => { const c = JSON.parse(sessionStorage.getItem('woc_queue_return_scanner') || 'null'); return c && c.data && c.data.orders && c.data.orders.length; });
   is(rbCache === 3, 'الكاش الخام اتكتب بنفس مفتاح الصفحة (`woc_queue_return_scanner`) — الصفحة هتفتح بصفر نداء', String(rbCache));
   is(calls.ret === 1, 'نداء واحد لـ`get_ready_to_return` عند فتح الرئيسية', String(calls.ret));
+  // 🔴 «تعديل أوردرات» — صف واحد للتابين: الرقم = ٢ + ١، وChip لكل تاب، وبيفتح تاب «أوردرات معدّلة» (`#edited`)
+  const ed = await page.evaluate(() => { const r = document.getElementById('rowEdited');
+    return { tag: r.tagName, href: r.getAttribute('href'), num: r.querySelector('.eco-count').textContent.trim(), btn: !!r.querySelector('.eco-qref'),
+             inQ: 'edited' in homeQ, chips: [...r.querySelectorAll('.eco-chip')].map(c => c.textContent.replace(/\s+/g, ' ').trim()),
+             name: r.querySelector('.eco-card-name').textContent.trim() }; });
+  is(ed.tag === 'A' && ed.href === 'Package-Transfer-To-Warehouse.html#edited' && ed.num === '3' && ed.btn && ed.inQ && ed.name === 'تعديل أوردرات',
+     '🔴 «تعديل أوردرات»: صف طابور بالاسم الصح · الرقم 3 (٢ معدّلة + ١ بوسطة، الملغي وعهدة Warehouse مستبعدين) · بيفتح `#edited`', JSON.stringify(ed));
+  is(ed.chips.some(c => c.includes('أوردرات معدّلة') && c.includes('2')) && ed.chips.some(c => c.includes('تحويل بوسطة') && c.includes('1')),
+     'Chip لكل تاب: أوردرات معدّلة = 2 · تحويل بوسطة = 1', ed.chips.join(' | '));
+  const edCache = await page.evaluate(() => { const c = JSON.parse(sessionStorage.getItem('woc_queue_edited') || 'null'); return c && c.data && c.data.orders && c.data.orders.length; });
+  is(edCache === 5 && calls.edited === 1, 'نداء واحد لـ`get_ready_edited` والكاش الخام بمفتاح الصفحة (`woc_queue_edited`) — الصفحة بتفتح بصفر نداء', `cache=${edCache} calls=${calls.edited}`);
   // مفيش حافة · الخلفية بتتلوّن بالعمر
   const edge = await page.evaluate(() => { homeQ.print.at = new Date(Date.now() - 35 * 60000); renderFreshness();
     const r = document.getElementById('rowPrint'); return { e: getComputedStyle(r, '::before').content, cls: [...r.classList].find(c => c.startsWith('age-')) }; });

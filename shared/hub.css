@@ -13,6 +13,7 @@
   --id-warehouse:#78350f; --id-warehouse-light:#fbf4ec; --id-warehouse-border:#e0c3a0;
   --id-bostaret:#9a5b24; --id-bostaret-light:#fcf3e8; --id-bostaret-border:#ecc9a0;
   --id-retitems:#57534e; --id-retitems-light:#f5f5f4; --id-retitems-border:#d6d3d1;   /* قطع مستنية الرجوع للمخزن — رمادي حجري: بعيد عن سلّم العمر وعن البني بتاع صف الأوردرات */
+  --id-edited:#4d7c0f; --id-edited-light:#f7fee7; --id-edited-border:#d9f99d;   /* تعديل أوردرات — ليموني: بعيد عن سلّم العمر وعن باقي هويات الرئيسية */
   --id-upload:#6d28d9; --id-upload-light:#f5f3ff; --id-upload-border:#c4b5fd;   /* رفع بوسطة — بنفسجي: بعيد عن سلّم العمر وعن باقي هويات الرئيسية */
 }
 .eco-qrow.id-print,.eco-sm.id-print{--idc:var(--id-print);--idc-light:var(--id-print-light);--idc-border:var(--id-print-border)}
@@ -22,6 +23,7 @@
 .eco-qrow.id-warehouse,.eco-sm.id-warehouse{--idc:var(--id-warehouse);--idc-light:var(--id-warehouse-light);--idc-border:var(--id-warehouse-border)}
 .eco-qrow.id-upload,.eco-sm.id-upload{--idc:var(--id-upload);--idc-light:var(--id-upload-light);--idc-border:var(--id-upload-border)}
 .eco-qrow.id-bostaret,.eco-sm.id-bostaret{--idc:var(--id-bostaret);--idc-light:var(--id-bostaret-light);--idc-border:var(--id-bostaret-border)}
+.eco-qrow.id-edited,.eco-sm.id-edited{--idc:var(--id-edited);--idc-light:var(--id-edited-light);--idc-border:var(--id-edited-border)}
 .eco-qrow.id-retitems,.eco-sm.id-retitems{--idc:var(--id-retitems);--idc-light:var(--id-retitems-light);--idc-border:var(--id-retitems-border)}
 .eco-home-sec.sec-prep{--sec-bg:#eef2ff;--sec-border:#c7d2fe;--sec-fg:#4338ca;--sec-solid:#4338ca}
 .eco-home-sec.sec-deliver{--sec-bg:#fdf2f8;--sec-border:#fbcfe8;--sec-fg:#be185d;--sec-solid:#be185d}
@@ -40,6 +42,9 @@
 /* chips صف «قطع مستنية الرجوع للمخزن» (v1.51.0) — المستنية بلون الصف، والناقصة أحمر (محتاجة مراجعة) */
 .eco-chip.qc-ri-pending{background:var(--id-retitems-light);color:var(--id-retitems);border-color:var(--id-retitems-border)}
 .eco-chip.qc-ri-missing{background:var(--red-light);color:var(--red-dark);border-color:var(--red-border)}
+/* chips صف «تعديل أوردرات» — «أوردرات معدّلة» بلون الصف، و«تحويل بوسطة» أحمر زي قناة بوسطة في الطباعة */
+.eco-chip.qc-ed-edited{background:var(--id-edited-light);color:var(--id-edited);border-color:var(--id-edited-border)}
+.eco-chip.qc-ed-bosta{background:var(--red-light);color:var(--red-dark);border-color:var(--red-border)}
 /* chips صف «مرتجعات بوسطة» (v1.64.0) — نفس ألوان بادجات الصفحة: S1 (RTO) أزرق · [S-2] بعد التسليم محايد */
 .eco-chip.qc-rb-s1{background:var(--blue-light);color:var(--blue);border-color:var(--blue-border)}
 .eco-chip.qc-rb-s2{background:var(--surface-2);color:var(--text-secondary);border-color:var(--border-strong)}
