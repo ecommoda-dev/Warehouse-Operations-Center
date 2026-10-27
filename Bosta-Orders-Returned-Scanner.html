@@ -293,11 +293,13 @@ input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-colo
 /* ── v1.68.0 — شاشة واحدة: أدوات السكان + حالة الصف في الجدول ── */
 .rq-tools { display: flex; flex-direction: column; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
 .rq-ready-badge { background: var(--green); }
-#rqTableBody tr.rq-ready { background: var(--green-light); }
+#rqTableBody tr.rq-ready { background: #bbf7d0; }
+#rqTableBody tr.rq-ready .badge-success { background: #fff; }
 #rqTableBody tr.rq-hl { background: var(--amber-light); outline: 2px solid var(--amber); outline-offset: -2px; }
-/* ٩ أعمدة: حشو أضيق وبادج العمر تحت التاريخ — عشان عمود «إجراء» مايتقصّش برّه الشاشة (سكرول أفقي من غير إشارة) */
+/* ٧ أعمدة: حشو أضيق وبادج العمر تحت التاريخ — عشان عمود «إجراء» مايتقصّش برّه الشاشة (سكرول أفقي من غير إشارة) */
 #rqTableWrap thead th, #rqTableWrap tbody td { padding-inline: 8px; }
-#rqTableBody .rq-age { display: block; margin: 3px 0 0; }
+#rqTableBody .rq-time { display: block; margin: 3px 0 0; font-size: 11.5px; font-weight: 600; color: var(--text-secondary); }
+#rqTableBody .rq-trk { font-weight: 800; color: var(--text-primary); }
 .rq-fail ul { margin: 6px 0 0; padding-inline-start: 20px; }
 .rq-fail li { margin-bottom: 3px; }
 
@@ -311,7 +313,6 @@ input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-colo
 .rq-empty .ico { font-size: 26px; margin-bottom: 6px; }
 .rq-fail { margin: 12px 16px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--red-light); border: 1px solid var(--red-border); color: var(--red-dark); font-size: 12.5px; }
 .rq-warn { margin: 12px 16px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--amber-light); border: 1px solid var(--amber-border); color: var(--amber-dark); font-size: 12.5px; }
-.rq-age  { margin-inline-start: 6px; }
 #rqTableBody td.rq-cust { white-space: normal; max-width: 180px; }
 
 /* ── v3.4 — نافذة التأكيد قبل فعل لا رجعة فيه ── */
@@ -387,10 +388,6 @@ input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-colo
          للمسح»، وبعدين «تحديث شوبيفاي». -->
     <div class="rq-box" id="rqBox" style="margin-top:0;">
       <div class="rq-head">
-        <div>
-          <div class="rq-title">📦 راجع من بوسطة — امسح الشحنة أو اضغط «إضافة للمسح»</div>
-          <div class="rq-sub">مندوبه بوسطة · In-Return · حالة بوسطة <bdi dir="ltr">41 · Out For Return</bdi></div>
-        </div>
         <div class="counter-badge">
           <span class="num" id="rqCount">—</span>
           <span class="lbl">أوردر</span>
@@ -412,7 +409,6 @@ input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-colo
             aria-label="امسح الباركود أو اكتب رقم التتبع"
             autocomplete="off"
           />
-          <button class="btn btn-outline" onclick="addManual()">يدوي</button>
         </div>
 
         <div class="action-bar">
@@ -422,10 +418,6 @@ input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-colo
           <button class="btn btn-red" id="updateBtn" onclick="startUpdate()" disabled>
             ↩ تحديث شوبيفاي
           </button>
-          <button class="btn btn-danger btn-sm" onclick="clearScans()">مسح التعليم</button>
-          <div style="margin-right:auto;">
-            <button class="btn btn-outline btn-sm" onclick="exportResultsXLSX()">📥 تصدير XLSX</button>
-          </div>
         </div>
 
         <div id="updateProgress" style="display:none;">
@@ -448,12 +440,10 @@ input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-colo
           <thead>
             <tr>
               <th>رقم الأوردر</th>
-              <th>العميل</th>
               <th>رقم التتبع</th>
-              <th>نوع الراجع</th>
-              <th>حالة بوسطة</th>
+              <th>العميل</th>
+              <th>نوع الأوردر</th>
               <th>آخر تحديث من بوسطة</th>
-              <th>تاريخ الأوردر</th>
               <th>النتيجة</th>
               <th>إجراء</th>
             </tr>
@@ -1154,12 +1144,6 @@ function handleScan() {
   addTrackingNumber(val);
 }
 
-function addManual() {
-  const val = scanInputEl.value.trim();
-  scanInputEl.value = '';
-  scanInputEl.focus();
-  if (val) addTrackingNumber(val);
-}
 
 // ══════════════════════════════════════════════════════════════
 // §TOOL-JS — منطق الأداة (اللائحة · lookup · التحديث · التصدير)
@@ -1512,7 +1496,6 @@ async function startUpdate() {
           detail:     describeActions(res),
           raw:        res,
         };
-        rqExec.push(row);
         // نجاح / تحذير / «خلاص اتعمل» = اتقفل (بيتستبعد من أي جلب). الفشل بس بيفضل قابل للإعادة.
         if (status !== 'error') rqDoneMark(row);
         done++;
@@ -1679,52 +1662,6 @@ function startNewBatch() {
   scanInputEl.focus();
 }
 
-// ─── §TOOL-JS::exportResultsXLSX ───
-// بيصدّر اللي اتنفّذ في الجلسة (اتشال من الجدول) + اللي لسه في الجدول بحالته.
-async function exportResultsXLSX() {
-  const rows = [...rqExec.filter(r => !rqState.orders.includes(r)), ...rqState.orders];
-  if (!rows.length) { showToast('لا توجد بيانات للتصدير', 'error'); return; }
-  const wb  = new ExcelJS.Workbook();
-  const ws  = wb.addWorksheet('النتائج');
-  ws.columns = [
-    { header: 'رقم الأوردر',        key: 'order',   width: 18 },
-    { header: 'العميل',             key: 'cust',    width: 22 },
-    { header: 'رقم التتبع',         key: 'tn',      width: 18 },
-    { header: 'نوع الراجع',         key: 'machine', width: 24 },
-    { header: 'حالة بوسطة',         key: 'state',   width: 22 },
-    { header: 'تاريخ الأوردر',      key: 'created', width: 16 },
-    { header: 'النتيجة',            key: 'result',  width: 22 },
-    { header: 'السبب / الملاحظة',   key: 'reason',  width: 40 },
-    { header: 'ما تم فعليًا',        key: 'did',     width: 34 },
-    { header: 'قطع رجعت للمخزن',    key: 'units',   width: 16 },
-  ];
-  rows.forEach(r => {
-    const res = r.res || null;
-    const raw = res && res.raw;
-    const units = raw ? (raw.restock?.verifiedUnits ?? raw.restock?.confirmed ?? raw.cancel?.restockedUnits ?? '') : '';
-    ws.addRow({
-      order:   r.orderName ? (String(r.orderName).startsWith('#') ? r.orderName : '#' + r.orderName) : '—',
-      cust:    r.customer || '—',
-      tn:      r.tracking || '—',
-      machine: r.machine === 'S2' ? '[S-2] مرتجع بعد التسليم' : 'S1 راجع قبل التسليم (RTO)',
-      state:   r.bostaStatus || '—',
-      created: r.createdAt ? formatDate(r.createdAt) : '—',
-      result:  r.conflict ? 'تعارض — مرفوضة'
-             : res ? ({ success: 'تم', warning: 'تم جزئيًا (راجع الملاحظة)', error: 'فشل', already: 'خلاص متعمل' }[res.status] || '—')
-             : r.sel ? 'جاهزة للتحديث' : 'في انتظار التسجيل',
-      reason:  r.conflict || (res && res.failReason) || '—',
-      did:     (res && res.detail) || '—',
-      units:   units === '' ? '—' : units,
-    });
-  });
-  const buf  = await wb.xlsx.writeBuffer();
-  const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url; a.download = `bosta-returned-results-${cairoDayStr(new Date())}.xlsx`;
-  a.click(); URL.revokeObjectURL(url);
-  showToast('تم التصدير', 'success');
-}
 
 // ══════════════════════════════════════════════════════════════
 // §LOG-JS — تاب السجل: فلاتر multi-select + مدى تاريخ + ترتيب + تصدير
@@ -2060,7 +1997,6 @@ async function exportLogXLSX() {
 // ⛔ مفيش تحديث تلقائي بالتايمر: الجلب عند الفتح (كاش أحدث من ١٠ دقايق = صفر نداء) وعند «تحديث»
 //    وبعد كل تنفيذ وعند سكانة رقم مش في الجدول (لو الكاش أقدم من دقيقة).
 const rqState = { orders: [], at: null, loading: false, failed: false };
-const rqExec = [];   // الصفوف اللي اتنفّذت في الجلسة دي (للتصدير — بتتشال من الجدول)
 let rqLoadP = null;
 
 function rqSetFresh() { ecoFreshUnitSet('rqFresh', rqState.at); }
@@ -2078,12 +2014,12 @@ function rqActionCell(o, i) {
   if (o.res && o.res.status === 'warning')
     return `<button class="btn btn-outline btn-sm" onclick="rqDismiss(${i})">✓ تمت المراجعة</button>`;
   if (!o.tracking)
-    return `<button class="btn btn-outline btn-sm" disabled>➕ إضافة للمسح</button><br><span class="reject-reason" style="color:var(--text-secondary);">مفيش رقم تتبع</span>`;
+    return `<button class="btn btn-outline btn-sm" disabled>➕ إضافة</button><br><span class="reject-reason" style="color:var(--text-secondary);">مفيش رقم تتبع</span>`;
   if (o.conflict || isUpdating)
-    return `<button class="btn btn-outline btn-sm" disabled>➕ إضافة للمسح</button>`;
+    return `<button class="btn btn-outline btn-sm" disabled>➕ إضافة</button>`;
   return o.sel
     ? `<button class="btn btn-outline btn-sm" onclick="rqToggle(${i})">↩ إلغاء التعليم</button>`
-    : `<button class="btn btn-outline btn-sm" onclick="rqToggle(${i})">➕ إضافة للمسح</button>`;
+    : `<button class="btn btn-outline btn-sm" onclick="rqToggle(${i})">➕ إضافة</button>`;
 }
 
 function rqRender() {
@@ -2115,21 +2051,17 @@ function rqRender() {
   }
   empty.style.display = 'none';
   wrap.style.display  = '';
-  const now = new Date();
   tbody.innerHTML = rows.map((o, i) => {
-    const age = ecoOrderAge(o.createdAt, now);
     const machine = o.machine === 'S2'
-      ? '<span class="badge badge-neutral">[S-2] مرتجع بعد التسليم</span>'
-      : '<span class="badge badge-blue">S1 راجع قبل التسليم (RTO)</span>';
+      ? '<span class="badge badge-neutral">S2 استرجاع/استبدال</span>'
+      : '<span class="badge badge-blue">S1 عادي/ملغي</span>';
     const cls = o.conflict ? 'row-rejected' : (o.sel ? 'rq-ready' : '');
     return `<tr id="rqRow-${i}" class="${cls}">
       <td>${orderLink(o.orderName, o.orderId)}</td>
+      <td><span class="tracking-num rq-trk">${esc(o.tracking || '—')}</span>${o.trackingLegacy ? ' <span class="badge badge-neutral" title="الرقم جاي من الحقل القديم bosta_tracking_number">قديم</span>' : ''}</td>
       <td class="rq-cust">${esc(o.customer || '—')}</td>
-      <td><span class="tracking-num">${esc(o.tracking || '—')}</span>${o.trackingLegacy ? ' <span class="badge badge-neutral" title="الرقم جاي من الحقل القديم bosta_tracking_number">قديم</span>' : ''}</td>
       <td>${machine}</td>
-      <td><span class="badge badge-warn">${esc(o.bostaStatus)}</span></td>
-      <td>${o.bostaStatusAt ? esc(formatDateTime(o.bostaStatusAt)) : '—'}</td>
-      <td>${esc(formatDate(o.createdAt))}<span class="time-badge age-badge rq-age ${age.cls}">${esc(age.text)}</span></td>
+      <td>${o.bostaStatusAt ? `${esc(formatDate(o.bostaStatusAt))}<span class="rq-time">${esc(formatTimeOnly(o.bostaStatusAt))}</span>` : '—'}</td>
       <td>${rqResultCell(o)}</td>
       <td>${rqActionCell(o, i)}</td>
     </tr>`;
@@ -2173,18 +2105,8 @@ async function rqLoadRun(silent, pre) {
   }
 }
 
-// النبضة عرض بحت — «منذ كام» وبادج العمر بلا أي نداء شبكة.
-setInterval(() => {
-  rqSetFresh();
-  if (!rqState.orders.length) return;
-  const now = new Date();
-  document.querySelectorAll('#rqTableBody .age-badge').forEach((el, i) => {
-    const o = rqState.orders[i]; if (!o) return;
-    const age = ecoOrderAge(o.createdAt, now);
-    el.className = `time-badge age-badge rq-age ${age.cls}`;
-    el.textContent = age.text;
-  });
-}, 30 * 1000);
+// النبضة عرض بحت — «منذ كام» بلا أي نداء شبكة.
+setInterval(rqSetFresh, 30 * 1000);
 
 // §IDLE — الخروج التلقائي (٦٠ د) موقوف طول ما دفعة بتتنفّذ
 window.shellIsBusy = () => isUpdating;
