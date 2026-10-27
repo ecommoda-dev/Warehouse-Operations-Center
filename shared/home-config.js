@@ -93,7 +93,7 @@ const ECO_HOME = {
     { id: 'Deliver', cls: 'sec-deliver', summary: true, svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h12M12 6l6 6-6 6"/></svg>`,
       title: 'قسم التسليمات', sub: 'بوسطة والمكتب', queues: ['bosta', 'office'] },
     { id: 'Returns', cls: 'sec-returns', summary: true, svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>`,
-      title: 'قسم المرتجعات', sub: 'رجوع للمخزن ومرتجعات بوسطة', queues: ['warehouse', 'returnItems', 'bostaReturns'] },
+      title: 'قسم المرتجعات', sub: 'رجوع للمخزن ومرتجعات بوسطة', queues: ['warehouse', 'edited', 'returnItems', 'bostaReturns'] },
     { id: 'Helper', cls: 'sec-tools', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg>`,
       title: 'أدوات مساعدة', sub: 'عطلان وباركود',
       tools: [
@@ -206,6 +206,29 @@ const ECO_HOME = {
         cacheKey: ECO_CACHE_WAREHOUSE,
         fetchRaw: () => ecoApi(ECO_WORKERS.warehouse).apiGet('get_ready_to_warehouse'),
         derive: data => ({ total: ecoWarehouseQueue(data.orders || []).length, chips: [] }),
+      }),
+    },
+    // 🔴 «تعديل أوردرات» (طلب أحمد 27-10-2026 · بلا رفع نسخة هب) — صف واحد للتابين «أوردرات معدّلة» و«تحويل بوسطة» في الصفحة،
+    //    وكل واحد chip. 🔴 **استعلام واحد وكاش واحد** (`get_ready_edited` · `ECO_CACHE_EDITED` — نفس مفتاح الصفحة والاتنين
+    //    بيكتبوا الرد الخام)، والتقسيم بـ`ecoEditedQueue(orders, mode)` من `gates.js` — **نفس الدالة** اللي التابين بيرسموا بيها
+    //    (درس R1). الرقم الكبير = مجموع التابين. ⚠️ الصف بيفتح التاب «أوردرات معدّلة» دايمًا (`#edited`) بقرار أحمد — مش التاب الأكبر.
+    //    ⚠️ الاستعلام تقيل (تمريرتين على `Confirmed` اللي بيتراكم) ومقاسش حيًا — `staggerMs` بيأخّره بحكم ترتيبه، وأول فتح
+    //    حقيقي بعد النشر هو القياس. ⛔ عرض بحت مش حارس: الحكم وقت السكان في الـ Worker.
+    edited: {
+      href: 'Package-Transfer-To-Warehouse.html#edited', idCls: 'id-edited', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>`,
+      name: 'تعديل أوردرات', code: 'اتعدّل بعد ما راح المكتب',
+      err: 'تعذّر جلب طابور الأوردرات المعدّلة',
+      ...ecoRawQueue({
+        cacheKey: ECO_CACHE_EDITED,
+        fetchRaw: () => ecoApi(ECO_WORKERS.warehouse).apiGet('get_ready_edited'),
+        derive: data => {
+          const orders = data.orders || [];
+          const e = ecoEditedQueue(orders, 'edited').length, b = ecoEditedQueue(orders, 'edited_bosta').length;
+          return { total: e + b, truncated: !!data.truncated, chips: [
+            { grp: true, cls: 'qc-ed-edited', label: 'أوردرات معدّلة', n: e },
+            { grp: true, cls: 'qc-ed-bosta',  label: 'تحويل بوسطة',    n: b },
+          ] };
+        },
       }),
     },
     // 🔴 «قطع مستنية الرجوع للمخزن» (v1.51.0 · صف لوحده بقرار أحمد 22-10-2026) — من دفتر D1

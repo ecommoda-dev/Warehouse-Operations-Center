@@ -3035,6 +3035,7 @@ measureSticky();                         // ← بعد رسم التابات و�
 
 renderSession();   // §UNIFIED — الـ pills والشريطين من أول لحظة
 focusScan();
+if (location.hash === '#edited') switchMainTab('edited');   // جاي من صف «تعديل أوردرات» في الرئيسية — التاب بيجيب لوحده (§CACHE-TTL: الكاش مشترك)
 (function openFromCache(){ const c = cacheGet(ECO_CACHE_WAREHOUSE); if (c && c.data && c.ageMs >= 0 && c.ageMs < ECO_CACHE_TTL_MS) { rqLoad(true, c); } else { rqLoad(true); } })();                            // الطابور — قراءة بحتة
 (function(){ const c = cacheGet(ECO_CACHE_RETURN_ITEMS); return (c && c.data && c.ageMs >= 0 && c.ageMs < ECO_CACHE_TTL_MS) ? riLoad(true, c) : riLoad(true); })().then(() => {               // دفتر القطع الراجعة — قراءة D1 بحتة (v1.51.0)
   // جاي من صف الرئيسية (`#riBox`) — انزل للقايمة بعد ما تترسم
