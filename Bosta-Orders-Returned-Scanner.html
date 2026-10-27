@@ -295,7 +295,6 @@ input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-colo
 .rq-ready-badge { background: var(--green); }
 #rqTableBody tr.rq-ready { background: #bbf7d0; }
 #rqTableBody tr.rq-ready .badge-success { background: #fff; }
-#rqTableBody tr.rq-hl { background: var(--amber-light); outline: 2px solid var(--amber); outline-offset: -2px; }
 /* ٧ أعمدة: حشو أضيق وبادج العمر تحت التاريخ — عشان عمود «إجراء» مايتقصّش برّه الشاشة (سكرول أفقي من غير إشارة) */
 #rqTableWrap thead th, #rqTableWrap tbody td { padding-inline: 8px; }
 /* جدول «راجع من بوسطة» RTL: رقم الأوردر أقصى اليمين وإجراء أقصى اليسار (باقي الجداول لسه ltr) */
@@ -1259,13 +1258,6 @@ function rqMark(i, opts = {}) {
   const o = rqState.orders[i];
   o.sel = true; o.res = null;
   rqRender();
-  if (opts.reveal) {
-    const tr = document.getElementById(`rqRow-${i}`);
-    if (tr) {
-      tr.classList.add('rq-hl');
-      setTimeout(() => tr.classList.remove('rq-hl'), 1600);
-    }
-  }
 }
 
 async function addTrackingNumber(num) {
