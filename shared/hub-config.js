@@ -83,12 +83,15 @@ const ECO_WORKERS = {
   //    في السجل**، والأوردر بيفضل في الطابور كأنه ما اتطبعش (مقيس حيًا على
   //    `#53822`). ⚠️ الفشل **معلن** (نافذة نتيجة حمرا) — بس الورق بيبقى خرج
   //    خلاص، فالحارس هنا بيوفّر الورقة مش بس الرسالة.
+  // 🔴 **2.11.0 (v1.66.0)** = حارس العهدة بقى بيسمح بـ`Warehouse` (مع الفاضي) —
+  //    الواجهة معتمدة على الحكم ده: على 2.10.0 الأوردر اللي عليه `Warehouse`
+  //    بيتوقف والرسالة بتقول إنه مسموح. الحارس بيسمّي الـ Promote.
   // 🔴 **2.10.0 (v1.65.0)** = أول نسخة فيها `POST /precheck-whereabouts` — حارس
   //    «عهدة الطرد لازم تكون فاضية قبل الطباعة» (§WHEREABOUTS-GUARD في
   //    `Order-Printer.html`). الواجهة معتمدة عليه فعلاً: على Worker أقدم الفحص
   //    بيرجّع 404 فالصفحة **بتوقف كل أوردر** («مش متأكد» = متوقف بقرار أحمد
   //    26-10-2026) — يعني الطباعة واقفة لحد الـ Promote، والحارس بيسمّي السبب.
-  printer: { url: 'https://order-printer-worker.ecommoda-dev.workers.dev',          min: '2.10.0', label: 'الطباعة' },
+  printer: { url: 'https://order-printer-worker.ecommoda-dev.workers.dev',          min: '2.11.0', label: 'الطباعة' },
   // 🔴 2.6.0 = أول نسخة فيها §ELIGIBILITY و§PROFILE — `Orders-Packing-Checker.html` من هب
   // v1.21.0 **معتمدة عليهم فعلاً** (Standards #29): نافذة التشخيص بتقرا
   // `profile` و`eligibility.hints`، وبوابة الإقرار بتقرا `eligibility.level`.
@@ -209,7 +212,7 @@ const ECO_WORKERS = {
   bostaUpload: { url: 'https://bosta-orders-upload-worker.ecommoda-dev.workers.dev', min: '2.23.0', label: 'رفع بوسطة' },
 };
 
-const TOOL_VERSION = 'v1.65.0';                     // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.66.0';                     // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const SHOP_HANDLE  = '6c7e1a-53';
 
