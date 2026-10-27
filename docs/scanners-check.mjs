@@ -460,8 +460,14 @@ console.log('\n══ §RETURN-QUEUE — طابور «راجع من بوسطة»
   const html = await page.locator('#rqTableBody').innerHTML();
   is(html.includes('#53539') && html.includes('#53540') && html.includes('8216704439') && html.includes('2543339828'),
      'الأوردرات ورقم التتبع معروضين');
-  is(html.includes('41 · Out For Return'), 'حالة بوسطة معروضة بنصها الخام');
-  is(html.includes('RTO') && html.includes('[S-2]'), 'نوع الراجع: S1 (RTO) و[S-2] مرتجع بعد التسليم — مفرّقين');
+  is(!(await page.locator('#rqBox thead').innerText()).includes('حالة بوسطة'), 'عمود «حالة بوسطة» اتشال');
+  is(JSON.stringify(await page.locator('#rqBox thead th').allInnerTexts()) === JSON.stringify(['رقم الأوردر','رقم التتبع','العميل','نوع الأوردر','آخر تحديث من بوسطة','النتيجة','إجراء']),
+     'ترتيب الأعمدة السبعة: الأوردر · التتبع · العميل · نوع الأوردر · آخر تحديث · النتيجة · إجراء');
+  is(html.includes('S1 عادي/ملغي') && html.includes('S2 استرجاع/استبدال'), 'نوع الأوردر: «S1 عادي/ملغي» و«S2 استرجاع/استبدال» — مفرّقين');
+  is(await page.locator('#rqTableBody tr:first-child td:nth-child(2) .rq-trk').evaluate(e => +getComputedStyle(e).fontWeight >= 700), 'رقم التتبع Bold');
+  is(await page.locator('#rqTableBody tr:first-child td:nth-child(5) .rq-time').count() === 1, 'الوقت تحت التاريخ في «آخر تحديث من بوسطة»');
+  is(await page.locator('#rqBox button:has-text("مسح التعليم"), #rqBox button:has-text("XLSX"), #rqBox button:has-text("يدوي")').count() === 0, 'أزرار «يدوي» و«مسح التعليم» و«تصدير XLSX» اتشالت');
+  is(!(await page.locator('#rqBox').innerText()).includes('امسح الشحنة أو اضغط'), 'عنوان وسطر «راجع من بوسطة…» اتشالوا');
   is(await page.locator('#rqFresh .eco-qref').count() === 1, 'وحدة «آخر تحديث» + زرار التحديث (§FRESH-UNIT)');
 
   // ══ v1.68.0 — شاشة واحدة: الجدول هو حارس السكان ══
@@ -477,10 +483,10 @@ console.log('\n══ §RETURN-QUEUE — طابور «راجع من بوسطة»
   let lookupCalls = 0;
   page.on('request', r => { if (/action=lookup/.test(r.url())) lookupCalls++; });
 
-  // زرار «➕ إضافة للمسح» → «✅ جاهزة للتحديث»
+  // زرار «➕ إضافة» → «✅ جاهزة للتحديث»
   await page.locator('#rqTableBody tr:first-child button').click();
   is((await page.locator('#rqTableBody tr:first-child').innerText()).includes('جاهزة للتحديث'),
-     'الضغط على «➕ إضافة للمسح» غيّر النتيجة لـ «✅ جاهزة للتحديث»');
+     'الضغط على «➕ إضافة» غيّر النتيجة لـ «✅ جاهزة للتحديث»');
   is((await page.locator('#rqReadyCount').innerText()).trim() === '1', 'وعدّاد «جاهزة» = 1');
   is((await page.locator('#updateBtn').innerText()).includes('1'), 'وزرار التحديث بيعدّ 1');
   is((await page.locator('#rqTableBody tr:first-child button').innerText()).includes('إلغاء التعليم'),
@@ -510,8 +516,8 @@ console.log('\n══ §RETURN-QUEUE — طابور «راجع من بوسطة»
   await page.evaluate(() => { isUpdating = false; });
 
   // مسح التعليم
-  await page.click('button:has-text("مسح التعليم")');
-  is(await page.evaluate(() => rqToUpdate().length) === 0, '«مسح التعليم» رجّع كل الصفوف «في انتظار التسجيل»');
+  await page.evaluate(() => clearScans());
+  is(await page.evaluate(() => rqToUpdate().length) === 0, '`clearScans()` رجّع كل الصفوف «في انتظار التسجيل»');
 
   // §CACHE-TTL
   const first = n;
