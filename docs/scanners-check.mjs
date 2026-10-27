@@ -365,9 +365,9 @@ console.log('\n══ مسار السكان — Bosta-Orders-Shipped-Scanner.htm
 // ══════════════════════════════════════════════════════════════
 console.log('\n══ التأكيد قبل فعل لا رجعة فيه — Bosta-Orders-Returned-Scanner.html ══');
 {
-  const { page, ctx, errors } = await newPage(RETURNED_ROWS, DIAG_RETURNED);
+  const { page, ctx, errors } = await newPage(RETURNED_ROWS, DIAG_RETURNED, { returnRows: RETURN_QUEUE_ROWS });
   await page.goto(`${BASE}/Bosta-Orders-Returned-Scanner.html`);
-  await page.waitForTimeout(700);
+  await page.waitForTimeout(900);
 
   console.log('⑪ الثيم بني — والأحمر بقى في اللي بيحذّر بس');
   // 🔴 الثيم متنفَّذ بقاعدة الأسبقية مش بكتلة توكنز — `--accent` لازم تفضل
@@ -398,21 +398,23 @@ console.log('\n══ التأكيد قبل فعل لا رجعة فيه — Bost
   is(rgb(updBg) === 'rgb(220,38,38)', '🔴 وزرار التنفيذ لسه أحمر — البني chrome والأحمر فعل', updBg);
 
   console.log('⑫ نافذة التأكيد بتقف قدام الإلغاء');
-  for (const tn of ['11111111','22222222']) {   // ⚠️ نفس مهلة §SCAN فوق
-    await page.fill('#scanInput', tn);
-    await page.waitForTimeout(320);
-  }
-  await page.click('#lookupBtn');
-  await page.waitForTimeout(900);
-  is(await page.evaluate(() => resultsData.length) === 2, 'الاستعلام رجّع صفّين');
+  // v1.68.0 — مفيش خطوة «استعلام»: السكان بيعلّم الصف في الجدول، وزرار التنفيذ بيفتح النافذة على طول.
+  await page.fill('#scanInput', '8216704439');   // ⚠️ نفس مهلة §SCAN فوق
+  await page.waitForTimeout(320);
+  is(await page.evaluate(() => rqToUpdate().length) === 1, 'السكان علّم صف واحد «جاهزة للتحديث»');
+  let updateCalls = 0;
+  page.on('request', r => { if (r.url().includes('action=update')) updateCalls++; });
   await page.click('#updateBtn');
   await page.waitForTimeout(500);
   is(await page.locator('#confirmOverlay').evaluate(el => el.classList.contains('open')),
      '🔴 نافذة التأكيد اتفتحت **قبل** أي نداء `update`');
+  is(updateCalls === 0, 'ومفيش نداء `update` لسه', String(updateCalls));
   const ct = await page.locator('#confirmOverlay').innerText();
   is(/هيتلغي نهائيًا/.test(ct), '🔴 والنص بيسمّي الأثر — «هيتلغي نهائيًا» مش «متأكد؟»', ct.replace(/\s+/g,' ').slice(0,140));
   is(/مفيش رجوع فيه/.test(ct), 'وبيقول صراحةً إن الإلغاء مالوش رجعة');
   is(/1/.test(ct), 'وبالعدد — مش جملة عامة');
+  is(await page.evaluate(() => document.activeElement?.id) === 'confirmCancelBtn',
+     '🔴 الفوكس على «إلغاء» — Enter بالغلط مايلغيش أوردرات');
 
   console.log('— الكونسول —');
   is(errors.length === 0, 'صفر خطأ JS', errors.join(' | ').slice(0,300));
@@ -462,18 +464,54 @@ console.log('\n══ §RETURN-QUEUE — طابور «راجع من بوسطة»
   is(html.includes('RTO') && html.includes('[S-2]'), 'نوع الراجع: S1 (RTO) و[S-2] مرتجع بعد التسليم — مفرّقين');
   is(await page.locator('#rqFresh .eco-qref').count() === 1, 'وحدة «آخر تحديث» + زرار التحديث (§FRESH-UNIT)');
 
-  // «➕ إضافة للمسح» بتعدّي على addTrackingNumber (مفيش مسار إضافة تاني)
+  // ══ v1.68.0 — شاشة واحدة: الجدول هو حارس السكان ══
+  console.log('⑬ 🔴 الشاشة الواحدة — حالة الصف في عمود «النتيجة»');
+  const bodyTxt = () => page.locator('#rqTableBody').innerText();
+  is(await page.locator('#step1Card, #resultsCard, #lookupBtn, #startLookup').count() === 0,
+     '🔴 مفيش «الخطوة 1» ولا «الخطوة 2» ولا زرار «استعلام بوسطة»');
+  is((await page.locator('#rqBox thead th').allInnerTexts()).includes('النتيجة'), 'عمود «النتيجة» موجود');
+  is(!(await page.locator('#rqBox thead').innerText()).includes('الحالة الحالية') && !(await page.locator('#rqBox thead').innerText()).includes('التحديث المطلوب'),
+     'وأعمدة «الحالة الحالية» و«التحديث المطلوب» اتشالت');
+  is((await bodyTxt()).split('في انتظار التسجيل').length - 1 === RETURN_QUEUE_ROWS.length,
+     '🔴 كل الصفوف بتبدأ «⏳ في انتظار التسجيل»');
+  let lookupCalls = 0;
+  page.on('request', r => { if (/action=lookup/.test(r.url())) lookupCalls++; });
+
+  // زرار «➕ إضافة للمسح» → «✅ جاهزة للتحديث»
   await page.locator('#rqTableBody tr:first-child button').click();
-  is((await page.locator('#scanCount').innerText()).trim() === '1', 'الضغط على «➕ إضافة للمسح» ضاف الرقم لقايمة السكان');
-  is((await page.locator('#rqTableBody tr:first-child td:last-child').innerText()).includes('في القايمة'),
-     'والصف بقى بيقول «✓ في القايمة» (مفيش إضافة مكررة)');
+  is((await page.locator('#rqTableBody tr:first-child').innerText()).includes('جاهزة للتحديث'),
+     'الضغط على «➕ إضافة للمسح» غيّر النتيجة لـ «✅ جاهزة للتحديث»');
+  is((await page.locator('#rqReadyCount').innerText()).trim() === '1', 'وعدّاد «جاهزة» = 1');
+  is((await page.locator('#updateBtn').innerText()).includes('1'), 'وزرار التحديث بيعدّ 1');
+  is((await page.locator('#rqTableBody tr:first-child button').innerText()).includes('إلغاء التعليم'),
+     'والزرار بقى «↩ إلغاء التعليم»');
+  await page.locator('#rqTableBody tr:first-child button').click();
+  is((await page.locator('#rqTableBody tr:first-child').innerText()).includes('في انتظار التسجيل'), 'إلغاء التعليم رجّع الصف «في انتظار التسجيل»');
+
+  // سكان رقم في الجدول
+  await page.fill('#scanInput', '2543339828'); await page.waitForTimeout(500);
+  is((await page.locator('#rqTableBody tr:nth-child(2)').innerText()).includes('جاهزة للتحديث'), 'سكان رقم من الجدول علّم صفّه');
+  is(await page.evaluate(() => window.__beeps.at(-1)) === 1400, 'بنغمة السكان العادية');
+  // رقم مش في الجدول
+  await page.fill('#scanInput', '1234567890'); await page.waitForTimeout(500);
+  const toastTxt = await page.locator('#toastContainer').innerText();
+  is(toastTxt.includes('مش في جدول') , '🔴 رقم مش في الجدول **اترفض** برسالة بتقول السبب', toastTxt.slice(0, 120));
+  is(await page.evaluate(() => rqToUpdate().length) === 1, 'ومااتضافش للمجهّز');
+  // رقم موجود بالفعل
+  await page.fill('#scanInput', '2543339828'); await page.waitForTimeout(500);
+  is(await page.evaluate(() => rqToUpdate().length) === 1, 'سكان نفس الرقم تاني مايكرّرهوش');
+  is(lookupCalls === 0, '🔴 صفر نداء `lookup` (بوسطة) في كل المسار ده', String(lookupCalls));
 
   // #43 — القفل أثناء الدفعة
   await page.evaluate(() => { isUpdating = true; });
-  await page.evaluate(() => addTrackingNumber('2543339828'));
-  is((await page.locator('#scanCount').innerText()).trim() === '1', '🔴 الإضافة ممنوعة أثناء تنفيذ دفعة (isUpdating)');
+  await page.evaluate(() => addTrackingNumber('8216704439'));
+  is(await page.evaluate(() => rqToUpdate().length) === 1, '🔴 الإضافة ممنوعة أثناء تنفيذ دفعة (isUpdating)');
   is(await page.evaluate(() => window.shellIsBusy()) === true, 'والخروج التلقائي واقف (`shellIsBusy`)');
   await page.evaluate(() => { isUpdating = false; });
+
+  // مسح التعليم
+  await page.click('button:has-text("مسح التعليم")');
+  is(await page.evaluate(() => rqToUpdate().length) === 0, '«مسح التعليم» رجّع كل الصفوف «في انتظار التسجيل»');
 
   // §CACHE-TTL
   const first = n;
@@ -497,8 +535,106 @@ console.log('\n══ §RETURN-QUEUE — طابور «راجع من بوسطة»
   await page.waitForTimeout(1000);
   is(await page.locator('#rqFail').isVisible(), 'فشل الطابور = بانر أحمر معلن');
   is((await page.locator('#rqCount').innerText()).trim() === '—', '🔴 العدّاد `—` مش `0` — «تعذّر» ≠ «مفيش شغل»');
-  await page.fill('#scanInput', '8216704439'); await page.waitForTimeout(700);
-  is((await page.locator('#scanCount').innerText()).trim() === '1', 'والسكان شغّال عادي رغم فشل الطابور');
+  await page.fill('#scanInput', '8216704439'); await page.waitForTimeout(1200);
+  is((await page.locator('#toastContainer').innerText()).includes('مش في جدول'),
+     'والسكان بيترفض برسالة واضحة (الجدول فاضي) — مش بيعلّق ولا بيكتب حاجة');
+  await ctx.close();
+}
+
+// ══ §RETURN-ONE-SCREEN (v1.68.0) — التنفيذ والتعارض ══
+console.log('\n══ §RETURN-ONE-SCREEN — التنفيذ والتعارض ══');
+{
+  // ① التنفيذ: النجاح بيتشال من الجدول، والتحذير والفشل بيفضلوا، والطابور بيتحدّث ومابيرجّعش اللي اتنفّذ
+  const { page, ctx, errors } = await newPage(RETURNED_ROWS, DIAG_RETURNED, { returnRows: RETURN_QUEUE_ROWS });
+  let sent = null, queueCalls = 0;
+  await page.route('**/*.workers.dev/**', async (route) => {
+    const u = route.request().url();
+    if (u.includes('action=get_ready_to_return')) queueCalls++;
+    if (u.includes('action=update')) {
+      sent = JSON.parse(route.request().postData() || '{}');
+      return route.fulfill({ status:200, contentType:'application/json', body:JSON.stringify({ ok:true, logged:true, rejected:[],
+        results: sent.items.map((it, k) => k === 0
+          ? { status:'success', success:true, executed:true, logged:true, actions:['orderCancel'], field:'custom.manual_status', valueAfter:'Returned' }
+          : { status:'warning', success:true, executed:true, logged:true, actions:['metafields:status_2_r_e'], warnings:['مفيش مرتجع مسجَّل'] }) }) });
+    }
+    return route.fallback();
+  });
+  await page.goto(`${BASE}/Bosta-Orders-Returned-Scanner.html`);
+  await page.waitForTimeout(900);
+  for (const tn of ['8216704439', '2543339828']) { await page.fill('#scanInput', tn); await page.waitForTimeout(350); }
+  const q0 = queueCalls;
+  await page.click('#updateBtn'); await page.waitForTimeout(400);
+  await page.click('#confirmOkBtn'); await page.waitForTimeout(1500);
+  is(sent && sent.items.length === 2, 'التنفيذ بعت الصفّين المعلّمين في `update`');
+  is(sent && sent.items.every(i => i.orderType === '' && i.trackingNumber && i.orderName), 'بـ orderName وtrackingNumber و`orderType` فاضي (مفيش بوسطة)');
+  is(sent && Array.isArray(sent.rejected) && sent.rejected.length === 0, '🔴 مفيش `rejected[]` — الـ Worker بيسجّل اللي اتوقف وقت التنفيذ بنفسه');
+  is(queueCalls === q0 + 1, '🔴 الطابور اتحدّث تلقائي بعد التنفيذ', String(queueCalls - q0));
+  const left = await page.locator('#rqTableBody').innerText();
+  is(!left.includes('#53539'), '🔴 صف النجاح اتشال من الجدول — ومارجعش مع إن الطابور الوهمي لسه بيرجّعه (تأخّر الفهرس)');
+  is(left.includes('#53540') && left.includes('تم جزئيًا'), 'وصف التحذير فاضل ظاهر ومقفول بسببه');
+  is((await page.locator('#rqTableBody tr:first-child button').innerText()).includes('تمت المراجعة'), 'وزراره «✓ تمت المراجعة»');
+  is(await page.locator('#resultOverlay').evaluate(el => el.classList.contains('open')), 'ونافذة الملخّص اتفتحت');
+  await page.click('#resultOverlay .modal-close-x');
+  await page.fill('#scanInput', '8216704439'); await page.waitForTimeout(500);
+  is(await page.evaluate(() => rqToUpdate().length) === 0, '🔴 سكان رقم اتنفّذ خلاص = مرفوض (مش في الجدول) — مفيش ضغطة تانية');
+  await page.locator('#rqTableBody tr:first-child button').click();
+  is(await page.locator('#rqTableBody tr').count() === 0, '«تمت المراجعة» شالت صف التحذير');
+  is(errors.length === 0, 'صفر خطأ JS', errors.join(' | ').slice(0, 300));
+  await ctx.close();
+}
+{
+  // ② التعارض: نفس الأوردر بصفّين (S1 + S2) أو رقم تتبع متكرر → الاتنين بيترفضوا وبيتنبّه قبل السكان
+  const dup = [
+    { orderId:'8100000000009', orderName:'#60001', machine:'S1', createdAt:'2026-10-20T10:00:00Z', customer:'ا', tracking:'1111111111', bostaStatus:'41 · Out For Return' },
+    { orderId:'8100000000009', orderName:'#60001', machine:'S2', createdAt:'2026-10-20T10:00:00Z', customer:'ا', tracking:'2222222222', bostaStatus:'41 · Out For Return' },
+    { orderId:'8100000000010', orderName:'#60002', machine:'S1', createdAt:'2026-10-20T10:00:00Z', customer:'ب', tracking:'3333333333', bostaStatus:'41 · Out For Return' },
+    { orderId:'8100000000011', orderName:'#60003', machine:'S1', createdAt:'2026-10-20T10:00:00Z', customer:'ج', tracking:'4444444444', bostaStatus:'41 · Out For Return' },
+    { orderId:'8100000000012', orderName:'#60004', machine:'S1', createdAt:'2026-10-20T10:00:00Z', customer:'د', tracking:'4444444444', bostaStatus:'41 · Out For Return' },
+    { orderId:'8100000000013', orderName:'#60005', machine:'S1', createdAt:'2026-10-20T10:00:00Z', customer:'هـ', tracking:null, bostaStatus:'41 · Out For Return' },
+  ];
+  const { page, ctx, errors } = await newPage(RETURNED_ROWS, DIAG_RETURNED, { returnRows: dup });
+  await page.goto(`${BASE}/Bosta-Orders-Returned-Scanner.html`);
+  await page.waitForTimeout(900);
+  const bn = page.locator('#rqConflict');
+  is(await bn.isVisible(), '🔴 بانر التعارض ظاهر **قبل أي سكان**');
+  const bt = await bn.innerText();
+  is(bt.includes('#60001') && bt.includes('4444444444'), 'وبيسمّي الأوردر المتكرر ورقم التتبع المتكرر');
+  is(!bt.includes('#60002'), 'ومايلمسش الصف السليم');
+  is(await page.locator('#rqTableBody tr.row-rejected').count() === 4, 'والصفوف الأربعة المتعارضة متعلّمة مرفوضة في الجدول');
+  is((await page.locator('#rqTableBody tr:nth-child(1)').innerText()).includes('تعارض'), 'وعمود «النتيجة» بيقول «تعارض» والسبب');
+  is(await page.locator('#rqTableBody tr:nth-child(1) button').isDisabled(), 'وزرار الإضافة متعطّل');
+  for (const tn of ['1111111111', '2222222222', '4444444444']) { await page.fill('#scanInput', tn); await page.waitForTimeout(500); }
+  is(await page.evaluate(() => rqToUpdate().length) === 0, '🔴 سكان أي واحد من المتعارضين **مرفوض** (الاتنين مش بس التاني)');
+  is((await page.locator('#toastContainer').innerText()).includes('مرفوضة'), 'برسالة بتقول السبب');
+  await page.fill('#scanInput', '3333333333'); await page.waitForTimeout(500);
+  is(await page.evaluate(() => rqToUpdate().length) === 1, 'والصف السليم بيتعلّم عادي');
+  is(await page.locator('#rqTableBody tr:nth-child(6) button').isDisabled(), '🔴 صف بلا رقم تتبع: الزرار متعطّل');
+  is((await page.locator('#rqTableBody tr:nth-child(6)').innerText()).includes('مفيش رقم تتبع'), 'ومكتوب «مفيش رقم تتبع»');
+  is(errors.length === 0, 'صفر خطأ JS', errors.join(' | ').slice(0, 300));
+  await ctx.close();
+}
+{
+  // ③ سكان رقم مش في الجدول + كاش أقدم من دقيقة = إعادة جلب واحدة قبل الرفض (والرقم الجديد بيتقبل لو ظهر)
+  const { page, ctx } = await newPage(RETURNED_ROWS, DIAG_RETURNED, { returnRows: RETURN_QUEUE_ROWS });
+  let calls = 0, live = RETURN_QUEUE_ROWS;
+  await page.route('**/*.workers.dev/**', async (route) => {
+    if (route.request().url().includes('action=get_ready_to_return')) {
+      calls++;
+      return route.fulfill({ status:200, contentType:'application/json', body:JSON.stringify({ ok:true, orders:live, truncated:false }) });
+    }
+    return route.fallback();
+  });
+  await page.goto(`${BASE}/Bosta-Orders-Returned-Scanner.html`);
+  await page.waitForTimeout(900);
+  await page.evaluate(() => { rqState.at = new Date(Date.now() - 5 * 60 * 1000); });   // الجدول أقدم من دقيقة
+  live = [...RETURN_QUEUE_ROWS, { orderId:'8100000000099', orderName:'#53999', machine:'S1', createdAt:'2026-10-26T10:00:00Z',
+    customer:'جديد', tracking:'5555555555', bostaStatus:'41 · Out For Return', bostaStatusAt:null }];
+  const c0 = calls;
+  await page.fill('#scanInput', '5555555555'); await page.waitForTimeout(1200);
+  is(calls === c0 + 1, '🔴 رقم مش في الجدول وكاشه أقدم من دقيقة → إعادة جلب **واحدة** من شوبيفاي', String(calls - c0));
+  is(await page.evaluate(() => rqToUpdate().length) === 1, 'والشحنة اللي ظهرت بعد الجلب اتقبلت وعلّمت');
+  await page.fill('#scanInput', '6666666666'); await page.waitForTimeout(900);
+  is(calls === c0 + 1, '🔴 ورقم مش في الجدول والكاش طازة = رفض مباشر من غير جلب (مفيش ضغط على شوبيفاي)', String(calls - c0));
   await ctx.close();
 }
 
