@@ -409,13 +409,12 @@ console.log('⑦ التصميم الموحّد — الأقسام الخمسة �
   const want = { rowPrint: 'rgb(67, 56, 202)', rowPack: 'rgb(14, 116, 144)', rowBosta: 'rgb(190, 24, 93)', rowOffice: 'rgb(162, 28, 175)', rowWarehouse: 'rgb(120, 53, 15)', rowBostaReturns: 'rgb(154, 91, 36)', rowBostaUpload: 'rgb(109, 40, 217)' };
   is(Object.keys(want).every((k, i) => cols.ids[i] === want[k]), '🎨 الألوان المعتمدة: إنديجو · سيان · وردي · فوشيا · بني غامق · كراميل · بنفسجي (رفع بوسطة)', cols.ids.join(' | '));
   // خطين العنوان بلون العنوان + إطار المطوي
-  const lines = await page.evaluate(() => [...document.querySelectorAll('.eco-home-sec')].every(s => { const c = getComputedStyle(s.querySelector('.eco-home-sec-title')).color;
-    return [...s.querySelectorAll('.eco-sec-ln')].every(l => getComputedStyle(l).backgroundColor === c); }));
-  is(lines, 'خطين العنوان على الجانبين بنفس لون العنوان');
+  // 🎨 v1.67.0 — الهيدر تدرّج بلا إطار ومن غير الخطين
+  is(await page.evaluate(() => !document.querySelector('.eco-sec-ln, .eco-sec-sp') && [...document.querySelectorAll('.eco-home-sec-hd')].every(h => getComputedStyle(h).backgroundImage.includes('linear-gradient') && parseFloat(getComputedStyle(h).borderTopWidth) === 0)),
+     '🎨 الهيدر تدرّج بلا إطار ومن غير الخطين اللي كانوا على الجانبين');
   await page.click('#secDeliver .eco-sec-chev'); await page.waitForTimeout(450);
-  const fr = await page.evaluate(() => { const hd = document.querySelector('#secDeliver .eco-home-sec-hd'); return { bc: getComputedStyle(hd).borderTopColor, bw: getComputedStyle(hd).borderTopWidth,
-    tc: getComputedStyle(document.querySelector('#secDeliver .eco-home-sec-title')).color, pills: [...document.querySelectorAll('#secDeliver .eco-sm')].map(w => w.querySelector('.eco-sm-n').textContent.trim()) }; });
-  is(fr.bc === fr.tc && parseFloat(fr.bw) >= 2 && fr.pills.join('|') === 'جاهز لتسليم بوسطة|جاهز للتسليم للمكتب', '🎨 المطوي: إطار بنفس لون العنوان + ملخّص بأسماء الصفوف', JSON.stringify(fr));
+  const fr = await page.evaluate(() => { const hd = document.querySelector('#secDeliver .eco-home-sec-hd'); return { img: getComputedStyle(hd).backgroundImage, bw: getComputedStyle(hd).borderTopWidth, pills: [...document.querySelectorAll('#secDeliver .eco-sm')].map(w => w.querySelector('.eco-sm-n').textContent.trim()) }; });
+  is(fr.img.includes('linear-gradient') && parseFloat(fr.bw) === 0 && fr.pills.join('|') === 'جاهز لتسليم بوسطة|جاهز للتسليم للمكتب', '🎨 المطوي: نفس الهيدر (تدرّج أعمق) بلا إطار + chips بأسماء الصفوف', JSON.stringify(fr));
   // عطلان = الثيم الأحمر الوحيد
   const dng = await page.evaluate(() => [...document.querySelectorAll('.eco-tool.tool-danger')].map(a => a.getAttribute('href')));
   is(dng.join() === 'Order-Item-Remover.html', '🔴 الثيم الأحمر لـ«عطلان؟» وحده (الأداة الهدّامة)', dng.join());
@@ -474,7 +473,7 @@ console.log('⑩ §FOLD — حفظ حالة الطي (sessionStorage) + «افت
   const stored = () => page.evaluate(() => sessionStorage.getItem('woc_home_fold'));
   const reload = async () => { await page.reload(); await page.waitForTimeout(1300); };
   is((await st()).every(x => !x.c && x.e === 'true') && (await st()).length === 5, 'أول فتح (بلا حالة محفوظة): الخمس أقسام مفتوحة');
-  is(await page.$$eval('.eco-fold-bar .eco-fold-btn', b => b.map(x => x.textContent.trim()).join('|')) === 'افتح الكل|اقفل الكل', 'زرارين «افتح الكل» و«اقفل الكل» فوق الأقسام');
+  is(await page.$$eval('.eco-fold-bar .eco-fold-btn', b => b.map(x => x.textContent.trim()).join('|')) === 'افتح الكل|اقفل الكل|✎ ترتيب', 'زرار «افتح الكل» و«اقفل الكل» و«✎ ترتيب» فوق الأقسام (ومفيش «رجّع الترتيب الأصلي»)');
   await page.locator('#secPrep [data-sec-toggle] .eco-sec-chev').click(); await page.waitForTimeout(300);
   is(JSON.parse(await stored()).Prep === true, 'طي قسم = بيتحفظ في `sessionStorage` (المطوي بس)', await stored());
   await reload();
@@ -493,6 +492,41 @@ console.log('⑩ §FOLD — حفظ حالة الطي (sessionStorage) + «افت
   await page.evaluate(() => sessionStorage.setItem('woc_home_fold', '{bad json'));
   await reload();
   is((await st()).every(x => !x.c) && errors.length === 0, '🔴 قيمة مخزّنة باظت: كله مفتوح وصفر خطأ في الكونسول', errors.join(' | '));
+  await ctx.close();
+}
+
+console.log('⑪ §ORDER — ترتيب الأقسام والأدوات (طلب أحمد 27-10-2026 — نفس الكود المشترك بتاع هب الشحن؛ التغطية الكاملة هناك)');
+{
+  const { page, ctx, errors } = await openHome({});
+  await page.setViewportSize({ width: 1280, height: 3000 });
+  const KEY = 'woc_home_order';
+  const secIds = () => page.$$eval('.eco-home-sec', e => e.map(x => x.id.replace('sec', '')).join());
+  const list = sid => page.$$eval(`#secBody${sid} [data-ditem]`, e => e.map(x => x.dataset.ditem));
+  const reload = async () => { await page.reload(); await page.waitForTimeout(1300); await page.addStyleTag({ content: '*,*::before,*::after{transition:none!important}' }); };
+  await page.addStyleTag({ content: '*,*::before,*::after{transition:none!important}' });
+  const base = await secIds();
+  is(base === 'Prep,Deliver,Returns,Helper,Other' && await page.evaluate((k) => localStorage.getItem(k), KEY) === null, 'أول فتح: الترتيب الافتراضي ومفيش حاجة محفوظة');
+  is(await page.evaluate(() => !document.body.textContent.includes('الترتيب الأصلي')), '⛔ مفيش زرار «رجّع الترتيب الأصلي»');
+  await page.click('[data-edit-toggle]');
+  is(await page.evaluate(() => document.getElementById('homeRoot').classList.contains('is-editing') && getComputedStyle(document.querySelector('.eco-eh')).display === 'grid'), '✎ وضع الترتيب بيظهر المقبض والأسهم');
+  await page.click('#secPrep [data-mv="s|Prep||1"]');
+  is(await secIds() === 'Deliver,Prep,Returns,Helper,Other', 'سهم ▼ بينقل «قسم تجهيز الأوردر» تحت اللي بعده', await secIds());
+  await page.dragAndDrop('#secOther .eco-eh', '#secDeliver .eco-home-sec-hd', { targetPosition: { x: 300, y: 3 } });
+  is(await secIds() === 'Other,Deliver,Prep,Returns,Helper', 'السحب بينقل قسم', await secIds());
+  const before = await list('Prep');
+  await page.click(`#secPrep .eco-row[data-ditem="${before[1]}"] [data-mv="i|Prep|${before[1]}|-1"]`);
+  const after = await list('Prep');
+  is(after[0] === before[1] && after[1] === before[0], 'سهم ▲ بينقل طابور جوّه قسمه', after.join());
+  const hb = await list('Helper'), ot = await list('Other'), first = hb[0];
+  await page.click(`#secHelper [data-mvx^="${first}"]`);
+  is((await list('Other')).at(-1) === first && !(await list('Helper')).includes(first) && (await list('Helper')).length === hb.length - 1, '⇄ بينقل أداة لقسم الأدوات التاني', first);
+  const snap = [await secIds(), (await list('Prep')).join(), (await list('Helper')).join(), (await list('Other')).join()].join(' | ');
+  await reload();
+  is([await secIds(), (await list('Prep')).join(), (await list('Helper')).join(), (await list('Other')).join()].join(' | ') === snap, '🔴 الريفريش بيرجّع الترتيب (`localStorage`)');
+  await page.evaluate((k) => localStorage.setItem(k, '{bad json'), KEY);
+  await reload();
+  is(await secIds() === base, '🔴 قيمة مخزّنة باظت: الترتيب الافتراضي من غير أخطاء');
+  is(errors.length === 0, 'صفر خطأ في الكونسول', errors.join(' | '));
   await ctx.close();
 }
 

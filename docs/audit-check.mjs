@@ -398,7 +398,7 @@ console.log('\n⑪ الرئيسية — المربع والرابط');
   const tile = page.locator(`a.eco-tool[href="${PAGE}"]`);
   is(await tile.count() === 1, 'مربع «جرد المخزون» موجود في الرئيسية');
   is((await tile.innerText()).includes('جرد المخزون'), 'اسم المربع');
-  is(await page.locator('.eco-home-sec', { hasText: 'أخرى' }).locator(`a[href="${PAGE}"]`).count() === 1, 'المربع في قسم «أخرى»');
+  is(await page.locator('.eco-home-sec', { hasText: 'أخرى' }).locator(`a.eco-tool[href="${PAGE}"]`).count() === 1, 'المربع في قسم «أخرى»');
   await tile.click();
   await page.waitForURL(`**/${PAGE}`, { timeout: 5000 });
   ok('الضغط بيفتح الصفحة بالجلسة (من غير دخول تاني)');
