@@ -1690,7 +1690,9 @@ const srvLog = ecoSrvFilters({
     { key: 'date',    th: '#thDate',    type: 'date', label: 'التاريخ' },
     { key: 'emp',     th: '#thEmp',     type: 'list', label: 'الموظف', param: 'employees', items: [] },
     { key: 'search',  th: '#thOrder',   type: 'text', label: 'بحث برقم أوردر أو ملاحظة', param: 'search' },
-    { key: 'trans',   th: '#thTrans',   type: 'text', label: 'بحث في التحديث (مثال: In-Return)', param: 'transition' },
+    { key: 'trans',   th: '#thTrans',   type: 'list', label: 'التحديث', param: 'transitions', items: [
+        { value: 'In-Return', label: 'In-Return → Returned' },
+        { value: 'Shipped',   label: 'Shipped → Returned' } ] },
     { key: 'machine', th: '#thMachine', type: 'list', label: 'الماكينة', param: 'machines', items: [
         { value: 'S1', label: 'S1 — مسار RTO' },
         { value: 'S2', label: '[S-2] — مرتجع بعد التسليم' } ] },
