@@ -127,9 +127,9 @@ const READY_ROWS = [
 //    المؤهّل بس. البند اللي بيتقفل: الصفحة **بتعرض اللي راجع بالحرف** ومابتفلترش.
 const RETURN_QUEUE_ROWS = [
   { orderId:'8100000000001', orderName:'#53539', machine:'S1', createdAt:'2026-10-20T10:00:00Z', customer:'عميل أول',
-    tracking:'8216704439', trackingLegacy:false, bostaStatus:'41 · Out For Return', bostaStatusAt:'2026-10-22T18:08:00Z', whereabouts:'Client' },
+    tracking:'8216704439', trackingLegacy:false, bostaStatus:'41 · Out For Return', bostaCode:41, bostaStatusAt:'2026-10-22T18:08:00Z', whereabouts:'Client' },
   { orderId:'8100000000002', orderName:'#53540', machine:'S2', createdAt:'2026-10-24T10:00:00Z', customer:'عميل تاني',
-    tracking:'2543339828', trackingLegacy:false, bostaStatus:'41 · Out For Return', bostaStatusAt:'2026-10-25T15:34:00Z', whereabouts:'Courier' },
+    tracking:'2543339828', trackingLegacy:false, bostaStatus:'46 · Returned to business', bostaCode:46, bostaStatusAt:'2026-10-25T15:34:00Z', whereabouts:'Courier' },
 ];
 
 function makeStub(rows, diag, readyRows = [], returnRows = []) {
@@ -460,12 +460,15 @@ console.log('\n══ §RETURN-QUEUE — طابور «راجع من بوسطة»
   const html = await page.locator('#rqTableBody').innerHTML();
   is(html.includes('#53539') && html.includes('#53540') && html.includes('8216704439') && html.includes('2543339828'),
      'الأوردرات ورقم التتبع معروضين');
-  is(!(await page.locator('#rqBox thead').innerText()).includes('حالة بوسطة'), 'عمود «حالة بوسطة» اتشال');
-  is(JSON.stringify(await page.locator('#rqBox thead th').allInnerTexts()) === JSON.stringify(['رقم الأوردر','رقم التتبع','العميل','نوع الأوردر','آخر تحديث من بوسطة','النتيجة','إجراء']),
-     'ترتيب الأعمدة السبعة: الأوردر · التتبع · العميل · نوع الأوردر · آخر تحديث · النتيجة · إجراء');
+  is((await page.locator('#rqBox thead').innerText()).includes('حالة بوسطة'), 'عمود «حالة بوسطة» موجود (31-10-2026)');
+  is((await page.locator('#rqTableBody tr:nth-child(1) td:nth-child(5)').innerText()).includes('في الطريق للمخزن'), 'كود 41 ← «في الطريق للمخزن»');
+  is((await page.locator('#rqTableBody tr:nth-child(2) td:nth-child(5)').innerText()).includes('رجعت للتاجر'), 'كود 46 ← «رجعت للتاجر»');
+  is((await page.locator('#rqTableBody tr:nth-child(2) td:nth-child(5)').innerText()).includes('46 · Returned to business'), 'النص الخام لحالة بوسطة ظاهر تحت البادج');
+  is(JSON.stringify(await page.locator('#rqBox thead th').allInnerTexts()) === JSON.stringify(['رقم الأوردر','رقم التتبع','العميل','نوع الأوردر','حالة بوسطة','آخر تحديث من بوسطة','النتيجة','إجراء']),
+     'ترتيب الأعمدة الثمانية: الأوردر · التتبع · العميل · نوع الأوردر · حالة بوسطة · آخر تحديث · النتيجة · إجراء');
   is(html.includes('S1 عادي/ملغي') && html.includes('S2 استرجاع/استبدال'), 'نوع الأوردر: «S1 عادي/ملغي» و«S2 استرجاع/استبدال» — مفرّقين');
   is(await page.locator('#rqTableBody tr:first-child td:nth-child(2) .rq-trk').evaluate(e => +getComputedStyle(e).fontWeight >= 700), 'رقم التتبع Bold');
-  is(await page.locator('#rqTableBody tr:first-child td:nth-child(5) .rq-time').count() === 1, 'الوقت تحت التاريخ في «آخر تحديث من بوسطة»');
+  is(await page.locator('#rqTableBody tr:first-child td:nth-child(6) .rq-time').count() === 1, 'الوقت تحت التاريخ في «آخر تحديث من بوسطة»');
   is(await page.locator('#rqBox button:has-text("مسح التعليم"), #rqBox button:has-text("XLSX"), #rqBox button:has-text("يدوي")').count() === 0, 'أزرار «يدوي» و«مسح التعليم» و«تصدير XLSX» اتشالت');
   is(!(await page.locator('#rqBox').innerText()).includes('امسح الشحنة أو اضغط'), 'عنوان وسطر «راجع من بوسطة…» اتشالوا');
   is(await page.locator('#rqFresh .eco-qref').count() === 1, 'وحدة «آخر تحديث» + زرار التحديث (§FRESH-UNIT)');
