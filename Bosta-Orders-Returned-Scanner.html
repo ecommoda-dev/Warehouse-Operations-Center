@@ -499,7 +499,7 @@ input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-colo
                 <th id="thEmp" class="sortable-th" data-sort-key="emp" onclick="toggleSort('emp')"><span class="th-lbl">الموظف</span><span class="sort-icon" data-sort-key="emp"></span></th>
                 <th id="thOrder" class="sortable-th" data-sort-key="order" onclick="toggleSort('order')"><span class="th-lbl">الأوردر</span><span class="sort-icon" data-sort-key="order"></span></th>
                 <th id="thMachine" class="sortable-th" data-sort-key="machine" onclick="toggleSort('machine')"><span class="th-lbl">الماكينة</span><span class="sort-icon" data-sort-key="machine"></span></th>
-                <th data-eco-nofilter>التحديث</th>
+                <th id="thTrans"><span class="th-lbl">التحديث</span></th>
                 <th id="thResult" class="sortable-th" data-sort-key="result" onclick="toggleSort('result')"><span class="th-lbl">النتيجة</span><span class="sort-icon" data-sort-key="result"></span></th>
                 <th class="sortable-th" data-eco-nofilter data-sort-key="tn" onclick="toggleSort('tn')">التتبع<span class="sort-icon" data-sort-key="tn"></span></th>
               </tr>
@@ -1690,6 +1690,7 @@ const srvLog = ecoSrvFilters({
     { key: 'date',    th: '#thDate',    type: 'date', label: 'التاريخ' },
     { key: 'emp',     th: '#thEmp',     type: 'list', label: 'الموظف', param: 'employees', items: [] },
     { key: 'search',  th: '#thOrder',   type: 'text', label: 'بحث برقم أوردر أو ملاحظة', param: 'search' },
+    { key: 'trans',   th: '#thTrans',   type: 'text', label: 'بحث في التحديث (مثال: In-Return)', param: 'transition' },
     { key: 'machine', th: '#thMachine', type: 'list', label: 'الماكينة', param: 'machines', items: [
         { value: 'S1', label: 'S1 — مسار RTO' },
         { value: 'S2', label: '[S-2] — مرتجع بعد التسليم' } ] },

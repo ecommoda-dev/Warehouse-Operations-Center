@@ -156,7 +156,7 @@ const ECO_WORKERS = {
   //    **بيسمّي السبب** بدل ما الموظف يدوّر.
   //    ⚠️ والسكان **ما اتأثرش** — `lookup`/`update` زي ما هم بالحرف.
   shipped:  { url: 'https://bosta-orders-shipped-scanner.ecommoda-dev.workers.dev',  min: '3.5.0', label: 'قسم تسليمات بوسطة' },
-  returned: { url: 'https://bosta-orders-returned-scanner.ecommoda-dev.workers.dev', min: '3.6.0', label: 'قسم مرتجعات بوسطة' },
+  returned: { url: 'https://bosta-orders-returned-scanner.ecommoda-dev.workers.dev', min: '3.7.1', label: 'قسم مرتجعات بوسطة' },
   // 🔴 قسم تسليمات المكتب — Worker جديد بالكامل (هب v1.26.0).
   // `1.0.0` = أول نسخة، ومفيش أي نسخة أقدم منشورة — فالحارس هنا **مش** بيمنع
   // rollback، هو بيمسك الحالة الوحيدة الممكنة: الـ Worker ما اتنشرش أصلاً أو
