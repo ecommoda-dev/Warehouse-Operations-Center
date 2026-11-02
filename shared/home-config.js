@@ -101,9 +101,9 @@ const ECO_HOME = {
         //    الاسم بيقول الحالة اللي بتودّي ليها («عطلان؟») عشان الموظف اللي جاي من الجدول يلاقي نفس الكلمة.
         { href: 'Order-Item-Remover.html', theme: 'tool-danger', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 3h4M6 7l1 14h10l1-14M10 11v6M14 11v6"/></svg>`, name: 'أوردر عطلان؟' },
         { href: 'Order-SKU-Barcode-Printer.html', ico: 'ico-blue', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5v14M7 5v14M11 5v14M14 5v14M18 5v14M20 5v14"/></svg>`, name: 'باركود SKU' },
-        // 🧵 ديفوهات — تسجيل قطعة فيها عيب وخصم 1 من المخزون + مخزن رقمي (قرار أحمد 02-11-2026: في «أدوات مساعدة» جنب عطلان وباركود SKU).
+        // 🧵 أيقونة الكارت: بكرة خيط (طلب أحمد 02-11-2026، بدل مثلث التحذير ⚠). ديفوهات — تسجيل قطعة فيها عيب وخصم 1 من المخزون + مخزن رقمي (قرار أحمد 02-11-2026: في «أدوات مساعدة» جنب عطلان وباركود SKU).
         //    الأداة **بتكتب** (مخزون على شوبيفاي) بس مش هدّامة بالمعنى اللي يستاهل ثيم أحمر: كل فعل ليه إلغاء أو تأكيد بالأثر.
-        { href: 'Defect-Products.html', ico: 'ico-amber', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg>`, name: 'ديفوهات' },
+        { href: 'Defect-Products.html', ico: 'ico-amber', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12M6 21h12"/><rect x="8" y="3" width="8" height="18" rx="1.5"/><path d="M8 8l8 2.5M8 12.5l8 2.5M8 17l8 2"/></svg>`, name: 'ديفوهات' },
       ] },
     { id: 'Other', cls: 'sec-tools', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18" cy="12" r="1.6"/></svg>`,
       title: 'أدوات أخرى', sub: 'الجرد والإحصائيات',

@@ -2,13 +2,13 @@
 
 # مركز عمليات المخزن — Warehouse Operations Center (`Warehouse-Operations-Center`)
 
-![version](https://img.shields.io/badge/version-v1.70.0-blue)
+![version](https://img.shields.io/badge/version-v1.71.0-blue)
 
 **بتعمل إيه:** هب واحد لمحطة المخزن. الموظف بيدخل **مرة واحدة**، وبعدين
 بيتنقّل بين الطباعة والتغليف وحذف المنتج وتسليمات بوسطة وسكانر المرتجعات
 ورحلة الأوردر من غير ما يدخل تاني ومن غير ما يفتح تبويبات متفرقة.
 **مين بيستخدمها:** المخزن
-**الإصدار:** `v1.70.0` — **واحد للهب كله** (`TOOL_VERSION` في `shared/hub-config.js`)
+**الإصدار:** `v1.71.0` — **واحد للهب كله** (`TOOL_VERSION` في `shared/hub-config.js`)
 
 > 🔴 **الهب واجهة + Worker دخول بس — من v1.32.0.** الريبو ده بقى فيه
 > `index.js` و`wrangler.toml`، **بس نطاقهم محصور في الدخول والخروج بس**
@@ -4344,6 +4344,6 @@ Worker المرتجعات → `1.1.0`)
 `Returned`/`Cancelled` حالتان نهائيتان بتتراكم · `docs/warehouse-check.mjs`
 بـ٧٢ بند)
 
-آخر تحديث: 02-11-2026 — 11:44 — v1.70.0 (🧵 **صفحة `Defect-Products.html` — ديفوهات**: تسجيل + مخزن رقمي + صور · `core.js` فيه `apiUpload`/`apiGetBlob` في الهبّين · +`defects-check.mjs` 105 بند)
+آخر تحديث: 02-11-2026 — 12:30 — v1.71.0 (🧵 تعديلات صفحة ديفوهات: تاب «الديفوهات المسجّلة» · ١٢ عمود + البراند + SKU رابط · نافذة صور بسحب/أسهم · أيقونة بكرة الخيط في الكارت) — السابق: v1.70.0 (🧵 **صفحة `Defect-Products.html` — ديفوهات**: تسجيل + مخزن رقمي + صور · `core.js` فيه `apiUpload`/`apiGetBlob` في الهبّين · +`defects-check.mjs` 105 بند)
 
 </div>
