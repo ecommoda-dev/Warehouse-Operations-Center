@@ -505,7 +505,9 @@ const IMG_MAX_COUNT = 10;                 // أقصى صور للقطعة — ن
 const CFG = {
   SUGGEST_MIN: 3, SUGGEST_DEBOUNCE: 120,
   MISSING_ENTER_MS: 1500,                 // تحذير «الرقم وصل ومفيش Enter» — عمره ما بيضيف
-  BARCODE_MIN: 8, BARCODE_MAX: 14,        // أرقام فقط → بحث باركود تام؛ فوق الحد = غالبًا باركودين ملزوقين
+  // أرقام فقط → بحث باركود تام. المصدر: بلجن Retail Force Barcode (Format «General») بنمط [0-9]{9} = ٩ أرقام (قرار/معلومة أحمد 02-11-2026)،
+  // والباركود القديم ٨ أرقام (مثال 09473858 — الصفر الأول بيفضل، نص مش رقم). فوق ٩ = غالبًا باركودين ملزوقين (رفض صريح).
+  BARCODE_MIN: 8, BARCODE_MAX: 9,
   TOAST_MS: { success: 2200, dup: 3200, neutral: 3200, error: 6500 },
 };
 const PAGE_SIZE = 50;
