@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="shared/hub.css">
   <link rel="stylesheet" href="shared/srv-filters.css">
 <style>
-/* Tier L — جدول المخزن الرقمي فيه ١٤ عمود. الاستثناء الوحيد المسموح لكتلة توكنز في صفحة: --container-max لوحدها. */
+/* Tier L — جدول الديفوهات المسجّلة فيه ١٢ عمود. الاستثناء الوحيد المسموح لكتلة توكنز في صفحة: --container-max لوحدها. */
 :root { --container-max: 1400px; }
 
 /* ═══ §ENTRY-BAR — مربع الإدخال الموحّد (SKU / باركود المنتج) ═══ */
@@ -95,6 +95,9 @@
 .status-badge.ok { background: var(--green-light); color: var(--green-dark); border: 1px solid var(--green-border); }
 .status-badge.warn { background: var(--amber-light); color: var(--amber-dark); border: 1px solid var(--amber-border); }
 .status-badge.err { background: var(--red-light); color: var(--red-dark); border: 1px solid var(--red-border); }
+.ded-txt { font-size: 12.5px; font-weight: 800; white-space: nowrap; }
+.ded-txt.ok { color: var(--green-dark); } .ded-txt.warn { color: var(--amber-dark); } .ded-txt.neutral { color: var(--text-mid); }
+.sku-link { color: var(--accent); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 .status-badge.neutral { background: var(--surface-2); color: var(--text-mid); border: 1px solid var(--border-strong); }
 
 /* ═══ §TABLE — القسم الموحّد (كارت واحد بدون overflow:hidden) ═══ */
@@ -159,11 +162,21 @@ th.sorted .th-label { background: var(--accent-light); color: var(--accent-dark)
 .sum-note { margin-top: 10px; padding: 8px 12px; border-radius: var(--radius-sm); background: var(--amber-light); border: 1px solid var(--amber-border); color: var(--amber-dark); font-size: 12.5px; font-weight: 700; }
 .cfm-line { padding: 8px 12px; border-radius: var(--radius-sm); background: var(--red-light); border: 1px solid var(--red-border); color: var(--red-dark); font-size: 13px; font-weight: 700; margin-top: 8px; }
 .cfm-line.soft { background: var(--surface-2); border-color: var(--border-strong); color: var(--text-primary); }
-.img-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); }
-.img-row .grow { flex: 1; min-width: 140px; font-size: 12.5px; font-weight: 600; }
-.img-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
-.img-view { min-height: 120px; display: flex; align-items: center; justify-content: center; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px; }
-.img-view img { max-width: 100%; max-height: 60vh; border-radius: 6px; }
+.img-modal { max-width: min(900px, 94vw); }
+.img-body { display: flex; flex-direction: column; gap: 10px; }
+.img-stage { position: relative; display: flex; align-items: stretch; touch-action: pan-y; }
+.img-view { flex: 1; min-height: 260px; height: 56vh; display: flex; align-items: center; justify-content: center; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px; font-size: 13px; color: var(--text-mid); }
+.img-view img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 6px; user-select: none; -webkit-user-drag: none; }
+.img-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 56px; border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,.88); font-size: 28px; line-height: 1; cursor: pointer; color: var(--text); z-index: 2; }
+.img-nav:hover { background: #fff; }
+.img-nav[hidden] { display: none; }
+.img-prev { right: 8px; } .img-next { left: 8px; }
+.img-meta { text-align: center; font-size: 12.5px; font-weight: 600; color: var(--text-mid); }
+.img-dots { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
+.img-dots button { min-width: 32px; height: 32px; padding: 0 8px; border: 1px solid var(--border-strong); border-radius: 16px; background: var(--surface); font-weight: 700; cursor: pointer; }
+.img-dots button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.img-actions { justify-content: center; }
+.btn-outline.danger { color: var(--red-dark); border-color: var(--red-border); }
 </style>
 </head>
 <body>
@@ -192,8 +205,8 @@ th.sorted .th-label { background: var(--accent-light); color: var(--accent-dark)
           <ol>
             <li>اسكن باركود القطعة أو اكتب الـ SKU/الاسم في مربع الإدخال واضغط Enter.</li>
             <li>اختار نوع العيب (أو ضيف نوع جديد)، وهل قابل للإصلاح، وأي فردة، وجديد ولا مرتجع، وملاحظات، وصور (اختيارية).</li>
-            <li>اضغط «تسجيل الديفو» — بيتخصم 1 من المخزون ويتسجّل في المخزن الرقمي. لو الرصيد 0 بتتسأل: إلغاء، أو تسجيل بدون خصم.</li>
-            <li>من تاب «المخزن الرقمي»: «اتصلحت» بترجّع 1 للستوك (وبتقفل الحالة نهائيًا)، و«غير قابلة للإصلاح» بتعلّمها سجل، و«إلغاء» بتلغي تسجيل بالغلط وبترجّع الكمية.</li>
+            <li>اضغط «تسجيل الديفو» — بيتخصم 1 من المخزون ويتسجّل في الديفوهات المسجّلة. لو الرصيد 0 بتتسأل: إلغاء، أو تسجيل بدون خصم.</li>
+            <li>من تاب «الديفوهات المسجّلة»: «اتصلحت» بترجّع 1 للستوك (وبتقفل الحالة نهائيًا)، و«غير قابلة للإصلاح» بتعلّمها سجل، و«إلغاء» بتلغي تسجيل بالغلط وبترجّع الكمية.</li>
           </ol>
           <h4>الـ Endpoints الرئيسية</h4>
           <table>
@@ -255,7 +268,18 @@ th.sorted .th-label { background: var(--accent-light); color: var(--accent-dark)
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.70.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.71.0</span>
+          <span class="cl-ver-date">02-11-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>تاب «المخزن الرقمي» بقى <b>«الديفوهات المسجّلة»</b>. الجدول بقى <b>١٢ عمود</b>: اتشال «المنتج» و«قابل للإصلاح» (عمود «الحالة» بيكفي) واتدمج «التاريخ» و«الوقت» في عمود واحد، واتضاف عمود <b>«البراند»</b> (محتاج Promote لـ Worker الديفوهات v1.1.0).</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>الـ <b>SKU رابط</b> بيفتح صفحة الـ variant في أدمن شوبيفاي. وعمود «الصور» بقى الرقم بس، و«المخزون» بقى لون من غير بادج.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>نافذة الصور اتعملت من جديد: <b>أول صورة بتفتح على طول</b>، والتنقل بالسحب يمين/شمال أو أسهم الكيبورد، وأزرار السابق/التالي وأرقام الصور. فلتر «الموظف» بقى بيقول لو قايمة الموظفين ماتحمّلتش بدل ما يفضل فاضي.</span></li>
+        </ul>
+      </div>
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge">v1.70.0</span>
           <span class="cl-ver-date">02-11-2026</span>
         </div>
         <ul class="cl-items">
@@ -270,7 +294,7 @@ th.sorted .th-label { background: var(--accent-light); color: var(--accent-dark)
 <!-- ══ §TABS ══ -->
 <div class="main-tabs-bar">
   <button class="main-tab-btn active" id="mainTabReg" onclick="switchMainTab('reg')">🧵 تسجيل ديفو</button>
-  <button class="main-tab-btn" id="mainTabRegistry" onclick="switchMainTab('registry')">🗃️ المخزن الرقمي</button>
+  <button class="main-tab-btn" id="mainTabRegistry" onclick="switchMainTab('registry')">🗃️ الديفوهات المسجّلة</button>
   <button class="main-tab-btn" id="mainTabLog" onclick="switchMainTab('log')">📜 سجل العمليات</button>
 </div>
 
@@ -374,12 +398,10 @@ th.sorted .th-label { background: var(--accent-light); color: var(--accent-dark)
     <div class="tbl-body-wrap" id="regWrap"><div><div class="tbl-scroll">
       <table class="data-table" id="regTbl">
         <thead><tr>
-          <th id="rthDate" data-eco-nofilter><span class="th-in"><span class="th-label" data-table="reg" data-sort-key="date" role="button" tabindex="0">التاريخ</span><span class="sort-icon"></span></span></th>
-          <th data-eco-nofilter><span class="th-in"><span class="th-label" data-table="reg" data-sort-key="time" role="button" tabindex="0">الوقت</span><span class="sort-icon"></span></span></th>
-          <th id="rthProd" data-eco-nofilter><span class="th-in"><span class="th-label" data-table="reg" data-sort-key="product" role="button" tabindex="0">المنتج</span><span class="sort-icon"></span></span></th>
+          <th id="rthDate" data-eco-nofilter><span class="th-in"><span class="th-label" data-table="reg" data-sort-key="date" role="button" tabindex="0">التاريخ والوقت</span><span class="sort-icon"></span></span></th>
           <th id="rthSku" data-eco-nofilter><span class="th-in"><span class="th-label" data-table="reg" data-sort-key="sku" role="button" tabindex="0">SKU</span><span class="sort-icon"></span></span></th>
+          <th data-eco-nofilter><span class="th-in"><span class="th-label">البراند</span></span></th>
           <th id="rthType" data-eco-nofilter><span class="th-in"><span class="th-label" data-table="reg" data-sort-key="type" role="button" tabindex="0">نوع العيب</span><span class="sort-icon"></span></span></th>
-          <th id="rthRep" data-eco-nofilter><span class="th-in"><span class="th-label" data-table="reg" data-sort-key="repairable" role="button" tabindex="0">قابل للإصلاح</span><span class="sort-icon"></span></span></th>
           <th id="rthSide" data-eco-nofilter><span class="th-in"><span class="th-label" data-table="reg" data-sort-key="side" role="button" tabindex="0">أي فردة</span><span class="sort-icon"></span></span></th>
           <th id="rthOrigin" data-eco-nofilter><span class="th-in"><span class="th-label" data-table="reg" data-sort-key="origin" role="button" tabindex="0">جديد/مرتجع</span><span class="sort-icon"></span></span></th>
           <th id="rthStatus" data-eco-nofilter><span class="th-in"><span class="th-label" data-table="reg" data-sort-key="status" role="button" tabindex="0">الحالة</span><span class="sort-icon"></span></span></th>
@@ -389,7 +411,7 @@ th.sorted .th-label { background: var(--accent-light); color: var(--accent-dark)
           <th data-eco-nofilter><span class="th-in"><span class="th-label">ملاحظات</span></span></th>
           <th data-eco-nofilter><span class="th-in"><span class="th-label">الإجراءات</span></span></th>
         </tr></thead>
-        <tbody id="regBody"><tr class="empty-row"><td colspan="14">اضغط تحديث لتحميل المخزن الرقمي</td></tr></tbody>
+        <tbody id="regBody"><tr class="empty-row"><td colspan="12">اضغط تحديث لتحميل الديفوهات المسجّلة</td></tr></tbody>
       </table>
     </div></div></div>
   </div>
@@ -463,17 +485,23 @@ th.sorted .th-label { background: var(--accent-light); color: var(--accent-dark)
 </div>
 
 <div class="eco-overlay" id="imgOverlay" onclick="if(event.target===this)closeImages()">
-  <div class="eco-modal">
-    <div class="eco-modal-hdr"><span id="imgTitle">صور الديفو</span><button class="modal-close-x" onclick="closeImages()">✕</button></div>
-    <div class="eco-modal-body">
-      <div class="img-list" id="imgList"></div>
+  <div class="eco-modal img-modal" role="dialog" aria-modal="true" aria-labelledby="imgTitle">
+    <div class="eco-modal-hdr"><span id="imgTitle">صور الديفو</span><button class="modal-close-x" onclick="closeImages()" aria-label="إغلاق">✕</button></div>
+    <div class="eco-modal-body img-body">
+      <div class="img-stage" id="imgStage">
+        <button class="img-nav img-prev" id="imgPrev" type="button" onclick="stepImage(-1)" aria-label="الصورة السابقة">›</button>
+        <div class="img-view" id="imgView"></div>
+        <button class="img-nav img-next" id="imgNext" type="button" onclick="stepImage(1)" aria-label="الصورة التالية">‹</button>
+      </div>
+      <div class="img-meta" id="imgMeta"></div>
+      <div class="img-dots" id="imgDots"></div>
       <div class="img-actions" id="imgAdd" hidden>
         <button class="btn-outline" type="button" onclick="document.getElementById('mCam').click()">📷 تصوير</button>
         <button class="btn-outline" type="button" onclick="document.getElementById('mPick').click()">🖼️ إضافة من الجهاز</button>
+        <button class="btn-outline danger" id="imgDel" type="button" onclick="deleteCurrentImage()" hidden>🗑 مسح هذه الصورة</button>
         <input type="file" id="mCam" accept="image/jpeg,image/png,image/webp" capture="environment" hidden onchange="onModalFiles(this)">
         <input type="file" id="mPick" accept="image/jpeg,image/png,image/webp" multiple hidden onchange="onModalFiles(this)">
       </div>
-      <div class="img-view" id="imgView">اضغط «عرض» على أي صورة</div>
     </div>
     <div class="eco-modal-ftr"><button class="btn-ghost" onclick="closeImages()">إغلاق</button></div>
   </div>
@@ -943,7 +971,7 @@ async function submitDefect(stockMode) {
       const bad = up.filter(u => u.status !== 'success');
       lines.push(`الصور: اترفع ${up.length - bad.length} من ${up.length}`);
       bad.forEach(u => lines.push(`✗ ${u.name || 'صورة'}: ${u.message}`));
-      if (bad.length) lines.push('تقدر تضيف الصور الناقصة من المخزن الرقمي (زرار «الصور»).');
+      if (bad.length) lines.push('تقدر تضيف الصور الناقصة من الديفوهات المسجّلة (زرار «الصور»).');
     }
     if (ok && res.retryable) lines.push('الصور هتترفع بعد ما التسجيل يتأكد (استخدم «إعادة المحاولة»).');
     if (ok) {
@@ -1025,18 +1053,31 @@ function paintPager(which, st, total) {
 function stamp() { return `آخر تحديث ${formatTimeOnly(new Date().toISOString())}`; }
 function paintClear(btnId, flt) { document.getElementById(btnId).classList.toggle('inactive', !flt.active()); }
 
-// ═══ §REGISTRY — المخزن الرقمي ═══
+// قايمة فلتر «الموظف» — لو فشلت بنقول، ولو رجعت فاضية بنكمّلها من الصفوف المعروضة (مش بنسيبها فاضية بصمت)
+let empListOk = false;
+async function loadEmployeeFilter() {
+  try {
+    const d = await apiGet('get_employees');
+    const items = (d.employees || []).map(x => ({ value: x.username, label: x.display_name || x.username }));
+    if (items.length) { empListOk = true; regFlt.setItems('emp', items); logFlt.setItems('emp', items); }
+  } catch (e) { toast(`تعذّر تحميل قايمة الموظفين للفلتر: ${e.message}`, 'error'); }
+}
+function fillEmployeeFromRows() {
+  if (empListOk) return;
+  const seen = new Map(); regRows.forEach(r => { if (r.createdBy) seen.set(r.createdBy, r.createdBy); });
+  if (seen.size) regFlt.setItems('emp', [...seen].map(([value, label]) => ({ value, label })));
+}
+// ═══ §REGISTRY — الديفوهات المسجّلة ═══
 const regState = { page: 1, total: 0, seq: 0 };
 let regRows = [];
+let shopHandle = '';   // من get_defects — لبناء رابط الفاريانت
 const regFlt = ecoSrvFilters({
   onChange: () => { regState.page = 1; paintClear('regClearAll', regFlt); loadRegistry(); },
   chips: '#regChips', zone: '#regChipsZone', clearBtn: '#regClearAll',
   columns: [
     { key: 'date',   th: '#rthDate',   type: 'date', label: 'التاريخ' },
-    { key: 'prod',   th: '#rthProd',   type: 'text', label: 'المنتج', param: 'products' },
     { key: 'sku',    th: '#rthSku',    type: 'text', label: 'SKU', param: 'skus' },
     { key: 'type',   th: '#rthType',   type: 'list', label: 'نوع العيب', param: 'types', items: [] },
-    { key: 'rep',    th: '#rthRep',    type: 'list', label: 'قابل للإصلاح', param: 'repairable', items: [{ value: '1', label: 'نعم' }, { value: '0', label: 'لا' }] },
     { key: 'side',   th: '#rthSide',   type: 'list', label: 'أي فردة', param: 'sides', items: Object.entries(SIDE_LABEL).map(([value, label]) => ({ value, label })) },
     { key: 'origin', th: '#rthOrigin', type: 'list', label: 'جديد/مرتجع', param: 'origins', items: Object.entries(ORIGIN_LABEL).map(([value, label]) => ({ value, label })) },
     { key: 'status', th: '#rthStatus', type: 'list', label: 'الحالة', param: 'statuses', items: Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label })) },
@@ -1050,7 +1091,7 @@ function regParams() { return { ...regFlt.params(), ...sortParams('reg') }; }
 async function loadRegistry() {
   const seq = ++regState.seq;
   const body = document.getElementById('regBody');
-  body.innerHTML = `<tr class="empty-row"><td colspan="14">${ecoLoadingHTML('⏳ جاري تحميل الديفوهات…', true)}</td></tr>`;
+  body.innerHTML = `<tr class="empty-row"><td colspan="12">${ecoLoadingHTML('⏳ جاري تحميل الديفوهات…', true)}</td></tr>`;
   try {
     const base = regParams();
     const [list, cnt, sc] = await Promise.all([
@@ -1059,13 +1100,13 @@ async function loadRegistry() {
       apiGet('get_status_counts'),
     ]);
     if (seq !== regState.seq) return;   // رد قديم
-    regRows = list.defects || []; regState.total = cnt.total || 0;
+    regRows = list.defects || []; shopHandle = list.shopHandle || shopHandle; regState.total = cnt.total || 0;
     document.getElementById('regCount').textContent = regState.total.toLocaleString('en-US');
     document.getElementById('regUpd').textContent = stamp();
-    paintCounts(sc); renderRegistry(); paintPager('reg', regState, regState.total);
+    paintCounts(sc); renderRegistry(); fillEmployeeFromRows(); paintPager('reg', regState, regState.total);
   } catch (e) {
     if (seq !== regState.seq) return;
-    body.innerHTML = `<tr class="empty-row"><td colspan="14">❌ ${esc(e.message)}</td></tr>`;
+    body.innerHTML = `<tr class="empty-row"><td colspan="12">❌ ${esc(e.message)}</td></tr>`;
     document.getElementById('regCount').textContent = '—';
   }
 }
@@ -1082,7 +1123,7 @@ function paintCounts(sc) {
 function needsRetry(d) { return d.deductState === 'pending' || d.deductState === 'unconfirmed' || d.restockState === 'pending' || d.restockState === 'unconfirmed'; }
 function imagesCell(d) {
   const editable = d.status === 'awaiting_repair' || d.status === 'unrepairable';
-  if (d.imageCount > 0) return `<button class="log-btn" type="button" data-act="images" data-id="${d.id}">🖼 عرض (${d.imageCount})</button>`;
+  if (d.imageCount > 0) return `<button class="log-btn" type="button" data-act="images" data-id="${d.id}" aria-label="عرض الصور">${d.imageCount}</button>`;
   return editable ? `<button class="log-btn" type="button" data-act="images" data-id="${d.id}">➕ صور</button>` : '—';
 }
 function actionsCell(d) {
@@ -1097,16 +1138,20 @@ function dedBadge(d) {
   const cls = d.deductState === 'done' ? 'ok' : d.deductState === 'skipped' ? 'neutral' : 'warn';
   const txt = DEDUCT_LABEL[d.deductState] || d.deductState;
   const rs = d.restockState === 'done' ? '<div class="sub">رجع 1 للستوك</div>' : (d.restockState === 'pending' || d.restockState === 'unconfirmed') ? '<div class="sub">إرجاع الكمية غير مؤكد</div>' : '';
-  return `<span class="status-badge ${cls}">${esc(txt)}</span>${rs}`;
+  return `<span class="ded-txt ${cls}">${esc(txt)}</span>${rs}`;
+}
+// رابط صفحة الفاريانت في أدمن شوبيفاي — مش بيتبني لو ناقص product_id أو الـ handle
+function skuCell(d) {
+  if (!d.productId || !shopHandle) return esc(d.sku);
+  const href = `https://admin.shopify.com/store/${encodeURIComponent(shopHandle)}/products/${encodeURIComponent(d.productId)}/variants/${encodeURIComponent(d.variantId)}`;
+  return `<a class="sku-link" href="${esc(href)}" target="_blank" rel="noopener noreferrer">${esc(d.sku)}</a>`;
 }
 function regRowHtml(d) {
   return `<tr data-id="${d.id}">
-    <td class="col-num">${formatDate(d.createdAt)}</td>
-    <td class="col-num">${formatTimeOnly(d.createdAt)}</td>
-    <td>${esc(d.productTitle || '—')}${d.variantTitle ? `<div class="sub">${esc(d.variantTitle)}</div>` : ''}</td>
-    <td class="col-num">${esc(d.sku)}</td>
+    <td class="col-num">${formatDate(d.createdAt)}<div class="sub">${formatTimeOnly(d.createdAt)}</div></td>
+    <td class="col-num">${skuCell(d)}</td>
+    <td>${esc(d.vendor || '—')}</td>
     <td>${esc(d.defectTypeName || '—')}</td>
-    <td>${d.repairable ? 'نعم' : 'لا'}</td>
     <td>${esc(SIDE_LABEL[d.side] || d.side)}</td>
     <td>${esc(ORIGIN_LABEL[d.origin] || d.origin)}</td>
     <td><span class="status-badge ${STATUS_CLS[d.status] || 'neutral'}">${esc(STATUS_LABEL[d.status] || d.status)}</span></td>
@@ -1119,7 +1164,7 @@ function regRowHtml(d) {
 }
 function renderRegistry() {
   const body = document.getElementById('regBody');
-  body.innerHTML = regRows.length ? regRows.map(regRowHtml).join('') : `<tr class="empty-row"><td colspan="14">مفيش ديفوهات مطابقة</td></tr>`;
+  body.innerHTML = regRows.length ? regRows.map(regRowHtml).join('') : `<tr class="empty-row"><td colspan="12">مفيش ديفوهات مطابقة</td></tr>`;
 }
 function repaintRow(d, flash) {
   const i = regRows.findIndex(r => r.id === d.id);
@@ -1184,54 +1229,86 @@ async function rowAction(id, act) {
 }
 async function loadRegistryCounts() { try { paintCounts(await apiGet('get_status_counts')); } catch {} }
 
-// ═══ §IMAGES — نافذة الصور (عرض Lazy) ═══
-let imgCtx = { defectId: null, editable: false, url: null };
-function revokeView() { if (imgCtx.url) { URL.revokeObjectURL(imgCtx.url); imgCtx.url = null; } }
+// ═══ §IMAGES — نافذة الصور (أول صورة بتفتح على طول · سحب/أسهم للتنقل · عرض Lazy بكاش blob) ═══
+let imgCtx = { defectId: null, editable: false, images: [], idx: 0, cache: new Map(), seq: 0 };
+function revokeAll() { imgCtx.cache.forEach(u => URL.revokeObjectURL(u)); imgCtx.cache = new Map(); }
 async function openImages(id) {
   const d = regRows.find(r => r.id === id); if (!d) return;
-  imgCtx = { defectId: id, editable: d.status === 'awaiting_repair' || d.status === 'unrepairable', url: null };
+  revokeAll();
+  imgCtx = { defectId: id, editable: d.status === 'awaiting_repair' || d.status === 'unrepairable', images: [], idx: 0, cache: new Map(), seq: imgCtx.seq + 1 };
   document.getElementById('imgTitle').textContent = `صور الديفو #${d.id} — ${d.sku}`;
   document.getElementById('imgAdd').hidden = !imgCtx.editable;
-  document.getElementById('imgView').textContent = 'اضغط «عرض» على أي صورة';
+  document.getElementById('imgView').innerHTML = ecoLoadingHTML('⏳ جاري التحميل…', true);
+  document.getElementById('imgMeta').textContent = ''; document.getElementById('imgDots').innerHTML = '';
   openOverlay('imgOverlay');
-  await refreshImageList();
+  await refreshImageList(0);
 }
-function closeImages() { revokeView(); closeOverlay('imgOverlay'); document.getElementById('imgView').innerHTML = ''; }
-async function refreshImageList() {
-  const box = document.getElementById('imgList');
-  box.innerHTML = ecoLoadingHTML('⏳ جاري التحميل…', true);
+function closeImages() { imgCtx.seq++; revokeAll(); closeOverlay('imgOverlay'); document.getElementById('imgView').innerHTML = ''; }
+async function refreshImageList(keepIdx) {
   try {
     const d = await apiGet('get_defect_images', { defectId: imgCtx.defectId });
-    const imgs = d.images || [];
-    box.innerHTML = imgs.length ? imgs.map((im, i) =>
-      `<div class="img-row"><span class="grow">صورة ${i + 1} · ${Math.round(im.sizeBytes / 1024).toLocaleString('en-US')}KB · ${esc(im.createdBy)} · ${formatDateTime(im.createdAt)}</span>`
-      + `<button class="log-btn" type="button" onclick="viewImage(${im.id})">عرض</button>`
-      + (imgCtx.editable ? `<button class="log-btn danger" type="button" onclick="deleteImage(${im.id})">🗑</button>` : '') + `</div>`).join('')
-      : '<div class="empty-state">مفيش صور لقطعة دي</div>';
+    imgCtx.images = d.images || [];
     const row = regRows.find(r => r.id === imgCtx.defectId);
-    if (row && row.imageCount !== imgs.length) { row.imageCount = imgs.length; repaintRow(row); }
-  } catch (e) { box.innerHTML = `<div class="empty-state">❌ ${esc(e.message)}</div>`; }
+    if (row && row.imageCount !== imgCtx.images.length) { row.imageCount = imgCtx.images.length; repaintRow(row); }
+    await showImage(typeof keepIdx === 'number' ? keepIdx : imgCtx.idx);
+  } catch (e) { document.getElementById('imgView').innerHTML = `❌ ${esc(e.message)}`; }
 }
-async function viewImage(id) {
-  const view = document.getElementById('imgView');
-  view.innerHTML = ecoLoadingHTML('⏳ جاري تحميل الصورة…', true);
-  revokeView();
-  try {
-    const blob = await apiGetBlob('get_image', { id });
-    imgCtx.url = URL.createObjectURL(blob);
-    view.innerHTML = `<img src="${esc(imgCtx.url)}" alt="صورة الديفو">`;
-  } catch (e) { view.innerHTML = `❌ ${esc(e.message)}`; }
+function stepImage(d) { if (imgCtx.images.length > 1) showImage(imgCtx.idx + d); }
+async function showImage(i) {
+  const imgs = imgCtx.images, view = document.getElementById('imgView');
+  const n = imgs.length;
+  document.getElementById('imgPrev').hidden = document.getElementById('imgNext').hidden = n < 2;
+  if (!n) {
+    imgCtx.idx = 0; view.textContent = 'مفيش صور للقطعة دي';
+    document.getElementById('imgMeta').textContent = ''; document.getElementById('imgDots').innerHTML = '';
+    document.getElementById('imgDel').hidden = true; return;
+  }
+  i = (i + n) % n; imgCtx.idx = i;      // دوران: بعد الأخيرة الأولى
+  const im = imgs[i], seq = ++imgCtx.seq;
+  document.getElementById('imgMeta').textContent = `${n > 1 ? `صورة ${i + 1} من ${n} · ` : ''}${Math.round(im.sizeBytes / 1024).toLocaleString('en-US')}KB · ${im.createdBy} · ${formatDateTime(im.createdAt)}`;
+  document.getElementById('imgDots').innerHTML = n > 1 ? imgs.map((_, k) => `<button type="button" class="${k === i ? 'on' : ''}" onclick="showImage(${k})" aria-label="صورة ${k + 1}">${k + 1}</button>`).join('') : '';
+  document.getElementById('imgDel').hidden = !imgCtx.editable;
+  let url = imgCtx.cache.get(im.id);
+  if (!url) {
+    view.innerHTML = ecoLoadingHTML('⏳ جاري تحميل الصورة…', true);
+    try {
+      const blob = await apiGetBlob('get_image', { id: im.id });
+      url = URL.createObjectURL(blob);
+      if (seq !== imgCtx.seq) { URL.revokeObjectURL(url); return; }   // المستخدم راح لصورة تانية أو قفل
+      imgCtx.cache.set(im.id, url);
+    } catch (e) { if (seq === imgCtx.seq) view.innerHTML = `❌ ${esc(e.message)}`; return; }
+  }
+  view.innerHTML = `<img src="${esc(url)}" alt="صورة الديفو ${i + 1}" draggable="false">`;
 }
-async function deleteImage(id) {
+async function deleteCurrentImage() {
+  const im = imgCtx.images[imgCtx.idx]; if (!im) return;
   const ok = await askConfirm({ header: '🗑 مسح صورة', lead: 'الصورة هتتمسح نهائيًا من السجل والتخزين.', okLabel: 'مسح الصورة' });
   if (!ok) return;
   try {
-    const res = await apiPost('delete_defect_image', { employee: currentEmployee.username, imageId: id });
+    const res = await apiPost('delete_defect_image', { employee: currentEmployee.username, imageId: im.id });
     toast(res.message, res.status === 'success' ? 'success' : 'error');
-    revokeView(); document.getElementById('imgView').textContent = 'اضغط «عرض» على أي صورة';
-    await refreshImageList();
+    const u = imgCtx.cache.get(im.id); if (u) { URL.revokeObjectURL(u); imgCtx.cache.delete(im.id); }
+    await refreshImageList(Math.min(imgCtx.idx, imgCtx.images.length - 2));
   } catch (e) { toast(`تعذّر المسح: ${e.message}`, 'error'); }
 }
+// أسهم الكيبورد (الواجهة RTL: اليمين = السابقة، الشمال = التالية) + Esc للإغلاق · سحب يمين/شمال بالإصبع
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('imgOverlay').classList.contains('open')) return;
+  if (document.getElementById('cfmOverlay')?.classList.contains('open') || document.getElementById('sumOverlay')?.classList.contains('open')) return;
+  if (e.key === 'ArrowRight') { e.preventDefault(); stepImage(-1); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); stepImage(1); }
+  else if (e.key === 'Escape') closeImages();
+});
+(() => {
+  let x0 = null, y0 = null;
+  const st = document.getElementById('imgStage');
+  st.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+  st.addEventListener('touchend', e => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) stepImage(dx < 0 ? 1 : -1);   // سحب لليسار = التالية
+  }, { passive: true });
+})();
 async function onModalFiles(inp) {
   const files = [...inp.files]; inp.value = '';
   const good = [];
@@ -1243,7 +1320,8 @@ async function onModalFiles(inp) {
     const bad = up.filter(u => u.status !== 'success');
     if (bad.length) showSummary({ status: 'warning', message: `اترفع ${up.length - bad.length} من ${up.length}` }, { title: 'رفع الصور', lines: bad.map(u => `✗ ${u.name || 'صورة'}: ${u.message}`) });
     else toast(`اترفع ${up.length} صورة`, 'success');
-    await refreshImageList();
+    const before = imgCtx.images.length;
+    await refreshImageList(before);     // أول صورة جديدة
   } finally { box.style.opacity = ''; box.style.pointerEvents = ''; }
 }
 
@@ -1327,9 +1405,9 @@ async function exportRegistryXLSX() {
     const data = await apiGet('get_defects_export', regFlt.params());
     const rows = data.defects || [];
     const wb = new ExcelJS.Workbook(); const ws = wb.addWorksheet('الديفوهات', { views: [{ rightToLeft: true }] });
-    ws.columns = ['#', 'التاريخ', 'الوقت', 'المنتج', 'SKU', 'نوع العيب', 'قابل للإصلاح', 'أي فردة', 'جديد/مرتجع', 'الحالة', 'المخزون', 'الموظف', 'عدد الصور', 'ملاحظات']
+    ws.columns = ['#', 'التاريخ', 'الوقت', 'المنتج', 'البراند', 'SKU', 'نوع العيب', 'قابل للإصلاح', 'أي فردة', 'جديد/مرتجع', 'الحالة', 'المخزون', 'الموظف', 'عدد الصور', 'ملاحظات']
       .map(h => ({ header: h, width: h === 'ملاحظات' || h === 'المنتج' ? 34 : 16 }));
-    rows.forEach(d => ws.addRow([d.id, formatDateForExport(d.createdAt), (formatTimeOnly(d.createdAt) || '').replace('🕐 ', ''), d.productTitle || '', d.sku, d.defectTypeName || '',
+    rows.forEach(d => ws.addRow([d.id, formatDateForExport(d.createdAt), (formatTimeOnly(d.createdAt) || '').replace('🕐 ', ''), d.productTitle || '', d.vendor || '', d.sku, d.defectTypeName || '',
       d.repairable ? 'نعم' : 'لا', SIDE_LABEL[d.side] || d.side, ORIGIN_LABEL[d.origin] || d.origin, STATUS_LABEL[d.status] || d.status, DEDUCT_LABEL[d.deductState] || d.deductState,
       d.createdBy, d.imageCount, d.notes || '']));
     ws.getRow(1).font = { bold: true };
@@ -1373,10 +1451,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   entryEl.focus();
   // قوايم الفلاتر والنموذج — فشلها ماوقفش الصفحة
   loadTypes().catch(e => toast(`تعذّر تحميل أنواع العيب: ${e.message}`, 'error'));
-  apiGet('get_employees').then(d => {
-    const items = (d.employees || []).map(x => ({ value: x.username, label: x.display_name || x.username }));
-    regFlt.setItems('emp', items); logFlt.setItems('emp', items);
-  }).catch(() => {});
+  loadEmployeeFilter();
 });
 </script>
 </body>
