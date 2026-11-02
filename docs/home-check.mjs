@@ -380,8 +380,8 @@ console.log('⑦ التصميم الموحّد — الأقسام الخمسة �
   is(secs.map(s => s.title).join('|') === 'قسم التجهيزات|قسم التسليمات|قسم المرتجعات|أدوات مساعدة|أدوات أخرى', '🔴 خمس أقسام بالأسماء والترتيب المتفق عليه', secs.map(s => s.title).join('|'));
   is(secs[0].rows.join() === 'rowBostaUpload,rowPrint,rowPack' && secs[1].rows.join() === 'rowBosta,rowOffice' && secs[2].rows.join() === 'rowWarehouse,rowEdited,rowReturnItems,rowBostaReturns',
      'الصفوف في أقسامها: (رفع بوسطة · طباعة · تغليف) · (بوسطة · مكتب) · (رجوع للمخزن · تعديل أوردرات · قطع مستنية الرجوع · مرتجعات بوسطة)', JSON.stringify(secs.map(s => s.rows)));
-  is(secs[3].tools.join() === 'Order-Item-Remover.html,Order-SKU-Barcode-Printer.html' && secs[4].tools.join() === 'Inventory-Audit-Updater.html,stats.html',
-     'الأدوات: مساعدة (عطلان · باركود) · أخرى (الجرد · الإحصائيات) — **كروت** مش pills', JSON.stringify([secs[3].tools, secs[4].tools]));
+  is(secs[3].tools.join() === 'Order-Item-Remover.html,Order-SKU-Barcode-Printer.html,Defect-Products.html' && secs[4].tools.join() === 'Inventory-Audit-Updater.html,stats.html',
+     'الأدوات: مساعدة (عطلان · باركود · ديفوهات) · أخرى (الجرد · الإحصائيات) — **كروت** مش pills', JSON.stringify([secs[3].tools, secs[4].tools]));
   is(secs.every(s => s.open && s.sum), 'كلها مفتوحة عند الفتح، وكلها ليها ملخّص مطوي (بلاطات — الأدوات كمان)');
   // 🎨 المطوي: العنوان على اليمين في **كل** الأقسام (أقسام الأدوات كانت في النص) — طلب أحمد 22-10-2026
   for (const id of ['secPrep', 'secHelper', 'secOther']) await page.locator(`#${id} [data-sec-toggle] .eco-sec-chev`).click();

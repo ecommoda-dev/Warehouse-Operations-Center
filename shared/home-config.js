@@ -95,12 +95,15 @@ const ECO_HOME = {
     { id: 'Returns', cls: 'sec-returns', summary: true, svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>`,
       title: 'قسم المرتجعات', sub: 'رجوع للمخزن ومرتجعات بوسطة', queues: ['warehouse', 'edited', 'returnItems', 'bostaReturns'] },
     { id: 'Helper', cls: 'sec-tools', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg>`,
-      title: 'أدوات مساعدة', sub: 'عطلان وباركود',
+      title: 'أدوات مساعدة', sub: 'عطلان وباركود وديفوهات',
       tools: [
         // 🔴 ثيم أحمر (`tool-danger`) — الأداة دي **هدّامة**: بتحذف بند من أوردر حي، وبند متحذف **مالوش رجعة**.
         //    الاسم بيقول الحالة اللي بتودّي ليها («عطلان؟») عشان الموظف اللي جاي من الجدول يلاقي نفس الكلمة.
         { href: 'Order-Item-Remover.html', theme: 'tool-danger', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 3h4M6 7l1 14h10l1-14M10 11v6M14 11v6"/></svg>`, name: 'أوردر عطلان؟' },
         { href: 'Order-SKU-Barcode-Printer.html', ico: 'ico-blue', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5v14M7 5v14M11 5v14M14 5v14M18 5v14M20 5v14"/></svg>`, name: 'باركود SKU' },
+        // 🧵 ديفوهات — تسجيل قطعة فيها عيب وخصم 1 من المخزون + مخزن رقمي (قرار أحمد 02-11-2026: في «أدوات مساعدة» جنب عطلان وباركود SKU).
+        //    الأداة **بتكتب** (مخزون على شوبيفاي) بس مش هدّامة بالمعنى اللي يستاهل ثيم أحمر: كل فعل ليه إلغاء أو تأكيد بالأثر.
+        { href: 'Defect-Products.html', ico: 'ico-amber', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg>`, name: 'ديفوهات' },
       ] },
     { id: 'Other', cls: 'sec-tools', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18" cy="12" r="1.6"/></svg>`,
       title: 'أدوات أخرى', sub: 'الجرد والإحصائيات',
