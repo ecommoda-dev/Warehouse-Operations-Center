@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<!-- skills: html-builder v8.6.0 · constants v4.4.0 — 02-11-2026 -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ديفوهات — مركز عمليات المخزن</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+
+  <!-- 🔴 قاعدة الأسبقية: الـ shell أولاً، وستايل الصفحة بعده وبيغلب -->
+  <link rel="stylesheet" href="shared/core.css">
+  <link rel="stylesheet" href="shared/hub.css">
+  <link rel="stylesheet" href="shared/srv-filters.css">
+<style>
+/* Tier L — جدول المخزن الرقمي فيه ١٤ عمود. الاستثناء الوحيد المسموح لكتلة توكنز في صفحة: --container-max لوحدها. */
+:root { --container-max: 1400px; }
+
+/* ═══ §ENTRY-BAR — مربع الإدخال الموحّد (SKU / باركود المنتج) ═══ */
+.entry-bar { background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--green); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 12px 14px 14px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; }
+.entry-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.entry-segs { display: flex; gap: 1px; background: var(--border); border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); }
+.entry-chip { padding: 8px 16px; border: none; background: var(--green); color: var(--on-accent); font-family: inherit; font-size: 13px; font-weight: 800; cursor: default; display: inline-flex; align-items: center; gap: 6px; }
+.entry-auto { background: var(--on-accent); color: var(--green-dark); border-radius: 10px; padding: 0 7px; font-size: 10.5px; font-weight: 800; }
+.entry-hint { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--green-dark); pointer-events: none; }
+.entry-hint svg { width: 20px; height: 20px; }
+.entry-row { display: flex; gap: 8px; align-items: stretch; position: relative; }
+.entry-input { flex: 1; min-width: 0; min-height: 52px; border: 2px solid var(--green); border-radius: var(--radius-sm); padding: 0 14px; font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: var(--text-primary); background: var(--surface); outline: none; direction: ltr; text-align: left; }
+.entry-input:focus { box-shadow: 0 0 0 3px var(--focus-ring); }
+.entry-btn { min-width: 96px; border: none; border-radius: var(--radius-sm); background: var(--green); color: var(--on-accent); font-family: inherit; font-size: 14px; font-weight: 800; cursor: pointer; }
+.entry-btn:hover:not(:disabled) { background: var(--green-dark); }
+.entry-btn:disabled { opacity: .5; cursor: not-allowed; }
+.sugg { position: absolute; top: calc(100% + 4px); inset-inline: 0; z-index: 200; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); box-shadow: 0 8px 24px rgba(0,0,0,.16); max-height: 300px; overflow: auto; padding: 3px; }
+.sugg:empty { display: none; }
+.sg-item { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border-radius: 6px; cursor: pointer; text-align: right; }
+.sg-item:hover, .sg-item.act { background: var(--accent-light); }
+.sg-t { font-size: 13px; font-weight: 700; }
+.sg-s { font-size: 11.5px; font-weight: 600; color: var(--text-mid); font-family: var(--font-mono); direction: ltr; text-align: right; }
+.sg-more, .sg-empty { padding: 8px 10px; font-size: 12px; font-weight: 600; color: var(--text-mid); }
+
+/* الصندوق الأحمر — فشل/تحذير الإدخال: سطر قصير + ✕ (مش في الجدول) */
+.bc-fails { background: var(--red-light); border: 1px solid var(--red-border); border-radius: var(--radius-sm); padding: 8px 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 6px; }
+.bc-fails[hidden] { display: none; }
+.bc-fails-hd { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12.5px; font-weight: 800; color: var(--red-dark); }
+.bc-fail { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--red-dark); }
+.bc-fail .lbl { font-family: var(--font-mono); direction: ltr; }
+.bc-fail .why { flex: 1; font-weight: 600; }
+.bc-fail button, .bc-fails-hd button { border: 1px solid var(--red-border); background: var(--surface); color: var(--red-dark); border-radius: 6px; width: 24px; height: 24px; cursor: pointer; font-weight: 800; }
+.bc-fails-hd button { width: auto; padding: 0 10px; font-size: 12px; }
+
+/* ═══ §PRODUCT + §FORM — كارت المنتج ونموذج الديفو ═══ */
+.prod-card { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.prod-img { width: 76px; height: 76px; border-radius: var(--radius-sm); border: 1px solid var(--border); object-fit: cover; background: var(--surface-2); flex-shrink: 0; }
+.prod-info { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 4px; }
+.prod-title { font-size: 16px; font-weight: 800; }
+.prod-sub { font-size: 12.5px; font-weight: 600; color: var(--text-mid); }
+.prod-code { font-family: var(--font-mono); direction: ltr; display: inline-block; }
+.stock-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.stock-chip { border: 1px solid var(--border-strong); background: var(--surface-2); border-radius: 20px; padding: 2px 10px; font-size: 12px; font-weight: 700; color: var(--text-mid); }
+.stock-chip b { font-family: var(--font-mono); color: var(--text-primary); }
+.stock-chip.zero { background: var(--amber-light); border-color: var(--amber-border); color: var(--amber-dark); }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 16px; }
+.fgrp { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.fgrp.wide { grid-column: 1 / -1; }
+.flabel { font-size: 12.5px; font-weight: 800; color: var(--text-mid); }
+.finput, .fselect, .ftext { width: 100%; border: 1.5px solid var(--border-strong); border-radius: var(--radius-sm); padding: 0 11px; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--text-primary); background: var(--surface); outline: none; }
+.finput, .fselect { height: 38px; }
+.ftext { padding: 9px 11px; min-height: 76px; resize: vertical; line-height: 1.7; }
+.finput:focus, .fselect:focus, .ftext:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--focus-ring); }
+.finput.has-value, .ftext.has-value { border-color: var(--accent); background: var(--accent-light); }
+.seg { display: flex; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+.seg button { flex: 1; min-height: 38px; border: none; background: var(--surface); color: var(--text-primary); font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; padding: 0 10px; }
+.seg button:hover { background: var(--surface-hover); }
+.seg button.on { background: var(--accent); color: var(--on-accent); }
+.seg.yes button.on[data-v="true"] { background: var(--green); }
+.seg.yes button.on[data-v="false"] { background: var(--red); }
+.newtype { display: flex; gap: 8px; align-items: stretch; }
+.newtype[hidden] { display: none; }
+.img-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.img-actions[hidden] { display: none; }
+.thumbs { display: flex; gap: 8px; flex-wrap: wrap; }
+.thumbs:empty { display: none; }
+.thumb { position: relative; width: 84px; height: 84px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface-2); }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb button { position: absolute; top: 3px; inset-inline-start: 3px; width: 22px; height: 22px; border-radius: 50%; border: none; background: var(--red); color: var(--on-accent); cursor: pointer; font-size: 11px; font-weight: 800; }
+.form-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+.btn-submit { padding: 11px 22px; font-size: 14px; }
+.sess-list { display: flex; flex-direction: column; gap: 6px; }
+.sess-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); font-size: 13px; font-weight: 600; }
+.sess-row .grow { flex: 1; min-width: 160px; }
+
+/* بادجات الحالة */
+.status-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+.status-badge.ok { background: var(--green-light); color: var(--green-dark); border: 1px solid var(--green-border); }
+.status-badge.warn { background: var(--amber-light); color: var(--amber-dark); border: 1px solid var(--amber-border); }
+.status-badge.err { background: var(--red-light); color: var(--red-dark); border: 1px solid var(--red-border); }
+.status-badge.neutral { background: var(--surface-2); color: var(--text-mid); border: 1px solid var(--border-strong); }
+
+/* ═══ §TABLE — القسم الموحّد (كارت واحد بدون overflow:hidden) ═══ */
+.unified-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 16px; min-width: 0; }
+.clear-btn.inactive { border-color: var(--border); color: var(--text-muted); background: var(--surface-2); cursor: not-allowed; opacity: .6; }
+.clear-btn.inactive:hover { background: var(--surface-2); color: var(--text-muted); border-color: var(--border); }
+.tbl-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; background: var(--surface-2); cursor: pointer; user-select: none; flex-wrap: wrap; border-radius: var(--radius) var(--radius) 0 0; }
+.tbl-bar:hover { background: var(--surface-hover); }
+.tbl-bar-right, .tbl-bar-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.tbl-toggle { font-size: 13px; color: var(--text-muted); transition: transform .25s; }
+.tbl-toggle.open { transform: rotate(180deg); }
+.results-wrap { display: flex; align-items: center; gap: 8px; }
+.results-label { font-size: 14px; font-weight: 800; white-space: nowrap; }
+.results-count { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; height: 34px; padding: 0 10px; font-family: var(--font-mono); font-size: 17px; font-weight: 800; color: var(--purple); background: var(--purple-light); border: 1px solid var(--purple-border); border-radius: var(--radius-sm); }
+.upd { font-size: 12px; font-weight: 600; color: var(--text-mid); }
+.tbl-body-wrap { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 1fr; transition: grid-template-rows .3s ease; }
+.tbl-body-wrap > * { min-height: 0; min-width: 0; }
+.tbl-body-wrap.collapsed { grid-template-rows: 0fr; overflow: hidden; }
+.tbl-body-wrap.collapsed > * { overflow: hidden; }
+.tbl-scroll { max-height: 68vh; overflow: auto; }
+.data-table { width: 100%; border-collapse: collapse; table-layout: auto; font-size: var(--td-size); }
+.data-table thead th { position: sticky; top: 0; z-index: 20; background: var(--surface-2); color: var(--th-color); font-weight: var(--th-weight); font-size: var(--th-size); padding: 10px 6px; text-align: center; box-shadow: 0 1px 0 var(--border); white-space: nowrap; }
+.data-table tbody td { text-align: center; padding: 9px 6px; border-bottom: 1px solid var(--border); white-space: normal; overflow-wrap: anywhere; font-size: var(--td-size); font-weight: var(--td-weight); vertical-align: middle; }
+.data-table thead th, .data-table tbody td { border-inline-start: 1px solid var(--border); }
+.data-table thead th:first-child, .data-table tbody td:first-child { border-inline-start: none; }
+.data-table tbody tr:hover { background: var(--surface-2); }
+.data-table tbody tr.flash { animation: rowflash 1.4s ease; }
+@keyframes rowflash { 0% { background: var(--amber-light); } 100% { background: transparent; } }
+.col-num { font-family: var(--font-mono); direction: ltr; white-space: nowrap; }
+.th-in { display: inline-flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 5px; max-width: 100%; }
+.th-label { cursor: pointer; user-select: none; padding: 2px 4px; border-radius: 5px; transition: background .12s, color .12s; }
+.th-label:hover { background: var(--accent-light); color: var(--accent-dark); }
+th.sorted .th-label { background: var(--accent-light); color: var(--accent-dark); }
+.sort-icon { display: inline-block; font-size: 10px; color: var(--accent); font-weight: 900; }
+.sort-icon.active { margin-inline-start: 4px; }
+.sub { font-size: 11px; font-weight: 600; color: var(--text-mid); margin-top: 3px; line-height: 1.6; }
+.log-btn { border: 1px solid var(--accent-border); background: var(--accent-light); color: var(--accent-dark); border-radius: var(--radius-sm); padding: 5px 10px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.log-btn:hover { background: var(--accent-border); }
+.log-btn:disabled { opacity: .5; cursor: not-allowed; }
+.log-btn.ok { border-color: var(--green-border); background: var(--green-light); color: var(--green-dark); }
+.log-btn.warn { border-color: var(--amber-border); background: var(--amber-light); color: var(--amber-dark); }
+.log-btn.danger { border-color: var(--red-border); background: var(--red-light); color: var(--red-dark); }
+.row-acts { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; }
+.empty-row td { padding: 40px; color: var(--text-mid); font-weight: 700; }
+.count-strip { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.pagination-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 4px 0 16px; flex-wrap: wrap; }
+.page-info { font-size: 13px; color: var(--text-secondary); font-family: var(--font-mono); padding: 0 8px; }
+.page-btn { padding: 6px 14px; border-radius: 7px; border: 1px solid var(--border); background: var(--surface); font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--font-body); color: var(--text-primary); transition: background .15s, border-color .15s; }
+.page-btn:hover:not(:disabled) { background: var(--accent-light); border-color: var(--accent-border); color: var(--accent); }
+.page-btn:disabled { opacity: .4; cursor: not-allowed; }
+.pagination-row[hidden] { display: none; }
+.toast-dup { background: var(--amber); }
+.export-warn { margin: 0 0 12px; padding: 10px 14px; border-radius: 9px; background: var(--amber-light); border: 1px solid var(--amber); color: var(--amber-dark); font-size: 13px; font-weight: 600; line-height: 1.7; }
+.export-warn[hidden] { display: none; }
+
+/* ═══ نوافذ الصفحة (على شِل eco-modal) ═══ */
+.sum-badge { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 13px; font-weight: 800; }
+.sum-msg { font-size: 14px; font-weight: 700; line-height: 1.8; margin: 10px 0 4px; }
+.sum-sec { margin-top: 10px; font-size: 13px; line-height: 1.8; }
+.sum-sec h5 { font-size: 12px; font-weight: 800; color: var(--text-mid); margin-bottom: 3px; }
+.sum-sec ul { padding-inline-start: 18px; display: flex; flex-direction: column; gap: 3px; }
+.sum-note { margin-top: 10px; padding: 8px 12px; border-radius: var(--radius-sm); background: var(--amber-light); border: 1px solid var(--amber-border); color: var(--amber-dark); font-size: 12.5px; font-weight: 700; }
+.cfm-line { padding: 8px 12px; border-radius: var(--radius-sm); background: var(--red-light); border: 1px solid var(--red-border); color: var(--red-dark); font-size: 13px; font-weight: 700; margin-top: 8px; }
+.cfm-line.soft { background: var(--surface-2); border-color: var(--border-strong); color: var(--text-primary); }
+.img-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.img-row .grow { flex: 1; min-width: 140px; font-size: 12.5px; font-weight: 600; }
+.img-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.img-view { min-height: 120px; display: flex; align-items: center; justify-content: center; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px; }
+.img-view img { max-width: 100%; max-height: 60vh; border-radius: 6px; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="ico-scan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2M7 9v6M11 9v6M15 9v6"/></symbol>
+    <symbol id="ico-kbd" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></symbol>
+  </defs>
+</svg>
+
+<div id="headerMount"></div>
+<div class="container">
+
+<!-- ══ §ABOUT — عن الأداة ══ -->
+<div class="eco-overlay" id="aboutOverlay" onclick="if(event.target===this)closeAbout()">
+  <div class="eco-modal">
+    <div class="eco-modal-hdr"><span>ℹ️ About — ديفوهات</span><button class="modal-close-x" onclick="closeAbout()">✕</button></div>
+    <div class="eco-modal-body">
+      <details class="about-sec" open>
+        <summary>📋 وصف الأداة</summary>
+        <div class="about-sec-body">
+          <p><strong>الهدف:</strong> تسجيل قطعة فيها عيب مع <strong>خصم 1 من مخزون شوبيفاي</strong> (<code>available</code>)، وحفظها في <strong>مخزن رقمي</strong> بكل تفاصيلها. القطعة القابلة للإصلاح لما تتصلّح بترجع للستوك +1، والغير قابلة للإصلاح بتفضل سجل دايم.</p>
+          <p><strong>المستخدمون المستهدفون:</strong> موظفو المخزن (كل موظف).</p>
+          <h4>كيف تعمل — Workflow</h4>
+          <ol>
+            <li>اسكن باركود القطعة أو اكتب الـ SKU/الاسم في مربع الإدخال واضغط Enter.</li>
+            <li>اختار نوع العيب (أو ضيف نوع جديد)، وهل قابل للإصلاح، وأي فردة، وجديد ولا مرتجع، وملاحظات، وصور (اختيارية).</li>
+            <li>اضغط «تسجيل الديفو» — بيتخصم 1 من المخزون ويتسجّل في المخزن الرقمي. لو الرصيد 0 بتتسأل: إلغاء، أو تسجيل بدون خصم.</li>
+            <li>من تاب «المخزن الرقمي»: «اتصلحت» بترجّع 1 للستوك (وبتقفل الحالة نهائيًا)، و«غير قابلة للإصلاح» بتعلّمها سجل، و«إلغاء» بتلغي تسجيل بالغلط وبترجّع الكمية.</li>
+          </ol>
+          <h4>الـ Endpoints الرئيسية</h4>
+          <table>
+            <tr><th>action</th><th>الوصف</th></tr>
+            <tr><td><code>list_skus</code> · <code>lookup_barcode</code></td><td>البحث بالـ SKU/الاسم أو الباركود (الموقوف مستبعد)</td></tr>
+            <tr><td><code>register_defect</code></td><td>تسجيل + خصم 1 (<code>@idempotent</code> — الضغطة المكررة مابتخصمش مرتين)</td></tr>
+            <tr><td><code>set_status</code> · <code>cancel_defect</code></td><td>اتصلحت / غير قابل للإصلاح / رجوع / إلغاء التسجيل</td></tr>
+            <tr><td><code>add_defect_image</code> · <code>get_image</code></td><td>رفع صورة (R2) وعرضها بالضغط على «عرض» (Lazy)</td></tr>
+            <tr><td><code>get_defects</code> · <code>get_defects_count</code> · <code>get_defects_export</code></td><td>المخزن الرقمي: فلاتر وترتيب وصفحات من السيرفر + تصدير</td></tr>
+            <tr><td><code>get_logs</code> · <code>get_logs_count</code> · <code>get_logs_export</code></td><td>سجل العمليات</td></tr>
+          </table>
+          <h4>⚙️ إجراءات كل خيار</h4>
+          <table>
+            <tr><th>الحالة / الخيار</th><th>الإجراءات التي تُنفَّذ</th></tr>
+            <tr><td>تسجيل ديفو</td><td>حفظ الصف <code>pending</code> ← خصم 1 من <code>available</code> (سبب <code>damaged</code>) ← تأكيد من شوبيفاي ← الصف <code>done</code> ← رفع الصور (لو فيه)</td></tr>
+            <tr><td>تسجيل ديفو (الرصيد 0 — بدون خصم)</td><td>حفظ الصف <code>skipped</code> ← مفيش نداء مخزون</td></tr>
+            <tr><td>اتصلحت</td><td>إضافة 1 لـ <code>available</code> (سبب <code>restock</code>) ← الحالة <code>repaired</code> (نهائية) — (لو التسجيل كان بدون خصم: مفيش إضافة)</td></tr>
+            <tr><td>غير قابل للإصلاح / قابل للإصلاح</td><td>تغيير الحالة فقط — مفيش أثر على المخزون</td></tr>
+            <tr><td>إلغاء</td><td>إضافة 1 لـ <code>available</code> (سبب <code>correction</code>) ← الحالة <code>cancelled</code> — (لو التسجيل كان بدون خصم: مفيش إضافة)</td></tr>
+          </table>
+        </div>
+      </details>
+      <details class="about-sec">
+        <summary>🔧 تشريح الكود</summary>
+        <div class="about-sec-body">
+          <h4>الـ Workers والنسخ</h4>
+          <div id="aboutWorkers">جاري التحميل…</div>
+          <h4>FEATURE MAP</h4>
+          <ul>
+            <li><code>§ENTRY</code> — مربع الإدخال الموحّد (Enter فقط، تنضيف الأرقام العربي، اقتراحات SKU، الصندوق الأحمر)</li>
+            <li><code>§FORM</code> — نموذج الديفو + أنواع العيب + الصور المعلّقة (camera/ملف)</li>
+            <li><code>§SUBMIT</code> — التسجيل بحالاته الخمس + قرار «الرصيد 0» + رفع الصور بالتسلسل</li>
+            <li><code>§REGISTRY</code> — المخزن الرقمي: <code>ecoSrvFilters</code> + ترتيب 3 حالات + صفحات + إجراءات الصف</li>
+            <li><code>§IMAGES</code> — نافذة الصور: عرض Lazy بـ <code>apiGetBlob</code> و<code>revokeObjectURL</code></li>
+            <li><code>§LOG</code> — سجل العمليات + تصدير بـ <code>cap/total/truncated</code></li>
+          </ul>
+          <h4>KEY VARIABLES</h4>
+          <ul>
+            <li><code>draft.requestId</code> — UUID لكل تسجيل؛ <strong>بيتعاد استخدامه</strong> في «إعادة المحاولة» (ده اللي بيمنع الخصم مرتين)</li>
+            <li><code>isUpdating</code> — قفل التسجيل أثناء التنفيذ (Standards #43)</li>
+            <li><code>ECO_WORKERS.defects</code> — الرابط والحد الأدنى للنسخة (<code>shared/hub-config.js</code>)</li>
+          </ul>
+          <h4>NOTES</h4>
+          <ul>
+            <li>الصور مابتتحملش مع الجدول — بتتجاب فقط لما تضغط «عرض» (<code>get_image</code> بهيدر Authorization).</li>
+            <li>فلتر الوقت (ساعة/دقيقة) مش مدعوم — الـ Worker بيفلتر بالتاريخ (يوم القاهرة) بس.</li>
+            <li>فلتر النص في الجدول (المنتج/SKU) مكوّن الهب المشترك: كلمة واحدة، من غير توكنز واقتراحات لايف.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </div>
+</div>
+
+<!-- ══ §CHANGELOG ══ -->
+<div class="eco-overlay" id="changelogOverlay" onclick="if(event.target===this)closeChangelog()">
+  <div class="eco-modal">
+    <div class="eco-modal-hdr"><span>📋 سجل التحديثات</span><button class="modal-close-x" onclick="closeChangelog()">✕</button></div>
+    <div class="eco-modal-body">
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.70.0</span>
+          <span class="cl-ver-date">02-11-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>صفحة <b>🧵 ديفوهات</b>: تسجيل قطعة فيها عيب وخصم 1 من المخزون، ومخزن رقمي (حالات: قابل للإصلاح · اتصلح · غير قابل للإصلاح · ملغي)، وصور اختيارية، وتاب سجل العمليات.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>الضغطة المكررة أو الرد الضايع <b>مابيخصموش مرتين</b> (<code>@idempotent</code> + <code>requestId</code>)، ولما الرصيد 0 بتتسأل: إلغاء أو تسجيل بدون خصم.</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ §TABS ══ -->
+<div class="main-tabs-bar">
+  <button class="main-tab-btn active" id="mainTabReg" onclick="switchMainTab('reg')">🧵 تسجيل ديفو</button>
+  <button class="main-tab-btn" id="mainTabRegistry" onclick="switchMainTab('registry')">🗃️ المخزن الرقمي</button>
+  <button class="main-tab-btn" id="mainTabLog" onclick="switchMainTab('log')">📜 سجل العمليات</button>
+</div>
+
+<!-- ══ §TOOL — تاب التسجيل ══ -->
+<div id="regTabContent" class="tab-panel active">
+
+  <div class="entry-bar" id="entryBar">
+    <div class="entry-top">
+      <div class="entry-segs"><span class="entry-chip" id="entryChip">SKU / باركود المنتج <span class="entry-auto" id="entryAuto" hidden>تلقائي</span></span></div>
+      <span class="entry-hint" id="entryHint" aria-hidden="true"><svg><use href="#ico-scan"/></svg><span id="entryHintTx">سكانر</span></span>
+    </div>
+    <div class="entry-row">
+      <button class="entry-btn" id="entryBtn" type="button" onclick="fireEntry()">بحث</button>
+      <input type="text" class="entry-input" id="entryInput" autocomplete="off" inputmode="text" aria-label="SKU أو باركود المنتج" role="combobox" aria-expanded="false" aria-controls="sugg">
+      <div class="sugg" id="sugg" role="listbox"></div>
+    </div>
+  </div>
+
+  <div class="bc-fails" id="bcFails" hidden></div>
+
+  <div class="card" id="prodWrap" hidden>
+    <div class="prod-card" id="prodCard"></div>
+
+    <div class="form-grid" id="defForm">
+      <div class="fgrp">
+        <label class="flabel" for="fType">نوع العيب</label>
+        <select class="fselect" id="fType" onchange="onTypeChange()"></select>
+        <div class="newtype" id="newTypeBox" hidden>
+          <input type="text" class="finput" id="newTypeInput" maxlength="60" aria-label="اسم نوع العيب الجديد" onkeydown="if(event.key==='Enter'){event.preventDefault();addType();}">
+          <button class="btn-primary" type="button" id="newTypeBtn" onclick="addType()">إضافة</button>
+        </div>
+      </div>
+      <div class="fgrp">
+        <span class="flabel">قابل للإصلاح؟</span>
+        <div class="seg yes" id="fRepairable">
+          <button type="button" data-v="true" onclick="setSeg('repairable','true')">نعم</button>
+          <button type="button" data-v="false" onclick="setSeg('repairable','false')">لا</button>
+        </div>
+      </div>
+      <div class="fgrp">
+        <span class="flabel">أي فردة؟</span>
+        <div class="seg" id="fSide">
+          <button type="button" data-v="right" onclick="setSeg('side','right')">اليمين</button>
+          <button type="button" data-v="left" onclick="setSeg('side','left')">اليسار</button>
+          <button type="button" data-v="both" onclick="setSeg('side','both')">الفردتين</button>
+        </div>
+      </div>
+      <div class="fgrp">
+        <span class="flabel">جديد أم مرتجع؟</span>
+        <div class="seg" id="fOrigin">
+          <button type="button" data-v="new" onclick="setSeg('origin','new')">جديد</button>
+          <button type="button" data-v="return" onclick="setSeg('origin','return')">مرتجع</button>
+        </div>
+      </div>
+      <div class="fgrp wide">
+        <label class="flabel" for="fNotes">ملاحظات</label>
+        <textarea class="ftext" id="fNotes" maxlength="1000" oninput="this.classList.toggle('has-value', this.value.trim().length > 0)"></textarea>
+      </div>
+      <div class="fgrp wide">
+        <span class="flabel">صور (اختيارية — صورة أو أكتر، قبل الإصلاح)</span>
+        <div class="img-actions">
+          <button class="btn-outline" type="button" onclick="document.getElementById('fileCam').click()">📷 تصوير بالكاميرا</button>
+          <button class="btn-outline" type="button" onclick="document.getElementById('filePick').click()">🖼️ اختيار من الجهاز</button>
+        </div>
+        <input type="file" id="fileCam" accept="image/jpeg,image/png,image/webp" capture="environment" hidden onchange="onFilesPicked(this)">
+        <input type="file" id="filePick" accept="image/jpeg,image/png,image/webp" multiple hidden onchange="onFilesPicked(this)">
+        <div class="thumbs" id="thumbs"></div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn-primary btn-submit" id="submitBtn" type="button" onclick="submitDefect('deduct')">تسجيل الديفو وخصم 1 من المخزون</button>
+      <button class="btn-ghost" id="resetBtn" type="button" onclick="resetDraft(true)">مسح</button>
+    </div>
+  </div>
+
+  <div class="card" id="sessWrap" hidden>
+    <div class="card-title">اتسجّل في الجلسة دي</div>
+    <div class="sess-list" id="sessList"></div>
+  </div>
+</div>
+
+<!-- ══ §REGISTRY — تاب المخزن الرقمي ══ -->
+<div id="registryTabContent" class="tab-panel">
+  <div class="count-strip" id="regCounts"></div>
+  <div class="export-warn" id="regExportWarn" hidden></div>
+  <div class="unified-section">
+    <div class="tbl-bar" id="regBar" tabindex="0" role="button" aria-expanded="true" onclick="toggleTbl('reg')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleTbl('reg')}">
+      <div class="tbl-bar-right">
+        <span class="tbl-toggle open" id="regToggle">▼</span>
+        <div class="results-wrap"><span class="results-label">النتائج</span><span class="results-count" id="regCount">—</span></div>
+      </div>
+      <div class="tbl-bar-left">
+        <span class="upd" id="regUpd"></span>
+        <button class="clear-btn inactive" id="regClearAll" type="button" onclick="event.stopPropagation()">✕ مسح كل الفلاتر</button>
+        <button class="log-btn" type="button" onclick="event.stopPropagation();loadRegistry()">↺ تحديث</button>
+        <button class="log-btn" type="button" onclick="event.stopPropagation();exportRegistryXLSX()">⬇ تصدير .xlsx</button>
+      </div>
+    </div>
+    <div class="chips-zone" id="regChipsZone" hidden><div class="chips-rows" id="regChips"></div></div>
+    <div class="tbl-body-wrap" id="regWrap"><div><div class="tbl-scroll">
+      <table class="data-table" id="regTbl">
+        <thead><tr>
+          <th id="rthDate" data-eco-nofilter><span class="th-in"><span class="th-label" data-table="reg" data-sort-key="date" role="button" tabindex="0">التاريخ</span><span class="sort-icon"></span></span></th>
+          <th data-eco-nofilter><span class="th-in"><span class="th-label" data-table="reg" data-sort-key="time" role="button" tabindex="0">الوقت</span><span class="sort-icon"></span></span></th>
+          <th id="rthProd" data-eco-nofilter><span class="th-in"><span class="th-label" data-table="reg" data-sort-key="product" role="button" tabindex="0">المنتج</span><span class="sort-icon"></span></span></th>
+          <th id="rthSku" data-eco-nofilter><span class="th-in"><span class="th-label" data-table="reg" data-sort-key="sku" role="button" tabindex="0">SKU</span><span class="sort-icon"></span></span></th>
+          <th id="rthType" data-eco-nofilter><span class="th-in"><span class="th-label" data-table="reg" data-sort-key="type" role="button" tabindex="0">نوع العيب</span><span class="sort-icon"></span></span></th>
+          <th id="rthRep" data-eco-nofilter><span class="th-in"><span class="th-label" data-table="reg" data-sort-key="repairable" role="button" tabindex="0">قابل للإصلاح</span><span class="sort-icon"></span></span></th>
+          <th id="rthSide" data-eco-nofilter><span class="th-in"><span class="th-label" data-table="reg" data-sort-key="side" role="button" tabindex="0">أي فردة</span><span class="sort-icon"></span></span></th>
+          <th id="rthOrigin" data-eco-nofilter><span class="th-in"><span class="th-label" data-table="reg" data-sort-key="origin" role="button" tabindex="0">جديد/مرتجع</span><span class="sort-icon"></span></span></th>
+          <th id="rthStatus" data-eco-nofilter><span class="th-in"><span class="th-label" data-table="reg" data-sort-key="status" role="button" tabindex="0">الحالة</span><span class="sort-icon"></span></span></th>
+          <th id="rthDed" data-eco-nofilter><span class="th-in"><span class="th-label">المخزون</span></span></th>
+          <th id="rthEmp" data-eco-nofilter><span class="th-in"><span class="th-label" data-table="reg" data-sort-key="employee" role="button" tabindex="0">الموظف</span><span class="sort-icon"></span></span></th>
+          <th data-eco-nofilter><span class="th-in"><span class="th-label" data-table="reg" data-sort-key="images" role="button" tabindex="0">الصور</span><span class="sort-icon"></span></span></th>
+          <th data-eco-nofilter><span class="th-in"><span class="th-label">ملاحظات</span></span></th>
+          <th data-eco-nofilter><span class="th-in"><span class="th-label">الإجراءات</span></span></th>
+        </tr></thead>
+        <tbody id="regBody"><tr class="empty-row"><td colspan="14">اضغط تحديث لتحميل المخزن الرقمي</td></tr></tbody>
+      </table>
+    </div></div></div>
+  </div>
+  <div class="pagination-row" id="regPager" hidden>
+    <button class="page-btn" id="regPrev" onclick="regGoPage(-1)">→ السابق</button>
+    <span class="page-info" id="regPageInfo"></span>
+    <button class="page-btn" id="regNext" onclick="regGoPage(1)">التالي ←</button>
+  </div>
+</div>
+
+<!-- ══ §LOG — تاب سجل العمليات ══ -->
+<div id="logTabContent" class="tab-panel">
+  <div class="export-warn" id="logExportWarn" hidden></div>
+  <div class="unified-section">
+    <div class="tbl-bar" id="logBar" tabindex="0" role="button" aria-expanded="true" onclick="toggleTbl('log')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleTbl('log')}">
+      <div class="tbl-bar-right">
+        <span class="tbl-toggle open" id="logToggle">▼</span>
+        <div class="results-wrap"><span class="results-label">النتائج</span><span class="results-count" id="logCount">—</span></div>
+      </div>
+      <div class="tbl-bar-left">
+        <span class="upd" id="logUpd"></span>
+        <button class="clear-btn inactive" id="logClearAll" type="button" onclick="event.stopPropagation()">✕ مسح كل الفلاتر</button>
+        <button class="log-btn" type="button" onclick="event.stopPropagation();fetchLog()">↺ تحديث</button>
+        <button class="log-btn" type="button" onclick="event.stopPropagation();exportLogXLSX()">⬇ تصدير الكل .xlsx</button>
+      </div>
+    </div>
+    <div class="chips-zone" id="logChipsZone" hidden><div class="chips-rows" id="logChips"></div></div>
+    <div class="tbl-body-wrap" id="logWrap"><div><div class="tbl-scroll">
+      <table class="data-table" id="logTbl">
+        <thead><tr>
+          <th id="lthDate" data-eco-nofilter><span class="th-in"><span class="th-label" data-table="log" data-sort-key="date" role="button" tabindex="0">التاريخ</span><span class="sort-icon"></span></span></th>
+          <th data-eco-nofilter><span class="th-in"><span class="th-label" data-table="log" data-sort-key="time" role="button" tabindex="0">الوقت</span><span class="sort-icon"></span></span></th>
+          <th id="lthEmp" data-eco-nofilter><span class="th-in"><span class="th-label" data-table="log" data-sort-key="employee" role="button" tabindex="0">الموظف</span><span class="sort-icon"></span></span></th>
+          <th id="lthType" data-eco-nofilter><span class="th-in"><span class="th-label" data-table="log" data-sort-key="type" role="button" tabindex="0">نوع العملية</span><span class="sort-icon"></span></span></th>
+          <th data-eco-nofilter><span class="th-in"><span class="th-label" data-table="log" data-sort-key="result" role="button" tabindex="0">النتيجة</span><span class="sort-icon"></span></span></th>
+          <th id="lthSku" data-eco-nofilter><span class="th-in"><span class="th-label" data-table="log" data-sort-key="sku" role="button" tabindex="0">SKU / المنتج</span><span class="sort-icon"></span></span></th>
+          <th data-eco-nofilter><span class="th-in"><span class="th-label" data-table="log" data-sort-key="defectId" role="button" tabindex="0">رقم الديفو</span><span class="sort-icon"></span></span></th>
+          <th data-eco-nofilter><span class="th-in"><span class="th-label" data-table="log" data-sort-key="delta" role="button" tabindex="0">الكمية</span><span class="sort-icon"></span></span></th>
+          <th data-eco-nofilter><span class="th-in"><span class="th-label">المخزون قبل ← بعد</span></span></th>
+          <th data-eco-nofilter><span class="th-in"><span class="th-label">ملاحظات</span></span></th>
+        </tr></thead>
+        <tbody id="logBody"><tr class="empty-row"><td colspan="10">اضغط تحديث لتحميل السجل</td></tr></tbody>
+      </table>
+    </div></div></div>
+  </div>
+  <div class="pagination-row" id="logPager" hidden>
+    <button class="page-btn" id="logPrev" onclick="logGoPage(-1)">→ السابق</button>
+    <span class="page-info" id="logPageInfo"></span>
+    <button class="page-btn" id="logNext" onclick="logGoPage(1)">التالي ←</button>
+  </div>
+</div>
+
+<!-- ══ §MODALS — ملخص النتيجة · تأكيد · الصور ══ -->
+<div class="eco-overlay" id="sumOverlay" onclick="if(event.target===this)closeSummary()">
+  <div class="eco-modal">
+    <div class="eco-modal-hdr"><span id="sumTitle">نتيجة العملية</span><button class="modal-close-x" onclick="closeSummary()">✕</button></div>
+    <div class="eco-modal-body" id="sumBody"></div>
+    <div class="eco-modal-ftr" id="sumFtr"><button class="btn-ghost" onclick="closeSummary()">تمام</button></div>
+  </div>
+</div>
+
+<div class="eco-overlay" id="cfmOverlay">
+  <div class="eco-modal">
+    <div class="eco-modal-hdr"><span id="cfmTitle">تأكيد</span></div>
+    <div class="eco-modal-body" id="cfmBody"></div>
+    <div class="eco-modal-ftr">
+      <button class="btn-ghost" id="cfmCancel" type="button">إلغاء</button>
+      <button class="btn-red" id="cfmOk" type="button">تأكيد</button>
+    </div>
+  </div>
+</div>
+
+<div class="eco-overlay" id="imgOverlay" onclick="if(event.target===this)closeImages()">
+  <div class="eco-modal">
+    <div class="eco-modal-hdr"><span id="imgTitle">صور الديفو</span><button class="modal-close-x" onclick="closeImages()">✕</button></div>
+    <div class="eco-modal-body">
+      <div class="img-list" id="imgList"></div>
+      <div class="img-actions" id="imgAdd" hidden>
+        <button class="btn-outline" type="button" onclick="document.getElementById('mCam').click()">📷 تصوير</button>
+        <button class="btn-outline" type="button" onclick="document.getElementById('mPick').click()">🖼️ إضافة من الجهاز</button>
+        <input type="file" id="mCam" accept="image/jpeg,image/png,image/webp" capture="environment" hidden onchange="onModalFiles(this)">
+        <input type="file" id="mPick" accept="image/jpeg,image/png,image/webp" multiple hidden onchange="onModalFiles(this)">
+      </div>
+      <div class="img-view" id="imgView">اضغط «عرض» على أي صورة</div>
+    </div>
+    <div class="eco-modal-ftr"><button class="btn-ghost" onclick="closeImages()">إغلاق</button></div>
+  </div>
+</div>
+
+</div><!-- /.container -->
+
+<div id="sharedMount"></div>
+
+<!-- 🔴 نسخة واحدة مضمّنة — ممنوع محتوى الملفين دول يتنسخ هنا -->
+<script src="shared/hub-config.js"></script>
+<script src="shared/core.js"></script>
+<script src="shared/srv-filters.js"></script>
+<script>document.addEventListener("DOMContentLoaded", ecoTablesAuto);</script>
+<script>document.getElementById('sharedMount').innerHTML = ecoSharedModals();</script>
+<script>
+// ═══════════════════════════════════════════════════════════
+// §INIT — الجلسة أولاً، قبل أي حاجة تانية
+// ═══════════════════════════════════════════════════════════
+// 🔴 requireSession() بترمي لو مفيش جلسة — بتوقف باقي السكربت أثناء التحويل لشاشة الدخول.
+const session = requireSession();
+const currentEmployee = { username: session.username, displayName: session.displayName };
+const { apiGet, apiPost, apiUpload, apiGetBlob } = ecoApi(ECO_WORKERS.defects);
+const PAGE_WORKERS = ['defects'];
+
+// ═══ §CONFIG ═══
+const IMG_MAX_BYTES = 15 * 1024 * 1024;   // قرار أحمد 02-11-2026 — نفس سقف الـ Worker
+const IMG_MAX_COUNT = 10;                 // أقصى صور للقطعة — نفس سقف الـ Worker
+const CFG = {
+  SUGGEST_MIN: 3, SUGGEST_DEBOUNCE: 120,
+  MISSING_ENTER_MS: 1500,                 // تحذير «الرقم وصل ومفيش Enter» — عمره ما بيضيف
+  // أرقام فقط → بحث باركود تام. المصدر: بلجن Retail Force Barcode (Format «General») بنمط [0-9]{9} = ٩ أرقام (قرار/معلومة أحمد 02-11-2026)،
+  // والباركود القديم ٨ أرقام (مثال 09473858 — الصفر الأول بيفضل، نص مش رقم). فوق ٩ = غالبًا باركودين ملزوقين (رفض صريح).
+  BARCODE_MIN: 8, BARCODE_MAX: 9,
+  TOAST_MS: { success: 2200, dup: 3200, neutral: 3200, error: 6500 },
+};
+const PAGE_SIZE = 50;
+const SIDE_LABEL   = { right: 'اليمين', left: 'اليسار', both: 'الفردتين' };
+const ORIGIN_LABEL = { new: 'جديد', return: 'مرتجع' };
+const STATUS_LABEL = { awaiting_repair: 'قابل للإصلاح', unrepairable: 'غير قابل للإصلاح', repaired: 'اتصلح', cancelled: 'ملغي' };
+const STATUS_CLS   = { awaiting_repair: 'warn', unrepairable: 'err', repaired: 'ok', cancelled: 'neutral' };
+const DEDUCT_LABEL = { done: 'اتخصم 1', skipped: 'بدون خصم', pending: 'معلّق', unconfirmed: 'غير مؤكد' };
+const LOG_TYPE_LABEL = {
+  registered: 'تسجيل ديفو', status_changed: 'تغيير حالة', repaired: 'اتصلحت', cancelled: 'إلغاء تسجيل',
+  image_added: 'إضافة صورة', image_deleted: 'مسح صورة', defect_type_added: 'نوع عيب جديد', rejected: 'اتوقف قبل التنفيذ',
+};
+
+// ─── §RESULT::labels — مصدر واحد للجدول وللتصدير وللسجل (Step 3C) ───
+const RESULT_LABELS = { success: 'تم', warning: 'تم جزئيًا', error: 'فشل', rejected: 'مرفوض', already: 'خلاص متعمل' };
+const RESULT_CLS    = { success: 'ok', warning: 'warn', error: 'err', rejected: 'neutral', already: 'neutral' };
+const resultLabel = (v) => RESULT_LABELS[v] || '—';   // '—' = ما اتحاولش (أو صف قديم من غير result)
+function safeExtra(e) { try { return e && e.extra ? (JSON.parse(e.extra) || {}) : {}; } catch { return {}; } }
+
+let isUpdating = false;          // قفل التسجيل أثناء التنفيذ (Standards #43)
+const rowBusy = new Set();       // صفوف المخزن الرقمي اللي عليها عملية شغّالة
+let uploadingNow = false;
+// الـ shell بيسأل: ممنوع خروج تلقائي طول ما فيه كتابة شغّالة
+window.shellIsBusy = () => isUpdating || rowBusy.size > 0 || uploadingNow;
+
+function pad2(n) { return String(n).padStart(2, '0'); }
+function dayStamp() { const p = new Date(); return `${p.getFullYear()}${pad2(p.getMonth() + 1)}${pad2(p.getDate())}`; }
+function toast(msg, type) { showToast(msg, type || 'neutral', CFG.TOAST_MS[type || 'neutral'] || 3200); }
+
+async function renderAboutWorkers() {
+  const box = document.getElementById('aboutWorkers');
+  if (!box) return;
+  const rows = await Promise.all(PAGE_WORKERS.map(async k => {
+    const w = ECO_WORKERS[k];
+    let got = '—', mark = '❌';
+    try {
+      const cfg = await ecoApi(w).apiGet('get_config');
+      got = cfg.version || '—';
+      mark = cmpVersion(got, w.min) < 0 ? '⚠️' : '✅';
+    } catch { got = 'تعذّر الوصول'; }
+    return `<tr><td>${mark} ${esc(w.label)}</td><td><code>${esc(got)}</code></td><td><code>${esc(w.min)}</code></td></tr>`;
+  }));
+  box.innerHTML = `<table><tr><th>الأداة</th><th>نسخة الـ Worker</th><th>الحد الأدنى</th></tr>${rows.join('')}</table>
+     <p>نسخة الواجهة (الهب كله): <code>${esc(TOOL_VERSION)}</code></p>`;
+}
+function onSettingsSaved() { checkWorkerVersion(PAGE_WORKERS); }
+
+// ═══ §TABS ═══
+let registryLoaded = false, logLoaded = false;
+function switchMainTab(name) {
+  const map = { reg: ['regTabContent', 'mainTabReg'], registry: ['registryTabContent', 'mainTabRegistry'], log: ['logTabContent', 'mainTabLog'] };
+  Object.entries(map).forEach(([k, [panel, btn]]) => {
+    document.getElementById(panel).classList.toggle('active', k === name);
+    document.getElementById(btn).classList.toggle('active', k === name);
+  });
+  if (name === 'registry' && !registryLoaded) { registryLoaded = true; loadRegistry(); }
+  if (name === 'log' && !logLoaded) { logLoaded = true; fetchLog(); }
+  if (name === 'reg') document.getElementById('entryInput').focus();
+}
+function toggleTbl(which) {
+  const w = document.getElementById(which + 'Wrap'), t = document.getElementById(which + 'Toggle'), b = document.getElementById(which + 'Bar');
+  const collapsed = w.classList.toggle('collapsed');
+  t.classList.toggle('open', !collapsed);
+  b.setAttribute('aria-expanded', String(!collapsed));
+}
+
+// ═══ §MODALS — ملخص النتيجة · تأكيد ═══
+function openOverlay(id) { document.getElementById(id).classList.add('open'); }
+function closeOverlay(id) { document.getElementById(id).classList.remove('open'); }
+function closeSummary() {
+  closeOverlay('sumOverlay');
+  // الفوكس يرجع لمربع الإدخال بعد أي نتيجة (سكانر في الإيد — مفيش ضغطة ماوس إضافية)
+  if (document.getElementById('regTabContent').classList.contains('active')) entryEl.focus();
+}
+
+// نافذة تأكيد بتسمّي الأثر بالأرقام (Step 3C) — بترجّع Promise<boolean>
+function askConfirm({ header, lead, lines = [], okLabel = 'تأكيد', okClass = 'btn-red', cancelLabel = 'إلغاء' }) {
+  return new Promise(resolve => {
+    document.getElementById('cfmTitle').textContent = header;
+    document.getElementById('cfmBody').innerHTML =
+      `<div class="sum-msg">${esc(lead)}</div>` + lines.map(l => `<div class="cfm-line${l.soft ? ' soft' : ''}">${esc(l.text)}</div>`).join('');
+    const ok = document.getElementById('cfmOk'), cancel = document.getElementById('cfmCancel');
+    ok.textContent = okLabel; ok.className = okClass; cancel.textContent = cancelLabel;
+    const done = (v) => { closeOverlay('cfmOverlay'); ok.onclick = cancel.onclick = null; resolve(v); };
+    ok.onclick = () => done(true); cancel.onclick = () => done(false);
+    openOverlay('cfmOverlay');
+    cancel.focus();   // زرار الإلغاء هو الافتراضي
+  });
+}
+
+// ملخص نتيجة بالحالات الخمس: بادج + رسالة + «ما تم فعليًا» + تنبيه السجل + أسطر إضافية
+function showSummary(res, opts = {}) {
+  const st = res.status || 'error';
+  document.getElementById('sumTitle').textContent = opts.title || 'نتيجة العملية';
+  const actions = (res.actions || []).map(a => `<li>${esc(a)}</li>`).join('');
+  const extra = (opts.lines || []).map(l => `<li>${esc(l)}</li>`).join('');
+  document.getElementById('sumBody').innerHTML =
+    `<span class="sum-badge status-badge ${RESULT_CLS[st] || 'neutral'}">${esc(resultLabel(st))}</span>`
+    + `<div class="sum-msg">${esc(res.message || '')}</div>`
+    + (actions ? `<div class="sum-sec"><h5>ما تم فعليًا</h5><ul>${actions}</ul></div>` : '')
+    + (extra ? `<div class="sum-sec"><h5>تفاصيل</h5><ul>${extra}</ul></div>` : '')
+    + (res.logged === false ? `<div class="sum-note">⚠️ العملية تمت لكن ما اتسجلتش في سجل العمليات.</div>` : '');
+  const ftr = document.getElementById('sumFtr');
+  ftr.innerHTML = (opts.retry ? `<button class="btn-primary" id="sumRetry" type="button">🔁 إعادة المحاولة (آمنة)</button>` : '') + `<button class="btn-ghost" onclick="closeSummary()">تمام</button>`;
+  if (opts.retry) document.getElementById('sumRetry').onclick = () => { closeSummary(); opts.retry(); };
+  openOverlay('sumOverlay');
+  if (st === 'success') playBeep('success'); else if (st === 'warning' || st === 'error') playBeep('fail'); else if (st === 'already') playBeep('dup');
+}
+
+// ═══ §ENTRY — مربع الإدخال الموحّد ═══
+const entryEl = document.getElementById('entryInput');
+let sugList = [], sugIdx = -1, sugTimer = null, missTimer = null, sugSeq = 0;
+let fails = [];
+
+function normalizeEntry(s) {
+  return String(s || '')
+    .replace(/[‎‏‪-‮⁦-⁩ ]/g, '')
+    .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+    .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+    .trim();
+}
+function entryKind(v) {
+  if (!v) return null;
+  if (/^\d+$/.test(v) && v.length >= CFG.BARCODE_MIN) return v.length <= CFG.BARCODE_MAX ? 'barcode' : 'toolong';
+  return 'text';
+}
+function paintEntry() {
+  const v = normalizeEntry(entryEl.value), k = entryKind(v);
+  const btn = document.getElementById('entryBtn');
+  btn.textContent = k === 'text' ? 'بحث' : (k ? 'إضافة' : 'بحث');
+  document.getElementById('entryHintTx').textContent = k === 'text' ? 'اكتب الـ SKU' : 'سكانر';
+  document.getElementById('entryHint').querySelector('use').setAttribute('href', k === 'text' ? '#ico-kbd' : '#ico-scan');
+}
+function closeSugg() { sugList = []; sugIdx = -1; document.getElementById('sugg').innerHTML = ''; entryEl.setAttribute('aria-expanded', 'false'); }
+function renderSugg(more) {
+  const box = document.getElementById('sugg');
+  if (!sugList.length) { box.innerHTML = ''; entryEl.setAttribute('aria-expanded', 'false'); return; }
+  box.innerHTML = sugList.map((v, i) =>
+    `<div class="sg-item${i === sugIdx ? ' act' : ''}" role="option" data-i="${i}"><span class="sg-t">${esc(v.productTitle)}${v.variantTitle ? ' — ' + esc(v.variantTitle) : ''}</span>`
+    + `<span class="sg-s">${esc(v.sku)}${v.barcode ? ' · ' + esc(v.barcode) : ''} · متاح ${v.available ?? '—'}</span></div>`).join('')
+    + (more ? '<div class="sg-more">النتايج أكتر من اللي ظاهر — اكتب أكتر عشان تضيّق</div>' : '');
+  entryEl.setAttribute('aria-expanded', 'true');
+}
+
+entryEl.addEventListener('input', () => {
+  // الأرقام العربي ← إنجليزي لحظيًا جوّه المربع نفسه
+  const norm = entryEl.value.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+  if (norm !== entryEl.value) entryEl.value = norm;
+  paintEntry();
+  clearTimeout(sugTimer); clearTimeout(missTimer);
+  const v = normalizeEntry(entryEl.value), k = entryKind(v);
+  if (k === 'text' && v.length >= CFG.SUGGEST_MIN) sugTimer = setTimeout(() => runSuggest(v), CFG.SUGGEST_DEBOUNCE);
+  else closeSugg();
+  // ⛔ مفيش إضافة تلقائية بمؤقّت — بس تحذير لو الرقم وصل ومفيش Enter
+  if (k === 'barcode' || k === 'toolong') {
+    missTimer = setTimeout(() => toast(`الرقم وصل (${v.length} خانة) ولسه ماتضافش — اضغط Enter أو «إضافة». لو بيتكرر مع السكانر راجع إعداد Enter فيه`, 'error'), CFG.MISSING_ENTER_MS);
+  }
+});
+entryEl.addEventListener('keydown', e => {
+  if (e.key === 'ArrowDown' && sugList.length) { e.preventDefault(); sugIdx = (sugIdx + 1) % sugList.length; renderSugg(); }
+  else if (e.key === 'ArrowUp' && sugList.length) { e.preventDefault(); sugIdx = (sugIdx - 1 + sugList.length) % sugList.length; renderSugg(); }
+  else if (e.key === 'Escape') { closeSugg(); }
+  else if (e.key === 'Enter') { e.preventDefault(); fireEntry(); }
+});
+document.getElementById('sugg').addEventListener('click', e => {
+  // ⚠️ حارس document.contains (Standards #32) — القايمة بتتعاد رسمها
+  if (!document.contains(e.target)) return;
+  const it = e.target.closest('.sg-item'); if (!it) return;
+  pickProduct(sugList[Number(it.dataset.i)]);
+});
+document.addEventListener('click', e => {
+  if (!document.contains(e.target)) return;
+  if (!e.target.closest('.entry-row')) closeSugg();
+});
+
+async function runSuggest(v) {
+  const seq = ++sugSeq;
+  try {
+    const d = await apiGet('list_skus', { search: v });
+    if (seq !== sugSeq) return;   // رد قديم
+    sugList = (d.variants || []).slice(0, 6); sugIdx = -1;
+    renderSugg((d.variants || []).length > 6);
+  } catch { if (seq === sugSeq) closeSugg(); }
+}
+
+function addFail(label, reason) {
+  if (fails.some(f => f.label === label && f.reason === reason)) return;
+  fails.push({ label, reason });
+  paintFails();
+}
+function paintFails() {
+  const box = document.getElementById('bcFails');
+  box.hidden = fails.length === 0;
+  if (!fails.length) { box.innerHTML = ''; return; }
+  box.innerHTML = (fails.length > 1
+      ? `<div class="bc-fails-hd"><span>${fails.length} حاجة ما اتضافتش</span><button type="button" onclick="clearFails()">🗑 شيل الكل</button></div>` : '')
+    + fails.map((f, i) => `<div class="bc-fail"><span>⚠️</span><span class="lbl">${esc(f.label)}</span><span class="why">— ${esc(f.reason)}</span><button type="button" aria-label="شيل" onclick="removeFail(${i})">✕</button></div>`).join('');
+}
+function removeFail(i) { fails.splice(i, 1); paintFails(); }
+function clearFails() { fails = []; paintFails(); }
+
+function finishSubmit() {
+  entryEl.value = ''; paintEntry(); closeSugg(); clearTimeout(missTimer); clearTimeout(sugTimer);
+  entryEl.focus();
+}
+
+async function fireEntry() {
+  if (isUpdating) { toast('جاري التنفيذ — الإدخال مقفول لحد ما يخلص', 'error'); return; }
+  const raw = normalizeEntry(entryEl.value);
+  // القراءة والمسح جوّه fire() مش جوّه الـ listener
+  if (sugIdx >= 0 && sugList[sugIdx]) { const v = sugList[sugIdx]; finishSubmit(); pickProduct(v); return; }
+  if (!raw) return;
+  const k = entryKind(raw);
+  finishSubmit();
+  if (k === 'toolong') {
+    addFail(raw, `${raw.length} خانة — غالبًا باركودين ملزوقين، اسكنهم واحد واحد`);
+    toast(`${raw} — ${raw.length} خانة، غالبًا باركودين ملزوقين، اسكنهم واحد واحد`, 'error'); playBeep('fail'); return;
+  }
+  try {
+    if (k === 'barcode') {
+      const d = await apiGet('lookup_barcode', { barcode: raw });
+      const list = d.variants || [];
+      if (!list.length) { addFail(raw, 'مفيش أي صنف بالـ SKU ده على شوبيفاي'); toast(`${raw} — مفيش أي صنف بالـ SKU ده على شوبيفاي`, 'error'); playBeep('fail'); return; }
+      if (list.length === 1) { pickProduct(list[0]); return; }
+      sugList = list; sugIdx = -1; renderSugg(); toast(`الباركود ${raw} على أكتر من صنف — اختار الصنف الصح`, 'error'); playBeep('fail');
+    } else {
+      const d = await apiGet('list_skus', { search: raw });
+      const list = d.variants || [];
+      if (!list.length) { addFail(raw, 'مفيش أي صنف بالاسم أو الـ SKU ده على شوبيفاي'); toast(`${raw} — مفيش أي صنف بالاسم أو الـ SKU ده على شوبيفاي`, 'error'); playBeep('fail'); return; }
+      const exact = list.filter(v => v.sku.toLowerCase() === raw.toLowerCase());
+      if (list.length === 1 || exact.length === 1) { pickProduct(exact[0] || list[0]); return; }
+      sugList = list.slice(0, 6); sugIdx = -1; renderSugg(list.length > 6);
+    }
+  } catch (e) {
+    addFail(raw, e.message || 'تعذّر الاستعلام');
+    toast(`تعذّر الاستعلام: ${e.message}`, 'error'); playBeep('fail');
+  }
+}
+
+// ═══ §FORM — المنتج والنموذج ═══
+let curProduct = null;
+let draft = newDraft();
+let defectTypes = [];
+let pendingFiles = [];   // [{ file, url }]
+
+function newDraft() { return { requestId: crypto.randomUUID(), typeId: '', repairable: null, side: null, origin: null }; }
+
+function pickProduct(v) {
+  closeSugg();
+  if (!v) return;
+  if (isUpdating) { toast('جاري التنفيذ — الإدخال مقفول لحد ما يخلص', 'error'); return; }
+  if (v.ineligibleReason) {
+    addFail(v.sku, v.ineligibleReason); toast(`${v.sku} — ${v.ineligibleReason}`, 'error'); playBeep('fail'); return;
+  }
+  if (curProduct && curProduct.variantId === v.variantId) { toast(`${v.sku} متحدد بالفعل`, 'neutral'); playBeep('dup'); return; }
+  clearFails();
+  curProduct = v;
+  resetDraft(false);
+  paintProduct();
+  playBeep('success'); toast(`اتحدد ${v.sku}`, 'success');
+}
+function paintProduct() {
+  const wrap = document.getElementById('prodWrap');
+  wrap.hidden = !curProduct;
+  if (!curProduct) return;
+  const v = curProduct;
+  const img = v.imageUrl ? `<img class="prod-img" src="${esc(v.imageUrl)}" alt="">` : `<div class="prod-img"></div>`;
+  document.getElementById('prodCard').innerHTML = `${img}<div class="prod-info">
+    <div class="prod-title">${esc(v.productTitle)}</div>
+    <div class="prod-sub">${esc(v.variantTitle)}</div>
+    <div class="prod-sub"><span class="prod-code">${esc(v.sku)}</span>${v.barcode ? ` · <span class="prod-code">${esc(v.barcode)}</span>` : ''}</div>
+    <div class="stock-chips">
+      <span class="stock-chip${(v.available ?? 0) < 1 ? ' zero' : ''}">متاح <b>${v.available ?? '—'}</b></span>
+      <span class="stock-chip">محجوز <b>${v.committed ?? '—'}</b></span>
+      <span class="stock-chip">على اليد <b>${v.onHand ?? '—'}</b></span>
+    </div>
+    ${(v.available ?? 0) < 1 ? '<div class="prod-sub" style="color:var(--amber-dark)">⚠️ الرصيد المتاح 0 — هتتسأل وقت التسجيل: إلغاء أو تسجيل بدون خصم.</div>' : ''}
+  </div>`;
+  fillTypeSelect();
+  paintSegs();
+  document.getElementById('submitBtn').disabled = false;
+}
+
+function resetDraft(clearProduct) {
+  draft = newDraft();
+  document.getElementById('fNotes').value = ''; document.getElementById('fNotes').classList.remove('has-value');
+  document.getElementById('newTypeBox').hidden = true; document.getElementById('newTypeInput').value = '';
+  pendingFiles.forEach(p => URL.revokeObjectURL(p.url)); pendingFiles = []; paintThumbs();
+  if (clearProduct) { curProduct = null; paintProduct(); entryEl.focus(); }
+  else { fillTypeSelect(); paintSegs(); }
+}
+
+function setSeg(k, v) { draft[k] = v === 'true' ? true : v === 'false' ? false : v; paintSegs(); }
+function paintSegs() {
+  const sync = (id, val) => document.querySelectorAll(`#${id} button`).forEach(b => b.classList.toggle('on', val !== null && String(val) === b.dataset.v));
+  sync('fRepairable', draft.repairable); sync('fSide', draft.side); sync('fOrigin', draft.origin);
+}
+
+async function loadTypes(selectId) {
+  const d = await apiGet('get_defect_types');
+  defectTypes = d.types || [];
+  if (selectId) draft.typeId = String(selectId);
+  fillTypeSelect();
+  const items = defectTypes.map(t => ({ value: String(t.id), label: t.name }));
+  regFlt.setItems('type', items);
+}
+function fillTypeSelect() {
+  const sel = document.getElementById('fType');
+  sel.innerHTML = `<option value="">اختر نوع العيب</option>`
+    + defectTypes.map(t => `<option value="${esc(String(t.id))}">${esc(t.name)}</option>`).join('')
+    + `<option value="__new">＋ إضافة نوع جديد…</option>`;
+  sel.value = draft.typeId || '';
+}
+function onTypeChange() {
+  const sel = document.getElementById('fType');
+  const isNew = sel.value === '__new';
+  document.getElementById('newTypeBox').hidden = !isNew;
+  if (isNew) { document.getElementById('newTypeInput').focus(); }
+  else draft.typeId = sel.value;
+}
+let addingType = false;
+async function addType() {
+  if (addingType) return;
+  const inp = document.getElementById('newTypeInput'), name = inp.value.trim();
+  if (name.length < 2) { toast('اسم النوع لازم حرفين على الأقل', 'error'); return; }
+  addingType = true; const btn = document.getElementById('newTypeBtn'); btn.disabled = true;
+  try {
+    const res = await apiPost('add_defect_type', { employee: currentEmployee.username, name });
+    if (res.type) {
+      await loadTypes(res.type.id);
+      document.getElementById('newTypeBox').hidden = true; inp.value = '';
+      toast(res.status === 'already' ? `النوع «${res.type.name}» موجود أصلًا — اتحدد` : `اتضاف النوع «${res.type.name}»`, res.status === 'already' ? 'dup' : 'success');
+    } else toast(res.message || 'ما اتضافش', 'error');
+  } catch (e) { toast(`تعذّرت إضافة النوع: ${e.message}`, 'error'); }
+  finally { addingType = false; btn.disabled = false; }
+}
+
+// ─── الصور المعلّقة (قبل التسجيل) ───
+function imageProblem(file) {
+  const n = (file.name || '').toLowerCase();
+  if (/\.(heic|heif|avif)$/.test(n) || /image\/(heic|heif|avif)/.test(file.type)) return 'الصيغة دي (HEIC) مش مدعومة — صوّر بالكاميرا مباشرة أو اختار JPEG أو PNG';
+  if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return 'نوع الملف مش مدعوم — JPEG أو PNG أو WebP بس';
+  if (file.size > IMG_MAX_BYTES) return `الصورة أكبر من ${IMG_MAX_BYTES / 1024 / 1024}MB`;
+  if (file.size < 16) return 'الملف فاضي أو تالف';
+  return null;
+}
+function onFilesPicked(inp) {
+  const files = [...inp.files]; inp.value = '';
+  for (const f of files) {
+    if (pendingFiles.length >= IMG_MAX_COUNT) { toast(`الحد الأقصى ${IMG_MAX_COUNT} صور للقطعة`, 'error'); break; }
+    const why = imageProblem(f);
+    if (why) { toast(`${f.name}: ${why}`, 'error'); playBeep('fail'); continue; }
+    pendingFiles.push({ file: f, url: URL.createObjectURL(f) });
+  }
+  paintThumbs();
+}
+function paintThumbs() {
+  document.getElementById('thumbs').innerHTML = pendingFiles.map((p, i) =>
+    `<div class="thumb"><img src="${esc(p.url)}" alt=""><button type="button" aria-label="شيل الصورة" onclick="removeThumb(${i})">✕</button></div>`).join('');
+}
+function removeThumb(i) { const [p] = pendingFiles.splice(i, 1); if (p) URL.revokeObjectURL(p.url); paintThumbs(); }
+
+// رفع صور بالتسلسل — فشل صورة ما بيوقفش الباقي ولا بيأثر على الديفو نفسه
+async function uploadImages(defectId, files, onProgress) {
+  const out = [];
+  uploadingNow = true;
+  try {
+    for (let i = 0; i < files.length; i++) {
+      onProgress && onProgress(i + 1, files.length);
+      const f = files[i];
+      const fd = new FormData();
+      fd.set('employee', currentEmployee.username); fd.set('defectId', String(defectId)); fd.set('file', f, f.name || 'image');
+      try {
+        const r = await apiUpload('add_defect_image', fd);
+        out.push({ name: f.name, status: r.status, message: r.message });
+      } catch (e) { out.push({ name: f.name, status: 'error', message: e.message }); }
+    }
+  } finally { uploadingNow = false; }
+  return out;
+}
+
+// ═══ §SUBMIT — التسجيل ═══
+const sessionRows = [];   // اتسجّل في الجلسة دي
+function setUpdateLock(on) {
+  isUpdating = on;
+  document.getElementById('submitBtn').disabled = on || !curProduct;
+  document.getElementById('resetBtn').disabled = on;
+  document.getElementById('entryBtn').disabled = on;
+  document.getElementById('defForm').style.pointerEvents = on ? 'none' : '';
+  document.getElementById('defForm').style.opacity = on ? '.6' : '';
+}
+
+function buildBody(stockMode) {
+  return {
+    employee: currentEmployee.username, requestId: draft.requestId, variantId: curProduct.variantId,
+    defectTypeId: Number(draft.typeId), repairable: draft.repairable, side: draft.side, origin: draft.origin,
+    notes: document.getElementById('fNotes').value.trim() || null, stockMode,
+  };
+}
+
+async function submitDefect(stockMode) {
+  if (isUpdating || !curProduct) return;
+  if (!draft.typeId || draft.typeId === '__new') { toast('اختار نوع العيب', 'error'); return; }
+  if (draft.repairable === null) { toast('حدد: قابل للإصلاح؟', 'error'); return; }
+  if (!draft.side) { toast('حدد: أي فردة؟', 'error'); return; }
+  if (!draft.origin) { toast('حدد: جديد أم مرتجع؟', 'error'); return; }
+  const product = curProduct, files = pendingFiles.map(p => p.file), requestId = draft.requestId;
+  setUpdateLock(true);
+  const btn = document.getElementById('submitBtn'); const label = btn.textContent;
+  btn.textContent = '⏳ جاري التسجيل…';
+  try {
+    let res;
+    try { res = await apiPost('register_defect', buildBody(stockMode)); }
+    catch (e) {
+      // مهلة/شبكة: ممكن العملية تكون تمّت — الإعادة بنفس requestId آمنة (idempotent)
+      showSummary({ status: 'warning', message: `${e.message} — ما عرفناش النتيجة. «إعادة المحاولة» آمنة ومش هتخصم مرتين.` },
+        { title: 'نتيجة التسجيل', retry: () => submitDefect(stockMode) });
+      return;
+    }
+    if (res.status === 'needs_decision') {
+      const ok = await askConfirm({
+        header: '⚠️ الرصيد المتاح 0', lead: res.message,
+        lines: [{ text: `${product.sku}: الرصيد المتاح ${res.available}` }, { text: 'لو سجّلت بدون خصم: القطعة بتتسجّل في المخزن الرقمي ومفيش أي حاجة بتتغيّر في المخزون (ولا لما تتصلّح ولا لما تتلغي).', soft: true }],
+        okLabel: 'تسجيل بدون خصم من الستوك', okClass: 'btn-primary', cancelLabel: 'إلغاء',
+      });
+      if (ok) { setUpdateLock(false); btn.textContent = label; await submitDefect('skip'); }
+      return;
+    }
+    const lines = [];
+    const ok = (res.status === 'success' || res.status === 'warning') && res.defect;
+    if (ok && files.length && !res.retryable) {
+      const up = await uploadImages(res.defect.id, files, (n, t) => { btn.textContent = `⏳ رفع الصور (${n}/${t})…`; });
+      const bad = up.filter(u => u.status !== 'success');
+      lines.push(`الصور: اترفع ${up.length - bad.length} من ${up.length}`);
+      bad.forEach(u => lines.push(`✗ ${u.name || 'صورة'}: ${u.message}`));
+      if (bad.length) lines.push('تقدر تضيف الصور الناقصة من المخزن الرقمي (زرار «الصور»).');
+    }
+    if (ok && res.retryable) lines.push('الصور هتترفع بعد ما التسجيل يتأكد (استخدم «إعادة المحاولة»).');
+    if (ok) {
+      sessionRows.unshift({ id: res.defect.id, sku: product.sku, title: product.productTitle, status: res.status, defect: res.defect, retryable: !!res.retryable, body: buildBody(stockMode), files: res.retryable ? files : [] });
+      paintSession();
+    }
+    showSummary(res, { title: 'نتيجة التسجيل', lines, retry: res.retryable ? () => retryRegister(res.defect.id) : null });
+    if (res.status === 'success' || res.status === 'already') { registryLoaded = false; }
+    if (res.status === 'success') { curProduct = null; resetDraft(true); }
+  } finally {
+    setUpdateLock(false); btn.textContent = label;
+  }
+}
+
+// إعادة محاولة تسجيل غير مؤكد — بنفس requestId (الـ Worker بيرجّع نفس نتيجة شوبيفاي الأصلية)
+async function retryRegister(defectId) {
+  const row = sessionRows.find(r => r.id === defectId);
+  if (!row || isUpdating) return;
+  setUpdateLock(true);
+  try {
+    const res = await apiPost('register_defect', row.body);
+    let lines = [];
+    if ((res.status === 'success') && res.defect && row.files.length) {
+      const up = await uploadImages(res.defect.id, row.files);
+      const bad = up.filter(u => u.status !== 'success');
+      lines.push(`الصور: اترفع ${up.length - bad.length} من ${up.length}`); bad.forEach(u => lines.push(`✗ ${u.name || 'صورة'}: ${u.message}`));
+      row.files = [];
+    }
+    if (res.defect) { row.defect = res.defect; row.status = res.status; row.retryable = !!res.retryable; }
+    paintSession();
+    showSummary(res, { title: 'نتيجة إعادة المحاولة', lines, retry: res.retryable ? () => retryRegister(defectId) : null });
+  } catch (e) {
+    showSummary({ status: 'warning', message: `${e.message} — لسه ما عرفناش النتيجة. أعد المحاولة تاني.` }, { title: 'نتيجة إعادة المحاولة', retry: () => retryRegister(defectId) });
+  } finally { setUpdateLock(false); }
+}
+
+function paintSession() {
+  document.getElementById('sessWrap').hidden = sessionRows.length === 0;
+  document.getElementById('sessList').innerHTML = sessionRows.map(r =>
+    `<div class="sess-row"><span class="grow">#${r.id} — <b class="col-num">${esc(r.sku)}</b> ${esc(r.title)}</span>`
+    + `<span class="status-badge ${RESULT_CLS[r.status] || 'neutral'}">${esc(resultLabel(r.status))}</span>`
+    + (r.retryable ? `<button class="log-btn warn" type="button" onclick="retryRegister(${r.id})">🔁 إعادة المحاولة</button>` : '')
+    + `</div>`).join('');
+}
+
+// ═══ §TABLE-COMMON — ترتيب 3 حالات + صفحات ═══
+const sortState = { reg: { key: null, dir: null }, log: { key: null, dir: null } };
+function sortParams(which) { const s = sortState[which]; return s.key ? { sortBy: s.key, sortDir: s.dir } : {}; }
+function paintSort(which) {
+  const s = sortState[which];
+  document.querySelectorAll(`.th-label[data-table="${which}"]`).forEach(l => {
+    const th = l.closest('th'), ic = th.querySelector('.sort-icon'), on = s.key === l.dataset.sortKey;
+    th.classList.toggle('sorted', on);
+    ic.className = 'sort-icon' + (on ? ' active' : ''); ic.textContent = on ? (s.dir === 'asc' ? '▲' : '▼') : '';
+  });
+}
+function cycleSort(which, key) {
+  const s = sortState[which];
+  if (s.key !== key) { s.key = key; s.dir = 'asc'; }
+  else if (s.dir === 'asc') s.dir = 'desc';
+  else { s.key = null; s.dir = null; }          // الحالة التالتة: بلا ترتيب
+  paintSort(which);
+  if (which === 'reg') { regState.page = 1; loadRegistry(); } else { logState.page = 1; fetchLog(); }
+}
+document.addEventListener('click', e => {
+  if (!document.contains(e.target)) return;
+  const l = e.target.closest('.th-label[data-sort-key]'); if (l) cycleSort(l.dataset.table, l.dataset.sortKey);
+});
+document.addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('.th-label[data-sort-key]')) { e.preventDefault(); cycleSort(e.target.dataset.table, e.target.dataset.sortKey); }
+});
+function paintPager(which, st, total) {
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  document.getElementById(which + 'Pager').hidden = total <= PAGE_SIZE;
+  document.getElementById(which + 'PageInfo').textContent = `صفحة ${st.page} من ${pages} · ${total.toLocaleString('en-US')} صف`;
+  document.getElementById(which + 'Prev').disabled = st.page <= 1;
+  document.getElementById(which + 'Next').disabled = st.page >= pages;
+}
+function stamp() { return `آخر تحديث ${formatTimeOnly(new Date().toISOString())}`; }
+function paintClear(btnId, flt) { document.getElementById(btnId).classList.toggle('inactive', !flt.active()); }
+
+// ═══ §REGISTRY — المخزن الرقمي ═══
+const regState = { page: 1, total: 0, seq: 0 };
+let regRows = [];
+const regFlt = ecoSrvFilters({
+  onChange: () => { regState.page = 1; paintClear('regClearAll', regFlt); loadRegistry(); },
+  chips: '#regChips', zone: '#regChipsZone', clearBtn: '#regClearAll',
+  columns: [
+    { key: 'date',   th: '#rthDate',   type: 'date', label: 'التاريخ' },
+    { key: 'prod',   th: '#rthProd',   type: 'text', label: 'المنتج', param: 'products' },
+    { key: 'sku',    th: '#rthSku',    type: 'text', label: 'SKU', param: 'skus' },
+    { key: 'type',   th: '#rthType',   type: 'list', label: 'نوع العيب', param: 'types', items: [] },
+    { key: 'rep',    th: '#rthRep',    type: 'list', label: 'قابل للإصلاح', param: 'repairable', items: [{ value: '1', label: 'نعم' }, { value: '0', label: 'لا' }] },
+    { key: 'side',   th: '#rthSide',   type: 'list', label: 'أي فردة', param: 'sides', items: Object.entries(SIDE_LABEL).map(([value, label]) => ({ value, label })) },
+    { key: 'origin', th: '#rthOrigin', type: 'list', label: 'جديد/مرتجع', param: 'origins', items: Object.entries(ORIGIN_LABEL).map(([value, label]) => ({ value, label })) },
+    { key: 'status', th: '#rthStatus', type: 'list', label: 'الحالة', param: 'statuses', items: Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label })) },
+    { key: 'ded',    th: '#rthDed',    type: 'list', label: 'المخزون', param: 'deductStates', items: Object.entries(DEDUCT_LABEL).map(([value, label]) => ({ value, label })) },
+    { key: 'emp',    th: '#rthEmp',    type: 'list', label: 'الموظف', param: 'employees', items: [] },
+  ],
+});
+
+function regParams() { return { ...regFlt.params(), ...sortParams('reg') }; }
+
+async function loadRegistry() {
+  const seq = ++regState.seq;
+  const body = document.getElementById('regBody');
+  body.innerHTML = `<tr class="empty-row"><td colspan="14">${ecoLoadingHTML('⏳ جاري تحميل الديفوهات…', true)}</td></tr>`;
+  try {
+    const base = regParams();
+    const [list, cnt, sc] = await Promise.all([
+      apiGet('get_defects', { ...base, limit: PAGE_SIZE, offset: (regState.page - 1) * PAGE_SIZE }),
+      apiGet('get_defects_count', regFlt.params()),
+      apiGet('get_status_counts'),
+    ]);
+    if (seq !== regState.seq) return;   // رد قديم
+    regRows = list.defects || []; regState.total = cnt.total || 0;
+    document.getElementById('regCount').textContent = regState.total.toLocaleString('en-US');
+    document.getElementById('regUpd').textContent = stamp();
+    paintCounts(sc); renderRegistry(); paintPager('reg', regState, regState.total);
+  } catch (e) {
+    if (seq !== regState.seq) return;
+    body.innerHTML = `<tr class="empty-row"><td colspan="14">❌ ${esc(e.message)}</td></tr>`;
+    document.getElementById('regCount').textContent = '—';
+  }
+}
+function regGoPage(d) { const pages = Math.ceil(regState.total / PAGE_SIZE); const n = regState.page + d; if (n < 1 || n > pages) return; regState.page = n; loadRegistry(); }
+
+function paintCounts(sc) {
+  const c = sc.counts || {};
+  const chip = (t, n, cls) => `<span class="status-badge ${cls}">${t}: <b class="col-num">${(n || 0).toLocaleString('en-US')}</b></span>`;
+  document.getElementById('regCounts').innerHTML =
+    chip('قابل للإصلاح', c.awaiting_repair, 'warn') + chip('غير قابل للإصلاح', c.unrepairable, 'err') + chip('اتصلح', c.repaired, 'ok') + chip('ملغي', c.cancelled, 'neutral')
+    + chip('بدون خصم', sc.skipped, 'neutral') + (sc.needsReview ? chip('يحتاج مراجعة', sc.needsReview, 'warn') : '');
+}
+
+function needsRetry(d) { return d.deductState === 'pending' || d.deductState === 'unconfirmed' || d.restockState === 'pending' || d.restockState === 'unconfirmed'; }
+function imagesCell(d) {
+  const editable = d.status === 'awaiting_repair' || d.status === 'unrepairable';
+  if (d.imageCount > 0) return `<button class="log-btn" type="button" data-act="images" data-id="${d.id}">🖼 عرض (${d.imageCount})</button>`;
+  return editable ? `<button class="log-btn" type="button" data-act="images" data-id="${d.id}">➕ صور</button>` : '—';
+}
+function actionsCell(d) {
+  const busy = rowBusy.has(d.id) ? ' disabled' : '';
+  const b = (act, cls, txt) => `<button class="log-btn ${cls}" type="button" data-act="${act}" data-id="${d.id}"${busy}>${txt}</button>`;
+  if (needsRetry(d)) return `<div class="row-acts">${b('retry', 'warn', '🔁 إعادة المحاولة')}</div>`;
+  if (d.status === 'awaiting_repair') return `<div class="row-acts">${b('repaired', 'ok', '✅ اتصلحت')}${b('unrepairable', 'warn', '🚫 غير قابلة للإصلاح')}${b('cancel', 'danger', '✕ إلغاء')}</div>`;
+  if (d.status === 'unrepairable') return `<div class="row-acts">${b('awaiting', 'ok', '↩ قابلة للإصلاح')}${b('cancel', 'danger', '✕ إلغاء')}</div>`;
+  return '—';
+}
+function dedBadge(d) {
+  const cls = d.deductState === 'done' ? 'ok' : d.deductState === 'skipped' ? 'neutral' : 'warn';
+  const txt = DEDUCT_LABEL[d.deductState] || d.deductState;
+  const rs = d.restockState === 'done' ? '<div class="sub">رجع 1 للستوك</div>' : (d.restockState === 'pending' || d.restockState === 'unconfirmed') ? '<div class="sub">إرجاع الكمية غير مؤكد</div>' : '';
+  return `<span class="status-badge ${cls}">${esc(txt)}</span>${rs}`;
+}
+function regRowHtml(d) {
+  return `<tr data-id="${d.id}">
+    <td class="col-num">${formatDate(d.createdAt)}</td>
+    <td class="col-num">${formatTimeOnly(d.createdAt)}</td>
+    <td>${esc(d.productTitle || '—')}${d.variantTitle ? `<div class="sub">${esc(d.variantTitle)}</div>` : ''}</td>
+    <td class="col-num">${esc(d.sku)}</td>
+    <td>${esc(d.defectTypeName || '—')}</td>
+    <td>${d.repairable ? 'نعم' : 'لا'}</td>
+    <td>${esc(SIDE_LABEL[d.side] || d.side)}</td>
+    <td>${esc(ORIGIN_LABEL[d.origin] || d.origin)}</td>
+    <td><span class="status-badge ${STATUS_CLS[d.status] || 'neutral'}">${esc(STATUS_LABEL[d.status] || d.status)}</span></td>
+    <td>${dedBadge(d)}</td>
+    <td>${esc(d.createdBy)}</td>
+    <td>${imagesCell(d)}</td>
+    <td>${d.notes ? esc(d.notes) : '—'}</td>
+    <td>${actionsCell(d)}</td>
+  </tr>`;
+}
+function renderRegistry() {
+  const body = document.getElementById('regBody');
+  body.innerHTML = regRows.length ? regRows.map(regRowHtml).join('') : `<tr class="empty-row"><td colspan="14">مفيش ديفوهات مطابقة</td></tr>`;
+}
+function repaintRow(d, flash) {
+  const i = regRows.findIndex(r => r.id === d.id);
+  if (i >= 0) regRows[i] = d;
+  const tr = document.querySelector(`#regBody tr[data-id="${d.id}"]`);
+  if (tr) { tr.outerHTML = regRowHtml(d); if (flash) { const n = document.querySelector(`#regBody tr[data-id="${d.id}"]`); if (n) n.classList.add('flash'); } }
+}
+
+// إجراءات الصف — تأكيد بالأثر للأفعال اللي مالهاش رجعة · الصف بيتنزع سلاحه أثناء التنفيذ
+document.getElementById('regBody').addEventListener('click', e => {
+  if (!document.contains(e.target)) return;
+  const b = e.target.closest('button[data-act]'); if (!b) return;
+  e.stopPropagation();
+  const id = Number(b.dataset.id);
+  if (b.dataset.act === 'images') openImages(id); else rowAction(id, b.dataset.act);
+});
+
+async function rowAction(id, act) {
+  const d = regRows.find(r => r.id === id);
+  if (!d || rowBusy.has(id) || isUpdating) return;
+  let call;
+  if (act === 'repaired') {
+    const returns = d.deductState === 'done';
+    const ok = await askConfirm({
+      header: '✅ تأكيد: اتصلحت', lead: `${d.sku} — ${d.productTitle || ''}`,
+      lines: [{ text: returns ? 'هيتضاف 1 للستوك (available) على شوبيفاي.' : 'القطعة دي اتسجّلت بدون خصم — مفيش حاجة هتتضاف للستوك.', soft: !returns },
+              { text: 'الحالة دي نهائية — مفيش رجوع منها.' }],
+      okLabel: 'تأكيد — اتصلحت', okClass: 'btn-green',
+    });
+    if (!ok) return;
+    call = () => apiPost('set_status', { employee: currentEmployee.username, defectId: id, status: 'repaired' });
+  } else if (act === 'cancel') {
+    const returns = d.deductState === 'done';
+    const ok = await askConfirm({
+      header: '✕ تأكيد: إلغاء التسجيل', lead: `${d.sku} — ${d.productTitle || ''}`,
+      lines: [{ text: returns ? 'هيرجع 1 للستوك (available) على شوبيفاي.' : 'القطعة دي اتسجّلت بدون خصم — مفيش حاجة هترجع للستوك.', soft: !returns },
+              { text: 'التسجيل بيتقفل (ملغي) ومينفعش يتفتح تاني.' }],
+      okLabel: 'تأكيد — إلغاء التسجيل', okClass: 'btn-red',
+    });
+    if (!ok) return;
+    call = () => apiPost('cancel_defect', { employee: currentEmployee.username, defectId: id });
+  } else if (act === 'unrepairable' || act === 'awaiting') {
+    call = () => apiPost('set_status', { employee: currentEmployee.username, defectId: id, status: act === 'awaiting' ? 'awaiting_repair' : 'unrepairable' });
+  } else if (act === 'retry') {
+    if (d.deductState === 'pending' || d.deductState === 'unconfirmed') {
+      call = () => apiPost('register_defect', { employee: currentEmployee.username, requestId: d.requestId, variantId: d.variantId, defectTypeId: d.defectTypeId,
+        repairable: d.repairable, side: d.side, origin: d.origin, notes: d.notes, stockMode: 'deduct' });
+    } else if (d.pendingOp === 'cancel') call = () => apiPost('cancel_defect', { employee: currentEmployee.username, defectId: id });
+    else call = () => apiPost('set_status', { employee: currentEmployee.username, defectId: id, status: 'repaired' });
+  } else return;
+
+  rowBusy.add(id); repaintRow(d);
+  try {
+    const res = await call();
+    if (res.defect) repaintRow(res.defect, true);
+    if (res.status === 'success') { toast(res.message, 'success'); playBeep('success'); }
+    else showSummary(res, { title: 'نتيجة العملية', retry: res.retryable ? () => rowAction(id, 'retry') : null });
+    loadRegistryCounts();
+  } catch (e) {
+    showSummary({ status: 'warning', message: `${e.message} — ما عرفناش النتيجة. حدّث الصفحة وراجع الحالة، و«إعادة المحاولة» آمنة.` }, { title: 'نتيجة العملية' });
+  } finally { rowBusy.delete(id); const cur = regRows.find(r => r.id === id); if (cur) repaintRow(cur); }
+}
+async function loadRegistryCounts() { try { paintCounts(await apiGet('get_status_counts')); } catch {} }
+
+// ═══ §IMAGES — نافذة الصور (عرض Lazy) ═══
+let imgCtx = { defectId: null, editable: false, url: null };
+function revokeView() { if (imgCtx.url) { URL.revokeObjectURL(imgCtx.url); imgCtx.url = null; } }
+async function openImages(id) {
+  const d = regRows.find(r => r.id === id); if (!d) return;
+  imgCtx = { defectId: id, editable: d.status === 'awaiting_repair' || d.status === 'unrepairable', url: null };
+  document.getElementById('imgTitle').textContent = `صور الديفو #${d.id} — ${d.sku}`;
+  document.getElementById('imgAdd').hidden = !imgCtx.editable;
+  document.getElementById('imgView').textContent = 'اضغط «عرض» على أي صورة';
+  openOverlay('imgOverlay');
+  await refreshImageList();
+}
+function closeImages() { revokeView(); closeOverlay('imgOverlay'); document.getElementById('imgView').innerHTML = ''; }
+async function refreshImageList() {
+  const box = document.getElementById('imgList');
+  box.innerHTML = ecoLoadingHTML('⏳ جاري التحميل…', true);
+  try {
+    const d = await apiGet('get_defect_images', { defectId: imgCtx.defectId });
+    const imgs = d.images || [];
+    box.innerHTML = imgs.length ? imgs.map((im, i) =>
+      `<div class="img-row"><span class="grow">صورة ${i + 1} · ${Math.round(im.sizeBytes / 1024).toLocaleString('en-US')}KB · ${esc(im.createdBy)} · ${formatDateTime(im.createdAt)}</span>`
+      + `<button class="log-btn" type="button" onclick="viewImage(${im.id})">عرض</button>`
+      + (imgCtx.editable ? `<button class="log-btn danger" type="button" onclick="deleteImage(${im.id})">🗑</button>` : '') + `</div>`).join('')
+      : '<div class="empty-state">مفيش صور لقطعة دي</div>';
+    const row = regRows.find(r => r.id === imgCtx.defectId);
+    if (row && row.imageCount !== imgs.length) { row.imageCount = imgs.length; repaintRow(row); }
+  } catch (e) { box.innerHTML = `<div class="empty-state">❌ ${esc(e.message)}</div>`; }
+}
+async function viewImage(id) {
+  const view = document.getElementById('imgView');
+  view.innerHTML = ecoLoadingHTML('⏳ جاري تحميل الصورة…', true);
+  revokeView();
+  try {
+    const blob = await apiGetBlob('get_image', { id });
+    imgCtx.url = URL.createObjectURL(blob);
+    view.innerHTML = `<img src="${esc(imgCtx.url)}" alt="صورة الديفو">`;
+  } catch (e) { view.innerHTML = `❌ ${esc(e.message)}`; }
+}
+async function deleteImage(id) {
+  const ok = await askConfirm({ header: '🗑 مسح صورة', lead: 'الصورة هتتمسح نهائيًا من السجل والتخزين.', okLabel: 'مسح الصورة' });
+  if (!ok) return;
+  try {
+    const res = await apiPost('delete_defect_image', { employee: currentEmployee.username, imageId: id });
+    toast(res.message, res.status === 'success' ? 'success' : 'error');
+    revokeView(); document.getElementById('imgView').textContent = 'اضغط «عرض» على أي صورة';
+    await refreshImageList();
+  } catch (e) { toast(`تعذّر المسح: ${e.message}`, 'error'); }
+}
+async function onModalFiles(inp) {
+  const files = [...inp.files]; inp.value = '';
+  const good = [];
+  for (const f of files) { const why = imageProblem(f); if (why) { toast(`${f.name}: ${why}`, 'error'); playBeep('fail'); } else good.push(f); }
+  if (!good.length) return;
+  const box = document.getElementById('imgAdd'); box.style.opacity = '.5'; box.style.pointerEvents = 'none';
+  try {
+    const up = await uploadImages(imgCtx.defectId, good);
+    const bad = up.filter(u => u.status !== 'success');
+    if (bad.length) showSummary({ status: 'warning', message: `اترفع ${up.length - bad.length} من ${up.length}` }, { title: 'رفع الصور', lines: bad.map(u => `✗ ${u.name || 'صورة'}: ${u.message}`) });
+    else toast(`اترفع ${up.length} صورة`, 'success');
+    await refreshImageList();
+  } finally { box.style.opacity = ''; box.style.pointerEvents = ''; }
+}
+
+// ═══ §LOG — سجل العمليات ═══
+const logState = { page: 1, total: 0, seq: 0 };
+const logFlt = ecoSrvFilters({
+  onChange: () => { logState.page = 1; clearLogWarn(); paintClear('logClearAll', logFlt); fetchLog(); },
+  chips: '#logChips', zone: '#logChipsZone', clearBtn: '#logClearAll',
+  columns: [
+    { key: 'date', th: '#lthDate', type: 'date', label: 'التاريخ' },
+    { key: 'emp',  th: '#lthEmp',  type: 'list', label: 'الموظف', param: 'employees', items: [] },
+    { key: 'type', th: '#lthType', type: 'list', label: 'نوع العملية', param: 'types', items: Object.entries(LOG_TYPE_LABEL).map(([value, label]) => ({ value, label })) },
+    { key: 'q',    th: '#lthSku',  type: 'text', label: 'بحث (SKU / ملاحظة)', param: 'search' },
+  ],
+});
+// مصدر واحد لباراميترات الفلاتر — بتستخدمه التلات نداءات (عرض · عدّ · تصدير)
+function logParams() { return logFlt.params(); }
+function clearLogWarn() { const w = document.getElementById('logExportWarn'); w.hidden = true; w.innerHTML = ''; }
+
+async function fetchLog() {
+  const seq = ++logState.seq;
+  const body = document.getElementById('logBody');
+  body.innerHTML = `<tr class="empty-row"><td colspan="10">${ecoLoadingHTML('⏳ جاري تحميل السجل…', true)}</td></tr>`;
+  try {
+    const base = logParams();
+    const [page, cnt] = await Promise.all([
+      apiGet('get_logs', { ...base, ...sortParams('log'), limit: PAGE_SIZE, offset: (logState.page - 1) * PAGE_SIZE }),
+      apiGet('get_logs_count', base),
+    ]);
+    if (seq !== logState.seq) return;
+    logState.total = cnt.total || 0;
+    document.getElementById('logCount').textContent = logState.total.toLocaleString('en-US');
+    document.getElementById('logUpd').textContent = stamp();
+    renderLog(page.entries || []); paintPager('log', logState, logState.total);
+  } catch (e) {
+    if (seq !== logState.seq) return;
+    body.innerHTML = `<tr class="empty-row"><td colspan="10">❌ ${esc(e.message)}</td></tr>`;
+    document.getElementById('logCount').textContent = '—';
+  }
+}
+function logGoPage(d) { const pages = Math.ceil(logState.total / PAGE_SIZE); const n = logState.page + d; if (n < 1 || n > pages) return; logState.page = n; fetchLog(); }
+
+function renderLog(entries) {
+  const body = document.getElementById('logBody');
+  if (!entries.length) { body.innerHTML = `<tr class="empty-row"><td colspan="10">مفيش عمليات مطابقة</td></tr>`; return; }
+  body.innerHTML = entries.map(e => {
+    const x = safeExtra(e), res = x.result;
+    const badge = res ? `<span class="status-badge ${RESULT_CLS[res] || 'neutral'}">${esc(resultLabel(res))}</span>` : '—';   // صف قديم بلا result = «—» مش «✓»
+    const ba = (e.value_before != null || e.value_after != null) ? `${e.value_before ?? '—'} ← ${e.value_after ?? '—'}` : '—';
+    return `<tr>
+      <td class="col-num">${formatDate(e.timestamp)}</td><td class="col-num">${formatTimeOnly(e.timestamp)}</td>
+      <td>${esc(e.employee || '—')}</td>
+      <td>${esc(LOG_TYPE_LABEL[e.type] || e.type)}</td>
+      <td>${badge}</td>
+      <td class="col-num">${esc(e.sku || '—')}${e.product_title ? `<div class="sub">${esc(e.product_title)}</div>` : ''}</td>
+      <td class="col-num">${x.defectId != null ? '#' + esc(String(x.defectId)) : '—'}</td>
+      <td class="col-num">${e.delta != null ? esc(String(e.delta)) : '—'}</td>
+      <td class="col-num">${esc(ba)}</td>
+      <td>${esc(e.notes || '—')}${x.error ? `<div class="sub">${esc(String(x.error).slice(0, 160))}</div>` : ''}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══ §EXPORT — XLSX (ExcelJS) + بانر التقصّ ═══
+async function saveWorkbook(wb, name) {
+  const buf = await wb.xlsx.writeBuffer();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+function showTruncWarn(id, shown, data) {
+  const w = document.getElementById(id);
+  w.innerHTML = `⚠️ <b>التصدير اتقص</b> — الملف فيه ${shown.toLocaleString('en-US')} صف`
+    + (data.total != null ? ` من أصل <b>${data.total.toLocaleString('en-US')}</b> مطابقين للفلاتر` : '') + `. ضيّق الفترة أو الفلاتر وصدّر على دفعات.`;
+  w.hidden = false;
+  toast(`⚠️ التصدير اتقص عند ${shown.toLocaleString('en-US')} صف — الملف مش كامل`, 'error');
+}
+async function exportRegistryXLSX() {
+  const w = document.getElementById('regExportWarn'); w.hidden = true;
+  try {
+    const data = await apiGet('get_defects_export', regFlt.params());
+    const rows = data.defects || [];
+    const wb = new ExcelJS.Workbook(); const ws = wb.addWorksheet('الديفوهات', { views: [{ rightToLeft: true }] });
+    ws.columns = ['#', 'التاريخ', 'الوقت', 'المنتج', 'SKU', 'نوع العيب', 'قابل للإصلاح', 'أي فردة', 'جديد/مرتجع', 'الحالة', 'المخزون', 'الموظف', 'عدد الصور', 'ملاحظات']
+      .map(h => ({ header: h, width: h === 'ملاحظات' || h === 'المنتج' ? 34 : 16 }));
+    rows.forEach(d => ws.addRow([d.id, formatDateForExport(d.createdAt), (formatTimeOnly(d.createdAt) || '').replace('🕐 ', ''), d.productTitle || '', d.sku, d.defectTypeName || '',
+      d.repairable ? 'نعم' : 'لا', SIDE_LABEL[d.side] || d.side, ORIGIN_LABEL[d.origin] || d.origin, STATUS_LABEL[d.status] || d.status, DEDUCT_LABEL[d.deductState] || d.deductState,
+      d.createdBy, d.imageCount, d.notes || '']));
+    ws.getRow(1).font = { bold: true };
+    await saveWorkbook(wb, `defects-${dayStamp()}.xlsx`);
+    const truncated = data.truncated === true || (data.cap && rows.length >= data.cap && data.total > rows.length);
+    if (truncated) showTruncWarn('regExportWarn', rows.length, data);
+    else toast(`تم تصدير ${rows.length.toLocaleString('en-US')} ديفو ✓`, 'success');
+  } catch (e) { toast(`فشل التصدير: ${e.message}`, 'error'); }
+}
+async function exportLogXLSX() {
+  clearLogWarn();
+  try {
+    const data = await apiGet('get_logs_export', logParams());
+    const rows = data.entries || [];
+    const wb = new ExcelJS.Workbook(); const ws = wb.addWorksheet('سجل الديفوهات', { views: [{ rightToLeft: true }] });
+    ws.columns = ['التاريخ', 'الوقت', 'الموظف', 'نوع العملية', 'النتيجة', 'ملاحظة النتيجة', 'SKU', 'المنتج', 'رقم الديفو', 'الكمية', 'المخزون قبل', 'المخزون بعد', 'ملاحظات']
+      .map(h => ({ header: h, width: h === 'ملاحظات' || h === 'ملاحظة النتيجة' ? 40 : 16 }));
+    rows.forEach(e => {
+      const x = safeExtra(e);
+      ws.addRow([formatDateForExport(e.timestamp), (formatTimeOnly(e.timestamp) || '').replace('🕐 ', ''), e.employee || '', LOG_TYPE_LABEL[e.type] || e.type,
+        resultLabel(x.result), x.error ? String(x.error).slice(0, 200) : '', e.sku || '', e.product_title || '', x.defectId ?? '', e.delta ?? '', e.value_before ?? '', e.value_after ?? '', e.notes || '']);
+    });
+    ws.getRow(1).font = { bold: true };
+    await saveWorkbook(wb, `defects-log-${dayStamp()}.xlsx`);
+    const truncated = data.truncated === true || (data.cap && rows.length >= data.cap);
+    if (truncated) showTruncWarn('logExportWarn', rows.length, data);
+    else toast(`تم تصدير ${rows.length.toLocaleString('en-US')} عملية ✓`, 'success');
+  } catch (e) { toast(`فشل التصدير: ${e.message}`, 'error'); }
+}
+
+// ═══ Init ═══
+document.addEventListener('DOMContentLoaded', async () => {
+  document.getElementById('headerMount').innerHTML = ecoHeader({
+    icon: '🧵', title: 'ديفوهات', subtitle: 'مركز عمليات المخزن', session,
+  });
+  renderVersionUI();
+  checkWorkerVersion(PAGE_WORKERS);
+  renderAboutWorkers();
+  paintEntry(); paintSort('reg'); paintSort('log');
+  document.getElementById('submitBtn').disabled = true;
+  entryEl.focus();
+  // قوايم الفلاتر والنموذج — فشلها ماوقفش الصفحة
+  loadTypes().catch(e => toast(`تعذّر تحميل أنواع العيب: ${e.message}`, 'error'));
+  apiGet('get_employees').then(d => {
+    const items = (d.employees || []).map(x => ({ value: x.username, label: x.display_name || x.username }));
+    regFlt.setItems('emp', items); logFlt.setItems('emp', items);
+  }).catch(() => {});
+});
+</script>
+</body>
+</html>

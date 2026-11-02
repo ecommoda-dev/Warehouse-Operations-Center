@@ -153,8 +153,13 @@ function ecoApi(worker) {
     if (!secret) { openSettings(); throw new Error('الإعدادات غير مكتملة — أدخل الـ WORKER SECRET'); }
     // `cancelSignal` اختياري: إلغاء يدوي من الموظف (زرار «إلغاء» في تحميل الباركودات
     // بجرد المخزون). مفيش مستهلك تاني — باقي الصفحات مابتبعتهوش فالسلوك زي ما هو.
-    const { cancelSignal, ...fetchOpts } = opts || {};
-    let resp;
+    // `responseType: 'blob'` اختياري (ديفوهات — 02-11-2026): الرد ملف (صورة) مش JSON.
+    // الافتراضي بدونه = السلوك القديم بالحرف. الخطأ (!resp.ok) لسه بيتقرا كـ JSON.
+    const { cancelSignal, responseType, ...fetchOpts } = opts || {};
+    // جسم FormData: المتصفح هو اللي بيحط Content-Type بالـ boundary — ممنوع نحطه إحنا
+    // (بيكسر الرفع). أي جسم تاني = JSON زي الأول.
+    const isForm = typeof FormData !== 'undefined' && fetchOpts.body instanceof FormData;
+    let resp, blob = null;
     const ctrl  = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), ECO_API_TIMEOUT_MS);
     if (cancelSignal) {
@@ -166,11 +171,13 @@ function ecoApi(worker) {
         ...fetchOpts,
         signal: ctrl.signal,
         headers: {
-          'Content-Type':  'application/json',
+          ...(isForm ? {} : { 'Content-Type': 'application/json' }),
           'Authorization': `Bearer ${secret}`,
           ...(opts?.headers || {}),
         },
       });
+      // الملف بيتقرا هنا (جوّه المهلة) مش بعد finally — قراءة جسم بطيئة تتقطع زي أي نداء.
+      if (responseType === 'blob' && resp.ok) blob = await resp.blob();
     } catch (e) {
       if (e.name === 'AbortError' && cancelSignal && cancelSignal.aborted) {
         const ce = new Error('اتلغى'); ce.cancelled = true; throw ce;
@@ -181,6 +188,7 @@ function ecoApi(worker) {
     } finally {
       clearTimeout(timer);
     }
+    if (blob) return blob;
     const text = await resp.text();
     let data;
     try { data = text ? JSON.parse(text) : null; }
@@ -197,6 +205,10 @@ function ecoApi(worker) {
   return {
     apiGet:  (action, params = {}, cancelSignal) => apiRequest(`${base}/?${new URLSearchParams({ action, ...params })}`, { method: 'GET', cancelSignal }),
     apiPost: (action, body = {})   => apiRequest(`${base}/?action=${encodeURIComponent(action)}`, { method: 'POST', body: JSON.stringify(body) }),
+    // رفع ملف (صورة) — `formData` من `new FormData()`؛ مفيش Content-Type يدوي. نفس السر والمهلة وتصنيف الأخطاء.
+    apiUpload:  (action, formData) => apiRequest(`${base}/?action=${encodeURIComponent(action)}`, { method: 'POST', body: formData }),
+    // جلب ملف (صورة) كـ Blob — بهيدر Authorization (`<img src>` مباشر مابيبعتوش). الاستخدام: URL.createObjectURL ثم revokeObjectURL عند الإغلاق.
+    apiGetBlob: (action, params = {}) => apiRequest(`${base}/?${new URLSearchParams({ action, ...params })}`, { method: 'GET', responseType: 'blob' }),
     // ⚠️ الطابعة بترّوت بالـ path كمان (`/orders` · `/invoice` · `/track` ·
     //    `/logs`) — شكل تاريخي متساب **عمدًا**، مش غلط يتصلّح.
     apiPath: (path, body = {})     => apiRequest(`${base}${path}`, { method: 'POST', body: JSON.stringify(body) }),

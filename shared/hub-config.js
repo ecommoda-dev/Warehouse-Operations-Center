@@ -210,9 +210,14 @@ const ECO_WORKERS = {
   // ⚠️ الـ Worker ده **عضو في مجموعتين**: `delivery_cod_ops` (`WORKER_SECRET`) و`warehouse_ops` (`WORKER_SECRET_WAREHOUSE`) —
   //    تدوير أي من المجموعتين لازم يشمله. الخطوة اليدوية: `WORKER_SECRET_WAREHOUSE` = قيمة `warehouse_ops` → Promote.
   bostaUpload: { url: 'https://bosta-orders-upload-worker.ecommoda-dev.workers.dev', min: '2.23.0', label: 'رفع بوسطة' },
+  // 🧵 ديفوهات — صفحة `Defect-Products.html` (v1.70.0). `1.0.0` = أول نسخة؛ مفيش نسخة أقدم منشورة، فالحارس بيمسك حالة واحدة:
+  // الـ Worker ما اتنشرش أو الـ Promote ناقص. الواجهة معتمدة عليه بالكامل (`register_defect` · `set_status` · `get_defects*` · `get_image`…)،
+  // وعلى `core.js` (`apiUpload`/`apiGetBlob`) لرفع وعرض الصور.
+  // ⚠️ الخطوات اليدوية (أحمد): إنشاء الـ Worker باسم `defect-products-worker` · `WORKER_SECRET` = قيمة `warehouse_ops` + `CLIENT_ID`/`CLIENT_SECRET` → Promote.
+  defects: { url: 'https://defect-products-worker.ecommoda-dev.workers.dev', min: '1.0.0', label: 'ديفوهات' },
 };
 
-const TOOL_VERSION = 'v1.69.0';                     // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.70.0';                     // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const SHOP_HANDLE  = '6c7e1a-53';
 
@@ -266,5 +271,5 @@ const ECO_HUB = {
     return false;
   },
   secretNote:  "السر المشترك لمجموعة <code>warehouse_ops</code> — قيمة واحدة لكل الـ Workers",
-  workersNote: "order-printer-worker · orders-packing-checker-worker · order-item-remover-worker · order-sku-barcode-printer-worker · bosta-orders-shipped-scanner · bosta-orders-returned-scanner · package-transfer-to-office-worker · package-transfer-to-warehouse-worker · inventory-audit-updater-worker · bosta-orders-upload-worker",
+  workersNote: "order-printer-worker · orders-packing-checker-worker · order-item-remover-worker · order-sku-barcode-printer-worker · bosta-orders-shipped-scanner · bosta-orders-returned-scanner · package-transfer-to-office-worker · package-transfer-to-warehouse-worker · inventory-audit-updater-worker · bosta-orders-upload-worker · defect-products-worker",
 };
