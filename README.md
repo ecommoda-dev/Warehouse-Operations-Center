@@ -2,7 +2,7 @@
 
 # مركز عمليات المخزن — Warehouse Operations Center
 
-![version](https://img.shields.io/badge/version-v1.71.0-blue)
+![version](https://img.shields.io/badge/version-v1.72.0-blue)
 
 **هب واحد لمحطة المخزن.** الموظف بيدخل مرة واحدة، وبعدين بيتنقّل بين الطباعة
 والتغليف وحذف المنتج وتسليمات بوسطة ومرتجعات بوسطة وتسليمات المكتب واستلام
@@ -98,6 +98,6 @@ Warehouse-Operations-Center/
 
 ---
 
-آخر تحديث: 02-11-2026 — 12:30 — v1.71.0
+آخر تحديث: 05-11-2026 — v1.72.0
 
 </div>
