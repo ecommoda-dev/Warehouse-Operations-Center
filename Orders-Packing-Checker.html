@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<!-- skills: html-builder v6.3.0 · worker-builder v2.0.0 · constants v1.6.0 · order-lifecycle v1.2.0 · shopify-graphql-helper v1.0.0 · bosta-api-helper — 05-09-2026 -->
+<!-- skills: html-builder v8.7.0 · worker-builder v2.0.0 · constants v1.6.0 · order-lifecycle v1.2.0 · shopify-graphql-helper v1.0.0 · bosta-api-helper — 05-11-2026 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>قسم التغليف — مركز عمليات المخزن</title>
@@ -237,45 +237,63 @@
 .scan-input:focus{box-shadow:0 0 0 3px var(--focus-ring)}
 .scan-hint{font-size:12px;color:var(--text-muted);margin-top:6px;text-align:center}
 
-/* ── §STYLES::entry — تلات مداخل جنب بعض (v2.5.0) ──────────────
-   الشاشة بتتقسم بالتساوي على التلاتة (`1fr` ×٣) — ومقاس واحد
-   للتلاتة مقصود: مفيش مدخل «رئيسي» ومدخل «تاني»، الموظف بيختار
-   حسب الملصق اللي في إيده.
-   ⚠️ اللون هو التمييز الوحيد بينهم — أزرق شوبيفاي · أحمر بوسطة ·
-      محايد لليدوي — فأي تغيير في الألوان دي بيضيّع التمييز ده. */
-.entry-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px;align-items:start}
-@media (max-width:1000px){.entry-grid{grid-template-columns:1fr}}
-.entry-card{position:relative;display:flex;flex-direction:column;background:var(--surface);
-  border:1px solid var(--border);border-top:3px solid var(--border-strong);
-  border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;cursor:text;
-  transition:border-color .15s,box-shadow .15s}
-.entry-title{font-size:13px;font-weight:800;color:var(--text-muted);letter-spacing:.3px;margin-bottom:12px}
-
-.entry-card.entry-shopify{border-top-color:var(--accent)}
-.entry-card.entry-shopify .entry-title{color:var(--accent-dark)}
-.entry-card.entry-bosta{border-top-color:var(--red)}
-.entry-card.entry-bosta .entry-title{color:var(--red-dark)}
-.entry-card.entry-manual{border-top-color:var(--border-strong)}
-.entry-card.entry-manual .entry-title{color:var(--text-secondary)}
-
-.scan-input.si-shopify{border-color:var(--accent)}
-.scan-input.si-shopify:focus{box-shadow:0 0 0 3px var(--focus-ring)}
-.scan-input.si-bosta{border-color:var(--red)}
-.scan-input.si-bosta:focus{box-shadow:0 0 0 3px var(--focus-ring-red)}
-.scan-input.si-manual{border-color:var(--border-strong)}
-.scan-input.si-manual:focus{box-shadow:0 0 0 3px var(--focus-ring-neutral)}
-
-/* المربع النشط = آخر مدخل اتعمل منه استعلام. الفوكس بيرجع له لوحده
-   بعد كل عملية، والعلامة دي بتقول للموظف «السكانة هتكتب هنا». */
-.entry-card.is-active{box-shadow:0 0 0 2px var(--border-strong),var(--shadow)}
-.entry-card.entry-shopify.is-active{box-shadow:0 0 0 2px var(--accent),var(--shadow)}
-.entry-card.entry-bosta.is-active{box-shadow:0 0 0 2px var(--red),var(--shadow)}
-.entry-active-tag{position:absolute;top:-9px;inset-inline-start:14px;display:none;
-  padding:1px 9px;border-radius:20px;font-size:10px;font-weight:800;color:var(--on-accent);
-  background:var(--border-strong)}
-.entry-card.is-active .entry-active-tag{display:inline-flex}
-.entry-card.entry-shopify .entry-active-tag{background:var(--accent)}
-.entry-card.entry-bosta   .entry-active-tag{background:var(--red)}
+/* ── §STYLES::entry — مربع الإدخال الموحّد (v1.72.0) ─────────────────────
+   مربع واحد + chips مقسّمة (segmented) + حقل واحد. النوع بيتعرّف بالطول
+   (`entryClassify`) والـ chip بيتبع آخر نوع اتعرّف ويفضل عليه — مفيش تثبيت.
+   🔴 اللون هو التمييز الأساسي بين المسارات (قرار قديم ما اتغيّرش): أزرق
+      شوبيفاي · أحمر بوسطة · رمادي رقم الأوردر — على الحد العلوي للشريط
+      والحقل والزرار والـ chip المفعّل والـ pill.
+   ⚠️ صفر placeholder وصفر سطر شرح جوّه أو تحت المربع (Standards #7).
+   المرجع: ecommoda-html-builder → references/unified-entry-box.md §٥. */
+.entry-bar{display:flex;flex-direction:column;gap:10px;margin-bottom:12px;
+  background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--accent);
+  border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 16px;
+  transition:border-color .15s}
+.entry-bar[data-view=bosta] {border-top-color:var(--red)}
+.entry-bar[data-view=manual]{border-top-color:var(--border-strong)}
+.entry-bar .scan-input{border-color:var(--accent);padding-block:0;min-height:52px}
+.entry-bar[data-view=bosta]  .scan-input{border-color:var(--red)}
+.entry-bar[data-view=manual] .scan-input{border-color:var(--border-strong)}
+.entry-bar[data-view=bosta]  .scan-input:focus{box-shadow:0 0 0 3px var(--focus-ring-red)}
+.entry-bar[data-view=manual] .scan-input:focus{box-shadow:0 0 0 3px var(--focus-ring-neutral)}
+.entry-bar .scan-input:disabled{background:var(--surface-2);color:var(--text-secondary)}
+.entry-bar .scan-input-wrap .btn-primary{background:var(--accent);min-width:96px;font-size:15px;padding:0 18px}
+.entry-bar[data-view=bosta]  .scan-input-wrap .btn-primary{background:var(--red)}
+.entry-bar[data-view=manual] .scan-input-wrap .btn-primary{background:var(--text-secondary)}
+.entry-bar .scan-input-wrap .btn-primary:disabled{opacity:.55;cursor:not-allowed}
+.entry-chips{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.entry-segs{display:inline-flex;flex-wrap:wrap;gap:1px;max-width:100%;
+  background:var(--border-strong);border:1.5px solid var(--border-strong);border-radius:10px;overflow:hidden}
+.entry-chip{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:0;border-radius:0;
+  background:var(--surface);color:var(--text-secondary);
+  font-family:var(--font-body);font-size:14px;font-weight:800;cursor:pointer;white-space:nowrap;
+  transition:background .15s,color .15s}
+.entry-chip:hover{background:var(--surface-2)}
+.entry-chip:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
+.entry-chip[data-m=shopify].is-on{background:var(--accent);color:var(--on-accent)}
+.entry-chip[data-m=bosta].is-on  {background:var(--red);   color:var(--on-accent)}
+.entry-chip[data-m=manual].is-on {background:var(--text-secondary);color:var(--on-accent)}
+.entry-hint{display:inline-flex;align-items:center;gap:7px;padding:3px 14px;border-radius:20px;border:1.5px solid;
+  margin-inline-start:auto;font-size:13px;font-weight:800;pointer-events:none;user-select:none}
+.entry-hint svg{width:20px;height:20px;flex-shrink:0}
+.entry-hint[data-m=shopify]{background:var(--accent-light);border-color:var(--accent);color:var(--accent-dark)}
+.entry-hint[data-m=bosta]  {background:var(--red-light);   border-color:var(--red);   color:var(--red-dark)}
+.entry-hint[data-m=manual] {background:var(--surface-2);   border-color:var(--text-secondary);color:var(--text-mid)}
+.entry-chip-auto{padding:0 7px;line-height:17px;border-radius:20px;font-size:10px;font-weight:800;
+  background:var(--on-accent);color:var(--accent)}
+.entry-chip[data-m=bosta]  .entry-chip-auto{color:var(--red)}
+.entry-chip[data-m=manual] .entry-chip-auto{color:var(--text-secondary)}
+/* الصندوق الأحمر — رفض قبل الإرسال (طول مش معروف · خليط · مش رقم). سطر قصير + ✕ */
+.bc-fails{margin-bottom:12px;padding:10px 14px;border-radius:var(--radius-sm);
+  background:var(--red-light);border:1px solid var(--red-border);color:var(--red-dark);
+  font-size:12.5px;font-weight:700;line-height:1.8}
+.bc-fail-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.bc-fail-row + .bc-fail-row{margin-top:4px;padding-top:4px;border-top:1px dashed var(--red-border)}
+.bc-fail-lbl{font-family:var(--font-mono);font-weight:800;direction:ltr}
+.bc-fail-why{flex:1;min-width:140px}
+.bc-fail-x{margin-inline-start:auto;border:none;background:transparent;cursor:pointer;
+  font-size:15px;font-weight:900;color:inherit;line-height:1;padding:2px 6px;border-radius:6px;opacity:.7}
+.bc-fail-x:hover{opacity:1;background:var(--red-border)}
 
 /* شريط «الأوردر ده اتفتح من تراكينج بوسطة» فوق شاشة التشييك */
 .bosta-src{display:none;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;
@@ -554,6 +572,28 @@
 .po-banner.b-red{background:var(--red-light);border:1px solid var(--red-border);color:var(--red-dark)}
 .po-banner.b-amber{background:var(--amber-light);border:1px solid var(--amber-border);color:var(--amber-dark)}
 .po-banner.b-green{background:var(--green-light);border:1px solid var(--green-border);color:var(--green-dark)}
+/* ══ §STYLES::manifest — مانفست التجهيز (v1.72.0) ══════════════════════
+   النافذة بس. الورقة المطبوعة نفسها في مستند iframe مستقل (§MANIFEST-JS) —
+   مش هنا، عشان `@page{size:2in 1in}` و`body>*{display:none}` بتاعة ماكينة
+   الليبل (§LABEL-MACHINE) على الصفحة كلها وممنوع نلمسها. */
+.act-btn.manifest{border-color:var(--accent-border);color:var(--accent);background:var(--accent-light)}
+.act-btn.manifest:hover:not(:disabled){background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.act-btn:disabled{opacity:.5;cursor:not-allowed}
+.act-btn svg{width:16px;height:16px;flex-shrink:0}
+.pm-btn-n{min-width:22px;padding:0 6px;border-radius:20px;background:var(--accent);color:var(--on-accent);font-size:12px;font-weight:800;line-height:20px;text-align:center}
+.act-btn.manifest:hover:not(:disabled) .pm-btn-n{background:var(--on-accent);color:var(--accent)}
+.pm-box{max-width:1000px;height:90vh}
+.pm-box .modal-body{flex:1;min-height:0}
+.pm-title{padding:14px 20px;border-bottom:2px solid var(--border-strong);font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px}
+.pm-title svg{width:20px;height:20px;color:var(--accent)}
+.pm-progress{display:flex;flex-direction:column;gap:10px;align-items:center;padding:36px 12px;text-align:center}
+.pm-bar{width:100%;max-width:420px;height:10px;border-radius:20px;background:var(--surface-2);border:1px solid var(--border);overflow:hidden}
+.pm-bar>i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s}
+.pm-tools{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:12.5px;font-weight:600;color:var(--text-secondary)}
+.pm-tools label{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.pm-frame{flex:1;min-height:340px;width:100%;border:1px solid var(--border-strong);border-radius:var(--radius-sm);background:var(--surface)}
+.pm-sum{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;font-weight:700}
+.pm-sum b{font-size:15px}
 .po-list{margin:0;padding-inline-start:19px}
 .po-list li{font-size:12.5px;line-height:1.8;margin-bottom:4px}
 
@@ -808,6 +848,10 @@
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="ico-scan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(-.4 -1.2) scale(.8)"><path d="M5.5 5.6 15.6 4.6Q16.6 4.5 16.3 5.5L14.3 11.3Q14.1 12 13.4 12H5.5A2.5 2.5 0 0 1 3 9.5V8.1A2.5 2.5 0 0 1 5.5 5.6Z"/><path d="M12.9 4.8 11.3 12"/><path d="M7 12 5.3 19.1Q5.1 20 6 20H9.2Q10 20 9.6 19.3L8.5 17.6 10.3 12"/></g><path d="M15.6 4.4Q16.7 5.6 15.6 6.8M17.9 3Q19.9 5.6 17.9 8.2" stroke-width="1.5"/><path d="M13.8 15.6v-2h2M20.2 13.6h2v2M22.2 19.6v2h-2M15.8 21.6h-2v-2" stroke-width="1.6"/><path d="M16 16.6v3M17.9 16.6v3M19.8 16.6v3" stroke-width="1.4"/></symbol>
+  <symbol id="ico-kbd" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2.5"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h.01M18 14h.01" stroke-width="2.4"/><path d="M9.5 14.2h5"/></symbol>
+</defs></svg>
 
 <div class="container">
 
@@ -827,7 +871,19 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.35.1</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.72.0</span>
+          <span class="cl-ver-date">05-11-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🧾 <b>مانفست التجهيز</b> — زرار جنب «النتائج» بيجمّع <b>بنود كل الأوردرات الظاهرة في الجدول بعد الفلترة</b> في ورقة A4 واحدة مجمّعة بالـ SKU (العدد الإجمالي + أرقام الأوردرات + «×2» جنب اللي واخد أكتر من قطعة)، تطبعها وتجيب كل القطع من المخزن مرة واحدة وتنقلها لطاولة التجهيز، وبعدين تغلّف بالطريقة المعتادة. <b>قراءة بحتة</b> — مفيش أي كتابة.</span></li>
+          <li class="cl-item"><span class="cl-tag change">ملاحظة</span><span>↻ جنب رقم الأوردر = محاولة مكرّرة · «لا يوجد SKU» للصنف بلا SKU · صفحة تانية اختيارية لتوزيع القطع على الأوردرات · الأوردر اللي مبقاش جاهز وقت الجلب بيتشال ويتقال سببه، واللي فشل جلبه بيتكتب على الورقة «ناقصة». <b>محتاجة Worker التغليف v2.11.0 (Promote)</b> — على Worker أقدم الزرار بس هو اللي بيفشل برسالة بتسمّي النسخة.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🎨 <b>مربع الإدخال الموحّد</b> — التلات مربعات (شوبيفاي · بوسطة · يدوي) بقوا <b>مربع واحد</b> بـ chips مقسّمة. الأداة بتعرف النوع <b>بطول الرقم</b> والـ chip بيتبعه ويفضل عليه. الإضافة بـ <b>Enter أو «بحث» بس</b> — مفيش مؤقّت (السكانر بيبعت Enter). الرفض (طول مش معروف · باركود منتج · لصق متعدد · نص) في <b>صندوق أحمر</b> بسطر قصير + ✕ من غير ما يتبعت للـ Worker.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge">v1.35.1</span>
           <span class="cl-ver-date">28-09-2026</span>
         </div>
         <ul class="cl-items">
@@ -1181,6 +1237,7 @@
             <tr><th>action</th><th>الوصف</th></tr>
             <tr><td><code>get_order</code></td><td>جلب الأوردر + تحليل المرحلة + كشف التغيير بالبصمة</td></tr>
             <tr><td><code>complete_pack</code></td><td>كتابة الميتافيلدات + tag + تسجيل D1، وبترجّع <code>status</code> و<code>actions</code></td></tr>
+            <tr><td><code>get_pick_manifest</code></td><td>(POST · <b>Worker v2.11.0</b>) بنود مجموعة أوردرات من الطابور لمانفست التجهيز — قراءة حيّة بتعيد فحص كل أوردر وبترجّع <code>orders</code> و<code>skipped</code> و<code>failed</code> و<code>truncated</code>. حد أقصى ٤٠ أوردر في النداء (الواجهة بتبعت ٢٠). صفر كتابة.</td></tr>
             <tr><td><code>get_ready_orders</code></td><td>طابور «جاهز للتغليف» — أوردرات S1+S2 حالتها <code>Ready</code> واتطبعت ولسه ما اتغلّفتش. قراءة بحتة، وبترجّع <code>partial</code> و<code>s2Failed</code> و<code>s2Truncated</code>. <b>من Worker v2.3.0</b> بيرجّع كمان <code>zone</code> (<code>custom.zone</code>) — <b>الواجهة بقت من v2.6.2 مابتقراهوش</b>، عمود المنطقة اتشال نهائيًا</td></tr>
             <tr><td><code>get_logs</code> · <code>get_logs_count</code> · <code>get_logs_export</code></td><td>استعراض وتصدير سجل التغليف (فلترة server-side)</td></tr>
             <tr><td><code>diag</code> · <code>get_config</code></td><td>فحص ذاتي بدون كتابة · نسخة الـ Worker لحارس التوافق</td></tr>
@@ -1209,7 +1266,8 @@
             <li><code>§PACK::buildFingerprint</code> + <code>readStoredFingerprint</code> (Worker) — كشف التغيير</li>
             <li><code>§PACK::fetchOrderForPack</code> (Worker) — تصفيح lineItems و returns + علم <code>truncated</code></li>
             <li><code>§DIAG</code> (Worker) — <code>diag</code> و<code>get_config</code></li>
-            <li><code>§SCAN</code> (HTML) — سكانر الأوردر وسكانر الباركود · <code>§SCAN::entryMode</code> — المربع النشط والفوكس بيرجع له · <code>::scannerBinding</code> — نفس سلوك السكانة للمربعين</li>
+            <li><code>§SCAN</code> (HTML) — مربع الإدخال الموحّد (chips + حقل واحد + pill) · <code>§SCAN::entryMode</code> — <code>ENTRY_CFG</code> + <code>entryClassify</code> (الكشف بالطول) + <code>renderEntryBar</code> · <code>::entryFails</code> — الصندوق الأحمر · <code>::entryFire</code> — Enter/«بحث» بس</li>
+            <li><code>§MANIFEST-JS</code> — مانفست التجهيز: <code>pmOpen</code> (جلب بدفعات ٢٠) · <code>pmAggregate</code> (التجميع بالـ SKU) · <code>pmSheetHTML</code> (ورقة A4 كمستند كامل) · <code>pmPrint</code> (الطباعة من الـ iframe). 🔴 الطباعة في <code>iframe</code> مستقل — <b>مش <code>#printArea</code></b> (ماكينة الليبل ليها <code>@page 2in×1in</code>)</li>
             <li><code>§BOSTA</code> (Worker) — <code>bostaSearch</code> · <code>cleanOrderName</code> · <code>resolveTrackingToOrderName</code> — تحويل تراكينج بوسطة لرقم أوردر (قراءة بحتة)</li>
             <li><code>§TOOL-JS</code> (HTML) — شاشة الفحص · النوافذ · نتيجة التغليف بـ ٣ حالات</li>
             <li><code>§LOG-JS</code> (HTML) — جدول السجل · الفلاتر · الترتيب · الصفحات · تصدير XLSX</li>
@@ -1230,7 +1288,9 @@
             <li>روابط الـ Workers — ثوابت في <code>shared/hub-config.js</code> § CONFIG، مش في الإعدادات ولا في التخزين المحلي (Standards #28)</li>
             <li><code>LS_SECRET = 'pack_checker_worker_secret'</code> — المفتاح الوحيد في localStorage</li>
             <li><code>currentEmployee</code> — <code>{ username, displayName }</code> في الذاكرة فقط</li>
-            <li><code>lastEntryMode</code> — آخر مربع إدخال اتشتغل منه (<code>shopify</code> · <code>bosta</code> · <code>manual</code>). في الذاكرة فقط، وبيتصفّر عند الخروج.</li>
+            <li><code>curMode</code> · <code>entryStartMode</code> — الـ chip الحالي (بيتبع آخر نوع اتعرّف) وبداية الإدخال الحالي (لبادج «تلقائي»). في الذاكرة فقط.</li>
+            <li><code>ENTRY_CFG</code> — أطوال الكشف (رقم أوردر ١–٧ · باركود منتج ٨ · تراكينج ٩–١٠ · Order ID ١٣–١٥) ومدد التوست. ⛔ بنود مفتوحة: تراكينج بطول تاني؟ أوردر أكتر من ٧ خانات؟</li>
+            <li><code>pmState</code> · <code>PM_CHUNK</code> (٢٠) — حالة المانفست (توكن إلغاء + النموذج + صفحة التوزيع) وحجم الدفعة.</li>
             <li><code>msState</code> — حالة فلاتر الاختيار المتعدد في <b>تاب السجل</b> (فلترة server-side)</li>
             <li><code>rdyMsState</code> · <code>rdyAllOrders</code> · <code>rdySortState</code> — حالة فلاتر وترتيب <b>الطابور</b> (فلترة client-side). منفصلة عن اللي فوقها بالكامل — الاتنين شغّالين في نفس الصفحة.</li>
             <li><code>rdyDirty</code> — «حصل تغليف والطابور بقى قديم». التحديث بيحصل عند <b>الرجوع</b> لشاشة الطابور، والفلاج مابيتصفّرش غير بعد جلب ناجح.</li>
@@ -1263,7 +1323,9 @@
             <li><b>v2.5.0</b> — <b>مدخل تالت: ماسح باركود بوسطة</b>. رقم التتبع بيتبعت للـ Worker (<code>get_order?tracking=</code>)، والـ Worker بينادي بوسطة <b>قراءة بحتة</b>، بيطلّع <code>businessReference</code>، بينضّفه من الـ <code>#</code> وبيكمّل <b>بنفس مسار الاسم بالحرف</b> — نفس التصنيف ونفس حارس «اتغلّف قبل كده». <b>مفيش مسار تغليف تاني</b>: مسار موازي كان معناه حارسين يفترقوا، وده اللي أنتج R3.</li>
             <li><b>v2.5.0</b> — <code>BOSTA_API_KEY</code> <b>سر جديد مطلوب على الـ Worker</b>. من غيره مدخل بوسطة بس هو اللي بيفشل، وبرسالة باسم المتغيّر مش بـ«الشحنة غير موجودة» — و🩺 فحص النظام بيعرض وجوده.</li>
             <li><b>v2.5.0</b> — التلات مداخل جنب بعض بالتساوي، وكل واحد بلونه: شوبيفاي أزرق · بوسطة أحمر · اليدوي محايد. <b>اللون هو التمييز</b> — الموظف بيختار المربع من لون الملصق اللي في إيده.</li>
-            <li><b>v2.5.0</b> — <b>الفوكس بيرجع لآخر مربع اتشتغل منه</b> (<code>lastEntryMode</code>): موظف شغّال دفعة ملصقات بوسطة مايرجعش بإيده للمربع بعد كل أوردر. في ذاكرة الصفحة بس — مش في التخزين المحلي — فموظف جديد بيبدأ من الافتراضي.</li>
+            <li><b>v1.72.0</b> — <b>مربع الإدخال الموحّد</b> (بدل التلات مربعات): الفوكس على حقل واحد دايمًا، والـ chip بيتبع آخر نوع اتعرّف. في ذاكرة الصفحة بس — مش في التخزين المحلي.</li>
+            <li><b>v1.72.0</b> — 🔴 <b>مانفست التجهيز: الورقة في <code>iframe</code> بمستند مستقل</b> وألوانها بتتقري من توكنز الصفحة وقت البناء (المستند المولّد مالوش <code>:root</code>). أيقونتا التاريخ والوقت <b>SVG</b> مش إيموجي (الإيموجي مابيترسمش على أجهزة المخزن). الورقة الناقصة (أوردر فشل جلبه / بنود مقصوصة) بتتكتب عليها «ناقصة» — الموظف هيمشي بيها للمخزن.</li>
+            <li><b>v1.72.0</b> — صفر تسجيل في D1 للمانفست (قراءة بحتة، زي طباعة الليبلات من التغليف) — فمفيش <code>type</code> جديد ولا تسجيل في <code>ecommoda-constants</code>.</li>
             <li><b>v2.5.0</b> — <b>مربعات المناطق</b> في نص صندوق الأعداد = فلتر بضغطة. العدد جوّه المربع من <b>الطابور كله</b> مش من المفلتر: لو اتحسب على المفلتر، أول ضغطة كانت هتصفّر باقي المربعات فمحدش يقدر يرجّع. والضغط بينادي نفس <code>rdyMsToggleItem('zone', …)</code> — <b>حالة واحدة</b> مع فلتر «المنطقة»، مش حالة موازية.</li>
             <li><b>v2.5.0</b> — قسم الفلاتر <b>مقفول افتراضيًا</b>، و«المنطقة» بقت <b>أول فلتر</b>. قيمة الفلتر هي النص المترجم المعروض في العمود، مش قيمة الميتافيلد.</li>
             <li><b>v2.5.0</b> — نوع الأوردر بقى <b>نص عادي بنفس الألوان</b> بدل بادج، والمندوب الفاضي بقى «غير محدد»، وزرار «طباعة» بقى «إعادة» (نفس الرابط — لسه لينك خارجي بلا أكشن).</li>
@@ -1369,6 +1431,21 @@
   </div>
 </div>
 
+<!-- ══ §MANIFEST-MODAL — مانفست التجهيز (v1.72.0) ══════════════════════════
+     معاينة الورقة = نفس الـ iframe اللي بتتطبع منه (§MANIFEST-JS) — اللي
+     على الشاشة هو اللي بيطلع من الطابعة. مفيش onclick على الـ overlay:
+     الضغط برّه مايقفلهاش (نفس قرار §OUTCOME-MODAL). -->
+<div class="modal-overlay hidden" id="pmModal" role="dialog" aria-modal="true" aria-labelledby="pmTitle">
+  <div class="modal-box pm-box">
+    <div class="pm-title" id="pmTitle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3h6v3H9z"/><path d="M9 11h6M9 15h6"/></svg>
+      مانفست التجهيز
+    </div>
+    <div class="modal-body" id="pmBody"></div>
+    <div class="modal-footer" id="pmFooter"></div>
+  </div>
+</div>
+
 <!-- ══════════════════════════════════════════════════════════════
      §TOOL
      ══════════════════════════════════════════════════════════════ -->
@@ -1379,48 +1456,30 @@
 
 <div class="tab-panel active" id="panel-scan">
 
-  <!-- ─── §TOOL::entry — تلات مداخل جنب بعض (v2.5.0) ──────────────
-       الشاشة بتتقسم بالتساوي على التلاتة، وكل مدخل ليه لون ثابت:
-       شوبيفاي أزرق · بوسطة أحمر · اليدوي محايد. اللون مش زينة —
-       الموظف بيشوف قدامه ملصق فيه باركود أوردر أو ملصق بوسطة،
-       والمربع الغلط معناه استعلام فاشل ووقت ضايع.
-       ⚠️ المربع النشط بيتعلّم بإطار وشريط علوي، و`lastEntryMode`
-          بيرجّع الفوكس لنفس المربع بعد كل عملية — راجع
-          §SCAN::entryMode. ────────────────────────────────────── -->
+  <!-- ─── §TOOL::entry — مربع الإدخال الموحّد (v1.72.0) ─────────────
+       مربع واحد بدل التلات. الموظف بيمسح ملصق شوبيفاي أو بوسطة أو بيكتب
+       رقم الأوردر، والأداة بتعرف النوع بالطول (§SCAN::entryClassify) والـ chip
+       بيتبعه. الإضافة بـ Enter أو زرار «بحث» **بس** — مفيش مؤقّت أبدًا.
+       ⚠️ مفيش أي حاجة تحت المربع — الحالة بتوصل باللون والـ chip والـ pill
+          والتوست والصندوق الأحمر. ──────────────────────────────────── -->
   <div id="subscreenEntry">
-    <div class="entry-grid">
-
-      <div class="entry-card entry-shopify is-active" id="entryCard-shopify"
-           onclick="focusEntryInput('shopify')">
-        <span class="entry-active-tag">النشط الآن</span>
-        <div class="entry-title">🔫 ماسح باركود شوبيفاي</div>
-        <input type="text" class="scan-input si-shopify" id="orderScanInput"
-               placeholder="امسح باركود الأوردر هنا..." autocomplete="off" inputmode="text">
-        <div class="scan-hint">Scanner Gun: امسح وسيتم الاستعلام تلقائياً</div>
-      </div>
-
-      <div class="entry-card entry-bosta" id="entryCard-bosta"
-           onclick="focusEntryInput('bosta')">
-        <span class="entry-active-tag">النشط الآن</span>
-        <div class="entry-title">🚚 ماسح باركود بوسطة</div>
-        <input type="text" class="scan-input si-bosta" id="bostaScanInput"
-               placeholder="امسح تراكينج بوسطة هنا..." autocomplete="off" inputmode="text">
-        <div class="scan-hint">Scanner Gun: التراكينج بيتحوّل لرقم أوردر تلقائياً</div>
-      </div>
-
-      <div class="entry-card entry-manual" id="entryCard-manual"
-           onclick="focusEntryInput('manual')">
-        <span class="entry-active-tag">النشط الآن</span>
-        <div class="entry-title">⌨️ إدخال يدوي</div>
-        <div class="scan-input-wrap">
-          <input type="text" class="scan-input si-manual" id="orderManualInput"
-                 placeholder="أدخل رقم الأوردر يدوياً..." autocomplete="off" inputmode="text">
-          <button class="btn-primary" id="btnLookup" onclick="submitManualLookup()">بحث</button>
+    <div class="entry-bar" id="entryBar" data-view="shopify">
+      <div class="entry-chips" id="entryChips" role="group" aria-label="مصدر الإدخال">
+        <div class="entry-segs">
+          <button type="button" class="entry-chip is-on" data-m="shopify" id="chip-shopify" aria-pressed="true">🔫 فاتورة شوبيفاي</button>
+          <button type="button" class="entry-chip" data-m="bosta" id="chip-bosta" aria-pressed="false">🚚 بوليصة بوسطة</button>
+          <button type="button" class="entry-chip" data-m="manual" id="chip-manual" aria-pressed="false">⌨️ رقم الأوردر</button>
         </div>
-        <div class="scan-hint">أدخل الرقم مع أو بدون # ثم اضغط بحث أو Enter</div>
+        <span class="entry-hint" id="entryHint" data-m="shopify" aria-hidden="true"></span>
       </div>
-
+      <div class="scan-input-wrap">
+        <input type="text" class="scan-input" id="entryInput" dir="auto" autocomplete="off" autocapitalize="off"
+               spellcheck="false" enterkeyhint="search" inputmode="text"
+               aria-label="باركود فاتورة شوبيفاي">
+        <button type="button" class="btn-primary" id="btnLookup">بحث</button>
+      </div>
     </div>
+    <div class="bc-fails" id="entryFails" role="alert" hidden></div>
     <div id="lookupLoading" class="eco-loadbox" role="status" aria-live="polite" style="display:none">
       <span class="eco-load-spin" aria-hidden="true"></span>
     <div class="eco-load-title">⏳ جاري البحث عن الأوردر برجاء الانتظار ...</div>
@@ -1637,6 +1696,15 @@
           </div>
         </div>
         <div class="tbl-bar-left">
+          <!-- 🧾 مانفست التجهيز (v1.72.0) — بنود كل الأوردرات الظاهرة في الجدول بعد
+               الفلترة، مجمّعة بالـ SKU. الرقم = `rdyFilteredRows().length` بالحرف
+               (نفس قاعدة بادج «طباعة الكل»: رقم على زرار بيتقري كوعد بشغل).
+               `stopPropagation` لأن شريط النتائج كله onclick لطي الجدول. -->
+          <button class="act-btn manifest" id="pmBtn" type="button" disabled
+                  onclick="event.stopPropagation(); pmOpen();">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3h6v3H9z"/><path d="M9 11h6M9 15h6"/></svg>
+            مانفست التجهيز <span class="pm-btn-n" id="pmBtnN">0</span>
+          </button>
         </div>
       </div>
 
@@ -2064,94 +2132,204 @@ let currentEligibility = null;
 // أوردر فات بيتسحب على اللي بعده = إقرار ما اتسألش عنه ومكتوب في D1.
 let currentEligibilityAck = false;
 
-// ─── §SCAN::entryMode — الفوكس بيرجع لآخر مدخل اتشتغل منه (v2.5.0) ───
+// ─── §SCAN::entryMode — مربع الإدخال الموحّد (v1.72.0) ───
 //
-// الموظف اللي شغّال دفعة كلها من ملصقات بوسطة مش عايز يرجع بإيده لمربع
-// بوسطة بعد كل أوردر. `lastEntryMode` بيتسجّل عند **بداية كل استعلام** —
-// يعني المربع اللي الرقم اتكتب فيه فعلاً، وبيتغيّر كمان بمجرّد ما الفوكس
-// يروح لمربع تاني (بالماوس أو بالتاب).
+// مربع واحد بيستقبل: باركود فاتورة شوبيفاي (Order ID) · تراكينج بوسطة ·
+// رقم الأوردر. **النوع بيتحدد بالطول** مش بالـ chip، والـ chip بيتبع آخر نوع
+// اتعرّف وبيفضل عليه (مفيش تثبيت ولا رجوع للقديم). الإضافة بـ Enter أو «بحث»
+// بس — مفيش مؤقّت إضافة تلقائية أبدًا: السكانر بيبعت Enter (أحمد 25-10-2026)،
+// والمؤقّت كان بيفتح أوردر ناقص (`6239` وأنت لسه بتكتب `62398`).
 //
-// ⚠️ **في ذاكرة الصفحة بس** — مش في التخزين المحلي. المفتاح الوحيد في
-//    التخزين هو السر (Standards #28)، والموظف اللي بيخرج ويدخل تاني
-//    المفروض يبدأ من المربع الافتراضي مش من مربع زميله.
-const ENTRY_INPUT_IDS = {
-  shopify: 'orderScanInput',
-  bosta:   'bostaScanInput',
-  manual:  'orderManualInput',
+// ⚠️ **في ذاكرة الصفحة بس** — مش في التخزين المحلي (Standards #28).
+// ⚠️ الصفحة دي **بتفتح أوردر واحد في المرة**: مفيش لصق متعدد ولا بحث بالـ SKU
+//    ولا باركود منتج هنا (ده في مربع سكان بنود الأوردر جوّه شاشة التشييك) —
+//    كلهم بيترفضوا برسالة قصيرة في الصندوق الأحمر.
+// ⛔ الأطوال مصدرها قياس حقيقي (unified-entry-box.md §٢-أ) — **بنود مفتوحة**:
+//    تراكينج بطول غير ٩–١٠ ؟ · أوردر أكتر من ٧ خانات ؟ — أي طول تاني بيترفض
+//    بدل ما يتخمّن، وأول حالة حقيقية بتتضاف هنا في `ENTRY_CFG`.
+const ENTRY_CFG = {
+  ORDER_NAME:      { min: 1,  max: 7  },   // رقم الأوردر (#62403) — قرار أحمد: أكبر طول ٧
+  PRODUCT_BARCODE: { min: 8,  max: 8  },   // باركود منتج — مرفوض هنا (مش أوردر)
+  TRACKING:        { min: 9,  max: 10 },   // تراكينج بوسطة
+  ORDER_ID:        { min: 13, max: 15 },   // باركود فاتورة شوبيفاي (Order ID)
+  MISSING_ENTER_MS: 1500,                  // تحذير «مفيش Enter» — عمره ما بيفتح لوحده
+  TOAST_MS: { error: 6500 },
 };
-const DEFAULT_ENTRY_MODE = 'shopify';
-let lastEntryMode = DEFAULT_ENTRY_MODE;
+const ENTRY_MODES = {
+  shopify: { to: 'فاتورة شوبيفاي', aria: 'باركود فاتورة شوبيفاي' },
+  bosta:   { to: 'بوليصة بوسطة',   aria: 'رقم تتبع بوسطة' },
+  manual:  { to: 'رقم الأوردر',    aria: 'رقم الأوردر' },
+};
+const entryInRange = (n, r) => n >= r.min && n <= r.max;
+const ENTRY_AR_D = '٠١٢٣٤٥٦٧٨٩', ENTRY_FA_D = '۰۱۲۳۴۵۶۷۸۹';
+const entryToWestern = s => String(s ?? '')
+  .replace(/[٠-٩]/g, d => ENTRY_AR_D.indexOf(d)).replace(/[۰-۹]/g, d => ENTRY_FA_D.indexOf(d));
 
-function markActiveEntryCard() {
-  Object.keys(ENTRY_INPUT_IDS).forEach(m => {
-    const card = document.getElementById(`entryCard-${m}`);
-    if (card) card.classList.toggle('is-active', m === lastEntryMode);
-  });
+// بيشيل `#` والمسافات غير المرئية (علامات RTL) ويحوّل الأرقام العربي/الفارسي.
+function entryNormalize(raw) {
+  let s = String(raw ?? '').replace(/[‎‏‪-‮⁦-⁩ ]/g, ' ');
+  s = entryToWestern(s).trim();
+  const noHash = s.replace(/#/g, '').trim();
+  if (/^\d[\d\s,،;]*$/.test(noHash)) return { clean: noHash, numeric: true };
+  return { clean: s, numeric: false };
 }
 
-// بتتنادى من الضغط على أي مربع (بتغيّر المربع النشط) ومن كل رجوع لشاشة
-// الإدخال (من غير باراميتر — بترجّع الفوكس للمربع النشط زي ما هو).
-function focusEntryInput(mode) {
-  if (mode && ENTRY_INPUT_IDS[mode]) lastEntryMode = mode;
-  markActiveEntryCard();
-  const el = document.getElementById(ENTRY_INPUT_IDS[lastEntryMode] || ENTRY_INPUT_IDS[DEFAULT_ENTRY_MODE]);
-  if (el) el.focus();
+// → { kind: 'empty' } | { kind: 'single', type, value, mode } | { kind: 'invalid', reason }
+function entryClassify(raw) {
+  const n = entryNormalize(raw);
+  if (!n.clean) return { kind: 'empty' };
+  if (!n.numeric)
+    return { kind: 'invalid', reason: 'مش رقم — اكتب رقم الأوردر أو امسح الملصق (مفيش بحث بالـ SKU هنا)' };
+  const tokens = n.clean.split(/[\s,،;]+/).filter(Boolean);
+  if (tokens.length > 1)
+    return { kind: 'invalid', reason: `${tokens.length} أرقام — الأداة بتفتح أوردر واحد في المرة` };
+  const v = tokens[0], len = v.length;
+  if (entryInRange(len, ENTRY_CFG.ORDER_NAME)) {
+    const nv = String(Number(v));
+    if (nv === '0') return { kind: 'invalid', reason: 'رقم الأوردر مش ممكن يبقى صفر' };
+    return { kind: 'single', type: 'order_name', value: nv, mode: 'manual' };
+  }
+  if (entryInRange(len, ENTRY_CFG.PRODUCT_BARCODE))
+    return { kind: 'invalid', reason: `${len} أرقام — ده باركود منتج مش أوردر (بيتمسح جوّه شاشة التغليف)` };
+  if (entryInRange(len, ENTRY_CFG.TRACKING))
+    return { kind: 'single', type: 'tracking', value: v, mode: 'bosta' };
+  if (entryInRange(len, ENTRY_CFG.ORDER_ID))
+    return { kind: 'single', type: 'order_id', value: v, mode: 'shopify' };
+  return { kind: 'invalid', reason: len > ENTRY_CFG.ORDER_ID.max
+    ? `${len} خانة — غالبًا باركودين ملزوقين، اسكنهم واحد واحد`
+    : `${len} خانة — مش طول معروف، غالبًا اتقرا ناقص` };
+}
+
+const entryEl = document.getElementById('entryInput');
+let curMode = 'shopify';          // الـ chip الحالي — بيتبع آخر نوع اتعرّف وبيفضل عليه
+let entryStartMode = 'shopify';   // الـ chip وقت بداية الإدخال الحالي (عشان نكتب «تلقائي»)
+let entryMissingTimer = null;
+let entryFails = [], entryFailSeq = 0;
+
+function renderEntryBar() {
+  const c = entryClassify(entryEl.value);
+  if (c.kind === 'single') curMode = c.mode;           // مرفوض = الـ chip ما بيتغيّرش
+  if (!entryEl.value) entryStartMode = curMode;        // مفيش إدخال شغّال = البداية هي الحالي
+  const autoSwitched = !!entryEl.value && curMode !== entryStartMode;
+  document.getElementById('entryBar').dataset.view = curMode;
+  document.querySelectorAll('.entry-chip').forEach(ch => {
+    const on = ch.dataset.m === curMode;
+    ch.classList.toggle('is-on', on);
+    ch.setAttribute('aria-pressed', on ? 'true' : 'false');
+    ch.querySelectorAll('.entry-chip-auto').forEach(x => x.remove());
+    if (on && autoSwitched) {
+      const t = document.createElement('span');
+      t.className = 'entry-chip-auto'; t.textContent = 'تلقائي';
+      ch.appendChild(t);
+    }
+  });
+  entryEl.setAttribute('aria-label', ENTRY_MODES[curMode].aria);
+  const hint = document.getElementById('entryHint');
+  hint.dataset.m = curMode;
+  const ico  = curMode === 'manual' ? 'ico-kbd' : 'ico-scan';
+  const text = autoSwitched ? 'اتحوّل تلقائيًا إلى ' + ENTRY_MODES[curMode].to
+             : curMode === 'manual' ? 'كتابة الرقم يدوي' : 'سكانر';
+  hint.innerHTML = `<svg viewBox="0 0 24 24"><use href="#${ico}"/></svg>${esc(text)}`;
+}
+
+// ─── §SCAN::entryFails — الصندوق الأحمر (رفض قبل الإرسال) ───
+// سطر واحد قصير لكل رفض: الرقم — السبب. ✕ بتشيله. فشل الاستعلام نفسه
+// (أوردر مش موجود · ملغي · …) لسه في `showPackOutcome` — ده بتاع الأوردرات
+// اللي **اتبعتت** فعلاً، والصندوق ده للي **ما اتبعتتش**.
+function entryRenderFails() {
+  const box = document.getElementById('entryFails');
+  box.hidden = entryFails.length === 0;
+  box.innerHTML = entryFails.map(f => `
+    <div class="bc-fail-row">
+      <span class="bc-fail-ico" aria-label="رفض">⚠️</span>
+      <span class="bc-fail-lbl">${esc(f.label)}</span>
+      <span class="bc-fail-why">— ${esc(f.reason)}</span>
+      <button class="bc-fail-x" type="button" data-fx="${f.id}" aria-label="شيل ${esc(f.label)} من الصندوق">✕</button>
+    </div>`).join('');
+}
+function entryAddFail(label, reason) {
+  label = String(label || '—').slice(0, 40);
+  if (!entryFails.some(f => f.label === label && f.reason === reason))
+    entryFails.unshift({ id: ++entryFailSeq, label, reason });
+  entryRenderFails();
+  playBeep('error');
+}
+document.getElementById('entryFails').addEventListener('click', e => {
+  const x = e.target.closest('[data-fx]');
+  if (!x) return;
+  entryFails = entryFails.filter(f => f.id !== +x.dataset.fx);
+  entryRenderFails();
+  focusEntryInput();
+});
+
+// بتتنادى من كل رجوع لشاشة الإدخال — الفوكس على الحقل الواحد.
+function focusEntryInput() {
+  if (entryEl && !entryEl.disabled) entryEl.focus();
 }
 function resetEntryMode() {
-  lastEntryMode = DEFAULT_ENTRY_MODE;
-  markActiveEntryCard();
+  curMode = 'shopify'; entryStartMode = 'shopify';
+  entryEl.value = ''; entryFails = []; entryRenderFails(); renderEntryBar();
 }
 
-// ─── §SCAN::scannerBinding — نفس سلوك السكانة للمربعين ───
-// السكانة بتطلّق الحروف أسرع من 80ms، فالمهلة القصيرة معناها «ده سكان
-// خلص» والطويلة معناها «إنسان بيكتب». نفس المنطق للمربعين — بس
-// `onSubmit` مختلفة: مربع شوبيفاي بيبعت رقم الأوردر، ومربع بوسطة بيبعت
-// رقم التتبع للـ Worker اللي بيحوّله لرقم أوردر.
-function bindScannerInput(el, mode, onSubmit) {
-  let timer, lastKey = 0;
-  el.addEventListener('input', () => {
-    clearTimeout(timer);
-    const gap = Date.now() - lastKey;
-    lastKey = Date.now();
-    timer = setTimeout(fire, gap < 80 ? 150 : 400);
-  });
-  el.addEventListener('keydown', e => {
-    if (e.key === 'Enter') { clearTimeout(timer); fire(); }
-  });
-  // الفوكس بالماوس/التاب بيغيّر المربع النشط كمان — من غير كده، سكان
-  // في مربع اتفتح بالإيد كان هيرجّع الفوكس لمربع تاني بعد التغليف.
-  el.addEventListener('focus', () => {
-    if (lastEntryMode !== mode) { lastEntryMode = mode; markActiveEntryCard(); }
-  });
-  function fire() {
-    const val = el.value.trim();
-    el.value = ''; el.focus();
-    if (!val) return;
-    lastEntryMode = mode; markActiveEntryCard();
-    onSubmit(val);
+// ─── §SCAN::entryFire — Enter أو «بحث» بس ───
+// القراءة والمسح **جوّه fire()** مش جوّه الـ listener (Step 5) — والإدخال
+// بيتمسح قبل النداء، فسكانة تانية بعده مش بتتلزق في الرقم القديم.
+function entryFire() {
+  clearTimeout(entryMissingTimer);
+  const raw = entryEl.value;
+  const c = entryClassify(raw);
+  if (c.kind === 'empty') return;
+  // استعلام شغّال = الزرار متعطّل (lookupOrder) — سكانة في نصّه مابتتبعتش
+  if (document.getElementById('btnLookup').disabled) {
+    showToast('جاري الاستعلام — استنى لحد ما يخلص', 'error', 3000);
+    return;
   }
+  entryEl.value = '';
+  entryStartMode = curMode;      // الـ chip اللي اتعرّف يفضل هو الحالي
+  renderEntryBar();
+  entryEl.focus();
+  if (c.kind === 'invalid') {
+    const shown = entryNormalize(raw).clean || String(raw).trim();
+    showToast(`${shown.slice(0, 40)} — ${c.reason}`, 'error', ENTRY_CFG.TOAST_MS.error);
+    entryAddFail(shown, c.reason);
+    return;
+  }
+  // أي إدخال سليم بيفضّي الصندوق الأحمر — الصف القديم فيه رقم ماتفتحش خلاص
+  if (entryFails.length) { entryFails = []; entryRenderFails(); }
+  lookupOrder(c.value, c.type === 'tracking' ? { tracking: true } : {});
 }
 
-const orderInput = document.getElementById('orderScanInput');
-bindScannerInput(orderInput, 'shopify', val => lookupOrder(val));
-
-// مربع بوسطة — بيمرّر `{ tracking: true }` فالـ Worker بيحوّل التراكينج
-// لرقم أوردر ويكمّل **بنفس مسار** `get_order` بالحرف.
-const bostaInput = document.getElementById('bostaScanInput');
-bindScannerInput(bostaInput, 'bosta', val => lookupOrder(val, { tracking: true }));
-
-const orderManualInput = document.getElementById('orderManualInput');
-orderManualInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitManualLookup(); });
-orderManualInput.addEventListener('focus', () => {
-  if (lastEntryMode !== 'manual') { lastEntryMode = 'manual'; markActiveEntryCard(); }
+entryEl.addEventListener('input', () => {
+  // أرقام عربي → إنجليزي لحظيًا (١٤ رقم عربي بيبقى Order ID عادي)
+  if (/[٠-٩۰-۹]/.test(entryEl.value)) entryEl.value = entryToWestern(entryEl.value);
+  clearTimeout(entryMissingTimer);
+  renderEntryBar();
+  const nn = entryNormalize(entryEl.value);
+  // الرقم وصل ومفيش Enter: تحذير بس — **عمره ما بيفتح لوحده**
+  if (nn.numeric && nn.clean.replace(/\D/g, '').length >= ENTRY_CFG.PRODUCT_BARCODE.min) {
+    const v = entryEl.value;
+    entryMissingTimer = setTimeout(() => {
+      if (entryEl.value !== v) return;
+      showToast(`الرقم وصل (${nn.clean.length} خانة) ولسه ماتفتحش — اضغط Enter أو «بحث». لو بيتكرر مع السكانر راجع إعداد Enter فيه`,
+                'error', ENTRY_CFG.TOAST_MS.error);
+    }, ENTRY_CFG.MISSING_ENTER_MS);
+  }
 });
-function submitManualLookup() {
-  const val = orderManualInput.value.trim();
-  if (!val) return;
-  orderManualInput.value = '';
-  lastEntryMode = 'manual'; markActiveEntryCard();
-  lookupOrder(val);
-}
+entryEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); entryFire(); }
+});
+document.getElementById('btnLookup').addEventListener('click', entryFire);
+
+// الضغط على chip = نقطة بداية (مفيش رفض ولا قفل). بيفضّي الحقل — نص قديم
+// تحت لون جديد كان هيتفسّر غلط. أي إدخال بعده بيتعرّف بطوله والـ chip بيتبعه.
+document.getElementById('entryChips').addEventListener('click', e => {
+  const ch = e.target.closest('.entry-chip');
+  if (!ch) return;
+  curMode = entryStartMode = ch.dataset.m;
+  entryEl.value = ''; clearTimeout(entryMissingTimer);
+  renderEntryBar(); entryEl.focus();
+});
+renderEntryBar();
 
 // ══════════════════════════════════════════════════════════════
 // §TOOL-JS
@@ -3745,6 +3923,7 @@ function rdyApplyFilters() {
   const filtered = rdyFilteredRows();
   rdyRenderTable(rdyApplySort(filtered));
   document.getElementById('rdyFilteredCount').textContent = filtered.length.toLocaleString('en-US');
+  pmBtnSync(filtered.length);   // رقم زرار المانفست = المعروض فعلاً
 }
 
 // ─── §READY-JS::renderTable ───
@@ -4026,6 +4205,7 @@ function rdyRebuildFilterItems() {
 // تصفير كامل — بيتنادى من doLogout عشان الطابور مايفضلش معروض لموظف خرج
 function rdyResetAll() {
   rdyAllOrders = [];
+  pmBtnSync(0); pmState.token++; pmState.model = null;
   rdyStopTicker();
   rdyLastLoadedAt = null;
   rdyDirty = false;
@@ -4690,6 +4870,355 @@ function bcFirePrint() {
 }
 
 // ══ §LABEL-END — آخر ماكينة الليبل ══
+
+// ══════════════════════════════════════════════════════════════
+// §MANIFEST-JS — مانفست التجهيز (v1.72.0 · طلب أحمد 05-11-2026)
+// ══════════════════════════════════════════════════════════════
+//
+// الموظف بيفلتر الطابور وبيطبع ورقة واحدة فيها كل القطع المطلوبة لكل الأوردرات
+// الظاهرة مجمّعة بالـ SKU، يروح المخزن يجيبها مرة واحدة وينقلها لطاولة
+// التجهيز، وبعدين يغلّف بالطريقة المعتادة (السكان زي ما هو).
+//
+// 🔴 قراءة بحتة — صفر كتابة على شوبيفاي وصفر صف D1 (قرار أحمد، زي طباعة
+//    الليبلات من التغليف). `POST get_pick_manifest` على Worker التغليف v2.11.0.
+// 🔴 البنود من الـ Worker (`classifyOrderItems` نفسها) — الواجهة بتجمّع بس
+//    (`pmAggregate`) ومابتحسبش أهلية. الأوردر اللي مبقاش جاهز وقت الجلب
+//    بيرجع `skipped` بسببه، واللي فشل جلبه `failed` — **الاتنين بيتقالوا،
+//    مايتبلعوش**، ومانفست ناقصة بتتكتب عليها «ناقصة» في الورقة نفسها:
+//    الموظف هيمشي بيها للمخزن، وقطعة ناقصة من غير تنبيه أسوأ من مفيش ورقة.
+// 🔴 الطباعة في `iframe` بمستند مستقل (A4) — **مش `#printArea`**: ماكينة الليبل
+//    (§LABEL-MACHINE) عليها `@page{size:2in 1in}` و`body>*{display:none}` على
+//    الصفحة كلها، وكتلتها لازم تفضل متطابقة بايت ببايت مع التوأم. والـ iframe
+//    مفيهوش مشكلة popup blocker.
+// ⚠️ أيقونتا التاريخ والوقت SVG مش إيموجي — الإيموجي مابيترسمش على أجهزة
+//    المخزن (درس 🖨)، وفي الورقة المطبوعة الأيقونة اللي مابتترسمش مابتفشلش
+//    بصوت.
+// ⚠️ لو الـ Worker أقدم من 2.11.0 الزرار بس هو اللي بيفشل برسالة بتسمّي
+//    النسخة — `pack.min` فضل `2.8.0` عن قصد (التغليف نفسه شغّال).
+
+const PM_CHUNK = 20;                         // أوردر في النداء (الحد في الـ Worker 40)
+let pmState = { token: 0, model: null, showDist: false };
+
+const PM_ICO = {
+  cal:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+};
+
+// ─── §MANIFEST-JS::filterText — وصف الفلاتر النشطة (للورقة) ───
+// مربعات «بوسطة/مناديب/شو روم» بتتكتب بإسم المجموعة (زي ما الموظف دوس) مش
+// بقيم المندوب الحقيقية — ونفس شرط «المجموعة مفعّلة» بتاع `rdyUpdateCourierChipStates`.
+function pmFilterText() {
+  const parts = [];
+  const sel = rdyMsState.courier.selected;
+  if (sel.size) {
+    const used = new Set(), labels = [];
+    RDY_COURIER_GROUPS.forEach(g => {
+      const vals = rdyCourierGroupValues(g.key);
+      if (vals.length && vals.every(v => sel.has(v))) { labels.push(g.label); vals.forEach(v => used.add(v)); }
+    });
+    [...sel].filter(v => !used.has(v)).forEach(v => labels.push(v));
+    parts.push(labels.join('، '));
+  }
+  if (rdyMsState.orderType.selected.size)
+    parts.push([...rdyMsState.orderType.selected].map(v => RDY_TYPE_LABELS[v] || v).join('، '));
+  if (rdyMsState.attempt.selected.size)
+    parts.push([...rdyMsState.attempt.selected].map(v => RDY_ATTEMPT_LABELS[v] || v).join('، '));
+  const q = rdySearchTerm.trim();
+  if (q) parts.push(`بحث «${q}»`);
+  if (rdyDateFrom || rdyDateTo) {
+    const dmy = d => d ? d.split('-').reverse().join('-') : '…';
+    parts.push(`تاريخ الأوردر ${dmy(rdyDateFrom)} ← ${dmy(rdyDateTo)}`);
+  }
+  return parts.length ? parts.join(' · ') : 'الكل';
+}
+
+// ─── §MANIFEST-JS::aggregate — التجميع بالـ SKU (دالة نقية) ───
+// المفتاح: SKU وبعده الباركود وبعده العنوان (نفس منطق `buildFingerprint` في
+// الـ Worker). الصنف بلا SKU **بيتعلّم** `noSku` والورقة بتقول «لا يوجد SKU».
+function pmAggregate(orders) {
+  const map = new Map();
+  for (const o of orders) {
+    for (const it of o.items) {
+      const key = (it.sku || it.barcode || it.title || '?').trim().toLowerCase();
+      let e = map.get(key);
+      if (!e) {
+        e = { key, sku: it.sku || '', barcode: it.barcode || '', title: it.title || '',
+              noSku: !it.sku, total: 0, orders: [] };
+        map.set(key, e);
+      }
+      if (!e.barcode && it.barcode) e.barcode = it.barcode;
+      const qty = Number(it.quantity) || 0;
+      e.total += qty;
+      // نفس الأوردر ممكن يكون فيه سطرين لنفس الصنف — بيتدمجوا في خانة واحدة
+      const ex = e.orders.find(x => x.orderId === o.orderId && x.orderType === o.orderType);
+      if (ex) ex.qty += qty;
+      else e.orders.push({ orderNumber: o.orderNumber, orderId: o.orderId, orderType: o.orderType,
+                           repeat: o.isRepeatAttempt === true, qty });
+    }
+  }
+  const num = (a, b) => String(a).localeCompare(String(b), 'en', { numeric: true });
+  const list = [...map.values()];
+  list.forEach(e => e.orders.sort((a, b) => num(a.orderNumber, b.orderNumber)));
+  // بالـ SKU رقميًا (الموديل واللون يتجمّعوا والمقاسات تطلع تصاعدي = ماشي مع الرفوف)،
+  // وبلا SKU في الآخر.
+  list.sort((a, b) => (a.noSku - b.noSku) || num(a.sku || a.title, b.sku || b.title));
+  return list;
+}
+
+function pmTotals(orders, items) {
+  const pieces = orders.reduce((n, o) => n + o.items.reduce((m, i) => m + (Number(i.quantity) || 0), 0), 0);
+  const piecesAgg = items.reduce((n, e) => n + e.total, 0);
+  return { orders: orders.length, pieces, skus: items.length, consistent: pieces === piecesAgg };
+}
+
+// ─── §MANIFEST-JS::sheet — ورقة A4 (مستند كامل) ───
+// 🔴 الألوان بتتقرا من توكنز الصفحة وقت البناء (`T()`) وبتتحط كـ `--` جوّه
+//    مستند الـ iframe — المستند المولّد مالوش `:root`، ومفيش hex مكتوب هنا.
+function pmSheetHTML(m, opt = {}) {
+  const T = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const font = T('--font-body') || 'sans-serif';
+  const p = cairoParts(m.at) || {};
+  const h = Number(p.hour) || 0;
+  const when = `${p.day}-${p.month}-${p.year}`;
+  const time = `${String(h % 12 || 12).padStart(2, '0')}:${p.minute} ${h >= 12 ? 'م' : 'ص'}`;
+  const num = n => Number(n).toLocaleString('en-US');
+
+  const css = `
+  :root{--ink:${T('--print-ink')};--paper:${T('--print-paper')};--line:${T('--border-strong')};
+        --soft:${T('--surface-2')};--mute:${T('--text-secondary')};--mid:${T('--text-mid')};
+        --hi:${T('--amber-light')};--hi-line:${T('--amber-border')};
+        --bad:${T('--red-dark')};--bad-bg:${T('--red-light')};--bad-line:${T('--red-border')}}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--paper);color:var(--ink);font-family:${font};direction:rtl}
+  body{font-size:13px;line-height:1.55;padding:16px 20px}
+  .hd{display:flex;align-items:center;gap:18px;border-bottom:2px solid var(--ink);padding-bottom:8px}
+  .ttl{font-size:22px;font-weight:800}
+  .when{display:inline-flex;align-items:center;gap:6px;font-size:15px;font-weight:700;margin-inline-start:8px}
+  .when svg{width:17px;height:17px}
+  .when .sep{width:8px}
+  .meta{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:10px 0 12px;font-size:14px}
+  .meta b{font-weight:800}
+  .warn{border:2px solid var(--bad-line);background:var(--bad-bg);color:var(--bad);border-radius:6px;padding:8px 12px;margin:0 0 12px;font-weight:700;font-size:13px}
+  .warn ul{margin:4px 0 0;padding-inline-start:18px;font-weight:600}
+  table{width:100%;border-collapse:collapse;table-layout:auto}
+  thead{display:table-header-group}
+  th{background:var(--soft);font-size:12px;font-weight:800;text-align:center;border:1px solid var(--line);padding:6px 8px;color:var(--mid)}
+  td{border:1px solid var(--line);padding:6px 8px;vertical-align:middle;font-size:13px;font-weight:600}
+  tr{break-inside:avoid;page-break-inside:avoid}
+  .c{text-align:center}
+  .tick{width:34px;text-align:center}
+  .box{display:inline-block;width:16px;height:16px;border:2px solid var(--ink);border-radius:3px;vertical-align:middle}
+  .sku{font-weight:800;font-size:14px;direction:ltr;text-align:left;word-break:break-word}
+  .nosku{font-weight:800;color:var(--bad)}
+  .ttl-sub{display:block;font-size:11.5px;color:var(--mute);font-weight:600;direction:ltr;text-align:left}
+  .qty{width:64px;text-align:center;font-size:20px;font-weight:800}
+  tr.multi td{background:var(--hi)}
+  tr.multi .qty{font-size:24px}
+  .ords{line-height:1.9}
+  .o{display:inline-block;white-space:nowrap;margin-inline-end:10px;font-weight:700}
+  .o em{font-style:normal;font-weight:800;margin-inline-start:2px}
+  .o small{font-size:10px;color:var(--mute);font-weight:700;margin-inline-end:2px}
+  .bc{width:104px;direction:ltr;text-align:center;font-size:12px;color:var(--mid)}
+  tfoot td{background:var(--soft);font-weight:800;font-size:14px;text-align:center}
+  .note{margin-top:12px;font-size:11.5px;color:var(--mute);line-height:1.8}
+  .skipped{margin-top:10px;font-size:11.5px;color:var(--mid);border-top:1px dashed var(--line);padding-top:6px}
+  .pg2{break-before:page;page-break-before:always;margin-top:18px}
+  .pg2 h2{font-size:17px;margin:0 0 8px}
+  .dist td.items{direction:ltr;text-align:left}
+  .dist .it{display:block}
+  @media screen{body{max-width:210mm;margin:0 auto}}
+  @media print{@page{size:A4;margin:12mm}body{padding:0;font-size:12.5px}}`;
+
+  const rowsHTML = m.items.map(e => {
+    const ords = e.orders.map(o =>
+      `<span class="o">${o.orderType === 'S2' ? '<small>[S-2]</small>' : ''}${esc(o.orderNumber)}` +
+      `${o.qty > 1 ? `<em>×${num(o.qty)}</em>` : ''}${o.repeat ? ' ↻' : ''}</span>`).join('');
+    const skuCell = e.noSku
+      ? `<span class="nosku">لا يوجد SKU</span><span class="ttl-sub">${esc(e.title)}</span>`
+      : `<span class="sku">${esc(e.sku)}</span>`;
+    return `<tr class="${e.total >= 2 ? 'multi' : ''}">
+      <td class="tick"><span class="box"></span></td>
+      <td>${skuCell}</td>
+      <td class="qty">${num(e.total)}</td>
+      <td class="ords">${ords}</td>
+      <td class="bc">${esc(e.barcode || '—')}</td></tr>`;
+  }).join('');
+
+  const incomplete = m.failed.length + m.truncated.length > 0;
+  let warn = '';
+  if (incomplete) {
+    const li = [];
+    if (m.failed.length) li.push(`<li>ما اتجابتش بنود ${num(m.failed.length)} أوردر: ${m.failed.map(f => esc(f.orderNumber ? f.orderNumber : '#' + f.orderId)).join(' · ')}</li>`);
+    if (m.truncated.length) li.push(`<li>بنود مقصوصة (أكتر من اللي الاستعلام بيجيبه): ${m.truncated.map(esc).join(' · ')}</li>`);
+    warn = `<div class="warn">⚠️ المانفست ناقصة — راجع الأوردرات دي قبل ما تعتمد عليها<ul>${li.join('')}</ul></div>`;
+  }
+  if (!m.totals.consistent)
+    warn += '<div class="warn">⚠️ مجموع القطع في الجدول مش مطابق لمجموع الأوردرات — لا تعتمد على الورقة وبلّغ.</div>';
+
+  const skipped = m.skipped.length
+    ? `<div class="skipped">اتشالوا من المانفست (مبقوش جاهزين): ${m.skipped.map(s => `${esc(s.orderNumber)} — ${esc(s.reason)}`).join(' · ')}</div>` : '';
+
+  const dist = opt.showDist ? `
+    <div class="pg2"><h2>توزيع القطع على الأوردرات</h2>
+    <table class="dist"><thead><tr><th style="width:140px">رقم الأوردر</th><th>الأصناف</th><th style="width:70px">القطع</th></tr></thead><tbody>
+    ${m.orders.map(o => `<tr><td class="c"><b>${o.orderType === 'S2' ? '<small>[S-2]</small> ' : ''}${esc(o.orderNumber)}${o.isRepeatAttempt === true ? ' ↻' : ''}</b></td>
+      <td class="items">${o.items.map(i => `<span class="it">${esc(i.sku || ('لا يوجد SKU — ' + i.title))} ×${num(i.quantity)}</span>`).join('')}</td>
+      <td class="c"><b>${num(o.items.reduce((n, i) => n + (Number(i.quantity) || 0), 0))}</b></td></tr>`).join('')}
+    </tbody></table></div>` : '';
+
+  // ⚠️ الوسمين بيتركّبوا نصيًا: `docs/css-check.js` بيقرا أي style في الملف كأنه CSS الصفحة،
+  //    وCSS الورقة (مستند مولّد في iframe) مش ليه علاقة بتوكنزها — درس «المستند المولّد» (Step 9A).
+  const STYLE_OPEN = '<sty' + 'le>', STYLE_CLOSE = '</sty' + 'le>';
+  return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<title>مانفست تجهيز ${esc(when)}</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700;800&display=swap" rel="stylesheet">
+${STYLE_OPEN}${css}${STYLE_CLOSE}</head><body>
+<div class="hd"><span class="ttl">مانفست تجهيز</span>
+  <span class="when">${PM_ICO.cal}<span>${esc(when)}</span><span class="sep"></span>${PM_ICO.clock}<span>${esc(time)}</span></span></div>
+<div class="meta"><div>الفلتر: <b>${esc(m.filterText)}</b></div>
+  <div>الأوردرات <b>${num(m.totals.orders)}</b> · القطع <b>${num(m.totals.pieces)}</b></div></div>
+${warn}
+<table><thead><tr><th class="tick">✓</th><th>SKU</th><th>العدد</th><th>الأوردرات</th><th>باركود</th></tr></thead>
+<tbody>${rowsHTML}</tbody>
+<tfoot><tr><td colspan="5">إجمالي القطع: ${num(m.totals.pieces)}</td></tr></tfoot></table>
+<div class="note">↻ محاولة مكرّرة · [S-2] دورة استبدال · الصنف المظلّل مطلوب في أكتر من قطعة</div>
+${skipped}${dist}</body></html>`;
+}
+
+// ─── §MANIFEST-JS::flow — الجلب بدفعات ثم المعاينة ───
+function pmBtnSync(count) {
+  const b = document.getElementById('pmBtn'), n = document.getElementById('pmBtnN');
+  if (!b || !n) return;
+  n.textContent = Number(count).toLocaleString('en-US');
+  b.disabled = !count;
+}
+
+function pmShow(bodyHTML, footerBtns) {
+  document.getElementById('pmBody').innerHTML = bodyHTML;
+  const ftr = document.getElementById('pmFooter');
+  ftr.innerHTML = '';
+  footerBtns.forEach(b => {
+    const el = document.createElement('button');
+    el.className = b.cls; el.textContent = b.label;
+    if (b.grow) el.style.flex = '1';
+    if (b.disabled) el.disabled = true;
+    el.addEventListener('click', b.fn);
+    ftr.appendChild(el);
+  });
+  document.getElementById('pmModal').classList.remove('hidden');
+}
+
+function pmClose() {
+  pmState.token++;                       // أي جلب شغّال يقف عند الدفعة الجاية
+  document.getElementById('pmModal').classList.add('hidden');
+  document.getElementById('pmBody').innerHTML = '';   // مايفضلش iframe مخفي شايل نص
+  focusEntryInput();
+}
+
+async function pmOpen() {
+  if (!currentEmployee) return;
+  const rows = rdyFilteredRows();
+  if (!rows.length) return;
+  const myToken = ++pmState.token;
+  const filterText = pmFilterText();
+  const refs = rows.map(o => ({ id: o.orderId, type: o.orderType }));
+
+  const paint = (done) => pmShow(`
+    <div class="pm-progress" role="status" aria-live="polite">
+      <div class="eco-load-spin" aria-hidden="true"></div>
+      <div style="font-weight:800">⏳ جاري جلب بنود الأوردرات من شوبيفاي ...</div>
+      <div style="font-size:13px;color:var(--text-secondary)">${done.toLocaleString('en-US')} من ${refs.length.toLocaleString('en-US')}</div>
+      <div class="pm-bar"><i style="width:${Math.round(done / refs.length * 100)}%"></i></div>
+    </div>`, [{ label: 'إلغاء', cls: 'btn-ghost', fn: pmClose }]);
+  paint(0);
+
+  const orders = [], skipped = [], failed = [];
+  for (let i = 0; i < refs.length; i += PM_CHUNK) {
+    if (myToken !== pmState.token) return;                 // الموظف قفل النافذة
+    const slice = refs.slice(i, i + PM_CHUNK);
+    const valid = slice.filter(r => r.id);
+    slice.filter(r => !r.id).forEach(r => failed.push({ orderId: '', orderType: r.type, reason: 'مفيش رقم داخلي للأوردر' }));
+    try {
+      const d = await apiPost('get_pick_manifest', { orders: valid });
+      if (myToken !== pmState.token) return;
+      orders.push(...(d.orders || [])); skipped.push(...(d.skipped || [])); failed.push(...(d.failed || []));
+    } catch (err) {
+      if (myToken !== pmState.token) return;
+      // Worker أقدم من 2.11.0 — فشل معلن بإسم النسخة، مش «تعذّر» غامضة
+      if (/action غير معروف|404/.test(err.message || '')) {
+        pmShow(`<div class="po-banner b-red">⚠️ الـ Worker نسخة قديمة — المانفست محتاجة <b>Worker التغليف v2.11.0</b> (Promote ناقص). التغليف نفسه شغّال عادي.</div>`,
+               [{ label: 'إغلاق', cls: 'btn-red', grow: true, fn: pmClose }]);
+        return;
+      }
+      // فشل دفعة (شبكة/مهلة) — أوردراتها بتتسجّل «فشل» ونكمّل الباقي
+      valid.forEach(r => failed.push({ orderId: r.id, orderType: r.type, reason: err.message || 'تعذّر الجلب' }));
+    }
+    paint(Math.min(i + PM_CHUNK, refs.length));
+  }
+  if (myToken !== pmState.token) return;
+
+  const items = pmAggregate(orders);
+  pmState.model = {
+    at: new Date(), filterText, orders, items, skipped, failed,
+    truncated: orders.filter(o => o.truncated).map(o => o.orderNumber),
+    totals: pmTotals(orders, items),
+  };
+  if (skipped.length) rdyDirty = true;      // الطابور المعروض بقى قديم — يتحدّث عند الرجوع
+  pmRender();
+}
+
+function pmRender() {
+  const m = pmState.model;
+  const banners = [];
+  if (m.failed.length)
+    banners.push(`<div class="po-banner b-red">⚠️ <b>ما اتجابتش بنود ${m.failed.length.toLocaleString('en-US')} أوردر</b> — دول مش ظاهرين في المانفست: ` +
+      `${m.failed.slice(0, 8).map(f => esc(f.orderNumber || '#' + f.orderId) + ' (' + esc(f.reason) + ')').join(' · ')}` +
+      `${m.failed.length > 8 ? ` … و${(m.failed.length - 8).toLocaleString('en-US')} غيرهم` : ''}. اقفل وافتح المانفست تاني، ولو ثابت راجع 🩺 فحص النظام.</div>`);
+  if (m.truncated.length)
+    banners.push(`<div class="po-banner b-amber">⚠️ بنود مقصوصة (أكتر من اللي الاستعلام بيجيبه): ${m.truncated.map(esc).join(' · ')} — راجعهم بنفسك.</div>`);
+  if (m.skipped.length)
+    banners.push(`<div class="po-banner b-amber">ℹ️ اتشالوا من المانفست لأنهم مبقوش جاهزين دلوقتي (الطابور المعروض لقطة): ` +
+      `${m.skipped.map(s => esc(s.orderNumber) + ' — ' + esc(s.reason)).join(' · ')}</div>`);
+  if (!m.items.length)
+    banners.push('<div class="po-banner b-red">مفيش أي قطعة تتجمّع — كل الأوردرات اتشالت أو فشلت.</div>');
+
+  pmShow(`
+    ${banners.join('')}
+    <div class="pm-tools">
+      <div class="pm-sum"><span>الأوردرات <b>${m.totals.orders.toLocaleString('en-US')}</b></span>
+        <span>الأصناف <b>${m.totals.skus.toLocaleString('en-US')}</b></span>
+        <span>القطع <b>${m.totals.pieces.toLocaleString('en-US')}</b></span></div>
+      <label><input type="checkbox" id="pmDist" ${pmState.showDist ? 'checked' : ''}> صفحة تانية: توزيع القطع على الأوردرات</label>
+    </div>
+    <iframe class="pm-frame" id="pmFrame" title="معاينة المانفست"></iframe>`,
+    [
+      { label: 'إغلاق', cls: 'btn-ghost', fn: pmClose },
+      { label: '🖨 طباعة المانفست', cls: 'btn-primary', grow: true, fn: pmPrint, disabled: !m.items.length },
+    ]);
+  document.getElementById('pmDist').addEventListener('change', e => { pmState.showDist = e.target.checked; pmPaintFrame(); });
+  pmPaintFrame();
+  setTimeout(() => { const b = document.getElementById('pmFooter').lastChild; if (b && !b.disabled) b.focus(); }, 60);
+}
+
+function pmPaintFrame() {
+  const f = document.getElementById('pmFrame');
+  if (f && pmState.model) f.srcdoc = pmSheetHTML(pmState.model, { showDist: pmState.showDist });
+}
+
+// الطباعة من نفس الـ iframe اللي المعاينة فيه — بعد ما الخط يحمّل (وإلا الورقة
+// بتطلع بخط احتياطي بعرض مختلف). أي فشل بيتقال، مايسكتش.
+function pmPrint() {
+  const f = document.getElementById('pmFrame');
+  const w = f && f.contentWindow;
+  if (!w) { showToast('المعاينة لسه ما اتحمّلتش — جرّب تاني', 'warning'); return; }
+  const go = () => {
+    try { w.focus(); w.print(); }
+    catch (e) { showToast('تعذّر فتح نافذة الطباعة: ' + e.message, 'error', 6000); }
+  };
+  const ready = w.document.fonts && w.document.fonts.ready ? w.document.fonts.ready : Promise.resolve();
+  ready.then(go, go);
+}
+
 
 // ══════════════════════════════════════════════════════════════
 // §PACK-LABELS — طباعة باركود منتجات الأوردر من شاشة التغليف (v1.27.0)

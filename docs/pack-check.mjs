@@ -145,13 +145,13 @@ await page.route('**/orders-packing-checker-worker.ecommoda-dev.workers.dev/**',
 
 await page.goto(`${BASE}/Orders-Packing-Checker.html`, { waitUntil:'networkidle' });
 
-// ⚠️ `#orderScanInput` هو مربع **دخول الأوردر** (ماسح شوبيفاي)، مش
+// ⚠️ `#entryInput` هو مربع **دخول الأوردر** (ماسح شوبيفاي)، مش
 //    `#barcodeScanInput` اللي هو مربع سكان **بنود** الأوردر جوّه شاشة
 //    التشييك. الخلط بينهم بيخلّي الاختبار يعلّق على عنصر مخفي.
 const scan = async (num) => {
-  await page.fill('#orderScanInput', '');
-  await page.fill('#orderScanInput', num);
-  await page.press('#orderScanInput', 'Enter');
+  await page.fill('#entryInput', '');
+  await page.fill('#entryInput', num);
+  await page.press('#entryInput', 'Enter');
   await page.waitForTimeout(600);
 };
 const modalOpen  = () => page.locator('#packOutcomeModal:not(.hidden)').count().then(n => n > 0);
@@ -242,7 +242,7 @@ t = await modalText();
 is(t.includes('غير موجود'), 'رسالة الـ Worker معروضة كما هي');
 is(!t.includes('ملف الأوردر'), 'مفيش ملف — الـ Worker ما رجّعش واحد');
 await closeModal();
-is(await page.evaluate(() => document.activeElement?.id) === 'orderScanInput',
+is(await page.evaluate(() => document.activeElement?.id) === 'entryInput',
    '🔴 الفوكس رجع لمربع دخول الأوردر بعد الإغلاق');
 
 console.log('\n⑤ الضغط برّه النافذة مايقفلهاش');

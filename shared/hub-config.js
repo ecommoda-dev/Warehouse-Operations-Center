@@ -217,7 +217,7 @@ const ECO_WORKERS = {
   defects: { url: 'https://defect-products-worker.ecommoda-dev.workers.dev', min: '1.0.0', label: 'ديفوهات' },
 };
 
-const TOOL_VERSION = 'v1.71.0';                     // الهب كله — مصدر واحد (#24)
+const TOOL_VERSION = 'v1.72.0';                     // الهب كله — مصدر واحد (#24)
 const LS_SECRET    = 'warehouse_ops_worker_secret';  // مفتاح مجموعة warehouse_ops (#39)
 const SHOP_HANDLE  = '6c7e1a-53';
 
