@@ -210,7 +210,18 @@
     <div class="eco-modal-body">
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.74.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.75.0</span>
+          <span class="cl-ver-date">18-11-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔎 <b>فلتر النص في سجل العمليات (الأوردر/الملاحظة · SKU):</b> دوس Enter عشان تضيف قيمة وتكتب غيرها — النتايج بتطابق <b>أي</b> قيمة (OR)، وكل قيمة ليها chip تشيلها منه. وبيطلعلك <b>اقتراحات لايف</b> (أول ١٠ من الصفوف المحمّلة) بـ ↑↓ وEnter. محتاج Worker <code>v1.5.1</code> عشان القيم المتعددة (قيمة واحدة بتشتغل على أي Worker).</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🧹 مربع بحث الأوردر في تاب «البحث والحذف» بقى من غير <code>placeholder</code> (المعيار الجديد).</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.74.0</span>
           <span class="cl-ver-date">18-11-2026</span>
         </div>
         <ul class="cl-items">
@@ -544,7 +555,7 @@
     <div class="search-row">
       <div class="log-fg" style="flex:1;min-width:180px;">
         <span class="log-flabel">رقم الأوردر</span>
-        <input type="text" class="field-input" id="orderInput" placeholder="مثال: 47101 أو #47101" style="width:100%;" oninput="toggleSearchActiveState(this)" onkeydown="if(event.key==='Enter')lookupOrder()">
+        <input type="text" class="field-input" id="orderInput" aria-label="رقم الأوردر" style="width:100%;" oninput="toggleSearchActiveState(this)" onkeydown="if(event.key==='Enter')lookupOrder()">
       </div>
       <button class="btn-primary" id="searchBtn" onclick="lookupOrder()">🔍 بحث</button>
     </div>
@@ -929,10 +940,13 @@ const srvLog = ecoSrvFilters({
         { value: 'success', label: '✓ تم الحذف' },
         { value: 'warning', label: '⚠ تم بتحذير' },
         { value: 'error',   label: '✗ فشل' } ] },
-    { key: 'search', th: '#thOrder',  type: 'text', label: 'بحث برقم أوردر أو ملاحظة', param: 'search' },
-    { key: 'sku',    th: '#thSku',    type: 'text', label: 'SKU', param: 'sku' },
+    { key: 'search', th: '#thOrder',  type: 'text', label: 'بحث برقم أوردر أو ملاحظة', param: 'search', multi: true, suggest: (q) => logSuggest('order_name') },
+    { key: 'sku',    th: '#thSku',    type: 'text', label: 'SKU', param: 'sku', multi: true, suggest: (q) => logSuggest('sku') },
   ],
 });
+
+// اقتراحات الفلتر من الصفوف المحمّلة (الصفحة الحالية) — مفيش endpoint اقتراحات في الـ Worker
+function logSuggest(field) { return [...new Set((typeof logRows !== 'undefined' ? logRows : []).map(r => r.raw[field]).filter(Boolean))]; }
 
 function toggleTable() {
   const wrap = document.getElementById('tblBodyWrap');

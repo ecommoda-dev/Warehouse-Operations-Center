@@ -98,6 +98,20 @@ await page.click('#thSku .th-lbl'); await page.waitForTimeout(400); await page.c
 g = calls.filter(c => c.action === 'get_logs').pop(); is(!g?.p.sortBy, 'الضغطة التالتة = بلا ترتيب');
 is(calls.filter(c => c.action === 'get_logs_count').every(c => !c.p.sortBy), 'العدّ بلا باراميتر ترتيب');
 
+console.log('── فلتر النص: توكنز (OR) + اقتراحات');
+calls = []; await page.click('#thSku .th-flt'); await page.waitForSelector('.srv-pop');
+await page.fill('.srv-pop input[data-act="text"]', 'HG'); await page.waitForSelector('.srv-sugg-item');
+is((await page.$$eval('.srv-sugg-item', e => e.map(x => x.dataset.val))).includes('HG1 / Grey x navy / 42'), 'اقتراح لايف من الصفوف المحمّلة');
+await page.keyboard.press('ArrowDown'); await page.keyboard.press('Enter'); await page.waitForTimeout(600);
+is((await page.$$eval('.srv-tok', e => e.map(x => x.textContent.replace('✕','').trim()))).join('|') === 'HG1 / Grey x navy / 42', '↓+Enter اختار الاقتراح كتوكن');
+await page.fill('.srv-pop input[data-act="text"]', 'NF1'); await page.keyboard.press('Enter'); await page.waitForTimeout(700);
+g = calls.filter(c => c.action === 'get_logs').pop();
+is(g?.p.sku === 'HG1 / Grey x navy / 42,NF1', 'توكنزين اتبعتوا CSV (OR) للصفحة', JSON.stringify(g?.p));
+is((await page.$$eval('#srvChips .ms-chip', e => e.length)) === 2, 'شيبس لكل توكن');
+await page.click('#srvChips .ms-chip button'); await page.waitForTimeout(700);
+g = calls.filter(c => c.action === 'get_logs').pop(); is(g?.p.sku === 'NF1', 'شيل توكن من الشيبس');
+await page.keyboard.press('Escape'); await page.click('#clearAllBtn'); await page.waitForTimeout(600);
+
 console.log('── التصدير');
 const dl = page.waitForEvent('download').catch(() => null);
 calls = []; await page.click('.act-btn.export'); await page.waitForTimeout(800);
