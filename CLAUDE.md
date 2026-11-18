@@ -2,6 +2,8 @@
 
 # مركز عمليات المخزن — Warehouse Operations Center (`Warehouse-Operations-Center`)
 
+> 🗑️ **18-11-2026 (تمريرة ٢) — اتحذفت كمان الواجهات المستقلة لـ`Bosta-Orders-Returned-Scanner` و`Inventory-Audit-Updater`** (ريبوهاتهم Worker فقط). مفيش واجهة مستقلة لأي أداة في الهب دلوقتي. ملاحظة: `Order-SKU-Barcode-Printer` ريبوه فيه `1.html` نموذج أولي متجمّد (مش واجهة منشورة) — ما اتلمسش.
+
 > 🗑️ **18-11-2026 — تنضيف الإشارات للواجهات المستقلة للتلات أدوات (`Order-Printer` · `Order-Item-Remover` · `Orders-Packing-Checker`):** واجهاتها `index.html` اتحذفت من ريبوهاتها (Worker فقط)، والهب الواجهة الوحيدة، بلا إعادة توجيه. أي ذكر متبقّي لـ«النسخة المستقلة» لأحدهم بيوصف الوضع قبل الحذف. ✅ فحوصات التوأمة (`docs/*-twin-check.sh`) كانت بين الهب وهب الشحن بس، فما اتأثرتش. `TOOL_VERSION` ما اتغيّرش (توثيق بحت).
 
 ![version](https://img.shields.io/badge/version-v1.73.0-blue)
@@ -2805,7 +2807,7 @@ const REPRINT_WARN_MINUTES = 30;   // ثابت مسمّى — تغييره قر�
 > لـWorker وبس** (`index.html` بتاعه اتشال بالكامل بقرار، بلا إعادة توجيه من
 > رابطه القديم). ⛔ **يعني صفر نقطة رجوع** لو `Bosta-Orders-Shipped-Scanner.html` هنا وقعت —
 > نفس وضع `Package-Transfer-To-Office.html`/`Package-Transfer-To-Warehouse.html` بالظبط، مش وضع
-> `Bosta-Orders-Returned-Scanner.html` اللي لسه ليها نسخة مستقلة شغّالة كنقطة رجوع.
+> `Bosta-Orders-Returned-Scanner.html` — واجهتها المستقلة اتحذفت 18-11-2026 فبقت نفس الوضع.
 
 > 🔴 **§LOG-CLIP — قصّ تاب السجل من غير أي إشارة (اتصلح 25-09-2026).**
 > `.tbl-body-wrap` كانت بتحدّد سقف بكسل ثابت (`max-height:4000px`) على القسم
@@ -3326,9 +3328,7 @@ metafields.custom.package_whereabouts_s1:'Warehouse'  →  ١٠٬٠٠٠ صف (15
 (الجرد الجماعي · §BULK · معادلة الرف · الـ CAS) في `CLAUDE.md` بتاع ريبو الأداة،
 واللي هنا هو **اللي اتغيّر بالدمج** زائد اللي الهب لازم يحميه.
 
-> 🔴 **الريبو المستقل لسه شغّال كنقطة رجوع** (على عكس `Bosta-Orders-Shipped-Scanner`
-> اللي اتحوّل Worker وبس) — بسره الخاص `stockaudit_worker_secret`. ⛔ متشيلوش قبل ما
-> التجربة الحيّة تنجح، وأي تعديل على منطق الأداة يتعمل **في الاتنين** لحد ساعتها (درس R1).
+> 🗑️ **الواجهة المستقلة اتحذفت 18-11-2026** — الريبو بقى Worker فقط، فمفيش نقطة رجوع ولا تعديل مزدوج، ومفتاح `stockaudit_worker_secret` بقى بلا مستهلك (كان بيخدم الواجهة المستقلة بس).
 > ⚠️ والاسم: `Inventory-Audit-Updater.html` = اسم ريبو الـ Worker بالحرف (قاعدة v1.34.0).
 
 **اللي اتغيّر بالدمج:**
@@ -3901,8 +3901,7 @@ bash docs/label-twin-check.sh   # Orders-Packing-Checker.html ⟷ Order-SKU-Barc
   المطلوب: `WORKER_SECRET` = قيمة مجموعة `warehouse_ops` → **Promote** (من Settings → Variables
   and Secrets). **من غيره** `Inventory-Audit-Updater.html` بتفتح وكل نداء فيها `401`.
   وبعدها **تسجيل انضمامه للمجموعة** في `ecommoda-constants` → `references/secret-groups.md`
-  (بقت **عشرة Workers** + الهب). ⚠️ **ولسه الأداة المستقلة بتقرا `stockaudit_worker_secret`**
-  بالسر القديم — لو السر اتغيّر على الـ Worker لازم القيمة الجديدة تتلزق هناك كمان طول ما هي نقطة رجوع.
+  (بقت **عشرة Workers** + الهب). ✅ **الأداة المستقلة (اللي كانت بتقرا `stockaudit_worker_secret`) اتحذفت 18-11-2026** — مفيش مستهلك تاني للسر القديم.
 
 - ✅ **التوقيت الصيفي اتصلّح في الواجهة (21-10-2026):** `toCairo` في `shared/shell.js` بقت محسوبة بـ`Intl` على `Africa/Cairo` (`cairoOffsetMs`)، و`cairoDayStartMs` بدل `T00:00:00Z - ٣ ساعات` في `index.html` (شريط «خلص») و`stats.html`، و`cairoNow` في `Bosta-Orders-Returned-Scanner.html`. اتقاس على 29-10-2026 (قبل: +٣، بعد: +٢). 🔴 **باقي مفتوح:** الـ Workers اللي بتعدّ «خلص اليوم» بـ`date(timestamp,'+3 hours')` (ريبوهات الطباعة والتغليف وتسليمات بوسطة) ودوال التاريخ المحلية في `Inventory-Audit-Updater.html` (دي على `Intl` أصلًا).
 
@@ -4006,10 +4005,7 @@ bash docs/label-twin-check.sh   # Orders-Packing-Checker.html ⟷ Order-SKU-Barc
   ⚠️ **`Bosta-Orders-Shipped-Scanner` بقى Worker وبس من 25-09-2026** — واجهته
   المستقلة اتشالت بالكامل (بقرار)، فمفتاح `bosta_shipped_scanner_worker_secret`
   بقى بلا مستهلك وصفر خطر رجوع لنقطة دخول قديمة عليه.
-  ⚠️ **بس `Bosta-Orders-Returned-Scanner` لسه نقطة رجوع مستقلة شغّالة** — بتقرا
-  من `bosta_returned_scanner_worker_secret`، فلازم القيمة الجديدة تتلزق هناك
-  برضه طول ما هي نقطة رجوع. ⛔ **متشيلهاش قبل ما التجربة الحيّة تنجح** — نفس
-  قرار الأدوات التلاتة القديمة.
+  ✅ **و`Bosta-Orders-Returned-Scanner` واجهتها المستقلة اتحذفت 18-11-2026 كمان** — مفتاح `bosta_returned_scanner_worker_secret` بقى بلا مستهلك.
   ⚠️ `?action=diag` هو اللي بيثبّتها: البصمة القصيرة لازم تطابق باقي الـ Workers.
 - 🟡 **صفوف `login`/`logout` تاريخية بتاعت السكانرين اتفرّقت على اسمين** —
   اللي جاي من الهب بيتسجّل `warehouse_ops_center`، والصفوف القديمة (قبل
@@ -4017,8 +4013,7 @@ bash docs/label-twin-check.sh   # Orders-Packing-Checker.html ⟷ Order-SKU-Barc
   `bosta_tracker`/`bosta_return`. **مش عطل**: الزوج (دخول/خروج) مايتلخبطش لأن
   كل واجهة كانت بتكتب الاتنين تحت نفس الاسم، و**الأفعال التشغيلية ما اتلمستش
   خالص** (`metafields_change` بنفس `extra.sourceTool`). ✅ **البند اتقفل
-  لتسليمات بوسطة** (الواجهة المستقلة اتشالت) وبيتقفل لمرتجعات بوسطة لما
-  أداتها المستقلة تتشال هي كمان.
+  لتسليمات بوسطة** (الواجهة المستقلة اتشالت) واتقفل لمرتجعات بوسطة (اتشالت 18-11-2026).
 - ✅ **`BOSTA_API_KEY` اتضاف على `orders-packing-checker-worker`** (أحمد،
   05-09-2026) — مدخل بوسطة في `Orders-Packing-Checker.html` بقى شغّال. الفحص النهائي لسه
   مطلوب: 🩺 فحص النظام لازم يوري بند مفتاح بوسطة ✅، وأول سكان بتراكينج
