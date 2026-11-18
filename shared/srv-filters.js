@@ -12,6 +12,9 @@
 //     onChange: () => reload(),            // بيتنادى بعد كل تغيير (الاختيارات بتتأخر 250ms)
 //     chips: '#srvChips', zone: '#srvChipsZone', clearBtn: '#clearAllBtn',
 //     columns: [
+//       // نص: { multi:true } = توكنز بـ Enter (OR) — الباراميتر بيتبعت CSV، فالـ Worker لازم يقسّمه على الفاصلة.
+//       //      { suggest:(q)=>[…نصوص…] } = اقتراحات لايف (أول 10 · ↑↓ + Enter). من غير multi بيفضل قيمة واحدة زي الأول.
+//       // قايمة: { searchFrom: 10 } = بحث جوّه القايمة من N عنصر (الافتراضي 10 — معيار v8.6.0).
 //       { key:'emp',  th:'#thEmp',  type:'list', label:'الموظف', param:'employees', items:[…] },
 //       { key:'q',    th:'#thOrd',  type:'text', label:'بحث',    param:'search' },
 //       { key:'date', th:'#thDate', type:'date', label:'التاريخ' },     // dateFrom / dateTo
@@ -33,7 +36,7 @@ function ecoSrvFilters(cfg) {
 
   // ─── الحالة ───
   cfg.columns.forEach((c) => {
-    cols[c.key] = Object.assign({ items: [], sel: new Set(), q: '', text: '', from: '', to: '', preset: '', btn: null }, c, { th: $(c.th) });
+    cols[c.key] = Object.assign({ items: [], sel: new Set(), q: '', text: '', tokens: [], from: '', to: '', preset: '', btn: null }, c, { th: $(c.th) });
   });
 
   // ─── الفترات: يوم القاهرة من core (cairoDayStr / ecoAddDays) ───
@@ -57,7 +60,9 @@ function ecoSrvFilters(cfg) {
   }
 
   // ─── هل العمود فيه فلتر؟ ───
-  function isOn(c) { return c.type === 'list' ? c.sel.size > 0 : c.type === 'text' ? !!c.text.trim() : !!(c.from || c.to); }
+  function isOn(c) { return c.type === 'list' ? c.sel.size > 0 : c.type === 'text' ? !!(c.text.trim() || c.tokens.length) : !!(c.from || c.to); }
+  // قيم النص الفعّالة: التوكنز + اللي مكتوب ولسه ما اتأكدش بـ Enter
+  function textVals(c) { const t = c.text.trim(); return [...c.tokens, ...(t && !c.tokens.includes(t) ? [t] : [])]; }
   function active() { return Object.values(cols).some(isOn); }
 
   // ─── الباراميترات للـ Worker (المصدر الوحيد للعرض والعدّ والتصدير) ───
@@ -65,7 +70,7 @@ function ecoSrvFilters(cfg) {
     const p = {};
     Object.values(cols).forEach((c) => {
       if (c.type === 'list' && c.sel.size) p[c.param] = [...c.sel].join(',');
-      else if (c.type === 'text' && c.text.trim()) p[c.param] = c.text.trim();
+      else if (c.type === 'text' && isOn(c)) p[c.param] = c.multi ? textVals(c).join(',') : c.text.trim();
       else if (c.type === 'date') { if (c.from) p.dateFrom = c.from; if (c.to) p.dateTo = c.to; }
     });
     return p;
@@ -102,6 +107,9 @@ function ecoSrvFilters(cfg) {
             const t = it ? it.label : v;
             return `<span class="ms-chip">${esc(t)}<button type="button" aria-label="شيل ${esc(t)}" data-k="${esc(c.key)}" data-v="${esc(v)}">✕</button></span>`;
           }).join('');
+        } else if (c.type === 'text' && c.multi) {
+          chips = c.tokens.map((v) => `<span class="ms-chip">${esc(v)}<button type="button" aria-label="شيل ${esc(v)}" data-k="${esc(c.key)}" data-v="${esc(v)}">✕</button></span>`).join('')
+            + (c.text.trim() ? `<span class="ms-chip">${esc(c.text.trim())}<button type="button" aria-label="شيل الفلتر" data-k="${esc(c.key)}" data-p="1">✕</button></span>` : '');
         } else {
           const t = c.type === 'text' ? c.text.trim() : dateChipText(c);
           chips = `<span class="ms-chip">${esc(t)}<button type="button" aria-label="شيل الفلتر" data-k="${esc(c.key)}">✕</button></span>`;
@@ -131,9 +139,50 @@ function ecoSrvFilters(cfg) {
     const q = c.q.trim().toLowerCase();
     const vis = q ? c.items.filter((i) => i.label.toLowerCase().includes(q)) : c.items;
     const all = vis.length > 0 && vis.every((i) => c.sel.has(i.value));
-    return (c.items.length > 6 ? `<input class="srv-input" data-act="q" aria-label="بحث في ${esc(c.label)}" value="${esc(c.q)}">` : '')
+    return (c.items.length >= (c.searchFrom || 10) ? `<input class="srv-input" data-act="q" aria-label="بحث في ${esc(c.label)}" value="${esc(c.q)}">` : '')
       + `<label class="srv-item"><input type="checkbox" data-act="all" ${all ? 'checked' : ''}><span>${q ? `تحديد كل نتائج البحث (${vis.length})` : 'تحديد الكل'}</span></label>`
       + `<div class="srv-list">${vis.length ? vis.map((i) => `<label class="srv-item ${c.sel.has(i.value) ? 'checked' : ''}"><input type="checkbox" data-v="${esc(i.value)}" ${c.sel.has(i.value) ? 'checked' : ''}><span>${esc(i.label)}</span></label>`).join('') : '<div class="srv-empty">لا توجد نتائج مطابقة</div>'}</div>`;
+  }
+  // ─── نص: توكنز (multi) + اقتراحات لايف ───
+  let suggIdx = -1;
+  function suggList(c) {
+    if (!c.suggest) return [];
+    const q = c.text.trim().toLowerCase();
+    if (!q) return [];
+    let arr = [];
+    try { arr = c.suggest(c.text.trim()) || []; } catch { arr = []; }
+    const seen = new Set(c.tokens.map((x) => x.toLowerCase()));
+    const out = [];
+    for (const v of arr) {
+      const t = String(v == null ? '' : v);
+      const k = t.toLowerCase();
+      if (!t || seen.has(k) || !k.includes(q)) continue;
+      seen.add(k); out.push(t);
+      if (out.length >= 10) break;
+    }
+    return out;
+  }
+  function suggHTML(c) {
+    const l = suggList(c);
+    if (suggIdx >= l.length) suggIdx = l.length - 1;
+    return l.length ? l.map((t, i) => `<button type="button" class="srv-sugg-item ${i === suggIdx ? 'active' : ''}" data-sugg="${i}" data-val="${esc(t)}">${esc(t)}</button>`).join('') : '';
+  }
+  function textHTML(c) {
+    return `<input class="srv-input" data-act="text" aria-label="${esc(c.label)}" value="${esc(c.text)}" autocomplete="off">`
+      + `<div class="srv-sugg" data-sugg-box>${suggHTML(c)}</div>`
+      + (c.multi ? `<div class="srv-toks">${c.tokens.map((v) => `<span class="srv-tok">${esc(v)}<button type="button" data-tok="${esc(v)}" aria-label="شيل ${esc(v)}">✕</button></span>`).join('')}</div>` : '');
+  }
+  function paintSugg() {
+    const c = cols[openKey]; if (!c || c.type !== 'text') return;
+    const box = pop.querySelector('[data-sugg-box]'); if (box) box.innerHTML = suggHTML(c);
+  }
+  function addToken(c, v) {
+    v = String(v).trim(); if (!v) return;
+    if (!c.tokens.includes(v)) c.tokens.push(v);
+    c.text = ''; suggIdx = -1;
+    paintPop(false);
+    const inp = pop.querySelector('input[data-act="text"]'); if (inp) inp.focus();
+    changed(false);
   }
   function paintPop(keepFocus) {
     const c = cols[openKey];
@@ -141,7 +190,7 @@ function ecoSrvFilters(cfg) {
     pop.classList.toggle('wide', c.type === 'date');
     let body;
     if (c.type === 'list') body = listHTML(c);
-    else if (c.type === 'text') body = `<input class="srv-input" data-act="text" aria-label="${esc(c.label)}" value="${esc(c.text)}">`;
+    else if (c.type === 'text') body = textHTML(c);
     else {
       body = `<div class="srv-presets">${PRESETS.map((x) => `<button type="button" class="srv-preset ${c.preset === x[0] ? 'active' : ''}" data-preset="${x[0]}">${x[1]}</button>`).join('')}</div>`
         + `<div class="srv-field"><span>شهر محدد</span><input type="month" class="srv-input" data-act="month" aria-label="شهر محدد" value="${c.preset === 'month' ? c.from.slice(0, 7) : ''}"></div>`
@@ -164,7 +213,7 @@ function ecoSrvFilters(cfg) {
     close();
     openKey = key;
     const c = cols[key];
-    c.q = '';
+    c.q = ''; suggIdx = -1;
     pop.classList.add('open');
     paintPop(false);
     place(c.btn);
@@ -177,7 +226,7 @@ function ecoSrvFilters(cfg) {
     openKey = null; pop.classList.remove('open');
   }
 
-  function clearCol(c) { c.sel.clear(); c.text = ''; c.from = ''; c.to = ''; c.preset = ''; }
+  function clearCol(c) { c.sel.clear(); c.text = ''; c.tokens = []; c.from = ''; c.to = ''; c.preset = ''; }
   function setRange(c, from, to, preset) { c.from = from || ''; c.to = to || ''; c.preset = preset || ''; }
 
   // ─── أحداث النافذة (delegation) ───
@@ -185,6 +234,13 @@ function ecoSrvFilters(cfg) {
     const c = cols[openKey]; if (!c) return;
     const t = e.target;
     if (t.dataset.act === 'clear') { clearCol(c); paintPop(false); changed(true); return; }
+    const sb = t.closest('[data-sugg]');
+    if (sb && sb.dataset.val !== undefined && c.type === 'text') {
+      if (c.multi) addToken(c, sb.dataset.val);
+      else { c.text = sb.dataset.val; changed(true); close(); }
+      return;
+    }
+    if (t.dataset.tok !== undefined && c.type === 'text') { c.tokens = c.tokens.filter((x) => x !== t.dataset.tok); paintPop(true); changed(false); return; }
     if (t.dataset.preset) { const r = presetRange(t.dataset.preset); setRange(c, r[0], r[1], t.dataset.preset); paintPop(false); changed(true); close(); }
   });
   pop.addEventListener('change', (e) => {
@@ -213,16 +269,34 @@ function ecoSrvFilters(cfg) {
     const c = cols[openKey]; if (!c) return;
     const a = e.target.dataset.act;
     if (a === 'q') { c.q = e.target.value; paintPop(true); }
-    else if (a === 'text') { c.text = e.target.value; changed(false); }
+    else if (a === 'text') { c.text = e.target.value; suggIdx = -1; paintSugg(); changed(false); }
   });
-  pop.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.dataset.act === 'text') { close(); } });
+  pop.addEventListener('keydown', (e) => {
+    const c = cols[openKey];
+    if (!c || e.target.dataset.act !== 'text') return;
+    const l = suggList(c);
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      if (!l.length) return;
+      e.preventDefault();
+      suggIdx = e.key === 'ArrowDown' ? (suggIdx + 1) % l.length : (suggIdx <= 0 ? l.length - 1 : suggIdx - 1);
+      paintSugg();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const pick = suggIdx >= 0 && l[suggIdx] != null ? l[suggIdx] : null;
+      if (c.multi) { if (pick != null) addToken(c, pick); else if (c.text.trim()) addToken(c, c.text); else close(); }
+      else { if (pick != null) { c.text = pick; changed(true); } close(); }
+    }
+  });
 
   // ─── الشيبس والمسح الشامل ───
   const chipsEl = $(cfg.chips);
   if (chipsEl) chipsEl.addEventListener('click', (e) => {
     const b = e.target.closest('button[data-k]'); if (!b) return;
     const c = cols[b.dataset.k]; if (!c) return;
-    if (c.type === 'list') c.sel.delete(b.dataset.v); else clearCol(c);
+    if (c.type === 'list') c.sel.delete(b.dataset.v);
+    else if (c.type === 'text' && c.multi && b.dataset.v !== undefined) c.tokens = c.tokens.filter((x) => x !== b.dataset.v);
+    else if (c.type === 'text' && c.multi && b.dataset.p) c.text = '';
+    else clearCol(c);
     if (openKey === c.key) paintPop(false);
     changed(true);
   });
