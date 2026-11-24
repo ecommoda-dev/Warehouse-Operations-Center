@@ -68,7 +68,7 @@ const EMPLOYEES = [
   { username: 'Abo_Selim', display_name: 'Abo Selim' },
 ];
 
-async function makePage({ session = true, secret = SECRET, workerVersion = '6.2.2', bulkDelayMs = 0 } = {}) {
+async function makePage({ session = true, secret = SECRET, workerVersion = '6.2.2', bulkDelayMs = 0, prioTruncated = false } = {}) {
   const ctx = await browser.newContext({ locale: 'ar-EG' });
   const page = await ctx.newPage();
   const calls = [];          // { action, method, auth, body, aborted }
@@ -94,7 +94,7 @@ async function makePage({ session = true, secret = SECRET, workerVersion = '6.2.
                                       { ok: true, label: 'D1 (DB)', detail: 'متصل' },
                                       { ok: false, label: 'LOCATION_ID', detail: 'ناقص' } ] });
       case 'get_employees':         return reply({ ok: true, employees: EMPLOYEES });
-      case 'get_audit_priorities':  return reply({ ok: true, variants: PRIORITIES });
+      case 'get_audit_priorities':  return reply({ ok: true, variants: PRIORITIES, truncated: prioTruncated, cap: 10000 });
       case 'lookup_barcode':        return reply({ ok: true, variant: VARIANT });
       case 'get_details':           return reply({ ok: true, orders: [] });
       case 'get_audit_date':        return reply({ ok: true, auditDate: null });
@@ -423,6 +423,39 @@ console.log('\n⑫ تنسيق التصدير = الـ core (قرار أحمد 22
   is(/^\d{2}:\d{2} (صباحاً|مساءً)$/.test(r.t), 'الوقت hh:mm صباحاً/مساءً', r.t);
   is(r.e === '' && r.et === '', 'الفاضي = خانة فاضية مش «—»');
   is(!r.local, 'مفيش نسخة محلية بتغلب الـ core في الصفحة');
+  await ctx.close();
+}
+
+// ══════════════════════════════════════════════════════════════
+console.log('\n⑬ فلاتر الجداول — محرّك واحد بس (v1.76.0) + تنبيه تقصّ الأولويات');
+{
+  const { ctx, page } = await makePage({ prioTruncated: true });
+  await page.goto(`${BASE}/${PAGE}`);
+  await page.waitForSelector('.inv-hub-card');
+  await page.click('.inv-hub-card:nth-child(2)');
+  await page.waitForSelector('#priorityBody .priority-row', { timeout: 5000 });
+  // ① مفيش حقن من المكوّن العام (ecoTablesAuto) على الجداول التلاتة اللي ليها محرّكها (§TBL-JS)
+  const r = await page.evaluate(() => Object.fromEntries(['prioTbl', 'bulkTbl', 'logTbl'].map(id => {
+    const t = document.getElementById(id);
+    return [id, { notable: t.hasAttribute('data-eco-notable'), eco: t.querySelectorAll('.eco-hf,.eco-rz').length, own: t.querySelectorAll('.th-flt').length }];
+  })));
+  for (const id of ['prioTbl', 'bulkTbl', 'logTbl']) {
+    is(r[id].notable && r[id].eco === 0, `${id}: مفيش أزرار فلتر من المكوّن العام (eco-hf/eco-rz)`, JSON.stringify(r[id]));
+    is(r[id].own > 0, `${id}: فلاتر المحرّك الأصلي موجودة`, JSON.stringify(r[id]));
+  }
+  // ② تنبيه الاقتصاص ظاهر وفيه السقف
+  const w = await page.evaluate(() => { const b = document.getElementById('priorityTruncWarn'); return { shown: b.style.display !== 'none', txt: b.textContent }; });
+  is(w.shown && w.txt.includes('10,000'), 'تنبيه «القايمة اتقصّت» ظاهر وفيه السقف', w.txt);
+  await ctx.close();
+}
+{
+  const { ctx, page } = await makePage();   // من غير تقصّ
+  await page.goto(`${BASE}/${PAGE}`);
+  await page.waitForSelector('.inv-hub-card');
+  await page.click('.inv-hub-card:nth-child(2)');
+  await page.waitForSelector('#priorityBody .priority-row', { timeout: 5000 });
+  const shown = await page.evaluate(() => document.getElementById('priorityTruncWarn').style.display !== 'none');
+  is(!shown, 'مفيش تنبيه لما القايمة كاملة');
   await ctx.close();
 }
 
