@@ -68,7 +68,7 @@ const EMPLOYEES = [
   { username: 'Abo_Selim', display_name: 'Abo Selim' },
 ];
 
-async function makePage({ session = true, secret = SECRET, workerVersion = '6.2.2', bulkDelayMs = 0, prioTruncated = false } = {}) {
+async function makePage({ session = true, secret = SECRET, workerVersion = '6.2.2', bulkDelayMs = 0, prioTruncated = false, orders = [] } = {}) {
   const ctx = await browser.newContext({ locale: 'ar-EG' });
   const page = await ctx.newPage();
   const calls = [];          // { action, method, auth, body, aborted }
@@ -96,7 +96,9 @@ async function makePage({ session = true, secret = SECRET, workerVersion = '6.2.
       case 'get_employees':         return reply({ ok: true, employees: EMPLOYEES });
       case 'get_audit_priorities':  return reply({ ok: true, variants: PRIORITIES, truncated: prioTruncated, cap: 10000 });
       case 'lookup_barcode':        return reply({ ok: true, variant: VARIANT });
-      case 'get_details':           return reply({ ok: true, orders: [] });
+      case 'list_skus':             return reply({ ok: true, variants: [VARIANT] });
+      case 'adjust_inventory':      return reply({ ok: true, status: 'success', auditDate: '2026-10-13T10:00:00Z', logged: true });
+      case 'get_details':           return reply({ ok: true, orders });
       case 'get_audit_date':        return reply({ ok: true, auditDate: null });
       case 'set_audit_date':        return reply({ ok: true, result: 'success', auditDate: '2026-10-13T10:00:00Z', logged: true });
       case 'get_logs':              return reply({ ok: true, entries: LOG_ROWS });
@@ -163,8 +165,9 @@ console.log('\n② بجلسة — الهيكل والـ chrome من الـ shell
   is((await page.locator('#clLatestVerBadge').innerText()) === tv, 'بادج الـ changelog مطابق لنسخة الهب');
   is(await page.locator('#settingsOverlay').count() === 1 && !(await page.locator('#settingsOverlay').evaluate(e => e.classList.contains('open'))), 'مودال الإعدادات من الـ shell ومش مفتوح لوحده');
   is(await page.locator('#toastContainer').count() === 1, 'حاوية التوست من الـ shell');
-  is(await page.locator('.main-tabs-bar .main-tab-btn').count() === 2, 'تابين: الجرد + السجل');
-  is(await page.locator('.inv-hub-card').count() === 3, 'شاشة الاختيار فيها التلات مربعات (فردي · أولويات · جماعي)');
+  is(await page.locator('.main-tabs-bar .main-tab-btn').count() === 4, '٤ تابات: جرد فردي · جرد جماعي · أولويات الجرد · سجل العمليات');
+  is(await page.locator('.inv-hub-card, .inv-back-btn').count() === 0, 'مفيش شاشة اختيار ولا أزرار رجوع (التابات هي التنقل)');
+  is(await page.locator('#mainTabAudit.active').count() === 1 && await page.locator('#auditTabContent').isVisible(), 'الجرد الفردي هو التاب الافتراضي');
 
   // توكنز الهب هي اللي مطبّقة
   const css = await page.evaluate(() => {
@@ -244,8 +247,8 @@ console.log('\n⑤ أولويات الجرد — الجدول بيتملّى و�
 {
   const { ctx, page, calls, errors } = await makePage();
   await page.goto(`${BASE}/${PAGE}`);
-  await page.waitForSelector('.inv-hub-card');
-  await page.click('.inv-hub-card:nth-child(2)');
+  await page.waitForSelector('#mainTabPriority');
+  await page.click('#mainTabPriority');
   await page.waitForSelector('#priorityBody .priority-row', { timeout: 5000 });
   is(await page.locator('#priorityBody .priority-row').count() === PRIORITIES.length, 'صفوف الأولويات == اللي رجع من الـ Worker');
   is(calls.some(c => c.action === 'get_audit_priorities'), 'اتنادى get_audit_priorities');
@@ -264,10 +267,9 @@ console.log('\n⑥ الجرد الفردي — سكان باركود → «ال�
 {
   const { ctx, page, calls, errors } = await makePage();
   await page.goto(`${BASE}/${PAGE}`);
-  await page.waitForSelector('.inv-hub-card');
-  await page.click('.inv-hub-card:nth-child(1)');
-  await page.click('#tabBarcode');
-  await page.fill('#barcodeInput', '12345678');
+  await page.waitForSelector('#entryInput');
+  await page.fill('#entryInput', '12345678');
+  await page.press('#entryInput', 'Enter');
   await page.waitForSelector('#results.visible', { timeout: 5000 });
   const lk = calls.find(c => c.action === 'lookup_barcode');
   is(lk && lk.params.barcode === '12345678', 'lookup_barcode اتنادى بالباركود');
@@ -313,8 +315,8 @@ console.log('\n⑧ الجرد الجماعي — إلغاء تحميل البا�
 {
   const { ctx, page, calls, errors } = await makePage({ bulkDelayMs: 4000 });
   await page.goto(`${BASE}/${PAGE}`);
-  await page.waitForSelector('.inv-hub-card');
-  await page.click('.inv-hub-card:nth-child(3)');
+  await page.waitForSelector('#mainTabBulk');
+  await page.click('#mainTabBulk');
   await page.waitForSelector('#bulkLoadOverlay.open', { timeout: 3000 });
   is(calls.some(c => c.action === 'get_bulk_index'), 'فتح التاب بدأ تحميل الفهرس');
   await page.click('#bulkLoadCancelBtn');
@@ -431,8 +433,8 @@ console.log('\n⑬ فلاتر الجداول — محرّك واحد بس (v1.76
 {
   const { ctx, page } = await makePage({ prioTruncated: true });
   await page.goto(`${BASE}/${PAGE}`);
-  await page.waitForSelector('.inv-hub-card');
-  await page.click('.inv-hub-card:nth-child(2)');
+  await page.waitForSelector('#mainTabPriority');
+  await page.click('#mainTabPriority');
   await page.waitForSelector('#priorityBody .priority-row', { timeout: 5000 });
   // ① مفيش حقن من المكوّن العام (ecoTablesAuto) على الجداول التلاتة اللي ليها محرّكها (§TBL-JS)
   const r = await page.evaluate(() => Object.fromEntries(['prioTbl', 'bulkTbl', 'logTbl'].map(id => {
@@ -451,11 +453,102 @@ console.log('\n⑬ فلاتر الجداول — محرّك واحد بس (v1.76
 {
   const { ctx, page } = await makePage();   // من غير تقصّ
   await page.goto(`${BASE}/${PAGE}`);
-  await page.waitForSelector('.inv-hub-card');
-  await page.click('.inv-hub-card:nth-child(2)');
+  await page.waitForSelector('#mainTabPriority');
+  await page.click('#mainTabPriority');
   await page.waitForSelector('#priorityBody .priority-row', { timeout: 5000 });
   const shown = await page.evaluate(() => document.getElementById('priorityTruncWarn').style.display !== 'none');
   is(!shown, 'مفيش تنبيه لما القايمة كاملة');
+  await ctx.close();
+}
+
+
+// ══════════════════════════════════════════════════════════════
+console.log('\n⑭ التابات الأربعة + مربع الإدخال الموحّد + كارت الصنف + لوحة العد + نافذة الأوردرات غير المغلّفة');
+const ORDER_UNPACKED = { id: 'gid://shopify/Order/9001', orderId: 9001, name: '#9001', createdAt: '2026-11-20T10:00:00Z', packedBy: null, orderStage: 'S1', items: [{ unfulfilledQuantity: 1 }] };
+const ORDER_PACKED = { ...ORDER_UNPACKED, packedBy: 'Mona' };
+{
+  const { ctx, page, calls, errors } = await makePage();
+  await page.goto(`${BASE}/${PAGE}`);
+  await page.waitForSelector('#entryInput');
+  // التابات
+  await page.click('#mainTabBulk');
+  is(await page.locator('#bulkTabContent').isVisible() && !(await page.locator('#auditTabContent').isVisible()) && await page.locator('#mainTabBulk.active').count() === 1, 'جرد جماعي: بيتفتح بضغطة واحدة والفردي بيتقفل');
+  await page.click('#mainTabLog'); await page.click('#mainTabAudit');
+  is(await page.locator('#auditTabContent').isVisible() && await page.locator('#mainTabLog.active').count() === 0, 'الرجوع للجرد الفردي من غير زرار رجوع');
+  // آخر تاب في الجلسة
+  await page.click('#mainTabPriority'); await page.reload(); await page.waitForSelector('#mainTabPriority');
+  is(await page.locator('#mainTabPriority.active').count() === 1, 'فتح على آخر تاب (أولويات) بعد الريفريش');
+  await page.click('#mainTabBulk'); await page.reload(); await page.waitForSelector('#mainTabPriority');
+  is(await page.locator('#mainTabAudit.active').count() === 1, 'الجرد الجماعي مابيتفتحش لوحده بعد الريفريش');
+  // مربع الإدخال
+  await page.click('#mainTabAudit');
+  await page.fill('#entryInput', '12345'); await page.press('#entryInput', 'Enter');
+  is((await page.locator('#entryFails').innerText()).includes('5 خانة') && !calls.some(c => c.action === 'lookup_barcode'), 'رقم بطول غلط ← صندوق أحمر وصفر نداء للـ Worker');
+  await page.fill('#entryInput', ''); await page.type('#entryInput', '١٢٣٤٥٦٧٨');
+  is(await page.inputValue('#entryInput') === '12345678', 'الأرقام العربي بتتحوّل إنجليزي لحظيًا');
+  await wait(2200);
+  is(!calls.some(c => c.action === 'lookup_barcode'), 'مفيش بحث تلقائي بالمؤقّت — Enter بس');
+  await page.fill('#entryInput', ''); await page.type('#entryInput', 'AA1');
+  is(await page.locator('#entryChip-sku.is-on .entry-chip-auto').count() === 1, 'الـ chip اتحوّل تلقائيًا لـ SKU وعليه بادج «تلقائي»');
+  await page.fill('#entryInput', ''); await page.type('#entryInput', '12345678'); await page.press('#entryInput', 'Enter');
+  await page.waitForSelector('#results.visible', { timeout: 5000 });
+  is(await page.inputValue('#entryInput') === '', 'المربع اتفضّى بعد التحميل');
+  is(await page.locator('#entryChip-barcode.is-on').count() === 1, 'الـ chip بيتبع النوع (باركود)');
+  // كارت الصنف
+  is((await page.locator('#productSizeVal').innerText()).includes('مقاس 41'), 'المقاس ظاهر «مقاس 41»');
+  const lnk = await page.locator('#productSkuLink').getAttribute('href');
+  is(/\/products\/2001\/variants\/1001/.test(lnk || ''), 'الـ SKU نفسه لينك لصفحة المتغيّر', lnk);
+  is(await page.locator('a.nav-link-btn:has-text("صفحة الـ SKU")').count() === 0, 'زرار «صفحة الـ SKU» اتشال');
+  is((await page.locator('#refreshBtn').innerText()).includes('تحديث') && (await page.locator('#historyLink').innerText()).includes('سجل حركة المخزون'), 'أسماء الأزرار: تحديث · سجل حركة المخزون');
+  is(await page.locator('.eq-row .stat-card').count() === 5 && (await page.locator('.eq-row').innerText()).includes('إجمالي المخزن'), 'خمس مربعات للأرقام (On Hand زيهم) بتوضيحها العربي');
+  is(await page.locator('#warningBanner').count() === 0, 'بانر التحذير الكبير اتشال');
+  is(errors.length === 0, 'صفر أخطاء', errors.join(' | '));
+  await ctx.close();
+}
+{
+  const { ctx, page, calls } = await makePage({ orders: [ORDER_UNPACKED] });
+  await page.goto(`${BASE}/${PAGE}`);
+  await page.fill('#entryInput', '12345678'); await page.press('#entryInput', 'Enter');
+  await page.waitForFunction(() => currentShelfQty != null, null, { timeout: 5000 });
+  is(await page.locator('#ordersBodyWrap.collapsed').count() === 0, 'الأوردرات مفتوحة تلقائيًا (≤ 5)');
+  is((await page.locator('#qtyPacked').innerText()).trim() === '0', 'Packed = 0');
+  await page.click('#btnStartScanCount');
+  await page.waitForSelector('#scanCountPanel.visible');
+  is(await page.locator('#btnAuditOk').isDisabled(), 'أزرار البداية بتتعطّل وقت العد');
+  for (let i = 0; i < 6; i++) await page.evaluate(() => processScanCountValue('12345678'));
+  is((await page.locator('#btnCountFinal').innerText()).includes('سجّل الجرد مظبوط') && (await page.locator('#countDiff').innerText()).includes('مطابق'), 'العدد مطابق ← الزرار «سجّل الجرد مظبوط»');
+  await page.click('button:has-text("إعادة العد")');
+  is((await page.locator('#scanCountTotal').innerText()).trim() === '0' && await page.locator('#scanCountPanel.visible').count() === 1, 'إعادة العد بتصفّر وتفضل في اللوحة');
+  for (let i = 0; i < 5; i++) await page.evaluate(() => processScanCountValue('12345678'));
+  is((await page.locator('#btnCountFinal').innerText()).includes('تعديل الكمية بـ −1'), 'فيه فرق ← الزرار «تعديل الكمية بـ −1»');
+  is((await page.locator('#countNotes').inputValue()).includes('عدد بالسكانر: 5'), 'الملاحظة اتكتبت تلقائيًا');
+  await page.click('#btnCountFinal');
+  await page.waitForSelector('#unpackedOverlay.open', { timeout: 3000 });
+  const wtxt = await page.locator('#unpackedOverlay').innerText();
+  is(wtxt.includes('خد بالك') && wtxt.includes('طاولة التغليف') && wtxt.includes('#9001'), 'نافذة التحذير: النص وأرقام الأوردرات');
+  is(await page.locator('#confirmOverlay.open').count() === 0, 'نافذة التأكيد مابتظهرش قبل التحذير');
+  await page.click('#unpackedNo');
+  is(await page.locator('#unpackedOverlay.open').count() === 0 && !calls.some(c => c.action === 'adjust_inventory'), '«رجوع» بيلغي من غير كتابة');
+  await page.click('#btnCountFinal'); await page.waitForSelector('#unpackedOverlay.open');
+  await page.click('#unpackedOk');
+  await page.waitForSelector('#confirmOverlay.open', { timeout: 3000 });
+  await page.click('#confirmOkBtn'); await wait(500);
+  const adj = calls.find(c => c.action === 'adjust_inventory');
+  is(adj?.body?.delta === -1 && String(adj?.body?.notes || '').includes('عدد بالسكانر'), 'adjust_inventory بالفرق −1 والملاحظة', JSON.stringify(adj?.body));
+  is(await page.locator('#scanCountPanel.visible').count() === 0, 'لوحة العد اتقفلت بعد النجاح');
+  await ctx.close();
+}
+{
+  const { ctx, page } = await makePage({ orders: [ORDER_PACKED] });
+  await page.goto(`${BASE}/${PAGE}`);
+  await page.fill('#entryInput', '12345678'); await page.press('#entryInput', 'Enter');
+  await page.waitForFunction(() => currentShelfQty != null, null, { timeout: 5000 });
+  await page.click('#btnWantAdjust');
+  is(await page.locator('#adjustPanel.visible').count() === 1 && await page.locator('#adjustPanel button:has-text("رجوع")').count() === 1, 'التعديل اليدوي فيه زرار رجوع');
+  await page.click('#adjustPanel .delta-btn:not(.minus)');
+  await page.click('#btnApplyAdjust');
+  await page.waitForSelector('#confirmOverlay.open', { timeout: 3000 });
+  is(await page.locator('#unpackedOverlay.open').count() === 0, 'كله اتغلّف (Committed − Packed = 0) ← مفيش نافذة تحذير');
   await ctx.close();
 }
 
