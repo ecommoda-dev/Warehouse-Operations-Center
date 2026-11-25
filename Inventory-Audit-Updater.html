@@ -97,11 +97,11 @@
 .p-chip-p5{background:var(--bg);color:var(--text-secondary);border-color:var(--border);}
 .p-chip-p6{background:var(--green-light);color:var(--green);border-color:var(--green-border);}
 .priority-stat-chip.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent);}
-.priority-row{transition:background .1s;}
 .priority-row:hover{background:var(--accent-light);}
 .prio-acts{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;}
 .prio-act{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:var(--radius-sm);border:1px solid var(--accent-border);background:var(--accent-light);color:var(--accent);font-family:var(--font-body);font-size:11.5px;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;}
 .prio-act:hover{background:var(--accent);color:var(--on-accent);}
+.prio-more-row td{padding:14px 6px;}
 .prio-act.is-off{opacity:.45;cursor:default;pointer-events:none;}
 .prio-sku-wrap{display:inline-flex;align-items:center;gap:8px;}
 a.priority-sku{text-decoration:none;}a.priority-sku:hover{text-decoration:underline;}
@@ -1002,7 +1002,19 @@ col.hl{background:var(--accent-light);}
       <!-- 🔴 `#clLatestVerBadge` هو اللي `renderVersionUI()` بتحدّثه — مصدر واحد للنسخة. -->
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.80.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.81.0</span>
+          <span class="cl-ver-date">25-11-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>⚡ <b>أولويات الجرد — الصفحة كانت تقيلة:</b> الجدول بيعرض ١٥٠ صف في المرة وزرار «عرض المزيد» (بدل آلاف الصفوف مرة واحدة)، وأزرار الصفوف بـ event delegation، واتشال انتقال لون الصف.</span></li>
+          <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>🧾 <b>«سجل حركة المخزون» في الأولويات:</b> بقى لينك حقيقي (الرابط بيظهر تحت وCopy link بالكليك يمين) لما الـ Worker يرجّع <code>inventoryItemId</code> (v6.2.4)؛ وقبل كده بيشتغل بالزرار القديم.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>✂️ <b>سجل العمليات:</b> اتشال عمود «المنتج» من الجدول ومن تصدير xlsx.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.80.0</span>
           <span class="cl-ver-date">25-11-2026</span>
         </div>
         <ul class="cl-items">
@@ -1553,7 +1565,7 @@ function applyPriorityFilters(){
     return db-da;
   });
   priorityFiltered=filtered;
-  priorityShown=sortPriorityRows(filtered);
+  priorityShown=sortPriorityRows(filtered);prioLimit=PRIO_PAGE;
   document.getElementById('priorityResultsCount').textContent=filtered.length.toLocaleString('en-US');
   tblRefresh(PRIO_T);
   renderPriorityTable(priorityShown);renderPriorityStats(counts);
@@ -1590,37 +1602,55 @@ function renderPriorityStats(counts){
 }
 function togglePrioChip(p){const pm=PRIO_T.ms.priority,k=String(p);if(pm.has(k))pm.delete(k);else pm.add(k);tblChanged(PRIO_T);}
 
+// عرض مقسّم: PRIO_PAGE صف في المرة + «عرض المزيد» — الجدول كله (آلاف الصفوف) كان بيتقّل الصفحة. أي فلتر/ترتيب بيرجّع لأول دفعة.
+const PRIO_PAGE=150;let prioLimit=PRIO_PAGE;
+function stockLogUrl(iid){return 'https://admin.shopify.com/store/'+SHOP_HANDLE+'/products/inventory/'+iid+'/inventory_history?location_id=98849620290';}
+function prioRowHtml(v,i){
+  const p=getPriority(v.available,v.committed),cfg=PRIORITY_CFG[p],days=getDaysSince(v.lastAuditDate);
+  let auditText,auditCls;
+  if(days===Infinity){auditText='\u0644\u0645 \u064a\u064f\u062c\u0631\u062f \u0642\u0637';auditCls='audit-age-never';}
+  else{auditText='\u0645\u0646\u0630 '+days+' \u064a\u0648\u0645';auditCls=days>60?'audit-age-old':days>30?'audit-age-medium':'audit-age-recent';}
+  const avail=v.available!=null?v.available.toLocaleString('en-US'):'\u2014',comm=v.committed!=null?v.committed.toLocaleString('en-US'):'\u2014';
+  const neg=(v.available!=null&&v.available<0)?' val-negative':'';
+  const dashUrl=shopifyVariantUrl(String(v.productId||'').split('/').pop(),String(v.variantId||'').split('/').pop());
+  const skuTxt=dashUrl
+    ?'<a class="priority-sku" href="'+esc(dashUrl)+'" target="_blank" rel="noopener" title="\u0641\u062a\u062d \u0635\u0641\u062d\u0629 \u0627\u0644\u0645\u0642\u0627\u0633 \u0639\u0644\u0649 \u0634\u0648\u0628\u064a\u0641\u0627\u064a">'+esc(v.sku)+'</a>'
+    :'<span class="priority-sku">'+esc(v.sku)+'</span>';
+  const skuCell='<span class="prio-sku-wrap">'+skuTxt+'<button type="button" class="prio-copy" data-prio="copy" data-i="'+i+'" title="\u0646\u0633\u062e \u0627\u0644\u0640 SKU" aria-label="\u0646\u0633\u062e \u0627\u0644\u0640 SKU">'+PRIO_COPY_ICO+'</button></span>';
+  // لو الـ Worker رجّع inventoryItemId → <a> حقيقي (hover بيبيّن الرابط + Copy link)، وإلا زرار بيجيبه بـ list_skus
+  const logLbl='\u{1F9FE} \u0633\u062c\u0644 \u062d\u0631\u0643\u0629 \u0627\u0644\u0645\u062e\u0632\u0648\u0646';
+  const iid=String(v.inventoryItemId||'').split('/').pop();
+  const logBtn=iid
+    ?'<a class="prio-act" href="'+esc(stockLogUrl(iid))+'" target="_blank" rel="noopener">'+logLbl+'</a>'
+    :'<button type="button" class="prio-act" data-prio="log" data-i="'+i+'">'+logLbl+'</button>';
+  const acts='<div class="prio-acts"><button type="button" class="prio-act" data-prio="audit" data-i="'+i+'">\u{1F3F7}\ufe0f \u062c\u0631\u062f \u0641\u0631\u062f\u064a</button>'+logBtn+'</div>';
+  return '<tr class="priority-row"><td><span class="priority-badge priority-badge-'+cfg.cls+'">'+esc(cfg.label)+'</span></td>'
+    +'<td>'+skuCell+'</td><td class="centered'+neg+'">'+avail+'</td><td class="centered">'+comm+'</td>'
+    +'<td><span class="'+auditCls+'">'+auditText+'</span></td><td>'+acts+'</td></tr>';
+}
+function prioMoreRow(rest){return '<tr class="prio-more-row"><td colspan="6"><button type="button" class="prio-act" data-prio="more">\u0639\u0631\u0636 \u0627\u0644\u0645\u0632\u064a\u062f ('+rest.toLocaleString('en-US')+' \u0645\u062a\u0628\u0642\u0651\u064a)</button></td></tr>';}
 function renderPriorityTable(variants){
   const body=document.getElementById('priorityBody');
   if(!variants.length){body.innerHTML='<tr><td colspan="6"><div class="state-box"><div class="state-icon">\u{1F389}</div><p>\u062a\u0645 \u062c\u0631\u062f \u0643\u0644 \u0627\u0644\u0645\u0646\u062a\u062c\u0627\u062a \u2014 \u0623\u0648 \u0644\u0627 \u062a\u0648\u062c\u062f \u0646\u062a\u0627\u0626\u062c.</p></div></td></tr>';return;}
-  body.innerHTML=variants.map((v,i)=>{
-    const p=getPriority(v.available,v.committed),cfg=PRIORITY_CFG[p],days=getDaysSince(v.lastAuditDate);
-    let auditText,auditCls;
-    if(days===Infinity){auditText='\u0644\u0645 \u064a\u064f\u062c\u0631\u062f \u0642\u0637';auditCls='audit-age-never';}
-    else if(days>60){auditText='\u0645\u0646\u0630 '+days+' \u064a\u0648\u0645';auditCls='audit-age-old';}
-    else if(days>30){auditText='\u0645\u0646\u0630 '+days+' \u064a\u0648\u0645';auditCls='audit-age-medium';}
-    else{auditText='\u0645\u0646\u0630 '+days+' \u064a\u0648\u0645';auditCls='audit-age-recent';}
-    const avail=v.available!=null?v.available.toLocaleString('en-US'):'\u2014',comm=v.committed!=null?v.committed.toLocaleString('en-US'):'\u2014';
-    const neg=(v.available!=null&&v.available<0)?' val-negative':'';
-    // الفهرس مش JSON في الـ attribute — الصف بيرجع للعنصر من priorityShown
-    const dashUrl=shopifyVariantUrl(String(v.productId||'').split('/').pop(),String(v.variantId||'').split('/').pop());
-    const skuTxt=dashUrl
-      ?'<a class="priority-sku" href="'+esc(dashUrl)+'" target="_blank" rel="noopener" title="\u0641\u062a\u062d \u0635\u0641\u062d\u0629 \u0627\u0644\u0645\u0642\u0627\u0633 \u0639\u0644\u0649 \u0634\u0648\u0628\u064a\u0641\u0627\u064a">'+esc(v.sku)+'</a>'
-      :'<span class="priority-sku">'+esc(v.sku)+'</span>';
-    const skuCell='<span class="prio-sku-wrap">'+skuTxt+'<button type="button" class="prio-copy" onclick="copyPrioSku('+i+',this)" title="\u0646\u0633\u062e \u0627\u0644\u0640 SKU" aria-label="\u0646\u0633\u062e \u0627\u0644\u0640 SKU">'+PRIO_COPY_ICO+'</button></span>';
-    const acts='<div class="prio-acts">'
-      +'<button type="button" class="prio-act" onclick="loadVariantFromPriorityIdx('+i+')">\u{1F3F7}\ufe0f \u062c\u0631\u062f \u0641\u0631\u062f\u064a</button>'
-      +'<button type="button" class="prio-act" onclick="openStockLogFromPriority('+i+')">\u{1F9FE} \u0633\u062c\u0644 \u062d\u0631\u0643\u0629 \u0627\u0644\u0645\u062e\u0632\u0648\u0646</button>'
-      +'</div>';
-    return '<tr class="priority-row">'
-      +'<td><span class="priority-badge priority-badge-'+cfg.cls+'">'+esc(cfg.label)+'</span></td>'
-      +'<td>'+skuCell+'</td>'
-      +'<td class="centered'+neg+'">'+avail+'</td>'
-      +'<td class="centered">'+comm+'</td>'
-      +'<td><span class="'+auditCls+'">'+auditText+'</span></td>'
-      +'<td>'+acts+'</td></tr>';
-  }).join('');
+  const n=Math.min(prioLimit,variants.length);let html='';
+  for(let i=0;i<n;i++)html+=prioRowHtml(variants[i],i);
+  if(n<variants.length)html+=prioMoreRow(variants.length-n);
+  body.innerHTML=html;
 }
+function showMorePrio(){
+  const body=document.getElementById('priorityBody'),old=body.querySelector('.prio-more-row');
+  const from=Math.min(prioLimit,priorityShown.length),to=Math.min(from+PRIO_PAGE,priorityShown.length);
+  let html='';for(let i=from;i<to;i++)html+=prioRowHtml(priorityShown[i],i);
+  if(to<priorityShown.length)html+=prioMoreRow(priorityShown.length-to);
+  prioLimit=to;if(old)old.remove();body.insertAdjacentHTML('beforeend',html);
+}
+// event delegation — handler واحد على الـ tbody بدل onclick inline على كل زرار
+document.getElementById('priorityBody').addEventListener('click',e=>{
+  const b=e.target.closest('[data-prio]');if(!b)return;
+  const a=b.dataset.prio,i=+b.dataset.i;
+  if(a==='copy')copyPrioSku(i,b);else if(a==='audit')loadVariantFromPriorityIdx(i);
+  else if(a==='log')openStockLogFromPriority(i);else if(a==='more')showMorePrio();
+});
 const PRIO_COPY_ICO='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2.2"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></svg>',PRIO_OK_ICO='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 // نسخ الـ SKU — clipboard API ثم احتياطي execCommand (صفحة http/iframe أو متصفح قديم)
 async function copyPrioSku(i,btn){
@@ -1644,7 +1674,7 @@ async function openStockLogFromPriority(i){
     const variant=(data.variants||[]).find(x=>x.id===v.variantId)||(data.variants||[])[0];
     const iid=(variant?.inventoryItem?.id||'').split('/').pop();
     if(!iid)throw new Error('\u0645\u0634 \u0644\u0627\u0642\u064a \u0627\u0644\u0635\u0646\u0641 \u0639\u0644\u0649 \u0634\u0648\u0628\u064a\u0641\u0627\u064a');
-    const url='https://admin.shopify.com/store/'+SHOP_HANDLE+'/products/inventory/'+iid+'/inventory_history?location_id=98849620290';
+    const url=stockLogUrl(iid);
     if(w)w.location.href=url;else window.open(url,'_blank');
   }catch(e){if(w)w.close();showToast('\u062e\u0637\u0623: '+e.message,'error');}
 }
@@ -2543,7 +2573,6 @@ const LOG_COLS = [
   { k:'time',         l:'الوقت' },
   { k:'employee',     l:'الموظف',          flt:'emp' },
   { k:'sku',          l:'SKU',             flt:'search' },
-  { k:'productTitle', l:'المنتج' },
   { k:'type',         l:'نوع العملية',     flt:'type' },
   { k:'valueBefore',  l:'قبل' },
   { k:'valueAfter',   l:'بعد' },
@@ -2554,7 +2583,7 @@ const LOG_COLS = [
 ];
 const LOG_T = {
   id:'log', tblId:'logTbl', cgId:'logCg', headId:'logHeadRow', chipsId:'chipsZone', zoneId:'logTableZone', togId:'logTog',
-  lsKey:'stockaudit_col_widths_log_v1',          // ⚠️ ارفع _v1 → _v2 لو الأعمدة اتغيّرت
+  lsKey:'stockaudit_col_widths_log_v2',          // ⚠️ ارفع _v2 → _v3 لو الأعمدة اتغيّرت
   cols: LOG_COLS,
   FL: { emp:'الموظف', type:'نوع العملية', dir:'اتجاه التعديل', cnt:'عدد مرات الجرد',
         search:'بحث SKU / اسم المنتج', notes:'بحث في الملاحظات', date:'التاريخ' },
@@ -2641,7 +2670,6 @@ function renderLogTable(entries){
       <td>${esc(formatTimeOnly(e.timestamp))}</td>
       <td>${esc((e.employee || '—').replace(/_/g, ' '))}</td>
       <td>${e.sku ? `<span class="log-sku-badge">${esc(e.sku)}</span>` : '—'}</td>
-      <td>${esc(e.product_title || '—')}</td>
       <td>${typeCell(e)}</td>
       <td class="col-num">${e.value_before ?? '—'}</td>
       <td class="col-num">${e.value_after ?? '—'}</td>
@@ -2687,7 +2715,6 @@ async function exportLogXLSX(){
         'الوقت':          formatTimeForExport(e.timestamp),
         'الموظف':         (e.employee || '').replace(/_/g, ' '),
         'SKU':            e.sku || null,
-        'المنتج':         e.product_title || null,
         'نوع العملية':    e.type === 'ok' ? 'مظبوط'
                           : e.type === 'adjustment' ? ((e.delta ?? 0) > 0 ? 'زيادة' : 'نقصان')
                           : (e.type || ''),
@@ -2707,7 +2734,7 @@ async function exportLogXLSX(){
     ws.views = [{ state:'frozen', ySplit:1, rightToLeft:true }];
     ws.columns = Object.keys(rows[0]).map(k => ({
       header:k, key:k,
-      width: k === 'المنتج' ? 42 : k === 'الملاحظات' || k === 'ملاحظة النتيجة' ? 36
+      width: k === 'الملاحظات' || k === 'ملاحظة النتيجة' ? 36
            : k === 'SKU' ? 24 : k === 'الموظف' ? 18 : 15,
     }));
     rows.forEach(r => ws.addRow(r));
