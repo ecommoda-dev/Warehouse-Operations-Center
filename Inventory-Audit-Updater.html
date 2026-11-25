@@ -123,8 +123,9 @@ td.centered{text-align:center;}
 .dropdown-list.open{display:block;}
 .dropdown-item{padding:9px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
 .dropdown-item:hover{background:var(--accent-light);}
-.item-sku{font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-light);padding:2px 7px;border-radius:4px;white-space:nowrap;}
-.item-name{font-size:12px;color:var(--text-primary);flex:1;}
+.item-sku{font-family:var(--font-mono);font-size:15px;font-weight:800;color:var(--text-primary);direction:ltr;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.item-size{flex-shrink:0;min-width:34px;text-align:center;padding:2px 9px;border-radius:var(--radius-sm);border:1.5px solid var(--accent);background:var(--accent-light);color:var(--accent-dark,var(--accent));font-family:var(--font-mono);font-size:15px;font-weight:800;direction:ltr;}
+.dropdown-item .item-size:empty{display:none;}
 .dropdown-loading,.dropdown-empty{padding:18px;text-align:center;color:var(--text-muted);font-size:12px;}
 .barcode-icon{padding:0 14px;color:var(--text-muted);font-size:20px;}
 #results{display:none;}
@@ -369,14 +370,12 @@ td.centered{text-align:center;}
 .bulk-idx-stat b{color:var(--text-primary);font-variant-numeric:tabular-nums;}
 
 /* ─── جلسة المسح ─── */
-.bulk-scan-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
-.bulk-scan-wrap{position:relative;flex:1;min-width:260px;display:flex;align-items:center;gap:10px;height:56px;padding:0 16px;border:2.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);transition:border-color .15s,background .15s;}
-.bulk-scan-wrap.armed{border-color:var(--accent);background:var(--accent-light);}
-.bulk-scan-wrap.scanning{border-color:var(--green);background:var(--green-light);}
-.bulk-scan-wrap.disabled{opacity:.5;}
-.bulk-scan-wrap>span{font-size:22px;}
-.bulk-scan-wrap input{flex:1;border:none;background:transparent;outline:none;font-family:var(--font-body);font-size:16px;font-weight:700;color:var(--text-primary);}
-.bulk-scan-wrap input:disabled{cursor:not-allowed;}
+/* مربع الإدخال الجماعي = نفس مربع الجرد الفردي (.entry-bar · chips · .entry-input · .dropdown-list) */
+.bulk-entry-wrap.disabled{opacity:.5;}
+.bulk-entry-wrap.scanning .entry-input{box-shadow:0 0 0 3px var(--green-border);}
+.entry-input:disabled{cursor:not-allowed;}
+.bulk-entry-wrap .dropdown-list{max-height:240px;}
+.bulk-scan-card:not(.closed) .bulk-scan-collapse-in{overflow:visible;}   /* قايمة الاقتراحات تعدّي حدود الكارت */
 
 /* ─── جلسة المسح: مقفولة لحد «ابدأ المسح» — مفيش ظاهر غير الزرار الأخضر ─── */
 .bulk-scan-collapse{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:1fr;transition:grid-template-rows .3s ease;}
@@ -400,13 +399,13 @@ td.centered{text-align:center;}
 
 .bulk-live{padding:10px 14px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--surface-2);font-size:13px;font-weight:700;color:var(--text-secondary);min-height:42px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .bulk-live.ok{border-color:var(--green-border);background:var(--green-light);color:var(--green-dark);}
-.bulk-live.scan{display:grid;grid-template-columns:1fr auto auto;gap:8px;padding:8px;align-items:stretch;}
-.bulk-live-cell{display:flex;flex-direction:column;justify-content:center;gap:2px;padding:6px 12px;border-radius:var(--radius-sm);background:var(--surface);border:1.5px solid var(--green-border);min-width:0;}
-.bulk-live-cell small{font-size:10.5px;font-weight:700;color:var(--text-secondary);}
-.bulk-live-cell b{font-size:16px;font-weight:800;color:var(--green-dark);overflow-wrap:anywhere;}
-.bulk-live-cell.num b{font-size:22px;font-variant-numeric:tabular-nums;text-align:center;}
-.bulk-live-cell.size b{text-align:center;}
-.bulk-live-tag{grid-column:1/-1;font-size:11px;font-weight:700;color:var(--text-secondary);}
+.bulk-live.scan{flex-wrap:nowrap;gap:10px;padding:6px 12px;}
+/* صف واحد: SKU أسود · المقاس في مربع أزرق (نفس قايمة نتايج البحث) · إجمالي المعدود */
+.bulk-live-sku{font-family:var(--font-mono);font-size:15px;font-weight:800;color:var(--text-primary);direction:ltr;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bulk-live-size{flex-shrink:0;min-width:34px;text-align:center;padding:2px 9px;border-radius:var(--radius-sm);border:1.5px solid var(--accent);background:var(--accent-light);color:var(--accent-dark,var(--accent));font-family:var(--font-mono);font-size:15px;font-weight:800;direction:ltr;}
+.bulk-live-num{margin-inline-start:auto;flex-shrink:0;display:inline-flex;align-items:baseline;gap:6px;font-size:12px;font-weight:700;color:var(--text-secondary);white-space:nowrap;}
+.bulk-live-num b{font-size:20px;font-weight:800;color:var(--green-dark);font-variant-numeric:tabular-nums;}
+.bulk-live-tag{flex-shrink:0;font-size:11px;font-weight:700;color:var(--text-secondary);}
 .bulk-live.bad{border-color:var(--red-border);background:var(--red-light);color:var(--red);}
 .bulk-live-count{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:28px;padding:0 9px;border-radius:var(--radius-sm);background:var(--surface);border:1.5px solid currentColor;font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;}
 
@@ -419,7 +418,6 @@ td.centered{text-align:center;}
 .bulk-stat.red{border-color:var(--red-border);background:var(--red-light);}
 .bulk-stat.red .bulk-stat-num{color:var(--red);}
 
-.bulk-manual-add{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;}
 
 /* ─── الأكواد اللي الأداة ما عرفتهاش (Standards #44) ─── */
 .bulk-prob-card{border-color:var(--red-border);background:var(--red-lighter);}
@@ -456,7 +454,7 @@ button.bulk-state.on::after{content:' ✕';font-weight:800;}
 .res-verdict.ok{border-color:var(--green-border);background:var(--green-light);color:var(--green-dark);}
 .res-verdict.warn{border-color:var(--amber-border);background:var(--amber-light);color:var(--amber-dark);}
 .res-verdict.bad{border-color:var(--red-border);background:var(--red-light);color:var(--red-dark);}
-.st-match{background:var(--green-light);color:var(--green-dark);border:1px solid var(--green-border);}
+.st-match{background:var(--surface);color:#000;border:1px solid #000;}
 .st-short{background:var(--red-light);color:var(--red);border:1px solid var(--red-border);}
 .st-over{background:var(--accent-light);color:var(--accent);border:1px solid var(--accent-border);}
 .st-no_barcode{background:var(--surface-2);color:var(--text-secondary);border:1px solid var(--border-strong);}
@@ -468,6 +466,14 @@ button.bulk-state.on::after{content:' ✕';font-weight:800;}
 .bulk-diff.pos{color:var(--green-dark);}
 .bulk-diff.neg{color:var(--red);}
 .bulk-diff.zero{color:var(--text-muted);}
+.data-table td .bulk-diff{font-size:1.25em;}   /* الفرق أكبر شوية من باقي الأعمدة */
+.bulk-sku-link{font-family:var(--font-mono);font-weight:800;color:var(--text-primary);text-decoration:underline;text-underline-offset:3px;direction:ltr;}
+.bulk-sku-link:hover{color:var(--accent);}
+.bulk-size-cell{font-family:var(--font-mono);font-weight:800;direction:ltr;text-align:center;}
+.bulk-state-cell{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.bulk-uncounted{display:inline-block;padding:2px 9px;border-radius:5px;background:var(--red-light);color:var(--red);border:1px solid var(--red-border);font-size:11.5px;font-weight:800;white-space:nowrap;}
+.bulk-count-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:var(--radius-sm);border:1.5px solid var(--border-strong);background:var(--surface);color:var(--text-primary);font-size:12.5px;font-weight:800;}
+.bulk-count-chip b{font-size:15px;font-variant-numeric:tabular-nums;}
 
 /* ─── شريط التقدّم — بيتحرّك بعد كل مجموعة فعليًا (Step 3C) ─── */
 .bulk-progress{display:none;padding:10px 16px;border-bottom:1px solid var(--border);}
@@ -533,8 +539,8 @@ button.bulk-state.on::after{content:' ✕';font-weight:800;}
 .data-table tbody tr.is-blocked{background:var(--amber-light);}
 .data-table tbody tr.is-zero td{opacity:.5;}
 .data-table.pre-cmp tbody tr.is-blocked{background:transparent;}
-#bulkTbl.pre-cmp th:nth-child(1),#bulkTbl.pre-cmp td:nth-child(1),#bulkTbl.pre-cmp th:nth-child(n+7),#bulkTbl.pre-cmp td:nth-child(n+7),
-#bulkTbl.pre-cmp col:nth-child(1),#bulkTbl.pre-cmp col:nth-child(n+7){display:none;}
+#bulkTbl.pre-cmp th:nth-child(1),#bulkTbl.pre-cmp td:nth-child(1),#bulkTbl.pre-cmp th:nth-child(n+6),#bulkTbl.pre-cmp td:nth-child(n+6),
+#bulkTbl.pre-cmp col:nth-child(1),#bulkTbl.pre-cmp col:nth-child(n+6){display:none;}
 .data-table input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;cursor:pointer;}
 .data-table.measuring th,.data-table.measuring td{white-space:nowrap;}
 .data-table.measuring .th-in{flex-wrap:nowrap;max-width:none;}
@@ -788,11 +794,19 @@ col.hl{background:var(--accent-light);}
       </div>
       <div class="bulk-scan-collapse"><div class="bulk-scan-collapse-in">
       <div class="bulk-card-body">
-        <div class="bulk-scan-row">
-          <div class="bulk-scan-wrap disabled" id="bulkScanWrap">
-            <span>🔫</span>
-            <input type="text" id="bulkScanInput"
-                   autocomplete="off" spellcheck="false" inputmode="numeric" disabled />
+        <!-- مربع إدخال موحّد — نفس مربع الجرد الفردي: باركود بالسكانر، أو SKU / اسم باقتراحات (للقطع اللي باركودها تالف) -->
+        <div class="entry-bar" id="bulkEntryBar">
+          <div class="entry-chips" id="bulkEntryChips" role="group" aria-label="نوع الإدخال">
+            <div class="entry-segs">
+              <button type="button" class="entry-chip is-on" data-m="barcode" aria-pressed="true"><svg viewBox="0 0 24 24" width="1em" height="1em" style="vertical-align:-0.14em" fill="currentColor" aria-hidden="true"><rect x="2" y="3" width="2" height="18"/><rect x="6" y="3" width="1" height="18"/><rect x="9" y="3" width="3" height="18"/><rect x="14" y="3" width="1" height="18"/><rect x="17" y="3" width="1" height="18"/><rect x="20" y="3" width="2" height="18"/></svg> باركود المنتج</button>
+              <button type="button" class="entry-chip" data-m="sku" aria-pressed="false">🔍 SKU / اسم المنتج</button>
+            </div>
+            <span class="entry-hint" id="bulkEntryHint" aria-hidden="true">سكانر</span>
+          </div>
+          <div class="entry-row dropdown-wrap bulk-entry-wrap disabled" id="bulkScanWrap">
+            <button type="button" class="entry-go" id="bulkEntryBtn" disabled>أضف</button>
+            <input type="text" class="entry-input" id="bulkScanInput" autocomplete="off" spellcheck="false" inputmode="numeric" role="combobox" aria-expanded="false" aria-controls="bulkDropdown" aria-label="امسح باركود المنتج" disabled />
+            <div class="dropdown-list" id="bulkDropdown" role="listbox"></div>
           </div>
         </div>
 
@@ -803,15 +817,6 @@ col.hl{background:var(--accent-light);}
           <div class="bulk-stat"><div class="bulk-stat-num" id="bulkStatSkus">0</div><div class="bulk-stat-lbl">أصناف مختلفة</div></div>
           <div class="bulk-stat"><div class="bulk-stat-num" id="bulkStatPieces">0</div><div class="bulk-stat-lbl">إجمالي القطع المعدودة</div></div>
           <div class="bulk-stat red"><div class="bulk-stat-num" id="bulkStatProblems">0</div><div class="bulk-stat-lbl">أكواد فيها مشكلة</div></div>
-        </div>
-
-        <!-- إضافة يدوية للقطع اللي باركودها تالف أو مش موجود -->
-        <div class="bulk-manual-add">
-          <div class="uf-fg" style="flex:1;min-width:230px;">
-            <div class="uf-search"><span>🔎</span><input type="text" class="uf-input" id="bulkSkuAdd"
-                 placeholder="إضافة صنف يدويًا بالـ SKU (للقطع اللي باركودها تالف)" onkeydown="if(event.key==='Enter')addBulkBySku()" /></div>
-          </div>
-          <button class="bulk-btn" onclick="addBulkBySku()">➕ أضف</button>
         </div>
       </div>
       </div></div>
@@ -867,7 +872,7 @@ col.hl{background:var(--accent-light);}
             <colgroup id="bulkCg"></colgroup>
             <thead><tr id="bulkHeadRow"></tr></thead>
             <tbody id="bulkBody">
-              <tr><td colspan="11"><div class="state-box"><div class="state-icon">🧾</div><p>حمّل الباركودات وابدأ الجرد — وبعد ما تخلص اضغط «⚖️ قارن بشوبيفاي»</p></div></td></tr>
+              <tr><td colspan="9"><div class="state-box"><div class="state-icon">🧾</div><p>حمّل الباركودات وابدأ الجرد — وبعد ما تخلص اضغط «⚖️ قارن بشوبيفاي»</p></div></td></tr>
             </tbody>
           </table>
         </div>
@@ -968,7 +973,20 @@ col.hl{background:var(--accent-light);}
       <!-- 🔴 `#clLatestVerBadge` هو اللي `renderVersionUI()` بتحدّثه — مصدر واحد للنسخة. -->
       <div class="cl-version-block">
         <div class="cl-version-row">
-          <span class="cl-ver-badge" id="clLatestVerBadge">v1.77.0</span>
+          <span class="cl-ver-badge" id="clLatestVerBadge">v1.78.0</span>
+          <span class="cl-ver-date">25-11-2026</span>
+        </div>
+        <ul class="cl-items">
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🔍 <b>قايمة نتايج البحث (الفردي) بنفس شكل أداة الطباعة:</b> الـ SKU بخط أكبر وأسود، والمقاس في مربع أزرق. من غير اسم المنتج.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>📚 <b>الجرد الجماعي — مربع إدخال واحد:</b> مربع المسح والإضافة اليدوية اتدمجوا في مربع بنفس شكل الجرد الفردي (باركود بالسكانر · SKU/اسم باقتراحات من الفهرس). وآخر مسحة بقت في صف واحد: SKU أسود · المقاس أزرق · إجمالي المعدود.</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🧾 <b>جدول نتايج الجماعي:</b> الـ SKU لينك لصفحة المقاس على شوبيفاي · عمود «المقاس» بعده · اتشال عمودا السكانر واليدوي · «مظبوط» أسود · الفرق بخط أكبر · عدّاد «الأصناف» · وتنبيه أحمر «⚠️ لم يتم عد هذا المقاس» للمقاس اللي معدوده صفر وفيه فرق.</span></li>
+          <li class="cl-item"><span class="cl-tag new">جديد</span><span>🎯 <b>أولويات الجرد:</b> فلتر (اختيار متعدد) على عمودي Available و Committed.</span></li>
+        </ul>
+      </div>
+
+      <div class="cl-version-block">
+        <div class="cl-version-row">
+          <span class="cl-ver-badge old">v1.77.0</span>
           <span class="cl-ver-date">24-11-2026</span>
         </div>
         <ul class="cl-items">
@@ -1467,6 +1485,8 @@ function applyPriorityFilters(){
   let base=priorityData.filter(v=>needsAudit(v.lastAuditDate,threshold));
   if(am.size)base=base.filter(v=>(v.lastAuditDate?am.has('audited'):am.has('never')));
   if(q)base=base.filter(v=>(v.sku||'').toLowerCase().includes(q)||(v.productTitle||'').toLowerCase().includes(q));
+  if(PRIO_T.ms.available.size)base=base.filter(v=>PRIO_T.ms.available.has(String(v.available??'—')));
+  if(PRIO_T.ms.committed.size)base=base.filter(v=>PRIO_T.ms.committed.has(String(v.committed??'—')));
   const counts={};base.forEach(v=>{const p=getPriority(v.available,v.committed);counts[p]=(counts[p]||0)+1;});
   const filtered=(pm.size?base.filter(v=>pm.has(String(getPriority(v.available,v.committed)))):base).slice();
 
@@ -1670,10 +1690,12 @@ async function loadSkus(search){
   try{const data=await apiGet('list_skus',{search});if(seq!==_searchSeq)return;renderDropdown(data.variants||[]);}
   catch(e){if(seq!==_searchSeq)return;dropdownList.innerHTML='<div class="dropdown-empty">⚠️ '+esc(e.message)+'</div>';}
 }
+// المقاس = آخر جزء من الـ SKU (NB1906 / Black / 41 ← 41) — لو الـ SKU مفيهوش «/» بنرجع لآخر أوبشن
+function skuSizeOf(sku,fallback){const p=String(sku||'').split('/');return (p.length>1?p[p.length-1].trim():String(fallback||'').trim());}
 function renderDropdown(variants){
   ddIndex=-1;
   if(!variants.length){dropdownList.innerHTML='<div class="dropdown-empty">لا توجد نتائج</div>';return;}
-  dropdownList.innerHTML=variants.map(v=>'<div class="dropdown-item" role="option" onclick=\'selectVariant('+JSON.stringify(v).replace(/'/g,"&#39;")+',true)\' ><span class="item-sku">'+esc(v.sku||'—')+'</span><span class="item-name">'+esc((v.product?.title||'')+' '+(v.selectedOptions?.map(o=>o.value).join(' / ')||''))+'</span></div>').join('');
+  dropdownList.innerHTML=variants.map(v=>'<div class="dropdown-item" role="option" onclick=\'selectVariant('+JSON.stringify(v).replace(/'/g,"&#39;")+',true)\' ><span class="item-sku">'+esc(v.sku||'—')+'</span><span class="item-size">'+esc(skuSizeOf(v.sku,v.selectedOptions?.length?v.selectedOptions[v.selectedOptions.length-1].value:''))+'</span></div>').join('');
   dropdownList.classList.add('open');
 }
 function selectVariant(variant,announce){
@@ -2324,19 +2346,24 @@ const PRIO_T = {
   cols:[
     { k:'priority',  l:'الأولوية' },   // الفلتر = شرائح الأولوية فوق الجدول (مش قمع في الرأس)
     { k:'sku',       l:'SKU',      flt:'search' },
-    { k:'available', l:'Available' },
-    { k:'committed', l:'Committed' },
+    { k:'available', l:'Available', flt:'available' },
+    { k:'committed', l:'Committed', flt:'committed' },
     { k:'lastAudit', l:'آخر جرد',  flt:'audit' },
   ],
-  FL:{ priority:'الأولوية', audit:'آخر جرد', search:'بحث SKU / اسم المنتج' },
+  FL:{ priority:'الأولوية', audit:'آخر جرد', search:'بحث SKU / اسم المنتج', available:'Available', committed:'Committed' },
   noChips:{ priority:true },   // الشرائح نفسها بتبيّن المفعّل — مفيش صف chips مكرر
-  ms:{ priority:new Set(), audit:new Set() },
+  ms:{ priority:new Set(), audit:new Set(), available:new Set(), committed:new Set() },
   q:{ search:'' },
   date:null,
   debounce:300,
-  items:(k)=>k==='priority'
-    ? Object.keys(PRIORITY_CFG).map(p=>({ v:String(p), t:PRIORITY_CFG[p].label }))
-    : [{ v:'never', t:'لم يُجرد قط' },{ v:'audited', t:'جُرد من قبل' }],
+  items:(k)=>{
+    if(k==='priority')return Object.keys(PRIORITY_CFG).map(p=>({ v:String(p), t:PRIORITY_CFG[p].label }));
+    if(k==='available'||k==='committed'){   // القيم الموجودة فعلًا في البيانات (مرتبة رقميًا) + عدد الأصناف لكل قيمة
+      const cnt=new Map();(priorityData||[]).forEach(v=>{const x=String(v[k]??'—');cnt.set(x,(cnt.get(x)||0)+1);});
+      return [...cnt.keys()].sort((a,b)=>(a==='—')-(b==='—')||(parseFloat(a)-parseFloat(b))).map(x=>({ v:x, t:x, c:cnt.get(x) }));
+    }
+    return [{ v:'never', t:'لم يُجرد قط' },{ v:'audited', t:'جُرد من قبل' }];
+  },
   sort:()=>prioSort,
   toggleSort:(k)=>togglePrioSort(k),
   onChange:()=>applyPriorityFilters(),
@@ -2657,9 +2684,8 @@ const BULK_COLS = [
   { k:'_sel',         l:'', sort:false, flt:'sel',
     pre:'<input type="checkbox" id="bulkSelAll" onchange="bulkSelectAll(this.checked)" title="تحديد/إلغاء كل المعروض">' },
   { k:'sku',          l:'SKU',     flt:'search' },
+  { k:'size',         l:'المقاس' },
   { k:'vendor',       l:'البراند', flt:'vendor' },
-  { k:'scanned',      l:'سكانر' },
-  { k:'manual',       l:'يدوي' },
   { k:'counted',      l:'المعدود' },
   { k:'expected',     l:'المتوقع' },
   { k:'diff',         l:'الفرق' },
@@ -2668,7 +2694,7 @@ const BULK_COLS = [
 ];
 const BULK_T = {
   id:'bulk', tblId:'bulkTbl', cgId:'bulkCg', headId:'bulkHeadRow', chipsId:'bulkChipsZone', zoneId:'bulkTableZone', togId:'bulkTog',
-  lsKey:'stockaudit_col_widths_bulk_v2',         // ⚠️ ارفع _v1 → _v2 لو الأعمدة اتغيّرت
+  lsKey:'stockaudit_col_widths_bulk_v3',         // ⚠️ ارفع _v3 → _v4 لو الأعمدة اتغيّرت
   cols: BULK_COLS,
   FL: { state:'الحالة', vendor:'البراند', sel:'التحديد', search:'بحث SKU / اسم المنتج' },
   ms: { state:new Set(), vendor:new Set(), sel:new Set() },
@@ -2786,20 +2812,96 @@ setInterval(() => { if (bulkIndex) updateBulkIndexTs(); }, 60000);
 // نفس نمط السكانر المعتمد: الـ listener بيحط مؤقّت بس، والقراية والمسح جوّه
 // الـ handler — المسح في الـ listener بيمسح الإدخال في نص دفعة السكانر.
 const bulkScanInputEl = document.getElementById('bulkScanInput');
-let _bulkScanTimer = null;
+const bulkDropdownEl  = document.getElementById('bulkDropdown');
+let _bulkScanTimer = null, bulkEntryMode = 'barcode', bulkDdIndex = -1;
+// المدخل الموحّد: أرقام بس = باركود (مسح تلقائي بعد توقف السكانر) · أي حروف = SKU/اسم (اقتراحات محلية من الفهرس، والإضافة بـ Enter أو «أضف»)
+function bulkEntryRender(){
+  document.querySelectorAll('#bulkEntryChips .entry-chip').forEach(ch => {
+    const on = ch.dataset.m === bulkEntryMode;
+    ch.classList.toggle('is-on', on); ch.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  document.getElementById('bulkEntryHint').textContent = bulkEntryMode === 'barcode' ? 'سكانر' : 'اكتب الـ SKU أو الاسم';
+  bulkScanInputEl.inputMode = bulkEntryMode === 'barcode' ? 'numeric' : 'text';
+  bulkScanInputEl.setAttribute('aria-label', bulkEntryMode === 'barcode' ? 'امسح باركود المنتج' : 'اكتب SKU أو اسم المنتج');
+}
+function bulkCloseDropdown(){ bulkDropdownEl.classList.remove('open'); bulkDdIndex = -1; bulkScanInputEl.setAttribute('aria-expanded', 'false'); }
+function bulkSuggest(q){
+  if (!bulkIndex) return [];
+  const t = q.toLowerCase(), out = [];
+  for (const v of bulkIndex.variants){
+    if ((v.sku || '').toLowerCase().includes(t) || String(v.productTitle || '').toLowerCase().includes(t)){ out.push(v); if (out.length >= 40) break; }
+  }
+  return out;
+}
+function bulkRenderDropdown(list){
+  bulkDdIndex = -1;
+  bulkDropdownEl.innerHTML = list.length
+    ? list.map(v => `<div class="dropdown-item" role="option" data-vid="${esc(v.variantId)}"><span class="item-sku">${esc(v.sku || '—')}</span><span class="item-size">${esc(skuSizeOf(v.sku, String(v.variantTitle || '').split('/').pop()))}</span></div>`).join('')
+    : '<div class="dropdown-empty">لا توجد نتائج</div>';
+  bulkDropdownEl.classList.add('open'); bulkScanInputEl.setAttribute('aria-expanded', 'true');
+}
 bulkScanInputEl.addEventListener('input', () => {
   if (!bulkScanActive) return;
   clearTimeout(_bulkScanTimer);
-  document.getElementById('bulkScanWrap').classList.add('scanning');
-  const isBurst = bulkScanInputEl.value.length > 3;
-  _bulkScanTimer = setTimeout(handleBulkScanInput, isBurst ? SCAN_BURST_MS : SCAN_TYPE_MS);
+  let v = bulkScanInputEl.value.replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 1632)).replace(/[۰-۹]/g, d => String(d.charCodeAt(0) - 1776));
+  if (v !== bulkScanInputEl.value) bulkScanInputEl.value = v;
+  v = v.trim();
+  const wrap = document.getElementById('bulkScanWrap');
+  if (v && /^\d+$/.test(v)){            // باركود
+    bulkEntryMode = 'barcode'; bulkEntryRender(); bulkCloseDropdown();
+    wrap.classList.add('scanning');
+    _bulkScanTimer = setTimeout(handleBulkScanInput, v.length > 3 ? SCAN_BURST_MS : SCAN_TYPE_MS);
+    return;
+  }
+  wrap.classList.remove('scanning');
+  if (v){ bulkEntryMode = 'sku'; bulkEntryRender(); }
+  if (bulkEntryMode === 'sku' && v.length >= 2) bulkRenderDropdown(bulkSuggest(v)); else bulkCloseDropdown();
 });
+bulkScanInputEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape'){ bulkCloseDropdown(); return; }
+  const items = [...bulkDropdownEl.querySelectorAll('.dropdown-item')];
+  if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && items.length && bulkDropdownEl.classList.contains('open')){
+    e.preventDefault();
+    bulkDdIndex = (bulkDdIndex + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+    items.forEach((it, i) => it.classList.toggle('hl', i === bulkDdIndex)); items[bulkDdIndex].scrollIntoView({ block:'nearest' });
+    return;
+  }
+  if (e.key === 'Enter' && bulkEntryMode === 'sku'){ e.preventDefault(); submitBulkEntry(); }
+});
+bulkDropdownEl.addEventListener('click', (e) => {
+  const it = e.target.closest('.dropdown-item[data-vid]'); if (!it) return;
+  const v = bulkIndex && bulkIndex.byId.get(it.dataset.vid);
+  if (v) addBulkVariant(v);
+  bulkScanInputEl.value = ''; bulkCloseDropdown(); bulkScanInputEl.focus();
+});
+document.getElementById('bulkEntryChips').addEventListener('click', (e) => {
+  const c = e.target.closest('.entry-chip'); if (!c) return;
+  bulkEntryMode = c.dataset.m; bulkScanInputEl.value = ''; clearTimeout(_bulkScanTimer);
+  bulkCloseDropdown(); bulkEntryRender(); if (bulkScanActive) bulkScanInputEl.focus();
+});
+document.getElementById('bulkEntryBtn').addEventListener('click', () => submitBulkEntry());
+document.addEventListener('click', (e) => { if (!document.getElementById('bulkScanWrap').contains(e.target)) bulkCloseDropdown(); });
+// «أضف» / Enter: باركود → مسح فوري · SKU → المحدَّد في القايمة، أو تطابق تام، أو نتيجة وحيدة
+function submitBulkEntry(){
+  if (!bulkScanActive) return;
+  clearTimeout(_bulkScanTimer);
+  const v = bulkScanInputEl.value.trim();
+  if (!v) return;
+  if (/^\d+$/.test(v)){ handleBulkScanInput(); return; }
+  const hl = bulkDropdownEl.querySelector('.dropdown-item.hl');
+  if (hl){ hl.click(); return; }
+  const exact = bulkIndex && bulkIndex.bySku.get(v.toUpperCase());
+  const hits  = exact ? [exact] : bulkSuggest(v);
+  if (hits.length === 1){ addBulkVariant(hits[0]); bulkScanInputEl.value = ''; bulkCloseDropdown(); return; }
+  if (!hits.length){ showToast(`مفيش صنف بالاسم أو الـ SKU ده في الفهرس: ${v}`, 'error', 6000); playBeep('error'); return; }
+  bulkRenderDropdown(hits);   // أكتر من نتيجة: اختار من القايمة
+}
 function handleBulkScanInput(){
   const val = bulkScanInputEl.value.trim();   // القراية هنا
   bulkScanInputEl.value = '';                 // والمسح هنا
   bulkScanInputEl.focus();
   const wrap = document.getElementById('bulkScanWrap');
-  wrap.classList.remove('scanning'); wrap.classList.add('armed');
+  wrap.classList.remove('scanning');
   if (!val) return;
   if (!scanIsPlausible(val)) return;          // نفس حارس الطول المعتمد
   processBulkScanCode(val);
@@ -2813,7 +2915,8 @@ function toggleBulkScan(){
   const btn  = document.getElementById('bulkScanToggle');
   bulkScanInputEl.disabled = !bulkScanActive;
   wrap.classList.toggle('disabled', !bulkScanActive);
-  wrap.classList.toggle('armed', bulkScanActive);
+  document.getElementById('bulkEntryBtn').disabled = !bulkScanActive || isUpdatingBulk;
+  if (!bulkScanActive) bulkCloseDropdown();
   if (bulkScanActive) bulkScanStarted = true;
   btn.textContent = bulkScanActive ? '⏸ إيقاف الجرد'
                   : bulkScanStarted ? '▶ استكمال جلسة الجرد' : '▶ ابدأ الجرد';
@@ -2841,10 +2944,10 @@ function setBulkLiveScan(v, count, manual){
   const size = String(v.variantTitle || '').split('/').pop().trim() || '—';
   el.className = 'bulk-live ok scan';
   el.innerHTML =
-      `<div class="bulk-live-cell"><small>SKU</small><b>${esc(v.sku)}</b></div>`
-    + `<div class="bulk-live-cell size"><small>المقاس</small><b>${esc(size)}</b></div>`
-    + `<div class="bulk-live-cell num"><small>إجمالي المعدود</small><b>${Number(count).toLocaleString('en-US')}</b></div>`
-    + (manual ? `<div class="bulk-live-tag">(إضافة يدوية)</div>` : '');
+      `<span class="bulk-live-sku">${esc(v.sku)}</span>`
+    + `<span class="bulk-live-size">${esc(skuSizeOf(v.sku, size))}</span>`
+    + (manual ? `<span class="bulk-live-tag">(إضافة يدوية)</span>` : '')
+    + `<span class="bulk-live-num">إجمالي المعدود <b>${Number(count).toLocaleString('en-US')}</b></span>`;
 }
 
 // قسم النتائج مخفي طول ما المسح شغّال — بيظهر بعد الإيقاف لو في عدّ أو نتايج
@@ -2903,18 +3006,13 @@ function updateBulkScanStats(){
 }
 
 // إضافة صنف يدويًا — للقطع اللي باركودها تالف أو منتج بلا باركود
-function addBulkBySku(){
-  const inp = document.getElementById('bulkSkuAdd');
-  const sku = inp.value.trim();
-  if (!sku) return;
+function addBulkVariant(v){
   if (!bulkIndex){ showToast('حمّل الباركودات الأول', 'warning'); return; }
   if (isUpdatingBulk){ showToast('في تنفيذ شغّال — استنى لما يخلص', 'warning'); return; }
-  const v = bulkIndex.bySku.get(sku.toUpperCase());
-  if (!v){ showToast(`مفيش صنف بالـ SKU ده في الفهرس: ${sku}`, 'error', 6000); playBeep('error'); return; }
+  if (bulkDone.has(v.variantId)){ playBeep('error'); showToast(`${v.sku} اتنفّذ خلاص في الجلسة دي — ابدأ جلسة جديدة لو عايز تعدّه تاني`, 'warning', 6000); return; }
   const rec = bulkScans.get(v.variantId) || { scanned: 0, manual: 0 };
   rec.manual++;
   bulkScans.set(v.variantId, rec);
-  inp.value = '';
   playBeep('success');
   setBulkLiveScan(v, rec.scanned + rec.manual, true);
   updateBulkScanStats(); computeBulkRows(); applyBulkFilters();
@@ -3024,6 +3122,7 @@ function computeBulkRows(){
       sku: v.sku, barcode: v.barcode, productTitle: v.productTitle,
       variantTitle: v.variantTitle, vendor: v.vendor || '—',
       lastAuditDate: v.lastAuditDate,
+      size: skuSizeOf(v.sku, String(v.variantTitle || '').split('/').pop()),
       scanned, manual, counted, expected, diff, state, untouched,
       available, committed, onHand, packed,
       compared, comparedAt: compared ? live.at : null,
@@ -3110,7 +3209,7 @@ function bulkSelectAll(on){
 
 // ─── §BULK-JS::filters+table ───
 const BULK_SORT_CFG = {
-  sku:{type:'string'}, productTitle:{type:'string'}, vendor:{type:'string'},
+  sku:{type:'string'}, size:{type:'string'}, productTitle:{type:'string'}, vendor:{type:'string'},
   scanned:{type:'number'}, manual:{type:'number'}, counted:{type:'number'},
   expected:{type:'number'}, diff:{type:'number'}, state:{type:'string'},
 };
@@ -3129,7 +3228,7 @@ function applyBulkSort(rows){
   const dir = bulkSortState.dir === 'asc' ? 1 : -1;
   return [...rows].sort((a, b) => {
     const av = a[bulkSortState.key], bv = b[bulkSortState.key];
-    if (cfg.type === 'string') return String(av ?? '').localeCompare(String(bv ?? ''), 'ar') * dir;
+    if (cfg.type === 'string') return String(av ?? '').localeCompare(String(bv ?? ''), 'ar', { numeric:true }) * dir;
     return ((av ?? 0) - (bv ?? 0)) * dir;
   });
 }
@@ -3188,6 +3287,14 @@ function renderBulkTable(){
     const diffTxt = r.state === 'no_barcode' || r.state === 'compare_failed' || r.state === 'other_states'
       ? '—' : (r.diff > 0 ? '+' : '') + r.diff.toLocaleString('en-US')
               + (r.compared ? '' : '؟');
+    // SKU = رابط لصفحة المقاس (variant) على شوبيفاي
+    const _pid = String(r.productId || '').split('/').pop(), _vid = String(r.variantId || '').split('/').pop();
+    const skuLink = (_pid && _vid)
+      ? `<a class="bulk-sku-link" href="${esc(shopifyVariantUrl(_pid, _vid))}" target="_blank" rel="noopener">${esc(r.sku)}</a>`
+      : `<span class="bulk-sku-link">${esc(r.sku)}</span>`;
+    // مقاس ما اتعدّش (معدود = 0) وفيه فرق (عجز/زيادة) → تنبيه أحمر
+    const uncounted = (r.compared && r.counted === 0 && r.diff !== 0 && (r.state === 'short' || r.state === 'over'))
+      ? '<span class="bulk-uncounted">⚠️ لم يتم عد هذا المقاس</span>' : '';
     const res = r.result;
     const resHtml = res
       ? `<span class="log-res-badge res-${esc(res.status)}" title="${esc((res.warnings||[]).join(' · ') || res.error || (res.actions||[]).join(' · '))}">${esc(resultLabel(res.status))}</span>`
@@ -3195,16 +3302,15 @@ function renderBulkTable(){
     return `<tr class="${done ? 'is-done' : ''}${!BULK_STATES[r.state]?.sel ? ' is-blocked' : ''}${bulkScans.has(r.variantId) ? '' : ' is-zero'}">
       <td><input type="checkbox" ${sel ? 'checked' : ''} ${selectable ? '' : 'disabled'}
            onchange="toggleBulkRowIdx(${i})"></td>
-      <td><span class="log-sku-badge">${esc(r.sku)}</span></td>
+      <td>${skuLink}</td>
+      <td class="bulk-size-cell">${esc(r.size)}</td>
       <td>${esc(r.vendor)}</td>
-      <td class="col-num">${r.scanned.toLocaleString('en-US')}</td>
-      <td class="col-num">${r.manual.toLocaleString('en-US')}</td>
       <td class="col-num">${r.counted.toLocaleString('en-US')}</td>
       <td class="col-num" title="${r.compared ? `available ${r.available} + committed ${r.committed} − مغلَّف ${r.packed}` : 'رقم مبدئي من وقت تحميل الباركودات — اضغط «قارن بشوبيفاي»'}">${
         r.compared ? r.expected.toLocaleString('en-US')
                    : `<span class="bulk-prov">${r.expected.toLocaleString('en-US')}؟</span>`}</td>
       <td class="col-num"><span class="bulk-diff ${diffCls}">${esc(diffTxt)}</span></td>
-      <td><span class="bulk-state st-${esc(r.state)}">${esc(BULK_STATES[r.state]?.label || r.state)}</span></td>
+      <td><div class="bulk-state-cell"><span class="bulk-state st-${esc(r.state)}">${esc(BULK_STATES[r.state]?.label || r.state)}</span>${uncounted}</div></td>
       <td>${resHtml}</td>
     </tr>`;
   }).join('');
@@ -3231,7 +3337,9 @@ function renderBulkStats(){
       + ` title="${on ? 'إلغاء الفلتر' : 'فلترة الجدول على الحالة دي'}">${esc(BULK_STATES[k].label)}: ${(by[k] || 0).toLocaleString('en-US')}</button>`;
   }).join('');
   bar.style.display = 'flex';
-  bar.innerHTML = chips
+  const total = bulkRows.length, shown = bulkFiltered.length;
+  const countChip = `<span class="bulk-count-chip" title="عدد الأصناف في الجدول">📦 الأصناف: <b>${shown === total ? total.toLocaleString('en-US') : shown.toLocaleString('en-US') + ' من ' + total.toLocaleString('en-US')}</b></span>`;
+  bar.innerHTML = countChip + chips
     + `<span class="bulk-card-spacer"></span>`
     + `<span class="bulk-diff pos">+${plus.toLocaleString('en-US')}</span>`
     + `<span class="bulk-diff neg">−${minus.toLocaleString('en-US')}</span>`
@@ -3338,7 +3446,7 @@ function setBulkUpdateLock(on){
   document.getElementById('bulkScanToggle').disabled = on || !bulkIndex;
   document.getElementById('bulkLoadBtn').disabled    = on;
   document.getElementById('bulkResetBtn').disabled   = on || !bulkIndex;
-  document.getElementById('bulkSkuAdd').disabled     = on;
+  document.getElementById('bulkEntryBtn').disabled   = on || !bulkScanActive;
   bulkScanInputEl.disabled = on || !bulkScanActive;
   bulkScanInputEl.placeholder = '';
   updateBulkButtons();
