@@ -553,7 +553,7 @@ const ORDER_PACKED = { ...ORDER_UNPACKED, packedBy: 'Mona' };
 }
 
 // ══════════════════════════════════════════════════════════════
-console.log('\n⑮ أولويات: عمود «إجراءات» · نافذة «الجرد مظبوط» · صور قايمة البحث (v1.79.0)');
+console.log('\n⑮ أولويات: عمود «إجراءات» · نافذتا التأكيد · صور البحث · ترتيب الأزرار (v1.80.0)');
 {
   const IMG = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="120" height="120" fill="#cbd5e1"/><path d="M15 80 L45 45 L70 70 L90 40 L108 80Z" fill="#475569"/></svg>');
   const saved = VARIANT.product.featuredImage;
@@ -570,16 +570,19 @@ console.log('\n⑮ أولويات: عمود «إجراءات» · نافذة «�
   is(await page.locator('#prioHeadRow th').count() === 6, 'الجدول 6 أعمدة');
   is((await page.locator('#prioHeadRow th').last().innerText()).trim() === 'إجراءات', 'آخر عمود = إجراءات');
   const row = page.locator('#priorityBody .priority-row').first();
-  is(await row.locator('.prio-act').count() === 4, 'أربع أزرار في الصف');
-  const href = await row.locator('a.prio-act').getAttribute('href');
-  is(/\/products\/2001\/variants\/1001$/.test(href || ''), 'داشبورد شوبيفاي = لينك صفحة المقاس', href);
+  is(await row.locator('.prio-act').count() === 2, 'زرارين بس في الصف (فردي + سجل الحركة)');
+  is(await row.locator('button:has-text("جرد جماعي")').count() === 0 && await row.locator('.prio-act:has-text("داشبورد")').count() === 0, 'زرارا الجماعي والداشبورد اتشالوا');
+  const href = await row.locator('a.priority-sku').getAttribute('href');
+  is(/\/products\/2001\/variants\/1001$/.test(href || ''), 'الـ SKU نفسه لينك لصفحة المقاس على شوبيفاي', href);
+  // نسخ الـ SKU
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']).catch(() => {});
+  await row.locator('.prio-copy').click();
+  const clip = await page.evaluate(() => navigator.clipboard.readText()).catch(() => null);
+  is(clip === null || clip === 'AA1 / Black / 41', 'زرار النسخ بينسخ الـ SKU', String(clip));
+  is(await row.locator('.prio-copy.is-ok').count() === 1, 'زرار النسخ بيأكد بعلامة ✓');
   // الضغط على الصف نفسه ما بقاش بيفتح الجرد الفردي
-  await row.locator('.priority-sku').click();
+  await row.locator('td').nth(2).click();
   is(await page.locator('#auditTabContent').isHidden(), 'الضغط على الصف لا يفتح الجرد الفردي');
-  // جرد جماعي
-  await row.locator('button:has-text("جرد جماعي")').click();
-  is(await page.locator('#bulkTabContent').isVisible(), 'زرار جرد جماعي يفتح تاب الجماعي');
-  await page.click('#mainTabPriority');
   // سجل الحركة: بيفتح نافذة ويوجّهها لتاريخ المخزون
   const popup = page.waitForEvent('popup', { timeout: 5000 });
   await row.locator('button:has-text("سجل حركة المخزون")').click();
@@ -610,6 +613,24 @@ console.log('\n⑮ أولويات: عمود «إجراءات» · نافذة «�
   await page.waitForSelector('#entryDropdown .dropdown-item, .dropdown-item', { timeout: 5000 });
   is(await page.locator('.dropdown-item img.item-thumb').count() >= 1, 'صورة المنتج في نتائج البحث');
   await shot(page, '3-search');
+  // ترتيب الأزرار وأسماؤها
+  await page.keyboard.press('Escape');
+  const ids = await page.$$eval('.audit-q-btns button', bs => bs.map(b => b.id));
+  is(ids.join() === 'btnAuditOk,btnWantAdjust,btnStartScanCount', 'ترتيب الأزرار: مظبوط · تعديل العدد · العد بالسكانر', ids.join());
+  is((await page.locator('#btnWantAdjust').innerText()).includes('تعديل العدد'), 'زرار «تعديل العدد»');
+  is(await page.locator('#btnStartScanCount svg').count() === 1 && !(await page.locator('#btnStartScanCount').innerText()).includes('📷'), 'أيقونة السكانر SVG بدل 📷');
+  if (SHOTS) { await wait(500); await page.locator('.audit-q-btns').screenshot({ path: path.join(SHOTS, '5-buttons.png') }); }
+  // نافذة تأكيد تعديل الكمية بتصميم نافذة الجرد
+  await page.click('#btnWantAdjust');
+  await page.click('#adjustPanel .delta-btn:not(.minus)');
+  await page.click('#btnApplyAdjust');
+  await page.waitForSelector('#confirmOverlay.open');
+  const ab = page.locator('#confirmBody');
+  is(await ab.locator('img.cf-img').count() === 1 && (await ab.locator('.cf-sku').innerText()).trim() === 'AA1 / Black / 41' && (await ab.locator('.cf-size').innerText()).trim() === '41', 'نافذة التعديل: صورة + SKU + مقاس');
+  is(await ab.locator('.cf-cell').count() === 3 && await ab.locator('.cf-cell-new').count() === 1, 'نافذة التعديل: الحالي · التعديل · الجديد');
+  is(/👤\s*Ahmed Ibraheem/.test(await ab.innerText()), 'نافذة التعديل: الموظف مع 👤');
+  is(await page.locator('#confirmCancelBtn.cancel-red').count() === 1, 'نافذة التعديل: الإلغاء أحمر');
+  await shot(page, '4-adjust-confirm');
   is(errors.length === 0, 'صفر أخطاء', errors.join(' | '));
   VARIANT.product.featuredImage = saved;
   await ctx.close();
