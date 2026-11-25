@@ -552,6 +552,69 @@ const ORDER_PACKED = { ...ORDER_UNPACKED, packedBy: 'Mona' };
   await ctx.close();
 }
 
+// ══════════════════════════════════════════════════════════════
+console.log('\n⑮ أولويات: عمود «إجراءات» · نافذة «الجرد مظبوط» · صور قايمة البحث (v1.79.0)');
+{
+  const IMG = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="120" height="120" fill="#cbd5e1"/><path d="M15 80 L45 45 L70 70 L90 40 L108 80Z" fill="#475569"/></svg>');
+  const saved = VARIANT.product.featuredImage;
+  VARIANT.product.featuredImage = { url: IMG, altText: '' };
+  const SHOTS = process.env.SHOTS;                       // مجلد لقطات اختياري
+  const shot = async (page, name) => { if (SHOTS) await wait(700), await page.screenshot({ path: path.join(SHOTS, name + '.png') }); };
+  const { ctx, page, calls, errors } = await makePage();
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await ctx.route(url => url.hostname === 'admin.shopify.com', r => r.fulfill({ status: 200, headers: { 'Content-Type': 'text/html' }, body: 'shopify' }));
+  await page.goto(`${BASE}/${PAGE}`);
+  await page.click('#mainTabPriority');
+  await page.waitForSelector('#priorityBody .priority-row', { timeout: 5000 });
+  await shot(page, '1-priorities');
+  is(await page.locator('#prioHeadRow th').count() === 6, 'الجدول 6 أعمدة');
+  is((await page.locator('#prioHeadRow th').last().innerText()).trim() === 'إجراءات', 'آخر عمود = إجراءات');
+  const row = page.locator('#priorityBody .priority-row').first();
+  is(await row.locator('.prio-act').count() === 4, 'أربع أزرار في الصف');
+  const href = await row.locator('a.prio-act').getAttribute('href');
+  is(/\/products\/2001\/variants\/1001$/.test(href || ''), 'داشبورد شوبيفاي = لينك صفحة المقاس', href);
+  // الضغط على الصف نفسه ما بقاش بيفتح الجرد الفردي
+  await row.locator('.priority-sku').click();
+  is(await page.locator('#auditTabContent').isHidden(), 'الضغط على الصف لا يفتح الجرد الفردي');
+  // جرد جماعي
+  await row.locator('button:has-text("جرد جماعي")').click();
+  is(await page.locator('#bulkTabContent').isVisible(), 'زرار جرد جماعي يفتح تاب الجماعي');
+  await page.click('#mainTabPriority');
+  // سجل الحركة: بيفتح نافذة ويوجّهها لتاريخ المخزون
+  const popup = page.waitForEvent('popup', { timeout: 5000 });
+  await row.locator('button:has-text("سجل حركة المخزون")').click();
+  const pw = await popup;
+  await pw.waitForURL(/inventory_history/, { timeout: 5000 }).catch(() => {});
+  is(/products\/inventory\/3001\/inventory_history/.test(pw.url()), 'سجل الحركة بيفتح inventory_history للصنف', pw.url());
+  await pw.close().catch(() => {});
+  // جرد فردي
+  await row.locator('button:has-text("جرد فردي")').click();
+  await page.waitForSelector('#results.visible', { timeout: 5000 });
+  is(await page.locator('#auditTabContent').isVisible() && /AA1/.test(await page.locator('#productSkuDisplay').innerText()), 'زرار جرد فردي يحمّل الصنف في تاب الفردي');
+  // نافذة «الجرد مظبوط»
+  await page.click('#btnAuditOk');
+  await page.waitForSelector('#confirmOverlay.open');
+  const body = page.locator('#confirmBody');
+  is(await body.locator('img.cf-img').count() === 1, 'صورة المنتج في النافذة');
+  is((await body.locator('.cf-sku').innerText()).trim() === 'AA1 / Black / 41', 'SKU تحت الصورة');
+  is((await body.locator('.cf-size').innerText()).trim() === '41', 'المقاس في بادج');
+  const txt = await body.innerText();
+  is(!/المنتج|سيتم تسجيل/.test(txt), 'اسم المنتج وجملة التسجيل اتشالوا');
+  is(/👤\s*Ahmed Ibraheem/.test(txt), 'الموظف مع 👤');
+  is(await body.locator('.cf-shelf-num').count() === 1, 'بادج عدد القطع على الرف');
+  is(await page.locator('#confirmCancelBtn.cancel-red').count() === 1, 'زرار الإلغاء بثيم أحمر');
+  await shot(page, '2-confirm');
+  await page.click('#confirmCancelBtn');
+  // قايمة البحث بالصور
+  await page.fill('#entryInput', 'aa1 black');
+  await page.waitForSelector('#entryDropdown .dropdown-item, .dropdown-item', { timeout: 5000 });
+  is(await page.locator('.dropdown-item img.item-thumb').count() >= 1, 'صورة المنتج في نتائج البحث');
+  await shot(page, '3-search');
+  is(errors.length === 0, 'صفر أخطاء', errors.join(' | '));
+  VARIANT.product.featuredImage = saved;
+  await ctx.close();
+}
+
 await browser.close().catch(() => {});
 server.close();
 console.log(`\n${fail ? '❌' : '✅'} ${pass} عدّى · ${fail} فشل`);
