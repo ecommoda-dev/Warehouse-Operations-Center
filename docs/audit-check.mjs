@@ -54,6 +54,8 @@ const VARIANT = {
   ] }] } },
   selectedOptions: [{ name: 'Size', value: '41' }, { name: 'Color', value: 'Black' }],
 };
+const SIBLINGS = [42, 43].map(n => ({ ...VARIANT, id: 'gid://shopify/ProductVariant/10' + n, sku: 'AA1 / Black / ' + n, barcode: '999' + n, selectedOptions: [{ name: 'Size', value: String(n) }] }))
+  .concat([{ ...VARIANT, id: 'gid://shopify/ProductVariant/1999', sku: 'AA1 / White / 41', product: { ...VARIANT.product, id: 'gid://shopify/Product/2999' } }]);
 const PRIORITIES = [
   { variantId: VARIANT.id, productId: VARIANT.product.id, sku: 'AA1 / Black / 41', productTitle: 'AA1 Black', available: 0, committed: 2, lastAuditDate: null },
   { variantId: 'gid://shopify/ProductVariant/1002', productId: VARIANT.product.id, sku: 'AA1 / Black / 42', productTitle: 'AA1 Black', available: 4, committed: 0, lastAuditDate: '2026-07-01T10:00:00Z' },
@@ -68,7 +70,7 @@ const EMPLOYEES = [
   { username: 'Abo_Selim', display_name: 'Abo Selim' },
 ];
 
-async function makePage({ session = true, secret = SECRET, workerVersion = '6.2.2', bulkDelayMs = 0, prioTruncated = false, orders = [] } = {}) {
+async function makePage({ siblings = false, session = true, secret = SECRET, workerVersion = '6.2.2', bulkDelayMs = 0, prioTruncated = false, orders = [] } = {}) {
   const ctx = await browser.newContext({ locale: 'ar-EG' });
   const page = await ctx.newPage();
   const calls = [];          // { action, method, auth, body, aborted }
@@ -96,7 +98,7 @@ async function makePage({ session = true, secret = SECRET, workerVersion = '6.2.
       case 'get_employees':         return reply({ ok: true, employees: EMPLOYEES });
       case 'get_audit_priorities':  return reply({ ok: true, variants: PRIORITIES, truncated: prioTruncated, cap: 10000 });
       case 'lookup_barcode':        return reply({ ok: true, variant: VARIANT });
-      case 'list_skus':             return reply({ ok: true, variants: [VARIANT] });
+      case 'list_skus':             return reply({ ok: true, variants: siblings ? [VARIANT, ...SIBLINGS] : [VARIANT] });
       case 'adjust_inventory':      return reply({ ok: true, status: 'success', auditDate: '2026-10-13T10:00:00Z', logged: true });
       case 'get_details':           return reply({ ok: true, orders });
       case 'get_audit_date':        return reply({ ok: true, auditDate: null });
@@ -495,7 +497,7 @@ const ORDER_PACKED = { ...ORDER_UNPACKED, packedBy: 'Mona' };
   is(await page.inputValue('#entryInput') === '', 'المربع اتفضّى بعد التحميل');
   is(await page.locator('#entryChip-barcode.is-on').count() === 1, 'الـ chip بيتبع النوع (باركود)');
   // كارت الصنف
-  is((await page.locator('#productSizeVal').innerText()).includes('مقاس 41'), 'المقاس ظاهر «مقاس 41»');
+  is((await page.locator('#productSizeVal').innerText()).trim() === '41', 'المقاس ظاهر 41 في المربع');
   const lnk = await page.locator('#productSkuLink').getAttribute('href');
   is(/\/products\/2001\/variants\/1001/.test(lnk || ''), 'الـ SKU نفسه لينك لصفحة المتغيّر', lnk);
   is(await page.locator('a.nav-link-btn:has-text("صفحة الـ SKU")').count() === 0, 'زرار «صفحة الـ SKU» اتشال');
@@ -633,6 +635,84 @@ console.log('\n⑮ أولويات: عمود «إجراءات» · نافذتا �
   await shot(page, '4-adjust-confirm');
   is(errors.length === 0, 'صفر أخطاء', errors.join(' | '));
   VARIANT.product.featuredImage = saved;
+  await ctx.close();
+}
+
+// ══════════════════════════════════════════════════════════════
+console.log('\n⑯ كارت المنتج · باقي المقاسات · جدول الأوردرات · توست وصوت (v1.82.0)');
+const ORDER_FULL = { ...ORDER_PACKED, name: '#9002', orderId: 9002, packingDateTime: '2026-11-26T09:24:18Z', s1Status: 'Ready', s2Status: null, courier: 'Abo Yassin', whereaboutsS1: 'Warehouse', whereaboutsS2: null };
+const ORDER_ODD  = { ...ORDER_UNPACKED, name: '#9003', orderId: 9003, s1Status: 'New Order', s2Status: 'Printed', courier: 'Bosta', whereaboutsS1: null, whereaboutsS2: null };
+{
+  const { ctx, page, calls, errors } = await makePage({ siblings: true, orders: [ORDER_FULL, ORDER_ODD] });
+  await ctx.addInitScript(() => {
+    window.__osc = [];
+    const A = window.AudioContext || window.webkitAudioContext;
+    if (!A) return;
+    const orig = A.prototype.createOscillator;
+    A.prototype.createOscillator = function () { const o = orig.call(this); window.__osc.push(o); return o; };
+  });
+  await page.goto(`${BASE}/${PAGE}`);
+  await page.fill('#entryInput', '12345678'); await page.press('#entryInput', 'Enter');
+  await page.waitForFunction(() => currentShelfQty != null, null, { timeout: 5000 });
+  // ── كارت المنتج
+  const g = async sel => page.locator(sel).evaluate(e => { const r = e.getBoundingClientRect(); return { w: Math.round(r.width), h: Math.round(r.height), x: r.x, y: r.y, b: r.bottom }; });
+  const img = await g('#productImgWrap'), box = await g('#productSizeBox'), sku = await g('#productSkuLink');
+  is(img.w >= 90 && img.w === img.h, 'الصورة أكبر (≈١٫٥×) ومربعة', JSON.stringify(img));
+  is(box.w === img.w && box.h === img.h && Math.abs(box.y - img.y) < 2, 'مربع المقاس بنفس حجم الصورة وجنبها', JSON.stringify({ img, box }));
+  is(Math.abs(img.x - (box.x + box.w)) < 20 || Math.abs(box.x - (img.x + img.w)) < 20, 'مربع المقاس لازق في الصورة');
+  is(sku.y >= img.b - 1, 'الـ SKU تحت الصورة', JSON.stringify({ img, sku }));
+  is(await page.locator('#sizesBtn').count() === 1 && (await page.locator('#sizesBtn').innerText()).includes('باقي مقاسات المنتج'), 'زرار «باقي مقاسات المنتج»');
+  const sb = await g('#sizesBtn');
+  is(Math.abs(sb.y - box.y) < 130 && sb.x < box.x, 'الزرار بجانب المقاس');
+  const brand = await g('#productBrand'), hist = await g('#historyLink'), ref = await g('#refreshBtn');
+  is(brand.y < hist.y && brand.x + brand.w < img.x && Math.abs(brand.x - hist.x) < 200, 'البراند والحالة أقصى اليسار فوق زرار سجل الحركة', JSON.stringify({ brand, hist, img }));
+  const col = id => page.locator(id).evaluate(e => getComputedStyle(e).backgroundColor);
+  is(await col('#refreshBtn') !== await col('#historyLink'), 'لون «تحديث» مميّز عن «سجل حركة المخزون»');
+  if (process.env.SHOTS) { await page.setViewportSize({ width: 1000, height: 1000 }); await wait(800); await page.screenshot({ path: path.join(process.env.SHOTS, '6-product-card.png') }); }
+  // ── جدول الأوردرات
+  is(await page.locator('#ordersBodyWrap.collapsed').count() === 0, 'فيه أوردرات ← الجدول مفتوح تلقائيًا');
+  const heads = await page.$$eval('.orders-table th', hs => hs.map(h => h.textContent.trim()));
+  for (const h of ['تاريخ التغليف', 'وقت التغليف', 'حالة S1', 'حالة S2', 'المندوب', 'مكان شحنة S1', 'مكان شحنة S2']) is(heads.includes(h), 'عمود «' + h + '»');
+  is(await page.locator('.orders-table .summary-row').count() === 0 && !(await page.locator('#ordersBody').innerText()).includes('الإجمالي ('), 'سطر الإجمالي اتحذف');
+  const rows = page.locator('.orders-table tbody tr');
+  const r1 = await rows.nth(0).locator('td').allInnerTexts(), r2 = await rows.nth(1).locator('td').allInnerTexts();
+  is(r1.length === heads.length && r2.length === heads.length, 'خلايا الصف = أعمدة الهيدر');
+  is(/26\/11\/2026/.test(r1[2]) && /11:24|١١:٢٤|11:24/.test(r1[3]), 'تاريخ ووقت التغليف بتوقيت القاهرة', r1[2] + ' | ' + r1[3]);
+  is(r1[7].includes('Ready') && r1[8].trim() === '—' && r1[9].includes('Abo Yassin') && r1[10].includes('في المخزن') && r1[11].trim() === '—', 'S1=Ready · S2 فاضي · المندوب · مكان S1 في المخزن', r1.slice(7).join(' | '));
+  is(r2[7].includes('New Order') && r2[7].includes('⏳'), 'حالة عابرة (New Order) معاها عمر', r2[7]);
+  is(r2[8].includes('⚠') && r2[8].includes('Printed'), 'قيمة S2 مش في الـ choices ← معلّمة ⚠ بدون تحريك', r2[8]);
+  is(r2[9].includes('Bosta') && r2[10].includes('غير مسجّل') && !r2[10].includes('في المخزن') && !r2[10].includes('خارج النطاق'), 'مندوب Bosta: مفيش معاملة خاصة — مكان الشحنة الفاضي «غير مسجّل»', r2[9] + ' | ' + r2[10]);
+  // ── مفيش أوردرات ← مطوي
+  const m = await makePage({ orders: [] });
+  await m.page.goto(`${BASE}/${PAGE}`);
+  await m.page.fill('#entryInput', '12345678'); await m.page.press('#entryInput', 'Enter');
+  await m.page.waitForFunction(() => currentShelfQty != null, null, { timeout: 5000 });
+  is(await m.page.locator('#ordersBodyWrap.collapsed').count() === 1 && (await m.page.locator('#ordersCountBadge').innerText()).trim() === '0', 'صفر أوردرات ← الجدول مطوي تلقائيًا');
+  await m.ctx.close();
+  // ── Worker قديم (من غير الحقول الجديدة) ← «—» + تنبيه
+  const o = await makePage({ orders: [{ ...ORDER_UNPACKED, name: '#9010', orderId: 9010 }] });
+  await o.page.goto(`${BASE}/${PAGE}`);
+  await o.page.fill('#entryInput', '12345678'); await o.page.press('#entryInput', 'Enter');
+  await o.page.waitForFunction(() => currentShelfQty != null, null, { timeout: 5000 });
+  is((await o.page.locator('.orders-table tbody tr td').nth(7).innerText()).trim() === '—' && (await o.page.locator('.orders-meta-note').innerText()).includes('v6.2.6'), 'Worker أقدم: «—» وتنبيه بالنسخة المطلوبة');
+  await o.ctx.close();
+  // ── باقي المقاسات
+  await page.click('#sizesBtn'); await page.waitForSelector('#sizesOverlay.open .size-opt');
+  const opts = await page.$$eval('#sizesList .size-opt', bs => bs.map(b => ({ t: b.querySelector('.so-size').textContent.trim(), d: b.disabled })));
+  is(opts.map(x => x.t).join() === '41,42,43' && opts[0].d && !opts[1].d, 'المقاسات 41/42/43 بس (مفيش لون تاني) والحالي متعطّل', JSON.stringify(opts));
+  await page.click('#sizesList .size-opt:has-text("43")');
+  await page.waitForFunction(() => currentVariant && /43/.test(currentVariant.sku), null, { timeout: 4000 });
+  is(await page.locator('#sizesOverlay.open').count() === 0 && (await page.locator('#productSizeVal').innerText()).trim() === '43', 'اختيار مقاس بيفتحه في الجرد الفردي والنافذة بتتقفل');
+  // ── توست + صوت عند تحديث الجرد
+  await page.evaluate(() => { __osc.length = 0; });
+  await page.click('#btnAuditOk'); await page.waitForSelector('#confirmOverlay.open');
+  await page.click('#confirmOkBtn');
+  await page.waitForSelector('.toast.toast-success:has-text("تسجيل الجرد")', { timeout: 4000 });
+  const toast = await page.locator('.toast.toast-success:has-text("تسجيل الجرد")').first().innerText();
+  is(toast.includes('تسجيل الجرد') && toast.includes('AA1 / Black / 43'), 'توست نجاح بيسمّي العملية والـ SKU', toast);
+  is(await page.evaluate(() => __osc.length) >= 1, 'صوت تنبيه مع نجاح التحديث');
+  is(await page.locator('#productTopbar.flash-ok').count() === 1, 'وميض أخضر على كارت المنتج');
+  is(errors.length === 0, 'صفر أخطاء', errors.join(' | '));
   await ctx.close();
 }
 
