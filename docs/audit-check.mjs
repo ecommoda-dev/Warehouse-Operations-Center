@@ -640,8 +640,8 @@ console.log('\n⑮ أولويات: عمود «إجراءات» · نافذتا �
 
 // ══════════════════════════════════════════════════════════════
 console.log('\n⑯ كارت المنتج · باقي المقاسات · جدول الأوردرات · توست وصوت (v1.82.0)');
-const ORDER_FULL = { ...ORDER_PACKED, name: '#9002', orderId: 9002, packingDateTime: '2026-11-26T09:24:18Z', s1Status: 'Ready', s2Status: null, zone: 'Cairo+Giza', whereaboutsS1: 'Warehouse', whereaboutsS2: null };
-const ORDER_ODD  = { ...ORDER_UNPACKED, name: '#9003', orderId: 9003, s1Status: 'New Order', s2Status: 'Printed', zone: 'Other_Regions', whereaboutsS1: null, whereaboutsS2: null };
+const ORDER_FULL = { ...ORDER_PACKED, name: '#9002', orderId: 9002, packingDateTime: '2026-11-26T09:24:18Z', s1Status: 'Ready', s2Status: null, courier: 'Abo Yassin', whereaboutsS1: 'Warehouse', whereaboutsS2: null };
+const ORDER_ODD  = { ...ORDER_UNPACKED, name: '#9003', orderId: 9003, s1Status: 'New Order', s2Status: 'Printed', courier: 'Bosta', whereaboutsS1: null, whereaboutsS2: null };
 {
   const { ctx, page, calls, errors } = await makePage({ siblings: true, orders: [ORDER_FULL, ORDER_ODD] });
   await ctx.addInitScript(() => {
@@ -672,16 +672,16 @@ const ORDER_ODD  = { ...ORDER_UNPACKED, name: '#9003', orderId: 9003, s1Status: 
   // ── جدول الأوردرات
   is(await page.locator('#ordersBodyWrap.collapsed').count() === 0, 'فيه أوردرات ← الجدول مفتوح تلقائيًا');
   const heads = await page.$$eval('.orders-table th', hs => hs.map(h => h.textContent.trim()));
-  for (const h of ['تاريخ التغليف', 'وقت التغليف', 'حالة S1', 'حالة S2', 'مكان شحنة S1', 'مكان شحنة S2']) is(heads.includes(h), 'عمود «' + h + '»');
+  for (const h of ['تاريخ التغليف', 'وقت التغليف', 'حالة S1', 'حالة S2', 'المندوب', 'مكان شحنة S1', 'مكان شحنة S2']) is(heads.includes(h), 'عمود «' + h + '»');
   is(await page.locator('.orders-table .summary-row').count() === 0 && !(await page.locator('#ordersBody').innerText()).includes('الإجمالي ('), 'سطر الإجمالي اتحذف');
   const rows = page.locator('.orders-table tbody tr');
   const r1 = await rows.nth(0).locator('td').allInnerTexts(), r2 = await rows.nth(1).locator('td').allInnerTexts();
   is(r1.length === heads.length && r2.length === heads.length, 'خلايا الصف = أعمدة الهيدر');
   is(/26\/11\/2026/.test(r1[2]) && /11:24|١١:٢٤|11:24/.test(r1[3]), 'تاريخ ووقت التغليف بتوقيت القاهرة', r1[2] + ' | ' + r1[3]);
-  is(r1[7].includes('Ready') && r1[8].trim() === '—' && r1[9].includes('في المخزن') && r1[10].trim() === '—', 'S1=Ready · S2 فاضي · مكان S1 في المخزن', r1.slice(7).join(' | '));
+  is(r1[7].includes('Ready') && r1[8].trim() === '—' && r1[9].includes('Abo Yassin') && r1[10].includes('في المخزن') && r1[11].trim() === '—', 'S1=Ready · S2 فاضي · المندوب · مكان S1 في المخزن', r1.slice(7).join(' | '));
   is(r2[7].includes('New Order') && r2[7].includes('⏳'), 'حالة عابرة (New Order) معاها عمر', r2[7]);
   is(r2[8].includes('⚠') && r2[8].includes('Printed'), 'قيمة S2 مش في الـ choices ← معلّمة ⚠ بدون تحريك', r2[8]);
-  is(r2[9].includes('بوسطة') && r2[9].includes('خارج النطاق') && !r2[9].includes('في المخزن'), 'أوردر بوسطة: مكان الشحنة «خارج النطاق» مش «في المخزن»', r2[9]);
+  is(r2[9].includes('Bosta') && r2[10].includes('غير مسجّل') && !r2[10].includes('في المخزن') && !r2[10].includes('خارج النطاق'), 'مندوب Bosta: مفيش معاملة خاصة — مكان الشحنة الفاضي «غير مسجّل»', r2[9] + ' | ' + r2[10]);
   // ── مفيش أوردرات ← مطوي
   const m = await makePage({ orders: [] });
   await m.page.goto(`${BASE}/${PAGE}`);
@@ -694,7 +694,7 @@ const ORDER_ODD  = { ...ORDER_UNPACKED, name: '#9003', orderId: 9003, s1Status: 
   await o.page.goto(`${BASE}/${PAGE}`);
   await o.page.fill('#entryInput', '12345678'); await o.page.press('#entryInput', 'Enter');
   await o.page.waitForFunction(() => currentShelfQty != null, null, { timeout: 5000 });
-  is((await o.page.locator('.orders-table tbody tr td').nth(7).innerText()).trim() === '—' && (await o.page.locator('.orders-meta-note').innerText()).includes('v6.2.5'), 'Worker أقدم: «—» وتنبيه بالنسخة المطلوبة');
+  is((await o.page.locator('.orders-table tbody tr td').nth(7).innerText()).trim() === '—' && (await o.page.locator('.orders-meta-note').innerText()).includes('v6.2.6'), 'Worker أقدم: «—» وتنبيه بالنسخة المطلوبة');
   await o.ctx.close();
   // ── باقي المقاسات
   await page.click('#sizesBtn'); await page.waitForSelector('#sizesOverlay.open .size-opt');

@@ -330,6 +330,7 @@ td.centered{text-align:center;}
 .os-green{background:var(--green-light);color:var(--green-dark);border-color:var(--green-border);}
 .os-red{background:var(--red-light);color:var(--red);border-color:var(--red-border);}
 .os-unknown{background:var(--amber-light);color:var(--amber-dark);border:1px dashed var(--amber);}
+.order-courier{font-size:13px;font-weight:700;color:var(--text-primary);white-space:nowrap;}
 .os-none{color:var(--text-muted);font-size:12px;font-weight:600;}
 .os-age{display:block;margin-top:3px;font-size:10.5px;font-weight:600;color:var(--amber-dark);}
 .orders-meta-note{padding:9px 18px;font-size:12px;font-weight:600;color:var(--amber-dark);background:var(--amber-light);border-top:1px solid var(--amber-border);}
@@ -1036,7 +1037,7 @@ col.hl{background:var(--accent-light);}
         </div>
         <ul class="cl-items">
           <li class="cl-item"><span class="cl-tag change">تغيير</span><span>🧱 <b>كارت المنتج (الجرد الفردي):</b> الصورة أكبر ١٫٥× والـ SKU تحتها · مربع المقاس بنفس حجم الصورة وجنبها مباشرة · زرار <b>«باقي مقاسات المنتج»</b> بيفتح نافذة بالمقاسات (والمتاح) واختيار مقاس بيفتحه في الجرد الفردي · البراند وحالة المنتج أقصى اليسار فوق «سجل حركة المخزون» · زرار «تحديث» بلون مميّز (برتقالي).</span></li>
-          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>📦 <b>الأوردرات غير المشحونة:</b> مطوية تلقائيًا لو العدد صفر ومفتوحة لو فيه أوردرات (كان بيتطوي فوق ٥) · أعمدة جديدة: <b>تاريخ التغليف · وقت التغليف · حالة S1 · حالة S2 · مكان شحنة S1 · مكان شحنة S2</b> · سطر «الإجمالي» اتحذف. القيمة اللي مش في قايمة الاختيارات على شوبيفاي بتظهر خام بعلامة ⚠ من غير ما تتغيّر، وأوردر بوسطة مكان شحنته «خارج النطاق». <b>الأعمدة الجديدة محتاجة Worker v6.2.5</b> (على Worker أقدم بتظهر «—» مع تنبيه).</span></li>
+          <li class="cl-item"><span class="cl-tag change">تغيير</span><span>📦 <b>الأوردرات غير المشحونة:</b> مطوية تلقائيًا لو العدد صفر ومفتوحة لو فيه أوردرات (كان بيتطوي فوق ٥) · أعمدة جديدة: <b>تاريخ التغليف · وقت التغليف · حالة S1 · حالة S2 · المندوب · مكان شحنة S1 · مكان شحنة S2</b> · سطر «الإجمالي» اتحذف. القيمة اللي مش في قايمة الاختيارات على شوبيفاي بتظهر خام بعلامة ⚠ من غير ما تتغيّر. <b>الأعمدة الجديدة محتاجة Worker v6.2.6</b> (على Worker أقدم بتظهر «—» مع تنبيه).</span></li>
           <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>🔔 <b>إشارة نتيجة التحديث:</b> بعد «الجرد مظبوط» أو «تعديل الكمية» بيظهر توست (٥ ث) باسم العملية والـ SKU والكمية الجديدة على الرف + صوت (نجاح · تحذير · فشل) + وميض أخضر على الكارت. قبل كده النجاح كان توست قصير بلا صوت.</span></li>
           <li class="cl-item"><span class="cl-tag fix">إصلاح</span><span>🧹 مطابقة المعيار: اتشال placeholder «بحث...» من قوايم الفلاتر (#7) ولون <code>#000</code> الحرفي في حالة «مطابق» بقى توكن (#35).</span></li>
         </ul>
@@ -1266,7 +1267,7 @@ col.hl{background:var(--accent-light);}
 
           <h4>NOTES / QUIRKS</h4>
           <ul>
-            <li><b>جدول الأوردرات غير المشحونة:</b> حالة S1/S2 وزون ومكان الشحنة بتيجي <b>خام</b> من <code>get_details</code> (Worker v6.2.5). القيمة الغريبة بتتعلّم ⚠ ومابتتحرّكش. <b>مكان الشحنة نطاقه الكاروهات الخاصة/الشو روم بس</b> — أوردر <code>Other_Regions</code> (بوسطة) بيبان «خارج النطاق»، والفاضي «غير مسجّل» مش «في المخزن». الحالات العابرة (New Order · WhatsApp-* · Pending Edit) معاها ⏳ وعمر الأوردر (وقت دخول الحالة نفسها مش متسجّل في شوبيفاي).</li>
+            <li><b>جدول الأوردرات غير المشحونة:</b> حالة S1/S2 والمندوب ومكان الشحنة بتيجي <b>خام</b> من <code>get_details</code> (Worker v6.2.6). القيمة الغريبة بتتعلّم ⚠ ومابتتحرّكش. مفيش أي منطق مبني على <code>zone</code>/<code>Other_Regions</code>، والفاضي في مكان الشحنة «غير مسجّل» مش «في المخزن». الحالات العابرة (New Order · WhatsApp-* · Pending Edit) معاها ⏳ وعمر الأوردر (وقت دخول الحالة نفسها مش متسجّل في شوبيفاي).</li>
             <li><b>باقي مقاسات المنتج:</b> بيدوّر بـ model code (أول جزء من الـ SKU) عن طريق <code>list_skus</code> وبيفلتر بـ <code>productId</code> — في المتجر ده كل لون منتج مستقل والمتغيّرات هي المقاسات. لو النتيجة وصلت ١٠٠ بيظهر تنبيه إن القايمة ممكن تكون ناقصة.</li>
             <li><b>الفلاتر في رأس العمود:</b> محرّك <code>§TBL-JS</code> واحد للجدولين. القايمة عائمة على <code>body</code> (<code>position:fixed</code>) وبتفضل مفتوحة بعد الاختيار (حارس <code>document.contains</code>). السجل بيبعت الفلاتر والترتيب للسيرفر، والجماعي بيفلتر في المتصفح.</li>
             <li><b>عرض الأعمدة:</b> بيتقاس أول مرة على صفوف حقيقية وبيتجمّد، وآخر عمود بيمتص الفراغ عشان الجدول يملا الكارت. التاب المخفي مابيتقاسش لحد ما يظهر.</li>
@@ -2223,12 +2224,11 @@ function orderStatusBadge(v,isS2,createdAt){
   if(!isS2&&TEMP_STATES.has(v))h+='<span class="os-age" title="عمر الأوردر من إنشائه — وقت دخول الحالة نفسها مش متسجّل على شوبيفاي">⏳ '+esc(ecoOrderAge(createdAt).text)+'</span>';
   return h;
 }
-// مكان الشحنة — نطاقه الكاروهات الخاصة/الشو روم بس (Rule 17): بوسطة (Other_Regions) خارج النطاق، والفاضي = «غير مسجّل» مش «في المخزن».
+// مكان الشحنة: القيمة خام من الميتافيلد، والفاضي = «غير مسجّل» مش «في المخزن» (مفيش أي منطق مبني على الزون/Other_Regions — قرار أحمد 26-11-2026).
 function whereaboutsCell(o,machine){
   if(machine==='S2'&&!o.s2Status)return '<span class="os-none">—</span>';
   const v=machine==='S1'?o.whereaboutsS1:o.whereaboutsS2;
   if(v){const k=WHEREABOUTS_CFG[machine].known[v];return k?'<span class="os-badge '+k[1]+'">'+k[0]+'</span>':'<span class="os-badge os-unknown" title="قيمة مش في قايمة الاختيارات على شوبيفاي">⚠ '+esc(v)+'</span>';}
-  if(o.zone==='Other_Regions')return '<span class="os-badge os-muted" title="شحنة بوسطة — مكانها من تتبّع بوسطة مش من الحقل ده">بوسطة — خارج النطاق</span>';
   return '<span class="os-none">غير مسجّل</span>';
 }
 function renderOrders(orders){
@@ -2244,7 +2244,7 @@ function renderOrders(orders){
     const orderId=String(order.orderId||order.id.split('/').pop()).replace(/\D/g,'');
     const stageHtml=isS2?'<span class="stage-pill stage-s2">S2 — استبدال</span>':'<span class="stage-pill stage-s1">S1 — عادي</span>';
     const packHtml=isPacked?'<span class="pack-status pack-done">🔴 مغلَّف · '+esc(order.packedBy)+'</span>':'<span class="pack-status pack-shelf">🟢 على الرف</span>';
-    const hasMeta=('s1Status' in order);if(!hasMeta)noMeta=true;   // Worker أقدم من v6.2.5 — الأعمدة الجديدة «—»
+    const hasMeta=('courier' in order);if(!hasMeta)noMeta=true;   // Worker أقدم من v6.2.5 — الأعمدة الجديدة «—»
     const dash='<span class="os-none">—</span>';
     return '<tr><td><a class="order-name-link" href="'+shopifyOrderUrl(orderId)+'" target="_blank" rel="noopener">'+esc(order.name)+'</a></td>'
       +'<td><span class="order-date">'+formatDate(order.createdAt)+'</span></td>'
@@ -2254,11 +2254,12 @@ function renderOrders(orders){
       +'<td>'+stageHtml+'</td><td>'+packHtml+'</td>'
       +'<td>'+(hasMeta?orderStatusBadge(order.s1Status,false,order.createdAt):dash)+'</td>'
       +'<td>'+(hasMeta?orderStatusBadge(order.s2Status,true,order.createdAt):dash)+'</td>'
+      +'<td>'+(hasMeta?(order.courier?'<span class="order-courier">'+esc(order.courier)+'</span>':dash):dash)+'</td>'
       +'<td>'+(hasMeta?whereaboutsCell(order,'S1'):dash)+'</td>'
       +'<td>'+(hasMeta?whereaboutsCell(order,'S2'):dash)+'</td></tr>';
   }).join('');
-  body.innerHTML='<div class="orders-scroll"><table class="orders-table"><thead><tr><th>رقم الأوردر</th><th>تاريخ الأوردر</th><th>تاريخ التغليف</th><th>وقت التغليف</th><th style="text-align:center;">القطع غير مشحونة</th><th>نوع الأوردر</th><th>حالة التغليف</th><th>حالة S1</th><th>حالة S2</th><th>مكان شحنة S1</th><th>مكان شحنة S2</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
-    +(noMeta?'<div class="orders-meta-note">⚠️ حالة S1/S2 ومكان الشحنة محتاجين Worker v6.2.5 — Promote من ريبو Inventory-Audit-Updater</div>':'');
+  body.innerHTML='<div class="orders-scroll"><table class="orders-table"><thead><tr><th>رقم الأوردر</th><th>تاريخ الأوردر</th><th>تاريخ التغليف</th><th>وقت التغليف</th><th style="text-align:center;">القطع غير مشحونة</th><th>نوع الأوردر</th><th>حالة التغليف</th><th>حالة S1</th><th>حالة S2</th><th>المندوب</th><th>مكان شحنة S1</th><th>مكان شحنة S2</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+    +(noMeta?'<div class="orders-meta-note">⚠️ حالة S1/S2 ومكان الشحنة محتاجين Worker v6.2.6 — Promote من ريبو Inventory-Audit-Updater</div>':'');
   const avail=num('qtyAvailable');currentShelfQty=avail+unpackedCommitted;document.getElementById('qtyShelf').textContent=currentShelfQty.toLocaleString('en-US');document.getElementById('qtyPacked').textContent=packedQty.toLocaleString('en-US');currentUnpacked={qty:unpackedCommitted,committed:num('qtyCommitted'),packed:packedQty,orders:unpackedNames};
   setOrdersCollapsed(false);   // فيه أوردرات فعلية = مفتوح تلقائيًا
 }
